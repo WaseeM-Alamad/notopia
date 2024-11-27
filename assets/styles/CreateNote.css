@@ -1,0 +1,236 @@
+.box-container {
+  width: 100%;
+  background-color: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 1.3em;
+  padding-bottom: 3em;
+  /* height: 9rem; */
+}
+
+.note-card {
+  width: 100%;
+  position: relative;
+  max-width: 37.5rem;
+  border-radius: 0.5rem;
+  /* margin-right: 0.4rem; */
+  transition: background-color 0.2s ease-in, box-shadow 0.218s ;
+}
+
+.no-notes {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 39rem;
+  width: 100%;
+}
+
+.shadow {
+  border: 1px solid #e0e0e056;
+  outline: 1px solid #e0e0e056;
+}
+
+.inputs-container {
+  overflow-y: auto;
+  max-height: 37.5rem;
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
+}
+
+.inputs-container::-webkit-scrollbar {
+  width: 5px;
+}
+
+.inputs-container::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+.inputs-container::-webkit-scrollbar-thumb {
+  background-color: rgba(0,0,0,.2);
+  border-radius: 2rem;
+}
+
+.inputs-container {
+  width: 100%;
+  max-height: 37.5rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: height 0.2s ease-in;
+  position: relative;
+  height: 100%;
+}
+
+.pin-button {
+  position: absolute;
+  right: 0.6rem;
+  top: 0.2rem;
+  z-index: 200;
+  height: 30px;
+  width: 35px;
+  float: right;
+}
+
+.corner {
+  height: 35px;
+  width: 45px;
+  float: right;
+}
+
+.actions-container {
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 1.6rem;
+}
+
+.action-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+  gap: 0.8rem;
+}
+
+.icon-button {
+  padding: 0.5rem;
+  border: none;
+  background: transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #202124;
+}
+
+.icon-button:hover {
+  background-color: rgba(0, 0, 0, 0.54);
+}
+
+.close-button {
+  padding: 0.5rem 1.5rem;
+  font-size: 0.875rem;
+  letter-spacing: 0.0178571429em;
+  line-height: 1.25rem;
+  font-family: "Open Sans";
+  color: rgba(0, 0, 0, 0.87);
+  background: transparent;
+  font-weight: 500;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.close-button:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+
+.editable-title:empty::before {
+  content: attr(aria-label);
+  color: rgba(32, 33, 36, 0.7);
+  font-weight: 450;
+  font-family: "Roboto";
+  text-align: center;
+  margin-top: 9px;
+  letter-spacing: 0.00625em;
+  font-variant-ligatures: none;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  cursor: text;
+}
+
+.editable-content:empty::before {
+  content: attr(aria-label);
+  color: rgba(32, 33, 36, 0.8);
+  font-weight: 450;
+  text-align: center;
+  font-size: 0.875rem;
+  font-family: "Roboto";
+  line-height: 1.25rem;
+  font-weight: 400;
+  letter-spacing: 0.0142857143em;
+  position: relative;
+  top: 0.1rem;
+  margin-top: 9px;
+  cursor: text;
+}
+
+.expanded:empty::before {
+  content: attr(aria-label);
+  color: rgba(32, 33, 36, 0.8);
+  font-weight: 450;
+  text-align: center;
+  font-size: 0.95rem;
+  font-family: "Roboto";
+  line-height: 1.3rem;
+  font-weight: 410;
+  letter-spacing: 0.0142857143em;
+  margin-top: 9px;
+  cursor: text;
+}
+
+.title-input {
+  padding: 10px 15px 10px 15px;
+  letter-spacing: 0.00625em;
+  min-height: 24px;
+  font-family: Roboto;
+  letter-spacing: 0.00625em;
+  font-variant-ligatures: none;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  overflow-wrap: break-word;
+  outline: none;
+}
+
+.content-input {
+  padding: 12px 16px 12px 16px;
+  min-height: 22px;
+  font-size: 14px;
+  font-family: Roboto;
+  outline: none;
+  overflow-wrap: break-word;
+}
+
+.snackbar-button {
+  padding: 0.5rem 24px 0.5rem 24px;
+  color: #ffbb00;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background-color 0.2s ease;
+}
+
+.snackbar-button:hover {
+  background-color: rgba(255, 255, 255, 0.041);
+}
+
+.imageWrapper {
+  position: relative;
+}
+
+.imageWrapper:hover .delete {
+  opacity: 1;
+}
+
+.delete {
+  background-color: rgba(0, 0, 0, 0.5);
+  position: absolute;
+  right: 7px;
+  bottom: 13px;
+  padding: 6px;
+  display: flex;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  opacity: 0;
+  transition: background-color 0.3s ease, opacity 0.3s ease;
+}
+
+.delete:hover {
+  background-color: rgba(0, 0, 0, 0.7);
+}

@@ -1,0 +1,125 @@
+@font-face {
+  font-family: "default";
+  src: url(../fonts/TT\ Wellingtons\ Trial\ Regular.otf);
+}
+
+@font-face {
+  font-family: "default bold";
+  src: url(../fonts/TT\ Wellingtons\ Trial\ Bold.otf);
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
+
+
+
+* {
+  padding: 0;
+  margin: 0;
+  font-family: "default";
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  overflow-x:scroll;
+}
+
+::-webkit-scrollbar-track {
+  border-radius: 2px;
+  background-color: #ffffff62;
+  
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c0c0c0;
+
+  border-radius: 0.3em;
+}
+
+.roboto-thin {
+  font-family: "Roboto", sans-serif;
+  font-weight: 100;
+  font-style: normal;
+}
+
+.roboto-thin-italic {
+  font-family: "Roboto", sans-serif;
+  font-weight: 100;
+  font-style: italic;
+}
+
+.roboto-light {
+  font-family: "Roboto", sans-serif;
+  font-weight: 300;
+  font-style: normal;
+}
+
+.roboto-light-italic {
+  font-family: "Roboto", sans-serif;
+  font-weight: 300;
+  font-style: italic;
+}
+
+.roboto-regular {
+  font-family: "Roboto", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.roboto-regular-italic {
+  font-family: "Roboto", sans-serif;
+  font-weight: 400;
+  font-style: italic;
+}
+
+.roboto-medium {
+  font-family: "Roboto", sans-serif;
+  font-weight: 500;
+  font-style: normal;
+}
+
+.roboto-medium-italic {
+  font-family: "Roboto", sans-serif;
+  font-weight: 500;
+  font-style: italic;
+}
+
+.roboto-bold {
+  font-family: "Roboto", sans-serif;
+  font-weight: 700;
+  font-style: normal;
+}
+
+.roboto-bold-italic {
+  font-family: "Roboto", sans-serif;
+  font-weight: 700;
+  font-style: italic;
+}
+
+.roboto-black {
+  font-family: "Roboto", sans-serif;
+  font-weight: 900;
+  font-style: normal;
+}
+
+.roboto-black-italic {
+  font-family: "Roboto", sans-serif;
+  font-weight: 900;
+  font-style: italic;
+}
+
+.noto-sans-regular {
+  font-family: "Noto Sans Mayan Numerals", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.noto-sans-bold {
+  font-family: "Noto Sans Mayan Numerals", sans-serif;
+  font-weight: 500;
+  font-style: normal;
+}
+

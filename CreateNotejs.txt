@@ -1,0 +1,110 @@
+"use client";
+import React, { useEffect, useRef, useState } from "react";
+import "@/assets/styles/CreateNote.css";
+import ColorSelectMenu from "./ColorSelectMenu";
+import { Button, IconButton, Tooltip } from "@mui/material";
+import ImageIcon from "./ImageIcon";
+
+const CreateNote = ({ loadNotes }) => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+
+    try {
+      const response = await fetch("/api/notes", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (response.ok) {
+        e.target.reset();
+        await loadNotes();
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    }
+  };
+
+  
+
+  
+
+  
+
+  return (
+    <div className="boxWrapper">
+      <div
+        style={{ height: boxOpen ? "9.25rem" : "2.71125rem",
+        boxShadow: boxOpen? "0 0.2rem 0.5rem #a0a0a0": "0 0.04rem 0.4rem #a0a0a0" }}
+        className="box"
+        onSubmit={handleSubmit}
+        ref={boxRef}
+      >
+        <form
+          style={{
+            overflowY: overflow,
+          }}
+          className="inputsWrapper"
+        >
+          <textarea
+            style={{
+              padding: boxOpen
+                ? "1rem 0.9rem 0.5rem 0.9rem"
+                : "0.8rem 0.9rem 0.7rem 0.9rem",
+              fontSize: boxOpen ? "1rem" : "1.05rem",
+            }}
+            className="titleField roboto-regular"
+            name="titleInput"
+            type="text"
+            placeholder={placeHolder}
+            maxLength="999"
+            rows="1"
+            onChange={handleTitleChange}
+            onClick={() => expand()}
+            onFocus={() => {
+              expand();
+              if (!isExpanded) {
+                setTimeout(() => {
+                  contentRef.current.focus();
+                }, 0.1);
+              }
+            }}
+          />
+
+          <textarea
+            style={{
+              display: boxOpen ? "" : "none",
+              visibility: boxOpen ? "visible" : "none",
+              opacity: boxOpen ? "100%" : "0",
+            }}
+            name="contentInput"
+            className="contentField roboto-regular"
+            placeholder="Take a note..."
+            maxLength="19999"
+            rows="1"
+            ref={contentRef}
+          />
+        </form>
+
+        <div
+          style={{ display: bottomDis, opacity: boxOpen ? "100" : "0" }}
+          className="formBottom"
+        >
+          <div className="formTools">
+            <ColorSelectMenu />
+            <Tooltip title="Add image" disableInteractive>
+              <IconButton sx={{ width: 33, height: 33 }}>
+                <ImageIcon />
+              </IconButton>
+            </Tooltip>
+          </div>
+          <Button type="submit" variant="text" id="close">
+            Close
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CreateNote;

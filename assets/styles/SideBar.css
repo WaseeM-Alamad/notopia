@@ -1,0 +1,127 @@
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  background: white;
+  transition: width 0.2s , box-shadow 0.2s ease-in-out;
+  width: 280px;
+  display: flex;
+  flex-direction: column;
+  margin-top: 4rem;
+  z-index: 9;
+}
+
+.sidebar-shadow {
+    box-shadow: 0px 0px 7px #a8a8a8;
+}
+
+.collapsed {
+  width: 64px;
+}
+
+.navSection {
+  flex: 1;
+  padding-top: 8px;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  cursor: pointer;
+  border-top-right-radius: 9999px;
+  border-bottom-right-radius: 9999px;
+  margin-right: 8px;
+  color: #5f6368;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background-color 0.2s ease-in-out, padding 0.2s ease-in-out;
+}
+
+.navItem:hover {
+  background-color: #f1f3f4;
+}
+
+.active {
+  background-color: #feefc3;
+}
+
+.active:hover {
+  background-color: #feefc3;
+}
+
+.active svg {
+  color: #a26d00;
+}
+
+.navIcon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+
+.navLabel {
+  margin-left: 16px;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: inherit;
+  transition: margin 0.2s ease-in-out;
+}
+
+.active .navLabel {
+  color: #202124;
+  font-weight: 500;
+}
+
+.settingsSection {
+  padding: 16px;
+  margin-top: auto;
+  transition: padding 0.2s ease-in-out;
+}
+
+.settingsButton {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 9999px;
+  transition: background-color 0.2s ease-in-out, padding 0.2s ease-in-out;
+}
+
+.settingsButton:hover {
+  background-color: #f1f3f4;
+}
+
+.toggleButton {
+  padding: 16px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #5f6368;
+  font-size: 14px;
+  text-align: left;
+  transition: padding 0.2s ease-in-out, background-color 0.2s ease-in-out;
+}
+
+.toggleButton:hover {
+  background-color: #f1f3f4;
+}
+
+.collapsed .navLabel,
+.collapsed .settingsLabel {
+  display: none;
+}
+
+.collapsed .navItem,
+.collapsed .settingsButton,
+.collapsed .toggleButton {
+  padding: 12px;
+}
+
+.collapsed .settingsSection {
+  padding: 12px 16px;
+}

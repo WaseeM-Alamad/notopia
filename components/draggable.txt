@@ -1,0 +1,196 @@
+"use client";
+
+import { fetchNotes } from "@/utils/requests";
+import React, { useEffect, useRef, useState } from "react";
+import CreateNote from "./CreateNote";
+import Note from "./Note";
+import Packery from "packery";
+import Draggabilly from "draggabilly";
+import "@/assets/styles/Notes.css";
+import { redirect, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
+
+const Notes = ({ initialNotes = [] }) => {
+  const [notes, setNotes] = useState(initialNotes);
+  const gridRef = useRef(null);
+  const packeryRef = useRef(null);
+  const draggedItemRef = useRef(null);
+  const searchParams = useSearchParams();
+  const searchTerm = searchParams.get("Search") || "";
+  const { data: session, status } = useSession();
+  const userID = session?.user?.id;
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      redirect("/login");
+    }
+  }, [status]);
+
+  const loadNotes = async () => {
+    const fetchedNotes = await fetchNotes(userID);
+    setNotes(fetchedNotes);
+  };
+
+  useEffect(() => {
+    const initializePackery = () => {
+      if (!gridRef.current || notes.length === 0) return;
+
+      console.log("Initializing Packery");
+
+      // Initialize Packery
+      packeryRef.current = new Packery(gridRef.current, {
+        itemSelector: ".grid-item",
+        columnWidth: 240,
+        gutter: 16,
+        percentPosition: true,
+        transitionDuration: "0.4s",
+        stagger: "0.001s",
+      });
+
+      // Make all grid-items draggable
+      const gridItems = gridRef.current.querySelectorAll('.grid-item');
+      gridItems.forEach((gridItem, index) => {
+        console.log(`Initializing Draggabilly for item ${index}`);
+        const draggie = new Draggabilly(gridItem, {
+          handle: '.note-header'
+        });
+        
+        // Bind draggabilly events to Packery
+        packeryRef.current.bindDraggabillyEvents(draggie);
+
+        draggie.on('dragStart', function(event, pointer) {
+          console.log(`Drag started for item ${index}`);
+          event.target.classList.add('is-dragging');
+          draggedItemRef.current = event.target;
+        });
+
+        draggie.on('dragMove', function(event, pointer, moveVector) {
+          if (!draggedItemRef.current) return;
+
+          const draggedItem = draggedItemRef.current;
+          const itemRect = draggedItem.getBoundingClientRect();
+          const centerX = itemRect.left + itemRect.width / 2;
+          const centerY = itemRect.top + itemRect.height / 2;
+
+          // Find the item at the center of the dragged item
+          const itemAtPoint = document.elementFromPoint(centerX, centerY);
+          const targetItem = itemAtPoint ? itemAtPoint.closest('.grid-item:not(.is-dragging)') : null;
+
+          if (targetItem && targetItem !== draggedItem) {
+            const currentItems = Array.from(gridRef.current.children);
+            const draggedIndex = currentItems.indexOf(draggedItem);
+            const targetIndex = currentItems.indexOf(targetItem);
+
+            if (draggedIndex !== -1 && targetIndex !== -1) {
+              // Swap the positions of dragged item and target item
+              if (draggedIndex < targetIndex) {
+                gridRef.current.insertBefore(draggedItem, targetItem.nextSibling);
+              } else {
+                gridRef.current.insertBefore(draggedItem, targetItem);
+              }
+
+              // Update the layout
+              packeryRef.current.layout();
+            }
+          }
+        });
+
+        draggie.on('dragEnd', function(event, pointer) {
+          event.target.classList.remove('is-dragging');
+          draggedItemRef.current = null;
+          packeryRef.current.layout();
+        });
+      });
+
+      // Force a layout update
+      packeryRef.current.layout();
+    };
+
+    // Initialize Packery and draggable items
+    initializePackery();
+
+    // Cleanup
+    return () => {
+      if (packeryRef.current) {
+        console.log("Destroying Packery");
+        packeryRef.current.destroy();
+      }
+    };
+  }, [notes]); // Re-run when notes change
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (packeryRef.current) {
+        packeryRef.current.layout();
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+  const [isGridLayout, setIsGridLayout] = useState(false);
+
+  useEffect(() => {
+    // Load initial layout preference from localStorage
+    const savedLayout = localStorage.getItem("isGridLayout");
+    if (savedLayout !== null) {
+      setIsGridLayout(JSON.parse(savedLayout));
+    }
+
+    // Listen for the custom 'layoutChange' event to update the layout dynamically
+    const handleLayoutChange = (event) => {
+      setIsGridLayout(event.detail);
+    };
+
+    window.addEventListener("layoutChange", handleLayoutChange);
+
+    // Cleanup the event listener on component unmount
+    return () => {
+      window.removeEventListener("layoutChange", handleLayoutChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (packeryRef.current) {
+      setTimeout(() => {
+        packeryRef.current.layout();
+      }, 400);
+    }
+  }, [isGridLayout]);
+
+  
+
+  return (
+    <>
+      <div className="content-wrapper">
+        <CreateNote
+          notes={notes}
+          packeryRef={packeryRef}
+          setNotes={setNotes}
+          loadNotes={loadNotes}
+        />
+        <div className="notes-wrapper">
+          <div
+            style={{
+              width: isGridLayout ? "37.5rem" : "98%",
+            }}
+            className="inner-notes-wrapper"
+          >
+            <div ref={gridRef} className="grid">
+              {[...notes].reverse().map((note) => (
+                <div key={note._id} className="grid-item">
+                  <Note isGridLayout={isGridLayout} note={note} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default Notes;

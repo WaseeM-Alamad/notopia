@@ -1,0 +1,97 @@
+.note {
+  height: fit-content;
+  text-align: left;
+  border-radius: 0.5rem;
+  font-size: 8pt;
+  box-sizing: border-box;
+  position: relative;
+  margin: 0;
+  transition: width 0.5s ease, box-shadow 0.1s ease,
+    background-color 0.25s linear, border-color 0.25s linear,
+    outline 0.25s linear, opacity 0.25s ease;
+  z-index: auto;
+  margin-bottom: 1rem;
+  min-height: 102px;
+}
+
+.title {
+  user-select: none;
+  font-size: 1rem;
+  overflow-wrap: break-word;
+  padding: 12px 16px 0px 16px;
+  line-height: 1.5rem;
+}
+
+.content {
+  user-select: none;
+  font-size: 1.115rem;
+  padding: 12px 16px 12px 16px;
+  overflow-wrap: break-word;
+}
+
+.noteBottom {
+  display: grid;
+  grid-template-columns: 40px 40px 40px 40px 40px 40px;
+  transition: opacity 0.22s linear;
+  height: 34px;
+  justify-content: flex-start;
+  align-items: center;
+  width: 100%;
+}
+
+.date {
+  user-select: none;
+  margin-right: auto;
+  margin-top: auto;
+  margin-bottom: 2px;
+  font-family: "Roboto";
+  color: #202124;
+  font-size: 7.6pt;
+}
+
+.corner2 {
+  width: 24px;
+  height: 15px;
+  margin-left: 18px;
+  float: right;
+}
+
+#note-pin {
+  position: absolute;
+  right: 5px;
+  top: 2px;
+  padding: 0.3em;
+  transition: opacity 0.22s linear;
+}
+
+.checkmark {
+  left: -11px;
+  bottom: 0px;
+  top: -11px;
+  width: fit-content;
+  height: fit-content;
+  position: absolute;
+}
+
+.empty-note::before {
+  display: flex;
+  content: attr(aria-label);
+  color: rgb(95, 99, 104);
+  margin-left: 0.8rem;
+  font-family: "Open Sans";
+  text-align: center;
+  height: fit-content;
+  width: fit-content;
+  margin-top: 1.8rem;
+  letter-spacing: 0.00625em;
+  font-size: 1.375rem;
+  line-height: 1.5rem;
+  cursor: text;
+}
+
+.empty-note {
+  height: fit-content;
+  width: fit-content;
+  font-size: 2.5rem;
+  margin-bottom: 0.450625rem;
+}

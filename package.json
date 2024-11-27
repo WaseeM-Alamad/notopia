@@ -1,0 +1,39 @@
+{
+  "name": "keeper",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@auth/mongodb-adapter": "^3.7.3",
+    "@emotion/react": "^11.13.3",
+    "@emotion/styled": "^11.13.0",
+    "@mui/icons-material": "^6.1.7",
+    "@mui/lab": "^6.0.0-beta.15",
+    "@mui/material": "^6.1.6",
+    "@mui/system": "^6.1.7",
+    "@supabase/ssr": "^0.5.2",
+    "@supabase/supabase-js": "^2.46.1",
+    "bcryptjs": "^2.4.3",
+    "draggabilly": "^3.0.0",
+    "framer-motion": "^11.11.17",
+    "isotope-layout": "^3.0.6",
+    "lodash": "^4.17.21",
+    "lucide-react": "^0.460.0",
+    "masonry-layout": "^4.2.2",
+    "mongodb": "^6.10.0",
+    "mongoose": "^8.8.1",
+    "next": "^15.0.3",
+    "next-auth": "^4.24.10",
+    "packery": "^2.1.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.0",
+    "react-select": "^5.8.3",
+    "uuid": "^11.0.3"
+  }
+}

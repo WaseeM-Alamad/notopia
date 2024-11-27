@@ -1,0 +1,63 @@
+.grid {
+  margin: 0 auto;
+  transition: opacity 0.3s ease;
+}
+
+.contain {
+  width: fit-content;
+}
+
+.inner-notes-wrapper {
+  transition: width 0.4s ease, opacity 0.2s ease;
+}
+
+.width-97 {
+  width: 97%;
+}
+
+.width-37 {
+  width: 37.5rem;
+}
+
+.notes-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.content-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  margin-left: 5.4rem;
+}
+
+.grid-item.is-dragging { 
+  z-index: 11; 
+  cursor: move;
+  border-radius: 8px;
+  box-shadow: 0 1px 17px 5px rgba(60,64,67,0.3),0 1px 17px 2.5px rgba(60,64,67,0.15);
+  transition: box-shadow 0.1s ;
+}
+
+.grid-item.is-dragging .note {
+  border: none;
+  box-shadow: none;
+  min-height: 7.8125rem;
+  opacity: 90%;
+}
+
+.grid-item.is-dragging .note:hover {
+  box-shadow: none;
+}
+
+.grid-item.is-dragging .noteBottom {
+  visibility: hidden;
+}
+
+
+.grid-item.is-positioning-post-drag {
+  z-index: 2;
+}
+

@@ -1,0 +1,93 @@
+nav {
+  position: fixed;
+  display: flex;
+  color: white;
+  background: white;
+  width: 100%;
+  height: 3.9375rem;
+  display: flex;
+  align-items: center;
+  border-bottom: solid 1px #dadce0;
+  z-index: 10;
+}
+
+.logoButton {
+  display: flex;
+  cursor: pointer;
+  text-decoration: none;
+  color: #5f6368;
+  margin-right: 3.1em;
+}
+
+.logoButton:focus-visible {
+  outline: none;
+}
+
+.logoButton:focus-visible .logo {
+  text-decoration: underline;
+}
+
+.logo {
+  font-size: 2.08333125rem;
+  font-family: "McLaren";
+  margin-top: auto;
+  margin-bottom: auto;
+  margin-left: 0.1525em;
+}
+
+
+#flash {
+  margin-top: auto;
+  margin-bottom: auto;
+  margin-left: 1.275em;
+}
+
+.search {
+  margin-right: auto;
+  height: 64%;
+  width: 50%;
+  margin-top: auto;
+  margin-bottom: auto;
+  border-radius: 0.625rem;
+  background-color: #f1f3f4;
+  padding: 0.3125em;
+  padding-left: 2.8125em;
+  font-size: 1rem;
+  margin-left: 0.4em;
+  background-image: url('data:image/svg+xml;utf8,<svg style="margin-top:1px" width="23px" height="23px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15.7955 15.8111L21 21M18 10.5C18 14.6421 14.6421 18 10.5 18C6.35786 18 3 14.6421 3 10.5C3 6.35786 6.35786 3 10.5 3C14.6421 3 18 6.35786 18 10.5Z" stroke="%23D3D2D2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+  background-repeat: no-repeat;
+  background-position: 10px center;
+  background-position-y: 40%;
+  transition: background-image 0.1s, background-color 0.1s, box-shadow 0.1s;
+  outline: none;
+  border: none;
+}
+
+.search:focus {
+  box-shadow: 0px 1px 1px #ccc;
+  border: solid #d3d2d2 1px;
+  background-color: white;
+  background-image: url('data:image/svg+xml;utf8,<svg style="margin-top:1px" width="23px" height="23px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15.7955 15.8111L21 21M18 10.5C18 14.6421 14.6421 18 10.5 18C6.35786 18 3 14.6421 3 10.5C3 6.35786 6.35786 3 10.5 3C14.6421 3 18 6.35786 18 10.5Z" stroke="%235F6368" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+  background-repeat: no-repeat;
+  background-position: 0.625rem center;
+  background-position-y: 40%;
+}
+
+
+.account {
+  margin-right: 1rem;
+}
+
+.navTools {
+  display: grid;
+  grid-template-columns: auto auto auto auto;
+  margin-right: 1%;
+  margin-left: auto;
+  border: solid;
+}
+
+.profile-image {
+  background-color: #f0f0f0;
+  border-radius: 50%;
+  cursor: pointer;
+}
