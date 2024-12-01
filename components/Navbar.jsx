@@ -15,6 +15,11 @@ import ProfileMenu from "@/components/ProfileMenu";
 import Sidebar from "./SideBar";
 import Image from "next/image";
 import notopia from "@/public/notopia.svg";
+import CircularProgress from "@mui/material/CircularProgress";
+import { AnimatePresence, motion } from "framer-motion";
+import CloudIcon from "./cloudIcon";
+import { positions } from "@mui/system";
+import { DehazeSharp, HighlightSharp } from "@mui/icons-material";
 
 const Navbar = ({ image, name, email, handleRefresh }) => {
   const router = useRouter();
@@ -26,8 +31,34 @@ const Navbar = ({ image, name, email, handleRefresh }) => {
   const [LogoDis, setLogoDis] = useState(true);
   const [screenTrigger, setScreentrigger] = useState(false);
   const [buttonDisable, setButtonDisable] = useState(false);
-  const [loadNav, setLoadNav] = useState(false);
+  const [loadTrigger, setLoadTrigger] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const searchRef = useRef(null);
+
+  const TooltipPosition = {
+    modifiers: [
+      {
+        name: "offset",
+        options: {
+          offset: [0, -11], // Adjust position (x, y)
+        },
+      },
+    ],
+  };
+
+  const slotProps = {
+    tooltip: {
+      sx: {
+        height: "fit-content",
+        margin: "0",
+        backgroundColor: "rgba(0, 0, 0, 0.7)",
+        fontFamily: "Roboto",
+        fontWeight: "400",
+        fontSize: "0.76rem",
+        padding: "5px 8px 5px 8px",
+      },
+    },
+  };
 
   const handleScroll = () => {
     if (window.scrollY > 0) {
@@ -110,9 +141,37 @@ const Navbar = ({ image, name, email, handleRefresh }) => {
     );
   }, [isGridLayout]);
 
+  useEffect(() => {
+    const handler = (event) => {
+      setIsLoading(event.detail);
+    };
+
+    window.addEventListener("isLoading", handler);
+
+    // Cleanup the event listener on component unmount
+    return () => {
+      window.removeEventListener("isLoading", handler);
+    };
+  }, []);
+  
+
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent("loadTrigger", { detail: loadTrigger })
+    );
+  }, [loadTrigger]);
+
+  const [sideTrigger, setSideTrigger] = useState(false);
+
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent("sideBarTrigger", { detail: sideTrigger })
+    );
+  }, [sideTrigger]);
+
   return (
     <>
-      <Sidebar />
+      <Sidebar sideTrigger={sideTrigger} />
       <nav
         style={{
           boxShadow: isScrolled ? "0 3px 10px rgba(0, 0, 0, 0.2)" : "",
@@ -120,14 +179,40 @@ const Navbar = ({ image, name, email, handleRefresh }) => {
         }}
       >
         {(LogoDis || searchTrigger) && (
-          <Link href="/home" className="logoButton">
-            <Image
-              width={130}
-              style={{ marginLeft: "1.4rem" }}
-              alt="logo"
-              src={notopia}
-            />
-          </Link>
+          <>
+            <div style={{ paddingLeft: "0.9rem" }}>
+              <Tooltip
+                slotProps={slotProps}
+                PopperProps={{modifiers: [
+                  {
+                    name: "offset",
+                    options: {
+                      offset: [11, -11], // Adjust position (x, y)
+                    },
+                  },
+                ],}}
+                title="Main menu"
+                disableInteractive
+              >
+                <IconButton
+                  disableTouchRipple
+                  onClick={()=> {setSideTrigger(prev=>!prev)}}
+                  sx={{
+                    padding: "10px",
+                    "&:hover": { backgroundColor: "rgba(0,0,0,0.06)" },
+                  }}
+                >
+                  <DehazeSharp sx={{ color: "#5f6368" }} />
+                </IconButton>
+              </Tooltip>
+            </div>
+            <Link href="/home" className="logoButton">
+              <HighlightSharp
+                sx={{ paddingBottom: "0.3rem", paddingRight: "0.3rem" }}
+              />
+              <h1 style={{ fontSize: "1.7rem" }}>Notopia</h1>
+            </Link>
+          </>
         )}
 
         {!searchTrigger && (
@@ -145,7 +230,12 @@ const Navbar = ({ image, name, email, handleRefresh }) => {
 
         <div className="navTools">
           {searchTrigger && (
-            <Tooltip title="Search" disableInteractive>
+            <Tooltip
+              slotProps={slotProps}
+              PopperProps={TooltipPosition}
+              title="Search"
+              disableInteractive
+            >
               <IconButton
                 onClick={() => {
                   setSearchTrigger(false);
@@ -161,23 +251,56 @@ const Navbar = ({ image, name, email, handleRefresh }) => {
               </IconButton>
             </Tooltip>
           )}
-          <Tooltip title="Refresh" disableInteractive>
+          <Tooltip
+            slotProps={slotProps}
+            PopperProps={TooltipPosition}
+            title="Refresh"
+            disableInteractive
+          >
             <IconButton
-              onClick={() => {
-                setLoadNav((prev) => !prev);
-                handleRefresh(loadNav);
-              }}
+              onClick={() => setLoadTrigger((prev) => !prev)}
               disableTouchRipple
               sx={{
                 padding: "10px",
                 "&:hover": { backgroundColor: "rgba(0,0,0,0.08)" },
               }}
+              disabled={isLoading}
             >
-              <RefreshIcon />
+              <div
+                style={{
+                  width: "24px",
+                  height: "24px",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  position: "relative",
+                }}
+              >
+                {isLoading ? (
+                  <>
+                    <CircularProgress
+                      sx={{
+                        color: "#757575",
+                        borderRadius: "50%",
+                        position: "absolute",
+                        rotate: "260deg",
+                      }}
+                      size={19}
+                      thickness={5}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <RefreshIcon isLoading={isLoading} />
+                  </>
+                )}
+              </div>
             </IconButton>
           </Tooltip>
 
           <Tooltip
+            slotProps={slotProps}
+            PopperProps={TooltipPosition}
             title={!click ? "List view" : "Grid view"}
             disableInteractive
           >
@@ -213,7 +336,12 @@ const Navbar = ({ image, name, email, handleRefresh }) => {
               </IconButton>
             </span>
           </Tooltip>
-          <Tooltip title="Settings">
+          <Tooltip
+            slotProps={slotProps}
+            PopperProps={TooltipPosition}
+            title="Settings"
+            disableInteractive
+          >
             <IconButton
               onClick={() => setRotation((prev) => !prev)}
               disableTouchRipple
@@ -228,6 +356,8 @@ const Navbar = ({ image, name, email, handleRefresh }) => {
         </div>
         <div className="account">
           <Tooltip
+            slotProps={slotProps}
+            PopperProps={TooltipPosition}
             title={
               <span>
                 <p style={{ color: "#a4a9ad" }}>{name}</p>

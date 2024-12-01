@@ -10,6 +10,8 @@ import Stack from "@mui/material/Stack";
 import MoreIcon from "./MoreIcon";
 import { IconButton, Tooltip } from "@mui/material";
 import deleteNote from "@/actions/deleteNote";
+import Snack from "@/components/DeleteNoteSnack";
+
 
 export default function DropMenu({
   open,
@@ -24,6 +26,8 @@ export default function DropMenu({
   setIsTrash,
   isTrash,
   handleUpdate,
+  setIsLoading,
+  setIsDeleteSnackOpen,
 }) {
   const anchorRef = React.useRef(null);
 
@@ -51,6 +55,7 @@ export default function DropMenu({
       "0 1px 2px 0 rgba(60,64,67,0.3),0 2px 6px 2px rgba(60,64,67,0.15)",
     borderRadius: "4px",
     padding: "6px 0px 6px 0px ",
+    positions: "absolute",
   };
 
   const TooltipPosition = {
@@ -104,6 +109,39 @@ export default function DropMenu({
 
     prevOpen.current = open;
   }, [open]);
+
+  const handleDelete = async () => {
+    if (isTrash) {
+      setNoteOpacity(false);
+      setTimeout(() => {
+        setNoteDisplay(false);
+        setTimeout(() => {
+          isotopeRef.current.arrange();
+        }, 10);
+      }, 270);
+      setIsLoading(true);
+      await deleteNote(Noteuuid, userID);
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 700);
+    } else {
+      setIsDeleteSnackOpen(true);
+      setIsTrash(true);
+      setNoteOpacity(false);
+      setTimeout(() => {
+        setNoteDisplay(false);
+        setTimeout(() => {
+          isotopeRef.current.arrange();
+        }, 10);
+      }, 270);
+    }
+    setIsLoading(true);
+    await handleUpdate("isTrash", true);
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 700);
+    handleClose();
+  };
 
   return (
     <Stack direction="row" spacing={2}>
@@ -159,34 +197,7 @@ export default function DropMenu({
                     aria-labelledby="composition-button"
                     onKeyDown={handleListKeyDown}
                   >
-                    <MenuItem
-                      sx={menuStyle}
-                      onClick={() => {
-                        // if (isTrash) {
-                          deleteNote(Noteuuid, userID);
-                          setNoteOpacity(false);
-                          setTimeout(() => {
-                            setNoteDisplay(false);
-                            setTimeout(() => {
-                              isotopeRef.current.arrange();
-                              
-                            }, 10);
-                          }, 270);
-                        // } else {
-                        //   setIsTrash(true);
-                        //   handleUpdate("isTrash", true);
-                        //   setNoteOpacity(false);
-                        //   setTimeout(() => {
-                        //     setNoteDisplay(false);
-                        //     setTimeout(() => {
-                        //       isotopeRef.current.arrange();
-                        //     }, 10);
-                        //   }, 270);
-                        // }
-                        
-                        handleClose();
-                      }}
-                    >
+                    <MenuItem sx={menuStyle} onClick={handleDelete}>
                       Delete note
                     </MenuItem>
                     <MenuItem sx={menuStyle} onClick={handleClose}>

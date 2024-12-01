@@ -1,7 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { addImage } from "./image";
 
-
 // Create Supabase client
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -13,19 +12,22 @@ export default async function uploadFile(
   event,
   userID,
   setIsPending,
-  Noteuuid,
+  Noteuuid
 ) {
-  console.log(Noteuuid);
+  setIsPending(true);
   const file = event.target?.files[0];
   const fileExt = file?.name.split(".").pop();
-  const filePath = `${userID}/${Noteuuid}.${fileExt}`;
+  const filePath = `${userID}/${Noteuuid}`;
   const { data, error } = await supabase.storage
     .from("notopia")
     .upload(filePath, file);
   if (error) {
     // Handle error
   } else {
-    const { data: url } = supabase.storage.from("notopia").getPublicUrl(filePath);
-    addImage(Noteuuid, url)
+    // const { data: url } = supabase.storage
+    //   .from("notopia")
+    //   .getPublicUrl(filePath);
+    // await addImage(Noteuuid, url);
+    setIsPending(false);
   }
 }

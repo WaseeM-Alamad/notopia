@@ -16,6 +16,7 @@ import TopReminder from "./TopReminder";
 import TopArchive from "./TopArchive";
 import TopMore from "./TopMore";
 import ColorSelectMenu from "./ColorSelectMenuTop";
+import DeleteSnack from "@/components/DeleteNoteSnack";
 
 const Notes = ({ initialNotes }) => {
   const [notes, setNotes] = useState(initialNotes);
@@ -26,6 +27,9 @@ const Notes = ({ initialNotes }) => {
     isArchived: false,
     color: "#FFFFFF",
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [imagePending, setImagePending] = useState(false);
+  const [loadingNoteID, setLoadingNoteID] = useState();
   const [height, setHeight] = useState(0);
   const [colorTrigger, setColorTrigger] = useState(false);
   const [pinTrigger, setPinTrigger] = useState(false);
@@ -39,6 +43,7 @@ const Notes = ({ initialNotes }) => {
   const topMenuRef = useRef(null);
   const noteWrapperRef = useRef(null);
   const ColorMenuRef = useRef(null);
+  const loadRef = useRef(null);
   const SearchParams = useSearchParams();
   const searchTerm = SearchParams.get("Search" || "");
   const { data: session, status } = useSession();
@@ -222,6 +227,7 @@ const Notes = ({ initialNotes }) => {
   }, [selectedNotesIDs.length]);
 
   const updateSelectedNotesIDs = async (updates) => {
+    setIsLoading(true);
     try {
       const formData = new FormData();
       formData.append(
@@ -240,7 +246,9 @@ const Notes = ({ initialNotes }) => {
         method: "PATCH",
         body: formData,
       });
-
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 700);
       if (!response.ok) {
         throw new Error("Failed to update notes");
       }
@@ -304,6 +312,49 @@ const Notes = ({ initialNotes }) => {
       }
     };
   }, []);
+
+  const handleLoad = async () => {
+    setIsLoading(true);
+    await loadNotes();
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 700);
+  };
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("isLoading", { detail: isLoading }));
+  }, [isLoading]);
+
+  useEffect(() => {
+    const handler = async () => {
+      loadRef.current.click();
+    };
+
+    window.addEventListener("loadTrigger", handler);
+
+    return () => {
+      window.removeEventListener("loadTrigger", handler);
+    };
+  }, []);
+
+  const [sideTrigger, setSideTrigger] = useState(false);
+
+  useEffect(() => {
+    const handler = (event) => {
+      setSideTrigger(event.detail);
+    };
+
+    window.addEventListener("sideBarTrigger", handler);
+
+    // Cleanup the event listener on component unmount
+    return () => {
+      window.removeEventListener("sideBarTrigger", handler);
+    };
+  }, []);
+
+  useEffect(() => {
+    isotopeRef.current?.arrange();
+  }, [sideTrigger]);
 
   return (
     <>
@@ -420,8 +471,32 @@ const Notes = ({ initialNotes }) => {
         </motion.div>
       </AnimatePresence>
 
-      <div className="content-wrapper">
-        <CreateNote userID={userID} setNotes={setNotes} height={height} />
+      <div
+        style={{ marginLeft: sideTrigger ? "300px" : "" }}
+        className="content-wrapper"
+      >
+        <button
+          style={{
+            width: "0",
+            position: "fixed",
+            border: "solid",
+            left: "100px",
+            opacity: "0",
+            visibility: "hidden",
+            display: "none",
+          }}
+          ref={loadRef}
+          onClick={handleLoad}
+        />
+
+        <CreateNote
+          setImagePending={setImagePending}
+          setLoadingNoteID={setLoadingNoteID}
+          setIsLoading={setIsLoading}
+          userID={userID}
+          setNotes={setNotes}
+          height={height}
+        />
 
         <div className="notes-wrapper">
           <div
@@ -452,6 +527,9 @@ const Notes = ({ initialNotes }) => {
                         archivedTrigger={archivedTrigger}
                         setNotes={setNotes}
                         userID={userID}
+                        imagePending={imagePending}
+                        loadingNoteID={loadingNoteID}
+                        setIsLoading={setIsLoading}
                       />
                     </div>
                   );
@@ -461,6 +539,7 @@ const Notes = ({ initialNotes }) => {
           </div>
         </div>
       </div>
+      
     </>
   );
 };

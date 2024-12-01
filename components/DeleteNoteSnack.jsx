@@ -5,14 +5,15 @@ import SnackbarContent from "@mui/material/SnackbarContent";
 import React from "react";
 
 const SnackBar = ({
-  ref,
   open,
+  ref,
   setIsOpen,
-  setImage,
-  imageFile,
-  uploadRef,
-  setIsExpanded,
-  setImageEvent,
+  setIsTrash,
+  setIsLoading,
+  handleUpdate,
+  setNoteDisplay,
+  setNoteOpacity,
+  isotopeRef,
 }) => {
   const handleSnackClose = (event, reason) => {
     if (reason === "clickaway") {
@@ -23,7 +24,7 @@ const SnackBar = ({
 
   return (
     <Snackbar
-    style={{ zIndex: "100" }}
+      style={{ zIndex: "100" }}
       ref={ref}
       open={open}
       onClose={handleSnackClose}
@@ -37,24 +38,26 @@ const SnackBar = ({
           padding: "0.625rem 1rem 0.625rem 1.25rem",
           border: "solid rgb(50, 50, 50) 4px",
         }}
-        message="Image deleted"
+        message="Note trashed"
         action={
           <>
             <button
               aria-label="close"
-              onClick={() => {
-                const dataTransfer = new DataTransfer();
-                dataTransfer.items.add(imageFile);
-                if (uploadRef.current) {
-                  uploadRef.current.files = dataTransfer.files;
-                }
-                const newEvent = {
-                  target: uploadRef.current,
-                };
-                setImageEvent(newEvent);
-                setImage(URL.createObjectURL(imageFile));
+              onClick={async () => {
+                setIsTrash(false);
+                setNoteOpacity(true);
+                setNoteDisplay(true);
                 setIsOpen(false);
-                setIsExpanded(true);
+
+                setTimeout(() => {
+                  isotopeRef.current.arrange();
+                }, 10);
+
+                setIsLoading(true);
+                await handleUpdate("isTrash", false);
+                setTimeout(() => {
+                  setIsLoading(false);
+                }, 700);
               }}
               className="snackbar-button noto-sans-regular"
             >

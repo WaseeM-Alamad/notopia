@@ -15,13 +15,20 @@ import PersonAddIcon from "./PersonAdd";
 import MoreIcon from "./MoreIcon";
 import UndoIcon from "./UndoIcon";
 import RedoIcon from "./RedoIcon";
-import uploadFile from "@/actions/actions";
+import uploadFile from "@/actions/uploadFile";
 import ArchSnack from "./ArchSnack";
 import ImageSnack from "./ImageSnack";
 import { motion, AnimatePresence } from "framer-motion";
 import NoteIcon from "./NoteIcon";
 
-const CreateNote = ({ setNotes, userID, height }) => {
+const CreateNote = ({
+  setNotes,
+  userID,
+  height,
+  setImagePending,
+  setLoadingNoteID,
+  setIsLoading,
+}) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedColor, setSelectedColor] = useState("#FFFFFF");
   const [isPinned, setIsPinned] = useState(false);
@@ -34,7 +41,6 @@ const CreateNote = ({ setNotes, userID, height }) => {
     content: "",
     color: "",
   });
-  const [imagePending, setImagePending] = useState(false);
   const [image, setImage] = useState("");
   const [imageFile, setImageFile] = useState("");
   const [imageEvent, setImageEvent] = useState();
@@ -80,11 +86,19 @@ const CreateNote = ({ setNotes, userID, height }) => {
         formData.append("color", selectedColor);
         formData.append("isPinned", isPinned);
         formData.append("isArchived", isArchived);
+        image &&
+          formData.append(
+            "image",
+            `https://fopkycgspstkfctmhyyq.supabase.co/storage/v1/object/public/notopia/${userID}/${newNote.uuid}`
+          );
+        setIsLoading(true);
         const response = await fetch("/api/notes", {
           method: "POST",
           body: formData,
         });
-
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 700);
         if (response.ok) {
           return true;
         }
@@ -131,11 +145,11 @@ const CreateNote = ({ setNotes, userID, height }) => {
         isArchived: isArchived,
         image: image,
       };
-
+      setLoadingNoteID(Noteuuid);
       setNotes((prevNotes) => [...prevNotes, newNote]);
       titleRef.current.textContent = "";
       contentRef.current.textContent = "";
-      await submitNote(newNote);
+      submitNote(newNote);
       if (image) {
         uploadFile(imageEvent, userID, setImagePending, Noteuuid);
       }
@@ -503,7 +517,8 @@ const CreateNote = ({ setNotes, userID, height }) => {
                   fontSize: "1.375rem",
                   color: "rgb(95,99,104)",
                   fontWeight: "400",
-                  marginBottom: "100px",
+                  cursor: "default",
+                  userSelect: "none",
                 }}
               >
                 {" "}

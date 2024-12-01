@@ -15,8 +15,11 @@ nav {
   display: flex;
   cursor: pointer;
   text-decoration: none;
+  justify-content: center;
+  align-items: center;
   color: #5f6368;
   margin-right: 3.1em;
+  padding-left: 0.5rem;
 }
 
 .logoButton:focus-visible {

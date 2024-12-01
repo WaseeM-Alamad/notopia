@@ -61,6 +61,7 @@ export const POST = async (request) => {
       isPinned: formData.get("isPinned"),
       isArchived: formData.get("isArchived"),
       creator: user._id,
+      image: formData.get("image"),
     };
 
     const newNote = new Note(noteData);

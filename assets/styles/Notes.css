@@ -3,20 +3,13 @@
   transition: opacity 0.3s ease;
 }
 
+
 .contain {
   width: fit-content;
 }
 
 .inner-notes-wrapper {
   transition: width 0.4s ease, opacity 0.2s ease;
-}
-
-.width-97 {
-  width: 97%;
-}
-
-.width-37 {
-  width: 37.5rem;
 }
 
 .notes-wrapper {

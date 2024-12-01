@@ -13,7 +13,7 @@ const deleteNote = async (Noteuuid, userID) => {
   try {
     await connectDB();
     const note = await Note.findOne({ uuid: Noteuuid });
-    const filePath = note.image.substring(note.image.indexOf("notopia/") + "notopia/".length );
+    const filePath = `${userID}/${Noteuuid}`
     const noteID = note._id;
     await User.updateOne({ _id: userID }, { $pull: { notes: noteID } });
 
@@ -22,9 +22,13 @@ const deleteNote = async (Noteuuid, userID) => {
       return { success: false, message: "Note not found" };
     }
     if (note.image) {
-      await supabase.storage
+      const { error } = await supabase.storage
         .from("notopia")
         .remove([filePath]);
+      if (error) {
+        console.log("Error deleting note from storage ");
+      }
+      console.log("image deleted from storage");
     }
 
     return { success: true, message: "Note deleted successfully" };

@@ -3,13 +3,15 @@ import "@/assets/styles/SideBar.css";
 import BellIcon from "./BellIcon";
 import TrashIcon from "./TrashIcon";
 import EditIcon from "./EditIcon";
-import ArchiveIcon from '@/components/ArchiveSideIcon';
+import ArchiveIcon from "@/components/ArchiveSideIcon";
 import NoteIcon from "./NoteIcon";
 import { usePathname, useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 
-const Sidebar = () => {
-  const [isCollapsed, setIsCollapsed] = useState(true);
+const Sidebar = ({ sideTrigger }) => {
+  const [isExpanded, setIsExpanded] = useState(true);
   const sideBarRef = useRef(null);
+  const timeoutRef = useRef(null);
   const [activeItem, setActiveItem] = useState("home");
   const pathName = usePathname();
   const router = useRouter();
@@ -26,57 +28,198 @@ const Sidebar = () => {
     }
   }, [pathName]);
 
-  const menuItems = [
-    { id: "home", icon: NoteIcon, label: "Notes" },
-    { id: "reminders", icon: BellIcon, label: "Reminders" },
-    { id: "edit", icon: EditIcon, label: "Edit labels" },
-    { id: "archive", icon: ArchiveIcon, label: "Archive" },
-    { id: "trash", icon: TrashIcon, label: "Trash" },
-  ];
-
   const handleSideMenuItemClick = (id) => {
     setActiveItem(id);
     router.push(`/${id}`);
   };
 
   const handleSideMenuHover = (e) => {
-    const timeoutId = setTimeout(() => {
-      if (sideBarRef.current && sideBarRef.current.contains(e.target)) {
-        setIsCollapsed(false);
-      }
+    if (sideTrigger) return;
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    timeoutRef.current = setTimeout(() => {
+      setIsExpanded(true);
     }, 350);
-
-    const handleMouseLeave = () => {
-      clearTimeout(timeoutId);
-      setIsCollapsed(true);
-    };
-
-    sideBarRef.current.addEventListener("mouseleave", handleMouseLeave);
-
-    return () => {
-      sideBarRef.current.removeEventListener("mouseleave", handleMouseLeave);
-    };
   };
 
+  const handleSideMenuLeave = () => {
+    if (sideTrigger) return;
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    
+    setIsExpanded(false);
+  };
+
+  useEffect(() => {
+    if (sideTrigger) setIsExpanded(true);
+    else setIsExpanded(false);
+  }, [sideTrigger]);
+
   return (
-    <div
+    <motion.aside
       ref={sideBarRef}
       onMouseOver={handleSideMenuHover}
-      className={`${"sidebar"} ${isCollapsed ? "collapsed" : "sidebar-shadow"}`}
+      onMouseLeave={handleSideMenuLeave}
+      style={{
+        boxShadow:
+          isExpanded &&
+          !sideTrigger &&
+          "0 16px 10px 0 rgba(0,0,0,.14),0 11px 18px 0 rgba(0,0,0,.12),0 13px 5px -1px rgba(0,0,0,.2)",
+      }}
+      className="sidebar"
+      animate={{ width: isExpanded ? "280px" : "80px" }}
+      transition={{ duration: 0.12, ease: "easeInOut" }}
     >
-      <aside className={"navSection"}>
-        {menuItems.map(({ id, icon: Icon, label }) => (
-          <div
-            key={id}
-            className={`${"navItem"} ${activeItem === id ? "active" : ""}`}
-            onClick={() => handleSideMenuItemClick(id)}
-          >
-            <Icon className={"navIcon"} />
-            <span className={"navLabel"}>{label}</span>
-          </div>
-        ))}
-      </aside>
-    </div>
+      <div style={{ width: "100%", boxSizing: "border-box" }}>
+        <div
+          style={{
+            display: "flex",
+            borderRadius: isExpanded ? "0 25px 25px 0" : "50%",
+            padding: "12px",
+            width: isExpanded ? "100%" : "49px",
+            height: "49px",
+            backgroundColor: activeItem === "home" ? "#feefc3" : "transparent",
+            boxSizing: "border-box",
+            marginLeft: !isExpanded ? "12px" : "0px",
+            transition: "all 0.1s ease",
+            ':hover': {
+      backgroundColor: activeItem === "home" 
+        ? "#f0e6b0"  // Slightly darker version of #feefc3 when active
+        : "rgba(0,0,0,0.1)"  // Light gray overlay when not active
+    }
+          }}
+          onClick={() => handleSideMenuItemClick("home")}
+          className="sidebar-item"
+        >
+          <NoteIcon
+            style={{
+              position: "relative",
+              left: !isExpanded ? "0" : "12px",
+              transition: "all 0.1s ease",
+            }}
+            size={24}
+          />
+          <span className="roboto-regular label">Notes</span>
+        </div>
+      </div>
+      <div style={{ width: "100%", boxSizing: "border-box" }}>
+        <div
+          style={{
+            borderRadius: isExpanded ? "0 25px 25px 0" : "50%",
+            padding: "12px",
+            width: isExpanded ? "100%" : "49px",
+            height: "49px",
+            backgroundColor:
+              activeItem === "reminders" ? "#feefc3" : "transparent",
+            boxSizing: "border-box",
+            marginLeft: !isExpanded ? "12px" : "+0px",
+            transition: "all 0.1s ease",
+          }}
+          onClick={() => handleSideMenuItemClick("reminders")}
+          className="sidebar-item"
+        >
+          <BellIcon
+            style={{
+              position: "relative",
+              left: !isExpanded ? "0" : "12px",
+              transition: "all 0.1s ease",
+            }}
+            size={24}
+          />
+          <span className="roboto-regular label">Reminders</span>
+        </div>
+      </div>
+      <div style={{ width: "100%", boxSizing: "border-box" }}>
+        <div
+          style={{
+            borderRadius: isExpanded ? "0 25px 25px 0" : "50%",
+            padding: "12px",
+            width: isExpanded ? "100%" : "49px",
+            height: "49px",
+            backgroundColor: "transparent",
+            boxSizing: "border-box",
+            marginLeft: !isExpanded ? "12px" : "0px",
+            transition: "all 0.1s ease",
+            ":hover": {
+              backgroundColor: "red",
+            },
+          }}
+          className="sidebar-item"
+        >
+          <EditIcon
+            style={{
+              position: "relative",
+              left: !isExpanded ? "0" : "12px",
+              transition: "all 0.1s ease",
+            }}
+            size={24}
+          />
+          <span className="roboto-regular label">Edit labels</span>
+        </div>
+      </div>
+      <div style={{ width: "100%", boxSizing: "border-box" }}>
+        <div
+          style={{
+            borderRadius: isExpanded ? "0 25px 25px 0" : "50%",
+            padding: "12px",
+            width: isExpanded ? "100%" : "49px",
+            height: "49px",
+            backgroundColor:
+              activeItem === "archive" ? "#feefc3" : "transparent",
+            boxSizing: "border-box",
+            marginLeft: !isExpanded ? "12px" : "0px",
+            transition: "all 0.1s ease",
+            ":hover": {
+              backgroundColor: "red",
+            },
+          }}
+          onClick={() => handleSideMenuItemClick("archive")}
+          className="sidebar-item"
+        >
+          <ArchiveIcon
+            style={{
+              position: "relative",
+              left: !isExpanded ? "0" : "12px",
+              transition: "all 0.1s ease",
+            }}
+            size={24}
+          />
+          <span className="roboto-regular label">Archive</span>
+        </div>
+      </div>
+      <div style={{ width: "100%", boxSizing: "border-box" }}>
+        <div
+          style={{
+            borderRadius: isExpanded ? "0 25px 25px 0" : "50%",
+            padding: "12px",
+            width: isExpanded ? "100%" : "49px",
+            height: "49px",
+            backgroundColor: activeItem === "trash" ? "#feefc3" : "transparent",
+            boxSizing: "border-box",
+            marginLeft: !isExpanded ? "12px" : "0px",
+            transition: "all 0.1s ease",
+            ":hover": {
+              backgroundColor: "red",
+            },
+          }}
+          onClick={() => handleSideMenuItemClick("trash")}
+          className="sidebar-item"
+        >
+          <TrashIcon
+            style={{
+              position: "relative",
+              left: !isExpanded ? "0" : "12px",
+              transition: "all 0.1s ease",
+            }}
+            size={24}
+          />
+          <span className="roboto-regular label">Trash</span>
+        </div>
+      </div>
+    </motion.aside>
   );
 };
 

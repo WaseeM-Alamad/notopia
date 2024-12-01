@@ -17,6 +17,10 @@ export const authOptions = {
     }),
   ],
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      // Always redirect to /home after sign in
+      return `${baseUrl}/home`;
+    },
     // Invoked on successful sign-in
     async signIn({ profile }) {
       //1. Connect to the database
