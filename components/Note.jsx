@@ -17,6 +17,8 @@ import { BarLoader } from "react-spinners";
 import zIndex from "@mui/material/styles/zIndex";
 import { Box } from "@mui/system";
 import DeleteSnack from "./DeleteNoteSnack";
+import replaceImage from "@/actions/replaceImage";
+import Image from "next/image";
 
 const Note = React.memo(
   ({
@@ -32,6 +34,7 @@ const Note = React.memo(
     userID,
     archivedTrigger,
     imagePending,
+    setImagePending,
     loadingNoteID,
     setIsLoading,
   }) => {
@@ -48,6 +51,11 @@ const Note = React.memo(
     const [checkSelect, setCheckSelect] = useState(false);
     const [dropMenuOpen, setDropMenuOpen] = useState(false);
     const [isDeleteSnackOpen, setIsDeleteSnackOpen] = useState(false);
+    const [image, setImage] = useState(note.image);
+    const [noteImagePending, setNoteImagePending] = useState(false);
+    const [srcDate, setSrcDate] = useState(Date.now());
+    const isRemoteImage =
+      image?.startsWith("http") || image?.startsWith("https");
     const noteRef = useRef(null);
     const menuRef = useRef(null);
     const dropMenuRef = useRef(null);
@@ -55,6 +63,7 @@ const Note = React.memo(
     const toolRef = useRef(null);
     const pinRef = useRef(null);
     const isFirstRun = useRef(true);
+    const uploadRef = useRef(null);
 
     const TooltipPosition = {
       modifiers: [
@@ -70,6 +79,7 @@ const Note = React.memo(
     const slotProps = {
       tooltip: {
         sx: {
+          opacity: "0",
           height: "fit-content",
           margin: "0",
           backgroundColor: "rgba(0, 0, 0, 0.7)",
@@ -162,20 +172,23 @@ const Note = React.memo(
       formData.append(field, value);
 
       try {
-        setIsLoading(true);
+        if (field !== "image") {
+          setIsLoading(true);
+        }
+
         await fetch(`/api/notes/${noteID?.replace(/"/g, "")}`, {
           method: "PATCH",
           body: formData,
         });
-        setTimeout(() => {
-          setIsLoading(false);
-        }, 700);
+        if (field !== "image") {
+          setTimeout(() => {
+            setIsLoading(false);
+          }, 700);
+        }
       } catch (error) {
         console.log("Error updating note:", error);
       }
     };
-
-    const handleIsPinned = () => {};
 
     useEffect(() => {
       if (selectedNotesIDs?.length === 0) {
@@ -306,11 +319,11 @@ const Note = React.memo(
                   : "1px solid #e0e0e0"
                 : checkSelect
                 ? " 1px solid #202124"
-                : !note.image
+                : !image
                 ? "1px solid " + selectedColor
                 : "1px solid transparent",
 
-            border: !note.image
+            border: !image
               ? checkSelect
                 ? "solid 1px #202124"
                 : "solid 1px transparent"
@@ -328,7 +341,7 @@ const Note = React.memo(
           draggable="false"
         >
           <div
-            style={{ position: note.image ? "absolute" : "" }}
+            style={{ position: image ? "absolute" : "" }}
             className="corner2"
           />
           <div
@@ -375,7 +388,7 @@ const Note = React.memo(
               }}
             >
               <PinClicked
-                image={note.image}
+                image={image}
                 pinImgDis={isPinnedNote ? "block" : "none"}
                 style={{
                   display: isPinnedNote ? "block" : "none",
@@ -398,7 +411,7 @@ const Note = React.memo(
               />
 
               <Pin
-                image={note.image}
+                image={image}
                 pinImgDis={!isPinnedNote ? "block" : "none"}
                 style={{
                   display: isPinnedNote ? "none" : "block",
@@ -422,7 +435,7 @@ const Note = React.memo(
             </IconButton>
           </Tooltip>
 
-          {note.image && (
+          {image && (
             <div
               style={{
                 position: "relative",
@@ -436,19 +449,40 @@ const Note = React.memo(
                   note.title || note.content ? "0" : "0.5rem",
               }}
             >
-              <img
+              <div
                 style={{
-                  width: "100%",
-                  height: "100%",
-                  marginBottom: "-4px",
-                  userSelect: "none",
+                  opacity: noteImagePending ? "0.6" : "1",
+                  transition: "opacity 0.2s ease-in",
                 }}
-                // draggable="false"
-                alt="image"
-                src={note.image}
-                draggable="false"
-              />
+              >
+                <img
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    marginBottom: "-4px",
+                    userSelect: "none",
+                    opacity:
+                      imagePending && loadingNoteID === note.uuid ? "0.6" : "1",
+                    transition: "opacity 0.2s ease-in",
+                  }}
+                  // draggable="false"
+                  alt="image"
+                  src={isRemoteImage ? `${image}?v=${srcDate}` : image}
+                  draggable="false"
+                />
+              </div>
               {imagePending && loadingNoteID === note.uuid && (
+                <Box
+                  sx={{
+                    width: "100%",
+                    position: "absolute",
+                    bottom: "0",
+                  }}
+                >
+                  <LinearProgress />
+                </Box>
+              )}
+              {noteImagePending && (
                 <Box
                   sx={{
                     width: "100%",
@@ -462,7 +496,7 @@ const Note = React.memo(
             </div>
           )}
 
-          {!note.image && !note.title && !note.content && (
+          {!image && !note.title && !note.content && (
             <div
               className="empty-note"
               aria-label="Empty note"
@@ -472,7 +506,7 @@ const Note = React.memo(
 
           {(note.title || note.content) && (
             <div
-              style={{ minHeight: !note.image ? "60px" : "" }}
+              style={{ minHeight: !image ? "60px" : "" }}
               className="note-text"
             >
               {note.title && (
@@ -492,28 +526,27 @@ const Note = React.memo(
             style={{
               opacity: checkSelect ? "0" : opacity,
               visibility: selectedNotesIDs.length > 0 ? "hidden" : "visible",
-              position:
-                note.image && !note.title && !note.content && "absolute",
-              bottom: note.image && !note.title && !note.content && "0px",
+              position: image && !note.title && !note.content && "absolute",
+              bottom: image && !note.title && !note.content && "0px",
               backgroundColor:
-                note.image &&
+                image &&
                 !note.title &&
                 !note.content &&
                 "rgba(255,255,255,0.8)",
 
               borderBottomLeftRadius:
-                note.image && !note.title && !note.content && "0.5rem",
+                image && !note.title && !note.content && "0.5rem",
               borderBottomRightRadius:
-                note.image && !note.title && !note.content && "0.5rem",
-              marginBottom: note.image && !note.title && !note.content && "0px",
+                image && !note.title && !note.content && "0.5rem",
+              marginBottom: image && !note.title && !note.content && "0px",
               paddingTop:
-                note.image && !note.title && !note.content
+                image && !note.title && !note.content
                   ? "3px"
-                  : note.image && !note.title
+                  : image && !note.title
                   ? "0px"
                   : "4px",
               paddingBottom:
-                note.image && !note.title && !note.content ? "3px" : "4px",
+                image && !note.title && !note.content ? "3px" : "4px",
               paddingLeft: isGridLayout ? "10px" : "",
               gap: isGridLayout ? "13px" : "0",
               width: isGridLayout ? "calc(100% - 10px)" : "100%",
@@ -577,13 +610,41 @@ const Note = React.memo(
             <Tooltip
               slotProps={slotProps}
               PopperProps={TooltipPosition}
-              sx={{ zIndex: "100" }}
+              disableHoverListener={imagePending || noteImagePending}
               title="Add image"
               disableInteractive
             >
               <div style={{ margin: "auto" }}>
+                <input
+                  style={{ display: "none" }}
+                  ref={uploadRef}
+                  type="file"
+                  id="single"
+                  accept=".gif,.jpeg,.jpg,.png,image/gif,image/jpeg,image/jpg,image/png"
+                  onChange={(event) => {
+                    const file = event.target.files[0];
+                    setImage(URL.createObjectURL(file));
+                    handleUpdate(
+                      "image",
+                      `https://fopkycgspstkfctmhyyq.supabase.co/storage/v1/object/public/notopia/${userID}/${note.uuid}`
+                    );
+                    replaceImage(
+                      event,
+                      note.uuid,
+                      userID,
+                      image,
+                      setNoteImagePending,
+                      setIsLoading
+                    );
+                    uploadRef.current.value = "";
+                  }}
+                />
                 <IconButton
                   disableTouchRipple
+                  disabled={imagePending || noteImagePending}
+                  onClick={() => {
+                    uploadRef.current?.click();
+                  }}
                   sx={{
                     width: "34px",
                     height: "34px",

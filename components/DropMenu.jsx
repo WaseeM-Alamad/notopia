@@ -12,7 +12,6 @@ import { IconButton, Tooltip } from "@mui/material";
 import deleteNote from "@/actions/deleteNote";
 import Snack from "@/components/DeleteNoteSnack";
 
-
 export default function DropMenu({
   open,
   setOpen,
@@ -111,7 +110,8 @@ export default function DropMenu({
   }, [open]);
 
   const handleDelete = async () => {
-    if (isTrash) {
+    if (!isTrash) {
+      // if isTrash is true
       setNoteOpacity(false);
       setTimeout(() => {
         setNoteDisplay(false);
@@ -134,12 +134,13 @@ export default function DropMenu({
           isotopeRef.current.arrange();
         }, 10);
       }, 270);
+      setIsLoading(true);
+      await handleUpdate("isTrash", true);
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 700);
     }
-    setIsLoading(true);
-    await handleUpdate("isTrash", true);
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 700);
+
     handleClose();
   };
 

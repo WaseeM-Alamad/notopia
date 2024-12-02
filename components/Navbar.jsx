@@ -1,7 +1,6 @@
 "use client";
 import "@/assets/styles/navbar.css";
 import React, { useEffect, useState, useRef } from "react";
-import HighlightIcon from "@mui/icons-material/Highlight";
 import ListIcon from "./ListIcon";
 import GridIcon from "./GridIcon";
 import { IconButton } from "@mui/material";
@@ -13,15 +12,11 @@ import { useRouter } from "next/navigation";
 import SearchIcon from "./SearchIcon";
 import ProfileMenu from "@/components/ProfileMenu";
 import Sidebar from "./SideBar";
-import Image from "next/image";
-import notopia from "@/public/notopia.svg";
 import CircularProgress from "@mui/material/CircularProgress";
-import { AnimatePresence, motion } from "framer-motion";
-import CloudIcon from "./cloudIcon";
-import { positions } from "@mui/system";
 import { DehazeSharp, HighlightSharp } from "@mui/icons-material";
+import { useAppContext } from "@/context/AppContext";
 
-const Navbar = ({ image, name, email, handleRefresh }) => {
+const Navbar = ({ image, name, email }) => {
   const router = useRouter();
   const [rotation, setRotation] = useState(false);
   const [click, setClick] = useState(false);
@@ -30,10 +25,15 @@ const Navbar = ({ image, name, email, handleRefresh }) => {
   const [searchTrigger, setSearchTrigger] = useState(false);
   const [LogoDis, setLogoDis] = useState(true);
   const [screenTrigger, setScreentrigger] = useState(false);
-  const [buttonDisable, setButtonDisable] = useState(false);
-  const [loadTrigger, setLoadTrigger] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const { isLoading, setIsLoading } = useAppContext();
+  const { loadTrigger, setLoadTrigger } = useAppContext();
+  const [isGridLayout, setIsGridLayout] = useState(false);
   const searchRef = useRef(null);
+
+  useEffect(() => {
+    const isGridLayout = localStorage.getItem("isGridLayout");
+    setClick(isGridLayout === "true");
+  }, []);
 
   const TooltipPosition = {
     modifiers: [
@@ -116,8 +116,6 @@ const Navbar = ({ image, name, email, handleRefresh }) => {
     }
   }
 
-  const [isGridLayout, setIsGridLayout] = useState(false);
-
   useEffect(() => {
     const savedLayout = localStorage.getItem("isGridLayout");
     if (savedLayout !== null) {
@@ -130,6 +128,14 @@ const Navbar = ({ image, name, email, handleRefresh }) => {
     setIsGridLayout((prev) => {
       const newLayout = !prev;
       localStorage.setItem("isGridLayout", JSON.stringify(newLayout));
+      return newLayout;
+    });
+  };
+
+  const handleSideTrigger = () => {
+    setSideTrigger((prev) => {
+      const newLayout = !prev;
+      localStorage.setItem("sideBarTrigger", JSON.stringify(newLayout));
       return newLayout;
     });
   };
@@ -153,15 +159,12 @@ const Navbar = ({ image, name, email, handleRefresh }) => {
       window.removeEventListener("isLoading", handler);
     };
   }, []);
-  
 
-  useEffect(() => {
-    window.dispatchEvent(
-      new CustomEvent("loadTrigger", { detail: loadTrigger })
-    );
-  }, [loadTrigger]);
-
-  const [sideTrigger, setSideTrigger] = useState(false);
+  const [sideTrigger, setSideTrigger] = useState(() => {
+    const sideTrigger = localStorage.getItem("sideBarTrigger");
+    console.log("side Trigger: " + sideTrigger);
+    return sideTrigger === "true";
+  });
 
   useEffect(() => {
     window.dispatchEvent(
@@ -183,20 +186,22 @@ const Navbar = ({ image, name, email, handleRefresh }) => {
             <div style={{ paddingLeft: "0.9rem" }}>
               <Tooltip
                 slotProps={slotProps}
-                PopperProps={{modifiers: [
-                  {
-                    name: "offset",
-                    options: {
-                      offset: [11, -11], // Adjust position (x, y)
+                PopperProps={{
+                  modifiers: [
+                    {
+                      name: "offset",
+                      options: {
+                        offset: [11, -11], // Adjust position (x, y)
+                      },
                     },
-                  },
-                ],}}
+                  ],
+                }}
                 title="Main menu"
                 disableInteractive
               >
                 <IconButton
                   disableTouchRipple
-                  onClick={()=> {setSideTrigger(prev=>!prev)}}
+                  onClick={handleSideTrigger}
                   sx={{
                     padding: "10px",
                     "&:hover": { backgroundColor: "rgba(0,0,0,0.06)" },
@@ -256,6 +261,7 @@ const Navbar = ({ image, name, email, handleRefresh }) => {
             PopperProps={TooltipPosition}
             title="Refresh"
             disableInteractive
+            disableHoverListener={isLoading}
           >
             <IconButton
               onClick={() => setLoadTrigger((prev) => !prev)}
@@ -312,7 +318,6 @@ const Navbar = ({ image, name, email, handleRefresh }) => {
                   "&:hover": { backgroundColor: "rgba(0,0,0,0.08)" },
                 }}
                 onClick={handleToggle}
-                disabled={buttonDisable}
               >
                 <div
                   style={{

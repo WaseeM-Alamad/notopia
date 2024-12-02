@@ -16,7 +16,7 @@ import TopReminder from "./TopReminder";
 import TopArchive from "./TopArchive";
 import TopMore from "./TopMore";
 import ColorSelectMenu from "./ColorSelectMenuTop";
-import DeleteSnack from "@/components/DeleteNoteSnack";
+import { useAppContext } from "@/context/AppContext";
 
 const Notes = ({ initialNotes }) => {
   const [notes, setNotes] = useState(initialNotes);
@@ -27,7 +27,6 @@ const Notes = ({ initialNotes }) => {
     isArchived: false,
     color: "#FFFFFF",
   });
-  const [isLoading, setIsLoading] = useState(false);
   const [imagePending, setImagePending] = useState(false);
   const [loadingNoteID, setLoadingNoteID] = useState();
   const [height, setHeight] = useState(0);
@@ -43,11 +42,13 @@ const Notes = ({ initialNotes }) => {
   const topMenuRef = useRef(null);
   const noteWrapperRef = useRef(null);
   const ColorMenuRef = useRef(null);
-  const loadRef = useRef(null);
   const SearchParams = useSearchParams();
   const searchTerm = SearchParams.get("Search" || "");
   const { data: session, status } = useSession();
   const userID = session?.user?.id;
+
+  const {isLoading, setIsLoading} = useAppContext();
+  const { loadTrigger } = useAppContext();
 
   const TooltipPosition = {
     modifiers: [
@@ -81,9 +82,22 @@ const Notes = ({ initialNotes }) => {
   }, [status]);
 
   const loadNotes = async () => {
+    setIsLoading(true);
     const fetchedNotes = await fetchNotes(userID);
     setNotes(fetchedNotes);
+    setTimeout(() => {
+      setIsLoading(false);  
+    }, 700);
+    
   };
+  
+  useEffect(() => {
+    if (isFirstRun.current) {
+      isFirstRun.current = false;
+      return;
+    }
+    loadNotes();
+  }, [loadTrigger]);
 
   useEffect(() => {
     // Update the Isotope layout when notes change
@@ -139,15 +153,13 @@ const Notes = ({ initialNotes }) => {
     };
   }, []);
 
-  const [isGridLayout, setIsGridLayout] = useState(false);
+  const [isGridLayout, setIsGridLayout] = useState(()=> {
+    const isGridLayout = localStorage.getItem("isGridLayout");
+    return isGridLayout === "true";
+  });
 
   useEffect(() => {
-    // Load initial layout preference from localStorage
-    const savedLayout = localStorage.getItem("isGridLayout");
-    if (savedLayout !== null) {
-      setIsGridLayout(JSON.parse(savedLayout));
-    }
-
+    
     // Listen for the custom 'layoutChange' event to update the layout dynamically
     const handleLayoutChange = (event) => {
       setIsGridLayout(event.detail);
@@ -321,23 +333,11 @@ const Notes = ({ initialNotes }) => {
     }, 700);
   };
 
-  useEffect(() => {
-    window.dispatchEvent(new CustomEvent("isLoading", { detail: isLoading }));
-  }, [isLoading]);
-
-  useEffect(() => {
-    const handler = async () => {
-      loadRef.current.click();
-    };
-
-    window.addEventListener("loadTrigger", handler);
-
-    return () => {
-      window.removeEventListener("loadTrigger", handler);
-    };
-  }, []);
-
-  const [sideTrigger, setSideTrigger] = useState(false);
+  const [sideTrigger, setSideTrigger] = useState(()=> {
+    const sideTrigger = localStorage.getItem("sideBarTrigger");
+    console.log("side Trigger: "  + sideTrigger);
+    return sideTrigger === "true";
+  });
 
   useEffect(() => {
     const handler = (event) => {
@@ -475,20 +475,6 @@ const Notes = ({ initialNotes }) => {
         style={{ marginLeft: sideTrigger ? "300px" : "" }}
         className="content-wrapper"
       >
-        <button
-          style={{
-            width: "0",
-            position: "fixed",
-            border: "solid",
-            left: "100px",
-            opacity: "0",
-            visibility: "hidden",
-            display: "none",
-          }}
-          ref={loadRef}
-          onClick={handleLoad}
-        />
-
         <CreateNote
           setImagePending={setImagePending}
           setLoadingNoteID={setLoadingNoteID}
@@ -528,6 +514,7 @@ const Notes = ({ initialNotes }) => {
                         setNotes={setNotes}
                         userID={userID}
                         imagePending={imagePending}
+                        setImagePending={setImagePending}
                         loadingNoteID={loadingNoteID}
                         setIsLoading={setIsLoading}
                       />

@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { addImage } from "./image";
+import removeImage from "./removeImage";
 
 // Create Supabase client
 const supabase = createClient(
@@ -8,25 +8,33 @@ const supabase = createClient(
 );
 
 // Upload file using standard upload
-export default async function uploadFile(
+export default async function replaceImage(
   event,
+  Noteuuid,
   userID,
+  image,
   setIsPending,
-  Noteuuid
+  setIsLoading
 ) {
   setIsPending(true);
+  setIsLoading(true);
   const file = event.target?.files[0];
   const filePath = `${userID}/${Noteuuid}`;
+  if (image) {
+    console.log("HIIIIIIII WAS");
+    await removeImage(filePath);
+  }
   const { data, error } = await supabase.storage
     .from("notopia")
     .upload(filePath, file);
   if (error) {
     // Handle error
   } else {
+    setIsPending(false);
+    setIsLoading(false);
     // const { data: url } = supabase.storage
     //   .from("notopia")
     //   .getPublicUrl(filePath);
     // await addImage(Noteuuid, url);
-    setIsPending(false);
   }
 }

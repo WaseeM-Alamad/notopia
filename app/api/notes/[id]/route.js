@@ -40,6 +40,7 @@ export const PATCH = async (request, { params }) => {
       isPinned: formData.get("isPinned") || existingNote.isPinned,
       isArchived: formData.get("isArchived") || existingNote.isArchived,
       isTrash: formData.get("isTrash") || existingNote.isTrash,
+      image: formData.get("image") || existingNote.image,
     };
 
     // Update the note

@@ -9,7 +9,11 @@ import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
 const Sidebar = ({ sideTrigger }) => {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(() => {
+    const sideTrigger = localStorage.getItem("sideBarTrigger");
+    console.log("side Trigger: " + sideTrigger);
+    return sideTrigger === "true";
+  });
   const sideBarRef = useRef(null);
   const timeoutRef = useRef(null);
   const [activeItem, setActiveItem] = useState("home");
@@ -49,7 +53,7 @@ const Sidebar = ({ sideTrigger }) => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
-    
+
     setIsExpanded(false);
   };
 
@@ -85,11 +89,6 @@ const Sidebar = ({ sideTrigger }) => {
             boxSizing: "border-box",
             marginLeft: !isExpanded ? "12px" : "0px",
             transition: "all 0.1s ease",
-            ':hover': {
-      backgroundColor: activeItem === "home" 
-        ? "#f0e6b0"  // Slightly darker version of #feefc3 when active
-        : "rgba(0,0,0,0.1)"  // Light gray overlay when not active
-    }
           }}
           onClick={() => handleSideMenuItemClick("home")}
           className="sidebar-item"
@@ -143,9 +142,6 @@ const Sidebar = ({ sideTrigger }) => {
             boxSizing: "border-box",
             marginLeft: !isExpanded ? "12px" : "0px",
             transition: "all 0.1s ease",
-            ":hover": {
-              backgroundColor: "red",
-            },
           }}
           className="sidebar-item"
         >
@@ -172,9 +168,6 @@ const Sidebar = ({ sideTrigger }) => {
             boxSizing: "border-box",
             marginLeft: !isExpanded ? "12px" : "0px",
             transition: "all 0.1s ease",
-            ":hover": {
-              backgroundColor: "red",
-            },
           }}
           onClick={() => handleSideMenuItemClick("archive")}
           className="sidebar-item"
@@ -201,9 +194,6 @@ const Sidebar = ({ sideTrigger }) => {
             boxSizing: "border-box",
             marginLeft: !isExpanded ? "12px" : "0px",
             transition: "all 0.1s ease",
-            ":hover": {
-              backgroundColor: "red",
-            },
           }}
           onClick={() => handleSideMenuItemClick("trash")}
           className="sidebar-item"
@@ -223,4 +213,4 @@ const Sidebar = ({ sideTrigger }) => {
   );
 };
 
-export default Sidebar;
+export default React.memo(Sidebar);

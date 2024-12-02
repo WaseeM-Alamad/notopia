@@ -4,6 +4,7 @@ import AuthProvider from "@/components/AuthProvider";
 import Navbar from "@/components/Navbar";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/utils/authOptions";
+import { AppProvider } from "@/context/AppContext";
 
 export const metadata = {
   title: "notopia",
@@ -15,11 +16,6 @@ const MainLayout = async ({ children }) => {
   const email = session?.user.email;
   const name = session?.user.name;
 
-  const handleRefresh = async (refresh) => {
-    "use server";
-    console.log(refresh);
-    setRefreshValue(refresh);
-  };
 
   return (
     <AuthProvider>
@@ -58,18 +54,19 @@ const MainLayout = async ({ children }) => {
           />
         </head>
         <body>
+          <AppProvider>
           <div>
             {session && (
               <Navbar
                 image={image}
                 email={email}
                 name={name}
-                handleRefresh={handleRefresh}
                 suppressHydrationWarning
               />
             )}
             <main>{children}</main>
           </div>
+          </AppProvider>
         </body>
       </html>
     </AuthProvider>
