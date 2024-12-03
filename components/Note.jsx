@@ -39,6 +39,8 @@ const Note = React.memo(
     const [opacity, setOpacity] = useState("0");
     const [isOpen, setIsOpen] = useState(false);
     const [selectedColor, setSelectedColor] = useState(note.color);
+    const [title, setTitle] = useState(note.title);
+    const [content, setContent] = useState(note.content);
     const [boxShadow, setBoxShadow] = useState("none");
     const [noteDisplay, setNoteDisplay] = useState(true);
     const [noteOpacity, setNoteOpacity] = useState(true);
@@ -338,12 +340,16 @@ const Note = React.memo(
               !checkRef.current.contains(e.target) &&
               !pinRef.current.contains(e.target)
             ) {
-            setOpacityM(false);
-            setTrigger((prev) => !prev);
-            setTimeout(() => {
-              setPassedTrigger(true);
-            }, 0);
-          }
+              setOpacityM(false);
+              setTrigger((prev) => !prev);
+              setTimeout(() => {
+                setPassedTrigger(true);
+              }, 0);
+            }
+          }}
+          style={{
+            opacity: opacityM ? "1" : "0",
+            zIndex: "auto",
           }}
         >
           <div
@@ -486,10 +492,8 @@ const Note = React.memo(
                   overflow: "hidden",
                   borderTopLeftRadius: "0.5rem",
                   borderTopRightRadius: "0.5rem",
-                  borderBottomLeftRadius:
-                    note.title || note.content ? "0" : "0.5rem",
-                  borderBottomRightRadius:
-                    note.title || note.content ? "0" : "0.5rem",
+                  borderBottomLeftRadius: title || content ? "0" : "0.5rem",
+                  borderBottomRightRadius: title || content ? "0" : "0.5rem",
                 }}
               >
                 <div
@@ -541,7 +545,7 @@ const Note = React.memo(
               </div>
             )}
 
-            {!image && !note.title && !note.content && (
+            {!image && !title && !content && (
               <div
                 className="empty-note"
                 aria-label="Empty note"
@@ -549,22 +553,19 @@ const Note = React.memo(
               />
             )}
 
-            {(note.title || note.content) && (
+            {(title || content) && (
               <div
                 style={{ minHeight: !image ? "60px" : "" }}
                 className="note-text"
               >
-                {note.title && (
+                {title && (
                   <h2 draggable="false" className="title noto-sans-bold">
-                    {note.title}
+                    {title}
                   </h2>
                 )}
 
-                {note.content && (
-                  <h2 className="content noto-sans-regular">
-                    {" "}
-                    {note.content}{" "}
-                  </h2>
+                {content && (
+                  <h2 className="content noto-sans-regular"> {content} </h2>
                 )}
               </div>
             )}
@@ -574,27 +575,22 @@ const Note = React.memo(
               style={{
                 opacity: checkSelect ? "0" : opacity,
                 visibility: selectedNotesIDs.length > 0 ? "hidden" : "visible",
-                position: image && !note.title && !note.content && "absolute",
-                bottom: image && !note.title && !note.content && "0px",
+                position: image && !title && !content && "absolute",
+                bottom: image && !title && !content && "0px",
                 backgroundColor:
-                  image &&
-                  !note.title &&
-                  !note.content &&
-                  "rgba(255,255,255,0.8)",
+                  image && !title && !content && "rgba(255,255,255,0.8)",
 
-                borderBottomLeftRadius:
-                  image && !note.title && !note.content && "0.5rem",
+                borderBottomLeftRadius: image && !title && !content && "0.5rem",
                 borderBottomRightRadius:
-                  image && !note.title && !note.content && "0.5rem",
-                marginBottom: image && !note.title && !note.content && "0px",
+                  image && !title && !content && "0.5rem",
+                marginBottom: image && !title && !content && "0px",
                 paddingTop:
-                  image && !note.title && !note.content
+                  image && !title && !content
                     ? "3px"
-                    : image && !note.title
+                    : image && !title
                     ? "0px"
                     : "4px",
-                paddingBottom:
-                  image && !note.title && !note.content ? "3px" : "4px",
+                paddingBottom: image && !title && !content ? "3px" : "4px",
                 paddingLeft: isGridLayout ? "10px" : "",
                 gap: isGridLayout ? "13px" : "0",
                 width: isGridLayout ? "calc(100% - 10px)" : "100%",
@@ -780,7 +776,17 @@ const Note = React.memo(
           divSize={divSize}
           trigger={passedTrigger}
           setTrigger={setPassedTrigger}
-          setOpacity={setOpacity}
+          setOpacity={setOpacityM}
+          handleUpdate={handleUpdate}
+          setTitle={setTitle}
+          title={title}
+          setContent={setContent}
+          content={content}
+          color={selectedColor}
+          setColor={setSelectedColor}
+          image={image}
+          srsDate={srcDate}
+          isRemoteImage={isRemoteImage}
         />
       </>
     );
