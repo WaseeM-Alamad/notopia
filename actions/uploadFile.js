@@ -12,8 +12,10 @@ export default async function uploadFile(
   event,
   userID,
   setIsPending,
-  Noteuuid
+  Noteuuid,
+  setIsLoading
 ) {
+  setIsLoading(true);
   setIsPending(true);
   const file = event.target?.files[0];
   const filePath = `${userID}/${Noteuuid}`;
@@ -21,12 +23,12 @@ export default async function uploadFile(
     .from("notopia")
     .upload(filePath, file);
   if (error) {
-    // Handle error
+    console.log("couldn't upload image: " + error);
   } else {
-    // const { data: url } = supabase.storage
-    //   .from("notopia")
-    //   .getPublicUrl(filePath);
-    // await addImage(Noteuuid, url);
+    
+    setTimeout(() => {
+      setIsLoading(false);  
+    }, 700);
     setIsPending(false);
   }
 }

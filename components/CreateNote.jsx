@@ -91,14 +91,18 @@ const CreateNote = ({
             "image",
             `https://fopkycgspstkfctmhyyq.supabase.co/storage/v1/object/public/notopia/${userID}/${newNote.uuid}`
           );
-        setIsLoading(true);
+        if (!image) {
+          setIsLoading(true);
+        }
         const response = await fetch("/api/notes", {
           method: "POST",
           body: formData,
         });
-        setTimeout(() => {
-          setIsLoading(false);
-        }, 700);
+        if (!image) {
+          setTimeout(() => {
+            setIsLoading(false);
+          }, 700);
+        }
         if (response.ok) {
           return true;
         }
@@ -151,7 +155,7 @@ const CreateNote = ({
       contentRef.current.textContent = "";
       submitNote(newNote);
       if (image) {
-        uploadFile(imageEvent, userID, setImagePending, Noteuuid);
+        uploadFile(imageEvent, userID, setImagePending, Noteuuid, setIsLoading);
       }
     }
 
@@ -192,6 +196,13 @@ const CreateNote = ({
     <>
       <div className="box-container">
         <div
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              e.preventDefault();
+              handleClose();
+            }
+          }}
           style={{ boxShadow: isExpanded ? "0 2.4px 5px rgba(0,0,0,.30)" : "" }}
           className="note-card shadow"
         >
@@ -323,6 +334,12 @@ const CreateNote = ({
               )}
               {isExpanded && (
                 <div
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      contentRef.current?.focus();
+                    }
+                  }}
                   contentEditable="true"
                   suppressContentEditableWarning
                   onInput={handleTitleInput}

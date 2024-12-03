@@ -31,7 +31,10 @@ export default async function replaceImage(
     // Handle error
   } else {
     setIsPending(false);
-    setIsLoading(false);
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 700);
+
     // const { data: url } = supabase.storage
     //   .from("notopia")
     //   .getPublicUrl(filePath);

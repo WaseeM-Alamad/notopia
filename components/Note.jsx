@@ -13,12 +13,10 @@ import CheckMarkIcon from "./CheckMarkIcon";
 import { fetchNotes } from "@/utils/requests";
 import DropMenu from "./DropMenu";
 import fetchNoteID from "@/actions/fetchNoteID";
-import { BarLoader } from "react-spinners";
-import zIndex from "@mui/material/styles/zIndex";
 import { Box } from "@mui/system";
 import DeleteSnack from "./DeleteNoteSnack";
 import replaceImage from "@/actions/replaceImage";
-import Image from "next/image";
+import NoteModal from "./NoteModal";
 
 const Note = React.memo(
   ({
@@ -90,6 +88,36 @@ const Note = React.memo(
         },
       },
     };
+
+    const [divPosition, setDivPosition] = useState({
+      x: 0,
+      y: 0,
+    });
+    const [divSize, setDivSize] = useState({
+      width: 0,
+      height: 0,
+    });
+    const [trigger, setTrigger] = useState(false);
+    const [passedTrigger, setPassedTrigger] = useState(false);
+    const [opacityM, setOpacityM] = useState(true);
+
+    const getDivPosition = () => {
+      if (noteRef.current) {
+        const rect = noteRef.current.getBoundingClientRect();
+        setDivPosition({
+          x: rect.left, // Distance from the left of the viewport
+          y: rect.top, // Distance from the top of the viewport
+        });
+        setDivSize({
+          width: rect.width,
+          height: rect.height,
+        });
+      }
+    };
+
+    useEffect(() => {
+      getDivPosition();
+    }, [trigger]);
 
     useEffect(() => {
       const handleBeforeUnload = (e) => {
@@ -304,409 +332,438 @@ const Note = React.memo(
     return (
       <>
         <div
-          onMouseLeave={handleML}
-          onMouseOver={handleMO}
-          style={{
-            display: noteDisplay ? "" : "none",
-            opacity: noteOpacity ? "1" : "0",
-            backgroundColor: selectedColor,
-            boxShadow: boxShadow,
-            width: isGridLayout ? "37.5rem" : "240px",
-            outline:
-              selectedColor === "#FFFFFF"
-                ? checkSelect
-                  ? "1px solid #202124"
-                  : "1px solid #e0e0e0"
-                : checkSelect
-                ? " 1px solid #202124"
-                : !image
-                ? "1px solid " + selectedColor
-                : "1px solid transparent",
-
-            border: !image
-              ? checkSelect
-                ? "solid 1px #202124"
-                : "solid 1px transparent"
-              : checkSelect
-              ? "solid 1px #202124"
-              : "solid 1px transparent",
-          }}
-          className="note note-header"
           onClick={(e) => {
-            if (selectedNotesIDs.length > 0) {
-              handleNoteSelect(e);
-            }
+            if (
+              !toolRef.current.contains(e.target) &&
+              !checkRef.current.contains(e.target) &&
+              !pinRef.current.contains(e.target)
+            ) {
+            setOpacityM(false);
+            setTrigger((prev) => !prev);
+            setTimeout(() => {
+              setPassedTrigger(true);
+            }, 0);
+          }
           }}
-          ref={noteRef}
-          draggable="false"
         >
           <div
-            style={{ position: image ? "absolute" : "" }}
-            className="corner2"
-          />
-          <div
-            className="checkmark"
-            style={{ zIndex: "1", overflow: "visible" }}
-          >
-            <CheckMarkIcon
-              checkSelect={checkSelect}
-              checkRef={checkRef}
-              style={{
-                opacity: checkSelect ? "1" : opacity,
-                transition: "opacity 0.22s linear",
-                cursor: "pointer",
-                borderRadius: "50%",
-                height: "22px",
-                width: "22px",
-              }}
-              color={checkSelect ? "#6f6f6f" : selectedColor}
-              onClick={handleSelect}
-            />
-          </div>
-          <Tooltip
-            slotProps={slotProps}
-            PopperProps={TooltipPosition}
-            sx={{ zIndex: "100" }}
-            title={isPinnedNote ? "Unpin note" : "Pin note"}
-            disableInteractive
-          >
-            <IconButton
-              ref={pinRef}
-              disableTouchRipple
-              sx={{
-                zIndex: "1",
-                opacity: checkSelect ? "1" : opacity,
-                "&:hover": { backgroundColor: "rgba(95, 99, 104, 0.157)" },
-              }}
-              id="note-pin"
-              onMouseOver={() => setPinHover(true)}
-              onMouseLeave={() => setPinHover(false)}
-              onClick={() => {
-                setIsPinnedNote((prev) => !prev);
-                loadNotes();
-                handleUpdate("isPinned", !isPinnedNote);
-              }}
-            >
-              <PinClicked
-                image={image}
-                pinImgDis={isPinnedNote ? "block" : "none"}
-                style={{
-                  display: isPinnedNote ? "block" : "none",
-                  opacity:
-                    selectedColor !== "#FFFFFF"
-                      ? !pinHover
-                        ? "0.54"
-                        : "1"
-                      : "1",
-                  transition: "opacity 0s ease-in",
-                }}
-                color={
-                  !pinHover
-                    ? selectedColor !== "#FFFFFF"
-                      ? "#212121"
-                      : "#757575"
-                    : "#212121"
-                }
-                opacity={pinHover ? "0.87" : "0.54"}
-              />
+            onMouseLeave={handleML}
+            onMouseOver={handleMO}
+            style={{
+              display: noteDisplay ? "" : "none",
+              opacity: noteOpacity ? "1" : "0",
+              backgroundColor: selectedColor,
+              boxShadow: boxShadow,
+              width: isGridLayout ? "37.5rem" : "240px",
+              outline:
+                selectedColor === "#FFFFFF"
+                  ? checkSelect
+                    ? "1px solid #202124"
+                    : "1px solid #e0e0e0"
+                  : checkSelect
+                  ? " 1px solid #202124"
+                  : !image
+                  ? "1px solid " + selectedColor
+                  : "1px solid transparent",
 
-              <Pin
-                image={image}
-                pinImgDis={!isPinnedNote ? "block" : "none"}
-                style={{
-                  display: isPinnedNote ? "none" : "block",
-                  opacity:
-                    selectedColor !== "#FFFFFF"
-                      ? !pinHover
-                        ? "0.64"
-                        : "1"
-                      : "1",
-                  transition: "opacity 0.2s ease-in",
-                }}
-                color={
-                  !pinHover
-                    ? selectedColor !== "#FFFFFF"
-                      ? "#212121"
-                      : "#757575"
-                    : "#212121"
-                }
-                opacity={pinHover ? "0.87" : "0.54"}
-              />
-            </IconButton>
-          </Tooltip>
-
-          {image && (
+              border: !image
+                ? checkSelect
+                  ? "solid 1px #202124"
+                  : "solid 1px transparent"
+                : checkSelect
+                ? "solid 1px #202124"
+                : "solid 1px transparent",
+            }}
+            className="note note-header"
+            onClick={(e) => {
+              if (selectedNotesIDs.length > 0) {
+                handleNoteSelect(e);
+              }
+            }}
+            ref={noteRef}
+            draggable="false"
+          >
             <div
-              style={{
-                position: "relative",
-                zIndex: "0",
-                overflow: "hidden",
-                borderTopLeftRadius: "0.5rem",
-                borderTopRightRadius: "0.5rem",
-                borderBottomLeftRadius:
-                  note.title || note.content ? "0" : "0.5rem",
-                borderBottomRightRadius:
-                  note.title || note.content ? "0" : "0.5rem",
-              }}
+              style={{ position: image ? "absolute" : "" }}
+              className="corner2"
+            />
+            <div
+              className="checkmark"
+              style={{ zIndex: "1", overflow: "visible" }}
             >
-              <div
+              <CheckMarkIcon
+                checkSelect={checkSelect}
+                checkRef={checkRef}
                 style={{
-                  opacity: noteImagePending ? "0.6" : "1",
-                  transition: "opacity 0.2s ease-in",
+                  opacity: checkSelect ? "1" : opacity,
+                  transition: "opacity 0.22s linear",
+                  cursor: "pointer",
+                  borderRadius: "50%",
+                  height: "22px",
+                  width: "22px",
+                }}
+                color={checkSelect ? "#6f6f6f" : selectedColor}
+                onClick={handleSelect}
+              />
+            </div>
+            <Tooltip
+              slotProps={slotProps}
+              PopperProps={TooltipPosition}
+              sx={{ zIndex: "100" }}
+              title={isPinnedNote ? "Unpin note" : "Pin note"}
+              disableInteractive
+            >
+              <IconButton
+                ref={pinRef}
+                disableTouchRipple
+                sx={{
+                  zIndex: "1",
+                  opacity: checkSelect ? "1" : opacity,
+                  "&:hover": { backgroundColor: "rgba(95, 99, 104, 0.157)" },
+                }}
+                id="note-pin"
+                onMouseOver={() => setPinHover(true)}
+                onMouseLeave={() => setPinHover(false)}
+                onClick={() => {
+                  setIsPinnedNote((prev) => !prev);
+                  loadNotes();
+                  handleUpdate("isPinned", !isPinnedNote);
                 }}
               >
-                <img
+                <PinClicked
+                  image={image}
+                  pinImgDis={isPinnedNote ? "block" : "none"}
                   style={{
-                    width: "100%",
-                    height: "100%",
-                    marginBottom: "-4px",
-                    userSelect: "none",
+                    display: isPinnedNote ? "block" : "none",
                     opacity:
-                      imagePending && loadingNoteID === note.uuid ? "0.6" : "1",
+                      selectedColor !== "#FFFFFF"
+                        ? !pinHover
+                          ? "0.54"
+                          : "1"
+                        : "1",
+                    transition: "opacity 0s ease-in",
+                  }}
+                  color={
+                    !pinHover
+                      ? selectedColor !== "#FFFFFF"
+                        ? "#212121"
+                        : "#757575"
+                      : "#212121"
+                  }
+                  opacity={pinHover ? "0.87" : "0.54"}
+                />
+
+                <Pin
+                  image={image}
+                  pinImgDis={!isPinnedNote ? "block" : "none"}
+                  style={{
+                    display: isPinnedNote ? "none" : "block",
+                    opacity:
+                      selectedColor !== "#FFFFFF"
+                        ? !pinHover
+                          ? "0.64"
+                          : "1"
+                        : "1",
                     transition: "opacity 0.2s ease-in",
                   }}
-                  // draggable="false"
-                  alt="image"
-                  src={isRemoteImage ? `${image}?v=${srcDate}` : image}
-                  draggable="false"
+                  color={
+                    !pinHover
+                      ? selectedColor !== "#FFFFFF"
+                        ? "#212121"
+                        : "#757575"
+                      : "#212121"
+                  }
+                  opacity={pinHover ? "0.87" : "0.54"}
+                />
+              </IconButton>
+            </Tooltip>
+
+            {image && (
+              <div
+                style={{
+                  position: "relative",
+                  zIndex: "0",
+                  overflow: "hidden",
+                  borderTopLeftRadius: "0.5rem",
+                  borderTopRightRadius: "0.5rem",
+                  borderBottomLeftRadius:
+                    note.title || note.content ? "0" : "0.5rem",
+                  borderBottomRightRadius:
+                    note.title || note.content ? "0" : "0.5rem",
+                }}
+              >
+                <div
+                  style={{
+                    opacity: noteImagePending ? "0.6" : "1",
+                    transition: "opacity 0.2s ease-in",
+                  }}
+                >
+                  <img
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      marginBottom: "-4px",
+                      userSelect: "none",
+                      opacity:
+                        imagePending && loadingNoteID === note.uuid
+                          ? "0.6"
+                          : "1",
+                      transition: "opacity 0.2s ease-in",
+                    }}
+                    // draggable="false"
+                    alt="image"
+                    src={isRemoteImage ? `${image}?v=${srcDate}` : image}
+                    draggable="false"
+                  />
+                </div>
+                {imagePending && loadingNoteID === note.uuid && (
+                  <Box
+                    sx={{
+                      width: "100%",
+                      position: "absolute",
+                      bottom: "0",
+                    }}
+                  >
+                    <LinearProgress />
+                  </Box>
+                )}
+                {noteImagePending && (
+                  <Box
+                    sx={{
+                      width: "100%",
+                      position: "absolute",
+                      bottom: "0",
+                    }}
+                  >
+                    <LinearProgress />
+                  </Box>
+                )}
+              </div>
+            )}
+
+            {!image && !note.title && !note.content && (
+              <div
+                className="empty-note"
+                aria-label="Empty note"
+                spellCheck="false"
+              />
+            )}
+
+            {(note.title || note.content) && (
+              <div
+                style={{ minHeight: !image ? "60px" : "" }}
+                className="note-text"
+              >
+                {note.title && (
+                  <h2 draggable="false" className="title noto-sans-bold">
+                    {note.title}
+                  </h2>
+                )}
+
+                {note.content && (
+                  <h2 className="content noto-sans-regular">
+                    {" "}
+                    {note.content}{" "}
+                  </h2>
+                )}
+              </div>
+            )}
+
+            {/* {selectedNotesIDs > 0 && ( */}
+            <div
+              style={{
+                opacity: checkSelect ? "0" : opacity,
+                visibility: selectedNotesIDs.length > 0 ? "hidden" : "visible",
+                position: image && !note.title && !note.content && "absolute",
+                bottom: image && !note.title && !note.content && "0px",
+                backgroundColor:
+                  image &&
+                  !note.title &&
+                  !note.content &&
+                  "rgba(255,255,255,0.8)",
+
+                borderBottomLeftRadius:
+                  image && !note.title && !note.content && "0.5rem",
+                borderBottomRightRadius:
+                  image && !note.title && !note.content && "0.5rem",
+                marginBottom: image && !note.title && !note.content && "0px",
+                paddingTop:
+                  image && !note.title && !note.content
+                    ? "3px"
+                    : image && !note.title
+                    ? "0px"
+                    : "4px",
+                paddingBottom:
+                  image && !note.title && !note.content ? "3px" : "4px",
+                paddingLeft: isGridLayout ? "10px" : "",
+                gap: isGridLayout ? "13px" : "0",
+                width: isGridLayout ? "calc(100% - 10px)" : "100%",
+              }}
+              className="noteBottom"
+              ref={toolRef}
+            >
+              <Tooltip
+                slotProps={slotProps}
+                PopperProps={TooltipPosition}
+                sx={{ zIndex: "100" }}
+                title="Remind me"
+                disableInteractive
+              >
+                <div style={{ margin: "auto" }}>
+                  <IconButton
+                    disableTouchRipple
+                    sx={{
+                      width: "34px",
+                      height: "34px",
+                      padding: "6px",
+                      "&:hover": {
+                        backgroundColor: "rgba(95, 99, 104, 0.157)",
+                      },
+                    }}
+                  >
+                    <ReminderIcon />
+                  </IconButton>
+                </div>
+              </Tooltip>
+              <Tooltip
+                slotProps={slotProps}
+                PopperProps={TooltipPosition}
+                sx={{ zIndex: "100" }}
+                title="Collaborator"
+                disableInteractive
+              >
+                <div style={{ margin: "auto" }}>
+                  <IconButton
+                    disableTouchRipple
+                    sx={{
+                      width: "34px",
+                      height: "34px",
+                      padding: "6px",
+                      "&:hover": {
+                        backgroundColor: "rgba(95, 99, 104, 0.157)",
+                      },
+                    }}
+                  >
+                    <PersonAddIcon />
+                  </IconButton>
+                </div>
+              </Tooltip>
+              <div style={{ margin: "auto" }}>
+                <ColorSelectMenu
+                  menuRef={menuRef}
+                  isOpen={isOpen}
+                  setIsOpen={setIsOpen}
+                  handleMenuHover={handleMenuHover}
+                  selectedColor={selectedColor}
+                  setSelectedColor={setSelectedColor}
+                  handleColorSelect={handleColorSelect}
                 />
               </div>
-              {imagePending && loadingNoteID === note.uuid && (
-                <Box
-                  sx={{
-                    width: "100%",
-                    position: "absolute",
-                    bottom: "0",
-                  }}
-                >
-                  <LinearProgress />
-                </Box>
-              )}
-              {noteImagePending && (
-                <Box
-                  sx={{
-                    width: "100%",
-                    position: "absolute",
-                    bottom: "0",
-                  }}
-                >
-                  <LinearProgress />
-                </Box>
-              )}
-            </div>
-          )}
+              <Tooltip
+                slotProps={slotProps}
+                PopperProps={TooltipPosition}
+                disableHoverListener={imagePending || noteImagePending}
+                title="Add image"
+                disableInteractive
+              >
+                <div style={{ margin: "auto" }}>
+                  <input
+                    style={{ display: "none" }}
+                    ref={uploadRef}
+                    type="file"
+                    id="single"
+                    accept=".gif,.jpeg,.jpg,.png,image/gif,image/jpeg,image/jpg,image/png"
+                    onChange={(event) => {
+                      const file = event.target.files[0];
+                      setImage(URL.createObjectURL(file));
+                      handleUpdate(
+                        "image",
+                        `https://fopkycgspstkfctmhyyq.supabase.co/storage/v1/object/public/notopia/${userID}/${note.uuid}`
+                      );
+                      replaceImage(
+                        event,
+                        note.uuid,
+                        userID,
+                        image,
+                        setNoteImagePending,
+                        setIsLoading
+                      );
+                      uploadRef.current.value = "";
+                    }}
+                  />
+                  <IconButton
+                    disableTouchRipple
+                    disabled={imagePending || noteImagePending}
+                    onClick={() => {
+                      uploadRef.current?.click();
+                    }}
+                    sx={{
+                      width: "34px",
+                      height: "34px",
+                      padding: "6px",
+                      "&:hover": {
+                        backgroundColor: "rgba(95, 99, 104, 0.157)",
+                      },
+                    }}
+                  >
+                    <ImageIcon />
+                  </IconButton>
+                </div>
+              </Tooltip>
+              <Tooltip
+                slotProps={slotProps}
+                PopperProps={TooltipPosition}
+                sx={{ zIndex: "100" }}
+                title={Archived ? "Archived" : "Archive"}
+                disableInteractive
+              >
+                <div style={{ margin: "auto" }}>
+                  <IconButton
+                    disableTouchRipple
+                    sx={{
+                      width: "34px",
+                      height: "34px",
+                      padding: "6px",
+                      "&:hover": {
+                        backgroundColor: "rgba(95, 99, 104, 0.157)",
+                      },
+                    }}
+                    onClick={() => {
+                      setArchived((prev) => !prev);
+                      handleUpdate("isArchived", !Archived);
+                    }}
+                  >
+                    {Archived ? (
+                      <ArchivedIcon check={selectedColor} />
+                    ) : (
+                      <ArchiveIcon />
+                    )}
+                  </IconButton>
+                </div>
+              </Tooltip>
 
-          {!image && !note.title && !note.content && (
-            <div
-              className="empty-note"
-              aria-label="Empty note"
-              spellCheck="false"
-            />
-          )}
-
-          {(note.title || note.content) && (
-            <div
-              style={{ minHeight: !image ? "60px" : "" }}
-              className="note-text"
-            >
-              {note.title && (
-                <h2 draggable="false" className="title noto-sans-bold">
-                  {note.title}
-                </h2>
-              )}
-
-              {note.content && (
-                <h2 className="content noto-sans-regular"> {note.content} </h2>
-              )}
-            </div>
-          )}
-
-          {/* {selectedNotesIDs > 0 && ( */}
-          <div
-            style={{
-              opacity: checkSelect ? "0" : opacity,
-              visibility: selectedNotesIDs.length > 0 ? "hidden" : "visible",
-              position: image && !note.title && !note.content && "absolute",
-              bottom: image && !note.title && !note.content && "0px",
-              backgroundColor:
-                image &&
-                !note.title &&
-                !note.content &&
-                "rgba(255,255,255,0.8)",
-
-              borderBottomLeftRadius:
-                image && !note.title && !note.content && "0.5rem",
-              borderBottomRightRadius:
-                image && !note.title && !note.content && "0.5rem",
-              marginBottom: image && !note.title && !note.content && "0px",
-              paddingTop:
-                image && !note.title && !note.content
-                  ? "3px"
-                  : image && !note.title
-                  ? "0px"
-                  : "4px",
-              paddingBottom:
-                image && !note.title && !note.content ? "3px" : "4px",
-              paddingLeft: isGridLayout ? "10px" : "",
-              gap: isGridLayout ? "13px" : "0",
-              width: isGridLayout ? "calc(100% - 10px)" : "100%",
-            }}
-            className="noteBottom"
-            ref={toolRef}
-          >
-            <Tooltip
-              slotProps={slotProps}
-              PopperProps={TooltipPosition}
-              sx={{ zIndex: "100" }}
-              title="Remind me"
-              disableInteractive
-            >
               <div style={{ margin: "auto" }}>
-                <IconButton
-                  disableTouchRipple
-                  sx={{
-                    width: "34px",
-                    height: "34px",
-                    padding: "6px",
-                    "&:hover": { backgroundColor: "rgba(95, 99, 104, 0.157)" },
-                  }}
-                >
-                  <ReminderIcon />
-                </IconButton>
-              </div>
-            </Tooltip>
-            <Tooltip
-              slotProps={slotProps}
-              PopperProps={TooltipPosition}
-              sx={{ zIndex: "100" }}
-              title="Collaborator"
-              disableInteractive
-            >
-              <div style={{ margin: "auto" }}>
-                <IconButton
-                  disableTouchRipple
-                  sx={{
-                    width: "34px",
-                    height: "34px",
-                    padding: "6px",
-                    "&:hover": { backgroundColor: "rgba(95, 99, 104, 0.157)" },
-                  }}
-                >
-                  <PersonAddIcon />
-                </IconButton>
-              </div>
-            </Tooltip>
-            <div style={{ margin: "auto" }}>
-              <ColorSelectMenu
-                menuRef={menuRef}
-                isOpen={isOpen}
-                setIsOpen={setIsOpen}
-                handleMenuHover={handleMenuHover}
-                selectedColor={selectedColor}
-                setSelectedColor={setSelectedColor}
-                handleColorSelect={handleColorSelect}
-              />
-            </div>
-            <Tooltip
-              slotProps={slotProps}
-              PopperProps={TooltipPosition}
-              disableHoverListener={imagePending || noteImagePending}
-              title="Add image"
-              disableInteractive
-            >
-              <div style={{ margin: "auto" }}>
-                <input
-                  style={{ display: "none" }}
-                  ref={uploadRef}
-                  type="file"
-                  id="single"
-                  accept=".gif,.jpeg,.jpg,.png,image/gif,image/jpeg,image/jpg,image/png"
-                  onChange={(event) => {
-                    const file = event.target.files[0];
-                    setImage(URL.createObjectURL(file));
-                    handleUpdate(
-                      "image",
-                      `https://fopkycgspstkfctmhyyq.supabase.co/storage/v1/object/public/notopia/${userID}/${note.uuid}`
-                    );
-                    replaceImage(
-                      event,
-                      note.uuid,
-                      userID,
-                      image,
-                      setNoteImagePending,
-                      setIsLoading
-                    );
-                    uploadRef.current.value = "";
-                  }}
+                <DropMenu
+                  handleMenuHover={handleMenuHover}
+                  dropMenuRef={dropMenuRef}
+                  isotopeRef={isotopeRef}
+                  open={dropMenuOpen}
+                  setOpen={setDropMenuOpen}
+                  setNoteDisplay={setNoteDisplay}
+                  setNoteOpacity={setNoteOpacity}
+                  Noteuuid={note.uuid}
+                  userID={userID}
+                  setIsTrash={setIsTrash}
+                  isTrash={isTrash}
+                  handleUpdate={handleUpdate}
+                  setIsLoading={setIsLoading}
+                  setIsDeleteSnackOpen={setIsDeleteSnackOpen}
                 />
-                <IconButton
-                  disableTouchRipple
-                  disabled={imagePending || noteImagePending}
-                  onClick={() => {
-                    uploadRef.current?.click();
-                  }}
-                  sx={{
-                    width: "34px",
-                    height: "34px",
-                    padding: "6px",
-                    "&:hover": { backgroundColor: "rgba(95, 99, 104, 0.157)" },
-                  }}
-                >
-                  <ImageIcon />
-                </IconButton>
               </div>
-            </Tooltip>
-            <Tooltip
-              slotProps={slotProps}
-              PopperProps={TooltipPosition}
-              sx={{ zIndex: "100" }}
-              title={Archived ? "Archived" : "Archive"}
-              disableInteractive
-            >
-              <div style={{ margin: "auto" }}>
-                <IconButton
-                  disableTouchRipple
-                  sx={{
-                    width: "34px",
-                    height: "34px",
-                    padding: "6px",
-                    "&:hover": { backgroundColor: "rgba(95, 99, 104, 0.157)" },
-                  }}
-                  onClick={() => {
-                    setArchived((prev) => !prev);
-                    handleUpdate("isArchived", !Archived);
-                  }}
-                >
-                  {Archived ? (
-                    <ArchivedIcon check={selectedColor} />
-                  ) : (
-                    <ArchiveIcon />
-                  )}
-                </IconButton>
-              </div>
-            </Tooltip>
-
-            <div style={{ margin: "auto" }}>
-              <DropMenu
-                handleMenuHover={handleMenuHover}
-                dropMenuRef={dropMenuRef}
-                isotopeRef={isotopeRef}
-                open={dropMenuOpen}
-                setOpen={setDropMenuOpen}
-                setNoteDisplay={setNoteDisplay}
-                setNoteOpacity={setNoteOpacity}
-                Noteuuid={note.uuid}
-                userID={userID}
-                setIsTrash={setIsTrash}
-                isTrash={isTrash}
-                handleUpdate={handleUpdate}
-                setIsLoading={setIsLoading}
-                setIsDeleteSnackOpen={setIsDeleteSnackOpen}
-              />
+              {/* <DropMenu /> */}
             </div>
-            {/* <DropMenu /> */}
+            {/* )} */}
           </div>
-          {/* )} */}
         </div>
         <DeleteSnack
           isotopeRef={isotopeRef}
@@ -717,6 +774,13 @@ const Note = React.memo(
           setIsTrash={setIsTrash}
           open={isDeleteSnackOpen}
           setIsOpen={setIsDeleteSnackOpen}
+        />
+        <NoteModal
+          divPosition={divPosition}
+          divSize={divSize}
+          trigger={passedTrigger}
+          setTrigger={setPassedTrigger}
+          setOpacity={setOpacity}
         />
       </>
     );

@@ -66,6 +66,7 @@ const MainLayout = async ({ children }) => {
             )}
             <main>{children}</main>
           </div>
+          <div id="portal"></div>
           </AppProvider>
         </body>
       </html>
