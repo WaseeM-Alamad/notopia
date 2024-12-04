@@ -17,6 +17,7 @@ import { Box } from "@mui/system";
 import DeleteSnack from "./DeleteNoteSnack";
 import replaceImage from "@/actions/replaceImage";
 import NoteModal from "./NoteModal";
+import { debounce } from "lodash";
 
 const Note = React.memo(
   ({
@@ -90,6 +91,8 @@ const Note = React.memo(
         },
       },
     };
+
+    console.log("Note rerendered");
 
     const [divPosition, setDivPosition] = useState({
       x: 0,
@@ -216,9 +219,96 @@ const Note = React.memo(
           }, 700);
         }
       } catch (error) {
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 700);
         console.log("Error updating note:", error);
       }
     };
+
+    const imageUpload = (event) => {
+      const file = event.target.files[0];
+      setImage(URL.createObjectURL(file));
+      handleUpdate(
+        "image",
+        `https://fopkycgspstkfctmhyyq.supabase.co/storage/v1/object/public/notopia/${userID}/${note.uuid}`
+      );
+      replaceImage(
+        event,
+        note.uuid,
+        userID,
+        image,
+        setNoteImagePending,
+        setIsLoading
+      );
+      uploadRef.current.value = "";
+    };
+
+    const updateText = async (noteText) => {
+      const noteID = await fetchNoteID(note.uuid);
+      try {
+        setIsLoading(true);
+        const response = await fetch(
+          `/api/notes/update-text/${noteID?.replace(/"/g, "")}`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              title: noteText.title,
+              content: noteText.content,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to update note");
+        }
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 700);
+      } catch (error) {
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 700);
+        console.error("Error updating note:", error);
+        // Handle error (e.g., show error message to user)
+      }
+    };
+
+    const updateTextDebounced =  debounce (async (noteText) => {
+      const noteID = await fetchNoteID(note.uuid);
+      try {
+        setIsLoading(true);
+        const response = await fetch(
+          `/api/notes/update-text/${noteID?.replace(/"/g, "")}`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              title: noteText.title,
+              content: noteText.content,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to update note");
+        }
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 700);
+      } catch (error) {
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 700);
+        console.error("Error updating note:", error);
+        // Handle error (e.g., show error message to user)
+      }
+    }, 600);
 
     useEffect(() => {
       if (selectedNotesIDs?.length === 0) {
@@ -338,7 +428,8 @@ const Note = React.memo(
             if (
               !toolRef.current.contains(e.target) &&
               !checkRef.current.contains(e.target) &&
-              !pinRef.current.contains(e.target)
+              !pinRef.current.contains(e.target) &&
+              selectedNotesIDs.length === 0
             ) {
               setOpacityM(false);
               setTrigger((prev) => !prev);
@@ -669,23 +760,7 @@ const Note = React.memo(
                     type="file"
                     id="single"
                     accept=".gif,.jpeg,.jpg,.png,image/gif,image/jpeg,image/jpg,image/png"
-                    onChange={(event) => {
-                      const file = event.target.files[0];
-                      setImage(URL.createObjectURL(file));
-                      handleUpdate(
-                        "image",
-                        `https://fopkycgspstkfctmhyyq.supabase.co/storage/v1/object/public/notopia/${userID}/${note.uuid}`
-                      );
-                      replaceImage(
-                        event,
-                        note.uuid,
-                        userID,
-                        image,
-                        setNoteImagePending,
-                        setIsLoading
-                      );
-                      uploadRef.current.value = "";
-                    }}
+                    onChange={imageUpload}
                   />
                   <IconButton
                     disableTouchRipple
@@ -771,6 +846,7 @@ const Note = React.memo(
           open={isDeleteSnackOpen}
           setIsOpen={setIsDeleteSnackOpen}
         />
+        
         <NoteModal
           divPosition={divPosition}
           divSize={divSize}
@@ -778,15 +854,25 @@ const Note = React.memo(
           setTrigger={setPassedTrigger}
           setOpacity={setOpacityM}
           handleUpdate={handleUpdate}
+          updateTextDebounced={updateTextDebounced}
+          noteImagePending={noteImagePending}
           setTitle={setTitle}
           title={title}
           setContent={setContent}
           content={content}
           color={selectedColor}
           setColor={setSelectedColor}
+          isArchived={Archived}
+          setIsArchived={setArchived}
           image={image}
           srsDate={srcDate}
           isRemoteImage={isRemoteImage}
+          isPinnedNote={isPinnedNote}
+          setIsPinnedNote={setIsPinnedNote}
+          imageUpload={imageUpload}
+          Noteuuid={note.uuid}
+          loadingNoteID={loadingNoteID}
+          imagePending={imagePending}
         />
       </>
     );

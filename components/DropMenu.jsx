@@ -110,7 +110,7 @@ export default function DropMenu({
   }, [open]);
 
   const handleDelete = async () => {
-    if (!isTrash) {
+    if (isTrash) {
       // if isTrash is true
       setNoteOpacity(false);
       setTimeout(() => {

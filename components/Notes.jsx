@@ -118,7 +118,7 @@ const Notes = ({ initialNotes }) => {
         itemSelector: ".grid-item",
         masonry: {
           columnWidth: 240,
-          gutter: 14,
+          gutter: 17,
         },
         percentPosition: true,
         horizontalOrder: false,
@@ -372,6 +372,7 @@ const Notes = ({ initialNotes }) => {
             opacity: { duration: 0.2, ease: "easeInOut" },
             y: { duration: 0.3, stiffness: 130, damping: 20 },
           }}
+          style={{}}
         >
           <Tooltip
             slotProps={slotProps}

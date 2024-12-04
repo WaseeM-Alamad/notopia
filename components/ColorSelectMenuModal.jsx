@@ -59,7 +59,7 @@ const slotProps = {
   },
 };
 
-export default function ColorSelectMenu({ selectedColor, setSelectedColor }) {
+export default function ColorSelectMenu({ selectedColor, setSelectedColor, handleUpdate }) {
   const [hoveredColor, setHoveredColor] = useState(null);
 
   const [isOpen, setIsOpen] = useState(false);
@@ -83,6 +83,7 @@ export default function ColorSelectMenu({ selectedColor, setSelectedColor }) {
   };
 
   const handleColorSelect = (color) => {
+    handleUpdate("color", color);
     setSelectedColor(color);
   };
 

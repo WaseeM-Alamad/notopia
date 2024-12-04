@@ -1,8 +1,8 @@
 import { Close } from "@mui/icons-material";
 import { IconButton, Snackbar } from "@mui/material";
 import SnackbarContent from "@mui/material/SnackbarContent";
-
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 const SnackBar = ({ ref, open, setIsOpen, isArchived, setIsArchived }) => {
   const handleSnackClose = (event, reason) => {
@@ -12,7 +12,18 @@ const SnackBar = ({ ref, open, setIsOpen, isArchived, setIsArchived }) => {
     setIsOpen(false);
   };
 
-  return (
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+    return () => {
+      setMounted(false);
+    };
+  }, []);
+
+  if (!mounted) return null;
+
+  return createPortal(
+    <>
     <Snackbar
       ref={ref}
       open={open}
@@ -65,6 +76,8 @@ const SnackBar = ({ ref, open, setIsOpen, isArchived, setIsArchived }) => {
         }
       />
     </Snackbar>
+    </>,
+    document.getElementById("portal")
   );
 };
 

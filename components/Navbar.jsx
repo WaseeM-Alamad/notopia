@@ -360,19 +360,8 @@ const Navbar = ({ image, name, email }) => {
           </Tooltip>
         </div>
         <div className="account">
-          <Tooltip
-            slotProps={slotProps}
-            PopperProps={TooltipPosition}
-            title={
-              <span>
-                <p style={{ color: "#a4a9ad" }}>{name}</p>
-                <p>{email}</p>
-              </span>
-            }
-            disableInteractive
-          >
-            <ProfileMenu image={image} name={name} />
-          </Tooltip>
+          
+            <ProfileMenu image={image} name={name} email={email} />
         </div>
       </nav>
     </>
