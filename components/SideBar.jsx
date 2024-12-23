@@ -1,216 +1,99 @@
-import React, { useEffect, useRef, useState } from "react";
-import "@/assets/styles/SideBar.css";
-import BellIcon from "./BellIcon";
-import TrashIcon from "./TrashIcon";
-import EditIcon from "./EditIcon";
-import ArchiveIcon from "@/components/ArchiveSideIcon";
-import NoteIcon from "./NoteIcon";
-import { usePathname, useRouter } from "next/navigation";
+"use client";
+import React, { memo, useMemo, useRef } from "react";
+import "../assets/styles/sidebar.css";
+import { usePathname } from "next/navigation";
+import HomeIcon from "./icons/HomeIcon";
+import FolderIcon from "./icons/FolderIcon";
+import BellIcon from "./icons/BellIcon";
+import SideArchiveIcon from "./icons/SideArchiveIcon";
+import TrashIcon from "./icons/TrashIcon";
 import { motion } from "framer-motion";
+import Link from "next/link";
+import AddButton from "./icons/AddButton";
+import { useAppContext } from "@/context/AppContext";
 
-const Sidebar = ({ sideTrigger }) => {
-  const [isExpanded, setIsExpanded] = useState(() => {
-    const sideTrigger = localStorage.getItem("sideBarTrigger");
-    console.log("side Trigger: " + sideTrigger);
-    return sideTrigger === "true";
-  });
-  const sideBarRef = useRef(null);
-  const timeoutRef = useRef(null);
-  const [activeItem, setActiveItem] = useState("home");
-  const pathName = usePathname();
-  const router = useRouter();
+const ICON_SIZE = 22;
 
-  useEffect(() => {
-    if (pathName === "/home" || pathName === "/") {
-      setActiveItem("home");
-    } else if (pathName === "/reminders") {
-      setActiveItem("reminders");
-    } else if (pathName === "/archive") {
-      setActiveItem("archive");
-    } else if (pathName === "/trash") {
-      setActiveItem("trash");
-    }
-  }, [pathName]);
+const navItems = [
+  { path: "/home", Icon: HomeIcon },
+  { path: "/folders", Icon: FolderIcon },
+  { path: "/reminders", Icon: BellIcon },
+  { path: "/archive", Icon: SideArchiveIcon },
+  { path: "/trash", Icon: TrashIcon },
+];
 
-  const handleSideMenuItemClick = (id) => {
-    setActiveItem(id);
-    router.push(`/${id}`);
-  };
-
-  const handleSideMenuHover = (e) => {
-    if (sideTrigger) return;
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-
-    timeoutRef.current = setTimeout(() => {
-      setIsExpanded(true);
-    }, 350);
-  };
-
-  const handleSideMenuLeave = () => {
-    if (sideTrigger) return;
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-
-    setIsExpanded(false);
-  };
-
-  useEffect(() => {
-    if (sideTrigger) setIsExpanded(true);
-    else setIsExpanded(false);
-  }, [sideTrigger]);
-
-  return (
-    <motion.aside
-      ref={sideBarRef}
-      onMouseOver={handleSideMenuHover}
-      onMouseLeave={handleSideMenuLeave}
-      style={{
-        boxShadow:
-          isExpanded &&
-          !sideTrigger &&
-          "0 16px 10px 0 rgba(0,0,0,.14),0 11px 18px 0 rgba(0,0,0,.12),0 13px 5px -1px rgba(0,0,0,.2)",
-      }}
-      className="sidebar"
-      animate={{ width: isExpanded ? "280px" : "80px" }}
-      transition={{ duration: 0.12, ease: "easeInOut" }}
-    >
-      <div style={{ width: "100%", boxSizing: "border-box" }}>
-        <div
-          style={{
-            display: "flex",
-            borderRadius: isExpanded ? "0 25px 25px 0" : "50%",
-            padding: "12px",
-            width: isExpanded ? "100%" : "49px",
-            height: "49px",
-            backgroundColor: activeItem === "home" ? "#feefc3" : "transparent",
-            boxSizing: "border-box",
-            marginLeft: !isExpanded ? "12px" : "0px",
-            transition: "all 0.1s ease",
-          }}
-          onClick={() => handleSideMenuItemClick("home")}
-          className="sidebar-item"
-        >
-          <NoteIcon
-            style={{
-              position: "relative",
-              left: !isExpanded ? "0" : "12px",
-              transition: "all 0.1s ease",
-            }}
-            size={24}
-          />
-          <span className="roboto-regular label">Notes</span>
-        </div>
-      </div>
-      <div style={{ width: "100%", boxSizing: "border-box" }}>
-        <div
-          style={{
-            borderRadius: isExpanded ? "0 25px 25px 0" : "50%",
-            padding: "12px",
-            width: isExpanded ? "100%" : "49px",
-            height: "49px",
-            backgroundColor:
-              activeItem === "reminders" ? "#feefc3" : "transparent",
-            boxSizing: "border-box",
-            marginLeft: !isExpanded ? "12px" : "+0px",
-            transition: "all 0.1s ease",
-          }}
-          onClick={() => handleSideMenuItemClick("reminders")}
-          className="sidebar-item"
-        >
-          <BellIcon
-            style={{
-              position: "relative",
-              left: !isExpanded ? "0" : "12px",
-              transition: "all 0.1s ease",
-            }}
-            size={24}
-          />
-          <span className="roboto-regular label">Reminders</span>
-        </div>
-      </div>
-      <div style={{ width: "100%", boxSizing: "border-box" }}>
-        <div
-          style={{
-            borderRadius: isExpanded ? "0 25px 25px 0" : "50%",
-            padding: "12px",
-            width: isExpanded ? "100%" : "49px",
-            height: "49px",
-            backgroundColor: "transparent",
-            boxSizing: "border-box",
-            marginLeft: !isExpanded ? "12px" : "0px",
-            transition: "all 0.1s ease",
-          }}
-          className="sidebar-item"
-        >
-          <EditIcon
-            style={{
-              position: "relative",
-              left: !isExpanded ? "0" : "12px",
-              transition: "all 0.1s ease",
-            }}
-            size={24}
-          />
-          <span className="roboto-regular label">Edit labels</span>
-        </div>
-      </div>
-      <div style={{ width: "100%", boxSizing: "border-box" }}>
-        <div
-          style={{
-            borderRadius: isExpanded ? "0 25px 25px 0" : "50%",
-            padding: "12px",
-            width: isExpanded ? "100%" : "49px",
-            height: "49px",
-            backgroundColor:
-              activeItem === "archive" ? "#feefc3" : "transparent",
-            boxSizing: "border-box",
-            marginLeft: !isExpanded ? "12px" : "0px",
-            transition: "all 0.1s ease",
-          }}
-          onClick={() => handleSideMenuItemClick("archive")}
-          className="sidebar-item"
-        >
-          <ArchiveIcon
-            style={{
-              position: "relative",
-              left: !isExpanded ? "0" : "12px",
-              transition: "all 0.1s ease",
-            }}
-            size={24}
-          />
-          <span className="roboto-regular label">Archive</span>
-        </div>
-      </div>
-      <div style={{ width: "100%", boxSizing: "border-box" }}>
-        <div
-          style={{
-            borderRadius: isExpanded ? "0 25px 25px 0" : "50%",
-            padding: "12px",
-            width: isExpanded ? "100%" : "49px",
-            height: "49px",
-            backgroundColor: activeItem === "trash" ? "#feefc3" : "transparent",
-            boxSizing: "border-box",
-            marginLeft: !isExpanded ? "12px" : "0px",
-            transition: "all 0.1s ease",
-          }}
-          onClick={() => handleSideMenuItemClick("trash")}
-          className="sidebar-item"
-        >
-          <TrashIcon
-            style={{
-              position: "relative",
-              left: !isExpanded ? "0" : "12px",
-              transition: "all 0.1s ease",
-            }}
-            size={24}
-          />
-          <span className="roboto-regular label">Trash</span>
-        </div>
-      </div>
-    </motion.aside>
-  );
+const springTransition = {
+  type: "spring",
+  stiffness: 1400,
+  damping: 70,
+  mass: 1,
 };
 
-export default React.memo(Sidebar);
+const Sidebar = memo(() => {
+  const { setModalOpen, modalPosition, setModalPosition } = useAppContext();
+  const addButtonRef = useRef(null);
+  const pathName = usePathname();
+
+  const highlightPosition = useMemo(() => {
+    const index = navItems.findIndex((item) => pathName.includes(item.path));
+    return index === -1 ? 0 : index * 62;
+  }, [pathName]);
+
+  const currentYear = useMemo(() => new Date().getFullYear(), []);
+
+  if (pathName === "/") return null;
+
+  const handleAddNote = () => {
+    const rect = addButtonRef.current.getBoundingClientRect();
+    setModalPosition({
+      top: rect.top,
+      left: rect.left,
+      width: rect.width,
+      height: rect.height,
+      borderRadius: "30%",
+    });
+    setModalOpen(true);
+  };
+
+  return (
+    <>
+      <aside className="sidebar">
+        <div>
+          <AddButton ref={addButtonRef} onClick={handleAddNote} />
+          <div className="sidebar-icons-container">
+            <motion.div
+              initial={{ y: highlightPosition }}
+              animate={{ y: highlightPosition }}
+              transition={{ y: springTransition }}
+              className="selected-highlight"
+            />
+            {navItems.map(({ path, Icon }) => (
+              <Link prefetch={true} key={path} href={path} style={{ zIndex: "9" }}>
+                <Icon
+                  size={ICON_SIZE}
+                  color={pathName.includes(path) ? "#212121" : "#535353"}
+                />
+              </Link>
+            ))}
+          </div>
+        </div>
+        <span
+          className="copyright-text"
+          style={{
+            marginTop: "auto",
+            marginBottom: "160px",
+            userSelect: "none",
+            fontSize: "0.7rem",
+            color: "rgba(0,0,0,0.3)",
+          }}
+        >
+          &copy; {currentYear}
+        </span>
+      </aside>
+    </>
+  );
+});
+
+Sidebar.displayName = "Sidebar";
+
+export default Sidebar;

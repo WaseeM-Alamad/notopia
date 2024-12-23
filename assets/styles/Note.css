@@ -1,97 +1,76 @@
 .note {
+  display: flex;
+  flex-direction: column;
+  width: 16.25rem;
   height: fit-content;
-  text-align: left;
-  border-radius: 0.5rem;
-  font-size: 8pt;
+  min-height: 7.95rem;
+  border-radius: 0.7rem;
   box-sizing: border-box;
-  position: relative;
-  margin: 0;
-  transition: width 0.5s ease, box-shadow 0.1s ease,
-    background-color 0.25s linear, border-color 0.25s linear,
-    outline 0.25s linear, opacity 0.25s ease;
-  z-index: auto;
-  margin-bottom: 1rem;
-  min-height: 102px;
+  font-size: 1.2rem;
+  box-sizing: border-box;
+  padding-bottom: 45px;
+  font-weight: 400;
+  user-select: none;
+  transition: all 0.3s ease-in-out, opacity 0s, box-shadow 0.2s ease;
+  overflow-wrap: break-word;
 }
 
 .title {
-  user-select: none;
-  font-size: 1rem;
-  overflow-wrap: break-word;
-  padding: 12px 16px 0px 16px;
-  line-height: 1.5rem;
+  padding: 0.8rem 0.8rem 0 0.8rem;
+  font-weight: 500;
 }
 
 .content {
-  user-select: none;
-  font-size: 1.115rem;
-  padding: 12px 16px 12px 16px;
-  overflow-wrap: break-word;
+  padding: 0.6rem 0.8rem 0.8rem 0.8rem;
+  font-size: 1.1rem;
 }
 
-.noteBottom {
-  display: grid;
-  grid-template-columns: 40px 40px 40px 40px 40px 40px;
-  transition: opacity 0.22s linear;
-  height: 34px;
-  justify-content: flex-start;
+.note-bottom {
+  opacity: 0;
+  position: absolute;
+  bottom: 0;
+  gap: 1rem;
+  display: flex;
+  justify-content: center;
   align-items: center;
+  color: rgba(0, 0, 0, 0.5);
+  font-weight: 600;
+  min-height: 40px;
   width: 100%;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+.note:hover .note-bottom {
+  opacity: 1;
+}
+
+.note:hover .pin {
+  opacity: 1;
+}
+
+.note:hover {
+  -webkit-box-shadow: 2px 3px 4px 0px rgba(0, 0, 0, 0.15);
+  -moz-box-shadow: 2px 3px 4px 0px rgba(0, 0, 0, 0.15);
+  box-shadow: 2px 3px 4px 0px rgba(0, 0, 0, 0.15);
 }
 
 .date {
-  user-select: none;
-  margin-right: auto;
-  margin-top: auto;
-  margin-bottom: 2px;
-  font-family: "Roboto";
-  color: #202124;
-  font-size: 7.6pt;
+  margin-top: 0.1rem;
+  margin-left: 0.2rem;
+  font-size: 0.733rem;
 }
 
-.corner2 {
-  width: 24px;
-  height: 15px;
-  margin-left: 18px;
-  float: right;
-}
-
-#note-pin {
-  position: absolute;
-  right: 5px;
-  top: 2px;
-  padding: 0.3em;
-  transition: opacity 0.22s linear;
-}
-
-.checkmark {
-  left: -10px;
-  bottom: 0px;
-  top: -10px;
-  width: fit-content;
-  height: fit-content;
-  position: absolute;
-}
-
-.empty-note::before {
+.note-bottom-icons {
   display: flex;
-  content: attr(aria-label);
-  color: rgb(95, 99, 104);
-  margin-left: 0.8rem;
-  font-family: "Open Sans";
-  text-align: center;
-  height: fit-content;
-  width: fit-content;
-  margin-top: 1.8rem;
-  letter-spacing: 0.00625em;
-  font-size: 1.375rem;
-  line-height: 1.5rem;
-  cursor: text;
+  padding-bottom: 3px;
+  gap: 9px;
 }
 
-.empty-note {
-  height: fit-content;
-  width: fit-content;
-  font-size: 2.5rem;
-  margin-bottom: 0.450625rem;
+.pin {
+  position: absolute;
+  right: 0;
+  opacity: 0;
+  padding: 0.3rem 0.4rem 0rem 0rem;
+  transition: all 0.3s ease;
 }

@@ -1,882 +1,188 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
-import ColorSelectMenu from "./ColorSelectMenu";
-import "@/assets/styles/Note.css";
-import Pin from "./Pin";
-import PinClicked from "./PinClicked";
-import { IconButton, LinearProgress, Tooltip } from "@mui/material";
-import ArchiveIcon from "./ArchiveIcon";
-import ArchivedIcon from "./ArchivedIcon";
-import ReminderIcon from "./ReminderIcon";
-import ImageIcon from "./ImageIcon";
-import PersonAddIcon from "./PersonAdd";
-import CheckMarkIcon from "./CheckMarkIcon";
-import { fetchNotes } from "@/utils/requests";
-import DropMenu from "./DropMenu";
-import fetchNoteID from "@/actions/fetchNoteID";
-import { Box } from "@mui/system";
-import DeleteSnack from "./DeleteNoteSnack";
-import replaceImage from "@/actions/replaceImage";
+import React, {
+  memo,
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
+import "../assets/styles/note.css";
+import NoteTools from "./NoteTools";
 import NoteModal from "./NoteModal";
-import { debounce } from "lodash";
+import PinIcon from "./icons/PinIcon";
+import { NoteUpdateAction } from "@/utils/actions";
+import Button from "./Tools/Button";
 
-const Note = React.memo(
-  ({
-    note,
-    isGridLayout,
-    isotopeRef,
-    selectedNotesIDs,
-    setSelectedNotesIDs,
-    updates,
-    colorTrigger,
-    pinTrigger,
-    setNotes,
-    userID,
-    archivedTrigger,
-    imagePending,
-    setImagePending,
-    loadingNoteID,
-    setIsLoading,
-  }) => {
-    const [opacity, setOpacity] = useState("0");
-    const [isOpen, setIsOpen] = useState(false);
-    const [selectedColor, setSelectedColor] = useState(note.color);
-    const [title, setTitle] = useState(note.title);
-    const [content, setContent] = useState(note.content);
-    const [boxShadow, setBoxShadow] = useState("none");
-    const [noteDisplay, setNoteDisplay] = useState(true);
-    const [noteOpacity, setNoteOpacity] = useState(true);
-    const [isPinnedNote, setIsPinnedNote] = useState(note.isPinned);
-    const [pinHover, setPinHover] = useState(false);
-    const [Archived, setArchived] = useState(note.isArchived);
-    const [isTrash, setIsTrash] = useState(note.isTrash);
-    const [checkSelect, setCheckSelect] = useState(false);
-    const [dropMenuOpen, setDropMenuOpen] = useState(false);
-    const [isDeleteSnackOpen, setIsDeleteSnackOpen] = useState(false);
-    const [image, setImage] = useState(note.image);
-    const [noteImagePending, setNoteImagePending] = useState(false);
-    const [srcDate, setSrcDate] = useState(Date.now());
-    const isRemoteImage =
-      image?.startsWith("http") || image?.startsWith("https");
+const Note = memo(
+  ({ Note, togglePin }) => {
+    const [note, setNote] = useState(Note);
+    const [modalTrigger, setModalTrigger] = useState(false);
+    const [menuIsOpen, setMenuIsOpen] = useState(false);
+    const [trigger2, setTrigger2] = useState(false);
+    const [opacityTrigger, setOpacityTrigger] = useState(true);
     const noteRef = useRef(null);
-    const menuRef = useRef(null);
-    const dropMenuRef = useRef(null);
-    const checkRef = useRef(null);
-    const toolRef = useRef(null);
-    const pinRef = useRef(null);
-    const isFirstRun = useRef(true);
-    const uploadRef = useRef(null);
+    const inputsRef = useRef(null);
+    const timeoutRef = useRef(null);
 
-    const TooltipPosition = {
-      modifiers: [
-        {
-          name: "offset",
-          options: {
-            offset: [0, -11], // Adjust position (x, y)
-          },
+    const [notePos, setNotePos] = useState(() => ({
+      top: 0,
+      left: 0,
+      width: 240,
+      height: 20,
+    }));
+
+    // Memoize note style
+    const noteStyle = useMemo(
+      () => ({
+        opacity: opacityTrigger ? "1" : "0",
+        backgroundColor: note.color,
+        border: "solid 1px transparent",
+        borderColor: note.color === "#FFFFFF" ? "#e0e0e0" : "transparent",
+      }),
+      [note.color, opacityTrigger]
+    );
+
+    // Memoize button style
+    const buttonStyle = useMemo(
+      () => ({
+        padding: "6px",
+        height: "32px",
+        width: "32px",
+        margin: "auto",
+        "&:hover": {
+          backgroundColor: "rgba(95, 99, 104, 0.157)",
         },
-      ],
-    };
+      }),
+      []
+    );
 
-    const slotProps = {
-      tooltip: {
-        sx: {
-          opacity: "0",
-          height: "fit-content",
-          margin: "0",
-          backgroundColor: "rgba(0, 0, 0, 0.7)",
-          fontFamily: "Roboto",
-          fontWeight: "400",
-          fontSize: "0.76rem",
-          padding: "5px 8px 5px 8px",
-        },
-      },
-    };
-
-    console.log("Note rerendered");
-
-    const [divPosition, setDivPosition] = useState({
-      x: 0,
-      y: 0,
-    });
-    const [divSize, setDivSize] = useState({
-      width: 0,
-      height: 0,
-    });
-    const [trigger, setTrigger] = useState(false);
-    const [passedTrigger, setPassedTrigger] = useState(false);
-    const [opacityM, setOpacityM] = useState(true);
-
-    const getDivPosition = () => {
-      if (noteRef.current) {
+    const handleNoteClick = useCallback((e) => {
+      if (
+        (noteRef.current && noteRef.current === e.target) ||
+        inputsRef.current.contains(e.target)
+      ) {
         const rect = noteRef.current.getBoundingClientRect();
-        setDivPosition({
-          x: rect.left, // Distance from the left of the viewport
-          y: rect.top, // Distance from the top of the viewport
-        });
-        setDivSize({
+        setNotePos({
+          top: rect.top,
+          left: rect.left,
           width: rect.width,
           height: rect.height,
         });
+        setModalTrigger(true);
       }
-    };
-
-    useEffect(() => {
-      getDivPosition();
-    }, [trigger]);
-
-    useEffect(() => {
-      const handleBeforeUnload = (e) => {
-        if (imagePending) {
-          const message =
-            "Your content is still loading. Are you sure you want to leave?";
-          e.returnValue = message; // Standard for most browsers
-          return message; // For some older browsers
-        }
-      };
-
-      window.addEventListener("beforeunload", handleBeforeUnload);
-
-      // Clean up the event listener
-      return () => {
-        window.removeEventListener("beforeunload", handleBeforeUnload);
-      };
-    }, [imagePending]);
-
-    useEffect(() => {
-      function handler(e) {
-        if (noteRef.current && !noteRef.current.contains(e.target)) {
-          setOpacity(0);
-        }
-      }
-      document.addEventListener("mousedown", handler);
-
-      return () => document.removeEventListener("mousedown", handler);
     }, []);
 
     useEffect(() => {
-      const handleResize = () => {
-        setIsOpen(false);
-        setDropMenuOpen(false);
-        setOpacity("0");
-      };
+      if (trigger2) {
+        setOpacityTrigger(false);
+      }
+      if (!modalTrigger) setOpacityTrigger(true);
+    }, [trigger2, modalTrigger]);
 
-      window.addEventListener("resize", handleResize);
-      return () => {
-        window.removeEventListener("resize", handleResize);
-      };
+    const handlePinClick = useCallback(
+      async (e) => {
+        e.stopPropagation(); // Prevent note click event
+        togglePin(note.uuid);
+        window.dispatchEvent(new Event("loadingStart"));
+
+        try {
+          await NoteUpdateAction("isPinned", !Note.isPinned, note.uuid);
+        } finally {
+          timeoutRef.current = setTimeout(() => {
+            window.dispatchEvent(new Event("loadingEnd"));
+          }, 800);
+        }
+      },
+      [note.uuid, Note.isPinned, togglePin]
+    );
+
+    const handleMenuIsOpenChange = useCallback((value) => {
+      setMenuIsOpen(value);
     }, []);
 
-    const handleMO = useCallback((e) => {
-      setOpacity("100");
-      if (
-        !menuRef.current?.contains(e.target) &&
-        !dropMenuRef.current?.contains(e.target)
-      )
-        setBoxShadow(
-          "0 1px 2px 0 rgba(60,64,67,0.3),0 1px 3px 1.5px rgba(60,64,67,0.15)"
-        );
+    const handleModalTriggerChange = useCallback((value) => {
+      setModalTrigger(value);
     }, []);
 
-    const loadNotes = async () => {
-      const fetchedNotes = await fetchNotes(userID);
-      setNotes(fetchedNotes);
-    };
-
-    const handleML = () => {
-      if (!isOpen && !dropMenuOpen) setOpacity("0");
-      setBoxShadow("none");
-    };
-
-    const handleMenuHover = useCallback(() => {
-      setBoxShadow("none");
+    const handleTrigger2Change = useCallback((value) => {
+      setTrigger2(value);
     }, []);
-
-    const handleColorSelect = (color) => {
-      if (color !== selectedColor) {
-        setSelectedColor(color);
-
-        handleUpdate("color", color);
-      }
-    };
-
-    const handleUpdate = async (field, value) => {
-      const noteID = await fetchNoteID(note.uuid);
-      const formData = new FormData();
-      formData.append(field, value);
-
-      try {
-        if (field !== "image") {
-          setIsLoading(true);
-        }
-
-        await fetch(`/api/notes/${noteID?.replace(/"/g, "")}`, {
-          method: "PATCH",
-          body: formData,
-        });
-        if (field !== "image") {
-          setTimeout(() => {
-            setIsLoading(false);
-          }, 700);
-        }
-      } catch (error) {
-        setTimeout(() => {
-          setIsLoading(false);
-        }, 700);
-        console.log("Error updating note:", error);
-      }
-    };
-
-    const imageUpload = (event) => {
-      const file = event.target.files[0];
-      setImage(URL.createObjectURL(file));
-      handleUpdate(
-        "image",
-        `https://fopkycgspstkfctmhyyq.supabase.co/storage/v1/object/public/notopia/${userID}/${note.uuid}`
-      );
-      replaceImage(
-        event,
-        note.uuid,
-        userID,
-        image,
-        setNoteImagePending,
-        setIsLoading
-      );
-      uploadRef.current.value = "";
-    };
-
-    const updateText = async (noteText) => {
-      const noteID = await fetchNoteID(note.uuid);
-      try {
-        setIsLoading(true);
-        const response = await fetch(
-          `/api/notes/update-text/${noteID?.replace(/"/g, "")}`,
-          {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              title: noteText.title,
-              content: noteText.content,
-            }),
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to update note");
-        }
-        setTimeout(() => {
-          setIsLoading(false);
-        }, 700);
-      } catch (error) {
-        setTimeout(() => {
-          setIsLoading(false);
-        }, 700);
-        console.error("Error updating note:", error);
-        // Handle error (e.g., show error message to user)
-      }
-    };
-
-    const updateTextDebounced =  debounce (async (noteText) => {
-      const noteID = await fetchNoteID(note.uuid);
-      try {
-        setIsLoading(true);
-        const response = await fetch(
-          `/api/notes/update-text/${noteID?.replace(/"/g, "")}`,
-          {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              title: noteText.title,
-              content: noteText.content,
-            }),
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to update note");
-        }
-        setTimeout(() => {
-          setIsLoading(false);
-        }, 700);
-      } catch (error) {
-        setTimeout(() => {
-          setIsLoading(false);
-        }, 700);
-        console.error("Error updating note:", error);
-        // Handle error (e.g., show error message to user)
-      }
-    }, 600);
-
-    useEffect(() => {
-      if (selectedNotesIDs?.length === 0) {
-        setCheckSelect(false);
-      }
-    }, [selectedNotesIDs]);
-
-    const handleSelect = () => {
-      setCheckSelect((prev) => !prev);
-
-      setSelectedNotesIDs((prevNotes) => {
-        if (!prevNotes.some((arrayNote) => arrayNote.uuid === note.uuid)) {
-          return [...prevNotes, note];
-        }
-        return prevNotes;
-      });
-    };
-
-    useEffect(() => {
-      if (!checkSelect) {
-        setSelectedNotesIDs((prevNotes) =>
-          prevNotes.filter((arrayNote) => arrayNote.uuid !== note.uuid)
-        );
-      }
-    }, [checkSelect]);
-
-    const handleNoteSelect = (e) => {
-      if (
-        !toolRef.current.contains(e.target) &&
-        !checkRef.current.contains(e.target) &&
-        !pinRef.current.contains(e.target)
-      ) {
-        setCheckSelect((prev) => !prev);
-
-        setSelectedNotesIDs((prevNotes) => {
-          if (!prevNotes.includes(note.uuid)) {
-            return [...prevNotes, note];
-          }
-          return prevNotes;
-        });
-      }
-    };
-
-    useEffect(() => {
-      setIsPinnedNote(note.isPinned);
-    }, []);
-
-    useEffect(() => {
-      if (isFirstRun.current) {
-        isFirstRun.current = false;
-        return;
-      }
-
-      if (selectedNotesIDs.some((arrayNote) => arrayNote.uuid === note.uuid)) {
-        console.log("Pin: " + updates?.isPinned);
-        setIsPinnedNote(updates?.isPinned);
-      }
-    }, [pinTrigger]);
-
-    useEffect(() => {
-      if (isFirstRun.current) {
-        isFirstRun.current = false;
-        return;
-      }
-
-      if (selectedNotesIDs.some((arrayNote) => arrayNote.uuid === note.uuid)) {
-        console.log("Color: " + updates?.color);
-        setSelectedColor(updates?.color);
-      }
-    }, [colorTrigger]);
-
-    useEffect(() => {
-      if (isFirstRun.current) {
-        isFirstRun.current = false;
-        return;
-      }
-
-      if (selectedNotesIDs.some((arrayNote) => arrayNote.uuid === note.uuid)) {
-        console.log("Archived: " + updates?.isArchived);
-        setArchived(updates?.isArchived);
-      }
-    }, [archivedTrigger]);
-
-    const [height, setHeight] = useState(0);
-
-    useEffect(() => {
-      const calculateHeight = () => {
-        if (noteRef.current) {
-          setHeight(noteRef.current.offsetHeight);
-        }
-      };
-
-      const resizeObserver = new ResizeObserver(calculateHeight);
-
-      if (noteRef.current) {
-        resizeObserver.observe(noteRef.current);
-      }
-
-      // Initial calculation
-      calculateHeight();
-      // Cleanup
-      return () => {
-        if (noteRef.current) {
-          resizeObserver.unobserve(noteRef.current);
-        }
-      };
-    }, []);
-
-    useEffect(() => {
-      isotopeRef.current?.arrange();
-    }, [height]);
 
     return (
       <>
         <div
-          onClick={(e) => {
-            if (
-              !toolRef.current.contains(e.target) &&
-              !checkRef.current.contains(e.target) &&
-              !pinRef.current.contains(e.target) &&
-              selectedNotesIDs.length === 0
-            ) {
-              setOpacityM(false);
-              setTrigger((prev) => !prev);
-              setTimeout(() => {
-                setPassedTrigger(true);
-              }, 0);
-            }
-          }}
-          style={{
-            opacity: opacityM ? "1" : "0",
-            zIndex: "auto",
-          }}
+          style={noteStyle}
+          className="note"
+          onClick={handleNoteClick}
+          ref={noteRef}
         >
-          <div
-            onMouseLeave={handleML}
-            onMouseOver={handleMO}
-            style={{
-              display: noteDisplay ? "" : "none",
-              opacity: noteOpacity ? "1" : "0",
-              backgroundColor: selectedColor,
-              boxShadow: boxShadow,
-              width: isGridLayout ? "37.5rem" : "240px",
-              outline:
-                selectedColor === "#FFFFFF"
-                  ? checkSelect
-                    ? "1px solid #202124"
-                    : "1px solid #e0e0e0"
-                  : checkSelect
-                  ? " 1px solid #202124"
-                  : !image
-                  ? "1px solid " + selectedColor
-                  : "1px solid transparent",
-
-              border: !image
-                ? checkSelect
-                  ? "solid 1px #202124"
-                  : "solid 1px transparent"
-                : checkSelect
-                ? "solid 1px #202124"
-                : "solid 1px transparent",
-            }}
-            className="note note-header"
-            onClick={(e) => {
-              if (selectedNotesIDs.length > 0) {
-                handleNoteSelect(e);
-              }
-            }}
-            ref={noteRef}
-            draggable="false"
-          >
+          <div>
+            <div className="corner" />
             <div
-              style={{ position: image ? "absolute" : "" }}
-              className="corner2"
-            />
-            <div
-              className="checkmark"
-              style={{ zIndex: "1", overflow: "visible" }}
+              style={{ opacity: menuIsOpen ? "1" : undefined }}
+              className="pin"
             >
-              <CheckMarkIcon
-                checkSelect={checkSelect}
-                checkRef={checkRef}
-                style={{
-                  opacity: checkSelect ? "1" : opacity,
-                  transition: "opacity 0.22s linear",
-                  cursor: "pointer",
-                  borderRadius: "50%",
-                  height: "22px",
-                  width: "22px",
-                }}
-                color={checkSelect ? "#6f6f6f" : selectedColor}
-                onClick={handleSelect}
-              />
+              <Button sx={buttonStyle} onClick={handlePinClick}>
+                <PinIcon
+                  color={Note.isPinned ? "#212121" : "transparent"}
+                  opacity={0.8}
+                  rotation={Note.isPinned ? "0deg" : "40deg"}
+                />
+              </Button>
             </div>
-            <Tooltip
-              slotProps={slotProps}
-              PopperProps={TooltipPosition}
-              sx={{ zIndex: "100" }}
-              title={isPinnedNote ? "Unpin note" : "Pin note"}
-              disableInteractive
-            >
-              <IconButton
-                ref={pinRef}
-                disableTouchRipple
-                sx={{
-                  zIndex: "1",
-                  opacity: checkSelect ? "1" : opacity,
-                  "&:hover": { backgroundColor: "rgba(95, 99, 104, 0.157)" },
-                }}
-                id="note-pin"
-                onMouseOver={() => setPinHover(true)}
-                onMouseLeave={() => setPinHover(false)}
-                onClick={() => {
-                  setIsPinnedNote((prev) => !prev);
-                  loadNotes();
-                  handleUpdate("isPinned", !isPinnedNote);
-                }}
-              >
-                <PinClicked
-                  image={image}
-                  pinImgDis={isPinnedNote ? "block" : "none"}
-                  style={{
-                    display: isPinnedNote ? "block" : "none",
-                    opacity:
-                      selectedColor !== "#FFFFFF"
-                        ? !pinHover
-                          ? "0.54"
-                          : "1"
-                        : "1",
-                    transition: "opacity 0s ease-in",
-                  }}
-                  color={
-                    !pinHover
-                      ? selectedColor !== "#FFFFFF"
-                        ? "#212121"
-                        : "#757575"
-                      : "#212121"
-                  }
-                  opacity={pinHover ? "0.87" : "0.54"}
-                />
-
-                <Pin
-                  image={image}
-                  pinImgDis={!isPinnedNote ? "block" : "none"}
-                  style={{
-                    display: isPinnedNote ? "none" : "block",
-                    opacity:
-                      selectedColor !== "#FFFFFF"
-                        ? !pinHover
-                          ? "0.64"
-                          : "1"
-                        : "1",
-                    transition: "opacity 0.2s ease-in",
-                  }}
-                  color={
-                    !pinHover
-                      ? selectedColor !== "#FFFFFF"
-                        ? "#212121"
-                        : "#757575"
-                      : "#212121"
-                  }
-                  opacity={pinHover ? "0.87" : "0.54"}
-                />
-              </IconButton>
-            </Tooltip>
-
-            {image && (
-              <div
-                style={{
-                  position: "relative",
-                  zIndex: "0",
-                  overflow: "hidden",
-                  borderTopLeftRadius: "0.5rem",
-                  borderTopRightRadius: "0.5rem",
-                  borderBottomLeftRadius: title || content ? "0" : "0.5rem",
-                  borderBottomRightRadius: title || content ? "0" : "0.5rem",
-                }}
-              >
-                <div
-                  style={{
-                    opacity: noteImagePending ? "0.6" : "1",
-                    transition: "opacity 0.2s ease-in",
-                  }}
-                >
-                  <img
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      marginBottom: "-4px",
-                      userSelect: "none",
-                      opacity:
-                        imagePending && loadingNoteID === note.uuid
-                          ? "0.6"
-                          : "1",
-                      transition: "opacity 0.2s ease-in",
-                    }}
-                    // draggable="false"
-                    alt="image"
-                    src={isRemoteImage ? `${image}?v=${srcDate}` : image}
-                    draggable="false"
-                  />
+            <div ref={inputsRef}>
+              {Note.title && (
+                <div className="title">
+                  <p>{note.title}</p>
                 </div>
-                {imagePending && loadingNoteID === note.uuid && (
-                  <Box
-                    sx={{
-                      width: "100%",
-                      position: "absolute",
-                      bottom: "0",
-                    }}
-                  >
-                    <LinearProgress />
-                  </Box>
-                )}
-                {noteImagePending && (
-                  <Box
-                    sx={{
-                      width: "100%",
-                      position: "absolute",
-                      bottom: "0",
-                    }}
-                  >
-                    <LinearProgress />
-                  </Box>
-                )}
-              </div>
-            )}
-
-            {!image && !title && !content && (
-              <div
-                className="empty-note"
-                aria-label="Empty note"
-                spellCheck="false"
-              />
-            )}
-
-            {(title || content) && (
-              <div
-                style={{ minHeight: !image ? "60px" : "" }}
-                className="note-text"
-              >
-                {title && (
-                  <h2 draggable="false" className="title noto-sans-bold">
-                    {title}
-                  </h2>
-                )}
-
-                {content && (
-                  <h2 className="content noto-sans-regular"> {content} </h2>
-                )}
-              </div>
-            )}
-
-            {/* {selectedNotesIDs > 0 && ( */}
-            <div
-              style={{
-                opacity: checkSelect ? "0" : opacity,
-                visibility: selectedNotesIDs.length > 0 ? "hidden" : "visible",
-                position: image && !title && !content && "absolute",
-                bottom: image && !title && !content && "0px",
-                backgroundColor:
-                  image && !title && !content && "rgba(255,255,255,0.8)",
-
-                borderBottomLeftRadius: image && !title && !content && "0.5rem",
-                borderBottomRightRadius:
-                  image && !title && !content && "0.5rem",
-                marginBottom: image && !title && !content && "0px",
-                paddingTop:
-                  image && !title && !content
-                    ? "3px"
-                    : image && !title
-                    ? "0px"
-                    : "4px",
-                paddingBottom: image && !title && !content ? "3px" : "4px",
-                paddingLeft: isGridLayout ? "10px" : "",
-                gap: isGridLayout ? "13px" : "0",
-                width: isGridLayout ? "calc(100% - 10px)" : "100%",
-              }}
-              className="noteBottom"
-              ref={toolRef}
-            >
-              <Tooltip
-                slotProps={slotProps}
-                PopperProps={TooltipPosition}
-                sx={{ zIndex: "100" }}
-                title="Remind me"
-                disableInteractive
-              >
-                <div style={{ margin: "auto" }}>
-                  <IconButton
-                    disableTouchRipple
-                    sx={{
-                      width: "34px",
-                      height: "34px",
-                      padding: "6px",
-                      "&:hover": {
-                        backgroundColor: "rgba(95, 99, 104, 0.157)",
-                      },
-                    }}
-                  >
-                    <ReminderIcon />
-                  </IconButton>
+              )}
+              {note.content && (
+                <div className="content">
+                  <p>{note.content}</p>
                 </div>
-              </Tooltip>
-              <Tooltip
-                slotProps={slotProps}
-                PopperProps={TooltipPosition}
-                sx={{ zIndex: "100" }}
-                title="Collaborator"
-                disableInteractive
-              >
-                <div style={{ margin: "auto" }}>
-                  <IconButton
-                    disableTouchRipple
-                    sx={{
-                      width: "34px",
-                      height: "34px",
-                      padding: "6px",
-                      "&:hover": {
-                        backgroundColor: "rgba(95, 99, 104, 0.157)",
-                      },
-                    }}
-                  >
-                    <PersonAddIcon />
-                  </IconButton>
-                </div>
-              </Tooltip>
-              <div style={{ margin: "auto" }}>
-                <ColorSelectMenu
-                  menuRef={menuRef}
-                  isOpen={isOpen}
-                  setIsOpen={setIsOpen}
-                  handleMenuHover={handleMenuHover}
-                  selectedColor={selectedColor}
-                  setSelectedColor={setSelectedColor}
-                  handleColorSelect={handleColorSelect}
-                />
-              </div>
-              <Tooltip
-                slotProps={slotProps}
-                PopperProps={TooltipPosition}
-                disableHoverListener={imagePending || noteImagePending}
-                title="Add image"
-                disableInteractive
-              >
-                <div style={{ margin: "auto" }}>
-                  <input
-                    style={{ display: "none" }}
-                    ref={uploadRef}
-                    type="file"
-                    id="single"
-                    accept=".gif,.jpeg,.jpg,.png,image/gif,image/jpeg,image/jpg,image/png"
-                    onChange={imageUpload}
-                  />
-                  <IconButton
-                    disableTouchRipple
-                    disabled={imagePending || noteImagePending}
-                    onClick={() => {
-                      uploadRef.current?.click();
-                    }}
-                    sx={{
-                      width: "34px",
-                      height: "34px",
-                      padding: "6px",
-                      "&:hover": {
-                        backgroundColor: "rgba(95, 99, 104, 0.157)",
-                      },
-                    }}
-                  >
-                    <ImageIcon />
-                  </IconButton>
-                </div>
-              </Tooltip>
-              <Tooltip
-                slotProps={slotProps}
-                PopperProps={TooltipPosition}
-                sx={{ zIndex: "100" }}
-                title={Archived ? "Archived" : "Archive"}
-                disableInteractive
-              >
-                <div style={{ margin: "auto" }}>
-                  <IconButton
-                    disableTouchRipple
-                    sx={{
-                      width: "34px",
-                      height: "34px",
-                      padding: "6px",
-                      "&:hover": {
-                        backgroundColor: "rgba(95, 99, 104, 0.157)",
-                      },
-                    }}
-                    onClick={() => {
-                      setArchived((prev) => !prev);
-                      handleUpdate("isArchived", !Archived);
-                    }}
-                  >
-                    {Archived ? (
-                      <ArchivedIcon check={selectedColor} />
-                    ) : (
-                      <ArchiveIcon />
-                    )}
-                  </IconButton>
-                </div>
-              </Tooltip>
-
-              <div style={{ margin: "auto" }}>
-                <DropMenu
-                  handleMenuHover={handleMenuHover}
-                  dropMenuRef={dropMenuRef}
-                  isotopeRef={isotopeRef}
-                  open={dropMenuOpen}
-                  setOpen={setDropMenuOpen}
-                  setNoteDisplay={setNoteDisplay}
-                  setNoteOpacity={setNoteOpacity}
-                  Noteuuid={note.uuid}
-                  userID={userID}
-                  setIsTrash={setIsTrash}
-                  isTrash={isTrash}
-                  handleUpdate={handleUpdate}
-                  setIsLoading={setIsLoading}
-                  setIsDeleteSnackOpen={setIsDeleteSnackOpen}
-                />
-              </div>
-              {/* <DropMenu /> */}
+              )}
             </div>
-            {/* )} */}
           </div>
+          <NoteTools
+            isOpen={menuIsOpen}
+            setIsOpen={handleMenuIsOpenChange}
+            setNote={setNote}
+            noteVals={{
+              color: note.color,
+              updatedAt: note.updatedAt,
+              createdAt: note.createdAt,
+              uuid: note.uuid,
+            }}
+          />
         </div>
-        <DeleteSnack
-          isotopeRef={isotopeRef}
-          setNoteDisplay={setNoteDisplay}
-          setNoteOpacity={setNoteOpacity}
-          setIsLoading={setIsLoading}
-          handleUpdate={handleUpdate}
-          setIsTrash={setIsTrash}
-          open={isDeleteSnackOpen}
-          setIsOpen={setIsDeleteSnackOpen}
-        />
-        
         <NoteModal
-          divPosition={divPosition}
-          divSize={divSize}
-          trigger={passedTrigger}
-          setTrigger={setPassedTrigger}
-          setOpacity={setOpacityM}
-          handleUpdate={handleUpdate}
-          updateTextDebounced={updateTextDebounced}
-          noteImagePending={noteImagePending}
-          setTitle={setTitle}
-          title={title}
-          setContent={setContent}
-          content={content}
-          color={selectedColor}
-          setColor={setSelectedColor}
-          isArchived={Archived}
-          setIsArchived={setArchived}
-          image={image}
-          srsDate={srcDate}
-          isRemoteImage={isRemoteImage}
-          isPinnedNote={isPinnedNote}
-          setIsPinnedNote={setIsPinnedNote}
-          imageUpload={imageUpload}
-          Noteuuid={note.uuid}
-          loadingNoteID={loadingNoteID}
-          imagePending={imagePending}
+          trigger={modalTrigger}
+          setTrigger={handleModalTriggerChange}
+          trigger2={trigger2}
+          setTrigger2={handleTrigger2Change}
+          notePos={notePos}
+          noteVals={{
+            color: note.color,
+            updatedAt: note.updatedAt,
+            uuid: note.uuid,
+          }}
         />
       </>
     );
+  },
+  (prevProps, nextProps) => {
+    // Custom comparison to prevent unnecessary rerenders
+    return (
+      prevProps.Note.uuid === nextProps.Note.uuid &&
+      prevProps.Note.isPinned === nextProps.Note.isPinned &&
+      prevProps.Note.color === nextProps.Note.color &&
+      prevProps.Note.title === nextProps.Note.title &&
+      prevProps.Note.content === nextProps.Note.content &&
+      prevProps.Note.updatedAt === nextProps.Note.updatedAt
+    );
   }
 );
+
+Note.displayName = "Note";
 
 export default Note;

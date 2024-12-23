@@ -40,10 +40,12 @@ const NoteSchema = new Schema(
       type: Boolean,
       default: false,
     },
-    image: {
-      type: String,
-      default: "",
-    },
+    images: [
+      {
+        url: { type: String, required: true },
+        id: { type: String, required: true },
+      },
+    ],
   },
   {
     timestamps: true,

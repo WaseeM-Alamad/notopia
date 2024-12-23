@@ -1,35 +1,21 @@
-@font-face {
-  font-family: "default";
-  src: url(../fonts/TT\ Wellingtons\ Trial\ Regular.otf);
-}
-
-@font-face {
-  font-family: "default bold";
-  src: url(../fonts/TT\ Wellingtons\ Trial\ Bold.otf);
-}
-
-html {
-  font-size: 16px;
-  scroll-behavior: smooth;
-}
-
-
-
 * {
-  padding: 0;
+  font-family: "DM Sans", sans-serif;
   margin: 0;
-  font-family: "default";
+  padding: 0;
+}
+
+body {
+  scrollbar-gutter: stable;
 }
 
 ::-webkit-scrollbar {
   width: 10px;
-  overflow-x:scroll;
+  overflow-x: scroll;
 }
 
 ::-webkit-scrollbar-track {
   border-radius: 2px;
-  background-color: #ffffff62;
-  
+  outline: solid 1px #d6d6d6;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -38,87 +24,118 @@ html {
   border-radius: 0.3em;
 }
 
-.roboto-thin {
-  font-family: "Roboto", sans-serif;
-  font-weight: 100;
-  font-style: normal;
+.starting-div {
+  padding-left: 6.5625rem;
+  padding-top: 4.625rem;
 }
 
-.roboto-thin-italic {
-  font-family: "Roboto", sans-serif;
-  font-weight: 100;
-  font-style: italic;
+.add-button-icon-circle {
+  transition: all 0.3s ease;
 }
 
-.roboto-light {
-  font-family: "Roboto", sans-serif;
-  font-weight: 300;
-  font-style: normal;
+.add-button-icon {
+  fill: #2b2b2b;
+  z-index: 2;
+  cursor: pointer;
 }
 
-.roboto-light-italic {
-  font-family: "Roboto", sans-serif;
-  font-weight: 300;
-  font-style: italic;
+.add-button-icon:hover .add-button-icon-circle {
+  fill: rgb(15, 15, 15);
 }
 
-.roboto-regular {
-  font-family: "Roboto", sans-serif;
-  font-weight: 400;
-  font-style: normal;
+.page-header {
+  display: flex;
+  min-height: 3.125rem;
+  justify-content: flex-start;
+  align-items: center;
+  padding-left: 2rem;
+  padding-right: 4rem;
+  margin-top: 1rem;
+  user-select: none;
 }
 
-.roboto-regular-italic {
-  font-family: "Roboto", sans-serif;
-  font-weight: 400;
-  font-style: italic;
+.page-header-title {
+  color: #212121;
+  margin-left: 0.7rem;
+  font-size: 1.9rem;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
-.roboto-medium {
-  font-family: "Roboto", sans-serif;
+.page-header-divider {
+  border-top: solid 0.12rem #a5a5a5;
+  width: 100%;
+  margin-left: 1.2rem;
+  margin-top: auto;
+  margin-bottom: 1.2rem;
+  margin-right: 1.2rem;
+}
+
+.divider-tools-container {
+  display: flex;
+  gap: 1rem;
+}
+
+.divider-tool-text {
+  color: #7a7a7a;
+  white-space: nowrap;
+  font-size: 0.85rem;
   font-weight: 500;
-  font-style: normal;
 }
 
-.roboto-medium-italic {
-  font-family: "Roboto", sans-serif;
-  font-weight: 500;
-  font-style: italic;
+.divider-tool {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  margin-top: 0.5rem;
+  width: fit-content;
+  gap: 0.2rem;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
 }
 
-.roboto-bold {
-  font-family: "Roboto", sans-serif;
-  font-weight: 700;
-  font-style: normal;
+.note {
+  width: 240px;
+  height: 104px;
 }
 
-.roboto-bold-italic {
-  font-family: "Roboto", sans-serif;
-  font-weight: 700;
-  font-style: italic;
+.corner {
+  float: right;
+  width: 38px;
+  height: 32px;
 }
 
-.roboto-black {
-  font-family: "Roboto", sans-serif;
-  font-weight: 900;
-  font-style: normal;
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0);
+  cursor: pointer;
+  padding: 6px;
+  height: 32px;
+  width: 32px;
+  border-radius: 50%;
+  border: none;
+  background-color: rgba(0, 0, 0, 0);
+  transition: all 0.1s ease;
 }
 
-.roboto-black-italic {
-  font-family: "Roboto", sans-serif;
-  font-weight: 900;
-  font-style: italic;
+.btn:hover {
+  background-color: rgba(0, 0, 0, 0.1);
 }
 
-.noto-sans-regular {
-  font-family: "Noto Sans Mayan Numerals", sans-serif;
-  font-weight: 400;
-  font-style: normal;
+.btn-click:active {
+  background-color: rgba(0,0,0,0.2);
 }
 
-.noto-sans-bold {
-  font-family: "Noto Sans Mayan Numerals", sans-serif;
-  font-weight: 500;
-  font-style: normal;
+.section-label {
+  left: 1.5rem;
+  position: absolute;
+  transition: opacity 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgb(95,99,104);
+  user-select: none;
+  
 }
-

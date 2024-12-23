@@ -1,7 +1,7 @@
 "use client";
-import { useSession, signIn, signOut } from "next-auth/react";
+import { useSession, signIn } from "next-auth/react";
 import { redirect } from "next/navigation";
-import "@/assets/styles/Login.css";
+import "@/assets/styles/login.css";
 import {
   EmailOutlined,
   FacebookOutlined,
@@ -10,23 +10,20 @@ import {
 } from "@mui/icons-material";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Checkbox } from "@mui/material";
-import CheckMarkForm from "@/components/CheckMarkForm";
+import CheckMarkForm from "@/components/icons/CheckMarkForm";
+import { authOptions } from "@/utils/authOptions";
 
-export default function page() {
-  const { data: session, status } = useSession();
+export default function Page() {
   const [emailClick, setEmailClick] = useState(false);
-  const [isChecked, setIsChecked] = useState();
-  const [mount, setMount] = useState(false);
+  const [isChecked, setIsChecked] = useState(false);
   const checkBoxRef = useRef(null);
 
+  const { data: session, status } = useSession();
   useEffect(() => {
-    setMount(true);
-  }, []);
-
-  if (status === "authenticated") {
-    redirect("/home");
-  }
+    if (status === "authenticated") {
+      redirect("/home");
+    }
+  }, [status]);
 
   return (
     <>
@@ -183,26 +180,32 @@ export default function page() {
               </div>
             </div>
             <div className="right-container">
-              <div
-                style={{
-                  position: "relative",
-                  top: !mount ? "55px" : "0",
-                  opacity: !mount ? "0" : "1",
-                  transition: "top 0.5s ease, opacity 0.5s ease",
+              <motion.div
+                initial={{ y: 150, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{
+                  y: {
+                    duration: 0.5,
+                    type: "spring", // Use spring animation for y
+                    stiffness: 250, // Controls the spring's strength (higher = more stiff)
+                    damping: 30, // Controls the bounciness (higher = less bouncy)
+                    mass: 1, // Mass of the object (affects how fast it moves)
+                  },
+                  opacity: { duration: 0.5 },
                 }}
                 className="right-inner"
               >
                 <h1 style={{ paddingBottom: "1rem", fontWeight: "900" }}>
                   Welcome to Notopia
                 </h1>
-                <h4 style={{ fontWeight: "100", paddingBottom: "1rem" }}>
+                <h4 style={{ fontWeight: "200", paddingBottom: "1rem" }}>
                   Don't have an account?
                 </h4>
                 <button className="sign-up-button">
                   {" "}
                   <span>Sign Up</span>{" "}
                 </button>
-              </div>
+              </motion.div>
             </div>
           </div>
         </div>
