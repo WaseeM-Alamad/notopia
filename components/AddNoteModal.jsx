@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { useAppContext } from "@/context/AppContext";
 import { createNoteAction } from "@/utils/actions";
 import { v4 as uuid } from "uuid";
+import ModalTools from "./ModalTools";
 
 const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
   const [note, setNote] = useState({
@@ -20,9 +21,11 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
   const { modalPosition, setModalPosition } = useAppContext();
   const [isClient, setIsClient] = useState(false);
   const [trigger2, setTrigger2] = useState(false);
+  const [selectedColor, setSelectedColor] = useState("#FFFFFF");
   const modalRef = useRef(null);
   const titleRef = useRef(null);
   const contentRef = useRef(null);
+  const modalContainerRef = useRef(null);
 
   useEffect(() => {
     // Set isClient to true once the component is mounted on the client side
@@ -53,7 +56,7 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
   }
 
   const handleClose = async (e) => {
-    if (!modalRef.current.contains(e.target)) {
+    if (modalContainerRef.current === e.target) {
       setTrigger2(false);
       setTimeout(() => {
         setTrigger(false);
@@ -95,6 +98,7 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
       }
       titleRef.current.textContent = "";
       contentRef.current.textContent = "";
+      setSelectedColor("#FFFFFF");
       setNote({
         uuid: "",
         title: "",
@@ -135,6 +139,7 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
 
   return createPortal(
     <div
+      ref={modalContainerRef}
       onClick={handleClose}
       style={{
         display: trigger ? "" : "none",
@@ -149,60 +154,69 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
           top: trigger2 ? "30%" : `${modalPosition.top}px`,
           left: trigger2 ? "50%" : `${modalPosition.left}px`,
           width: trigger2 ? "600px" : `${modalPosition.width}px`,
-          height: trigger2 ? "185px" : `${modalPosition.height}px`,
+          height: trigger2 ? "" : `${modalPosition.height}px`,
+          minHeight: trigger2 ? "185px" : "",
           transform: trigger2 && "translate(-50%, -30%)",
           borderRadius: trigger2 ? "0.7rem" : modalPosition.borderRadius,
-          backgroundColor: "white",
+          backgroundColor: selectedColor,
           transition:
             "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), width 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), height 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), background-color 0.25s linear, borderRadius 0.1s",
         }}
         className="modal"
       >
-        <div
-          style={{
-            display: trigger2
-              ? ""
-              : note.content && !note.title
-              ? "none"
-              : !note.title && !note.content
-              ? "none"
-              : "",
-          }}
-          contentEditable
-          suppressContentEditableWarning
-          onInput={handleTitleInput}
-          onPaste={handlePaste}
-          ref={titleRef}
-          className="modal-title-input modal-editable-title"
-          role="textbox"
-          tabIndex="0"
-          aria-multiline="true"
-          aria-label="Title"
-          spellCheck="false"
-        />
-        <div
-          style={{
-            display: trigger2
-              ? ""
-              : !note.content && note.title
-              ? "none"
-              : !note.title && !note.content
-              ? "none"
-              : "",
-            transition: "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)",
-          }}
-          contentEditable
-          suppressContentEditableWarning
-          onInput={handleContentInput}
-          onPaste={handlePaste}
-          ref={contentRef}
-          className="modal-content-input modal-editable-content"
-          role="textbox"
-          tabIndex="0"
-          aria-multiline="true"
-          aria-label="Take a note...."
-          spellCheck="false"
-        />
+        <div className="modal-inputs-container">
+          <div
+            style={{
+              display: trigger2
+                ? ""
+                : note.content && !note.title
+                ? "none"
+                : !note.title && !note.content
+                ? "none"
+                : "",
+            }}
+            contentEditable
+            suppressContentEditableWarning
+            onInput={handleTitleInput}
+            onPaste={handlePaste}
+            ref={titleRef}
+            className="modal-title-input modal-editable-title"
+            role="textbox"
+            tabIndex="0"
+            aria-multiline="true"
+            aria-label="Title"
+            spellCheck="false"
+          />
+          <div
+            style={{
+              display: trigger2
+                ? ""
+                : !note.content && note.title
+                ? "none"
+                : !note.title && !note.content
+                ? "none"
+                : "",
+              transition: "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)",
+            }}
+            contentEditable
+            suppressContentEditableWarning
+            onInput={handleContentInput}
+            onPaste={handlePaste}
+            ref={contentRef}
+            className="modal-content-input modal-editable-content"
+            role="textbox"
+            tabIndex="0"
+            aria-multiline="true"
+            aria-label="Take a note...."
+            spellCheck="false"
+          />
+        </div>
+        { trigger2 &&
+        <ModalTools
+          setNote={setNote}
+          selectedColor={selectedColor}
+          setSelectedColor={setSelectedColor}
+        />}
       </div>
     </div>,
     document.getElementById("modal-portal")

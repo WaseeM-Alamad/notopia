@@ -11,6 +11,8 @@
 .modal {
   position: fixed;
   overflow: hidden;
+  max-width: "37.5rem";
+  max-height: "51.8125rem";
 }
 
 .modal-editable-title:empty::before {
@@ -61,4 +63,38 @@
   top: 0.1rem;
   margin-top: 9px;
   cursor: text;
+}
+
+.modal-inputs-container {
+  max-height: 40.5rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.modal-date-section {
+  min-height: 25px;
+  padding: 5px 10px 5px 10px;
+}
+
+.modal-bottom {
+  opacity: 0;
+  position: absolute;
+  bottom: 0;
+  gap: 1rem;
+  display: flex;
+  justify-content: flex-start;
+  padding-left: 1rem;
+  align-items: center;
+  color: rgba(0, 0, 0, 0.5);
+  font-weight: 600;
+  min-height: 40px;
+  width: 100%;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+.modal-bottom-icons {
+  display: flex;
+  padding-bottom: 3px;
+  gap: 1.5rem;
 }

@@ -15,6 +15,7 @@ import LabelIcon from "./icons/LabelIcon";
 import AddNoteModal from "./AddNoteModal";
 import { useAppContext } from "@/context/AppContext";
 import { fetchNotes } from "@/utils/actions";
+import { motion } from "framer-motion";
 
 const COLUMN_WIDTH = 260;
 const GUTTER = 15;
@@ -40,26 +41,34 @@ const Header = memo(() => (
 
 Header.displayName = "Header";
 
-const NoteWrapper = memo(({ note, togglePin, isVisible, ref }) => (
-  <div
-    ref={ref}
-    data-pinned={note.isPinned}
-    className="grid-item"
-    style={{
-      width: `${COLUMN_WIDTH}px`,
-      marginBottom: `${GUTTER}px`,
-      transition: "transform 0.2s ease, opacity 0.3s ease",
-      opacity: isVisible ? 1 : 0,
-      pointerEvents: isVisible ? "auto" : "none",
-    }}
-  >
-    <Note Note={note} togglePin={togglePin} />
-  </div>
-));
+const NoteWrapper = memo(({ note, togglePin, isVisible, ref }) => {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setTimeout(() => {
+      setMounted(true);
+    }, 100);
+  }, []);
+  return (
+    <motion.div
+      ref={ref}
+      data-pinned={note.isPinned}
+      className="grid-item"
+      style={{
+        width: `${COLUMN_WIDTH}px`,
+        marginBottom: `${GUTTER}px`,
+        transition: `transform ${mounted ? "0.2s" : "0"} ease`,
+        opacity: isVisible ? 1 : 0,
+        pointerEvents: isVisible ? "auto" : "none",
+      }}
+    >
+      <Note Note={note} togglePin={togglePin} />
+    </motion.div>
+  );
+});
 
 NoteWrapper.displayName = "NoteWrapper";
 
-const Home = memo(({ InitialNotes }) => {
+const Home = memo(() => {
   const [notes, setNotes] = useState([]);
   const [isLayoutReady, setIsLayoutReady] = useState(false);
   const [othersHeight, setOthersHeight] = useState(null);
@@ -69,12 +78,21 @@ const Home = memo(({ InitialNotes }) => {
   const resizeTimeoutRef = useRef(null);
   const layoutFrameRef = useRef(null);
 
+  const getNotes = async () => {
+    window.dispatchEvent(new Event("loadingStart"));
+    const fetchedNotes = await fetchNotes();
+    setTimeout(() => {
+      window.dispatchEvent(new Event("loadingEnd"));
+    }, 800);
+
+    setNotes(fetchedNotes.data);
+  };
+
   useEffect(() => {
-    const getNotes = async () => {
-      const fetchedNotes = await fetchNotes();
-      setNotes(fetchedNotes.data);
-    };
     getNotes();
+    window.addEventListener("refresh", getNotes);
+
+    return () => window.removeEventListener("refresh", getNotes);
   }, []);
 
   const { pinnedNotes, unpinnedNotes } = useMemo(
@@ -157,7 +175,7 @@ const Home = memo(({ InitialNotes }) => {
       // Set layout ready after initial calculation
       if (!isLayoutReady) {
         // Small delay to ensure smooth transition
-        setTimeout(() => setIsLayoutReady(true), 100);
+        setTimeout(() => setIsLayoutReady(true), 300);
       }
     });
   }, [isLayoutReady]);

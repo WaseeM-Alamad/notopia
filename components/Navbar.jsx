@@ -10,13 +10,14 @@ import { usePathname } from "next/navigation";
 import { Box } from "@mui/system";
 import CloudIcon from "./icons/CloudIcon";
 import { AnimatePresence, motion } from "framer-motion";
+import Logo from "./logo";
 
 const Navbar = ({ user }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [UpToDatetrigger, setUpToDateTrigger] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
   const image = user?.image;
-  console.log(image)
+  console.log(image);
   const pathName = usePathname();
   const firstRun = useRef(true);
 
@@ -62,6 +63,10 @@ const Navbar = ({ user }) => {
     };
   }, []);
 
+  const handleRefresh = () => {
+    window.dispatchEvent(new Event("refresh"));
+  };
+
   return (
     <>
       {pathName !== "/" && (
@@ -75,7 +80,10 @@ const Navbar = ({ user }) => {
             <IconButton sx={{ width: "2.8rem", height: "2.8rem" }}>
               <GridIcon />
             </IconButton>
-            <IconButton sx={{ width: "2.8rem", height: "2.8rem" }}>
+            <IconButton
+              onClick={handleRefresh}
+              sx={{ width: "2.8rem", height: "2.8rem" }}
+            >
               <AnimatePresence>
                 {!isLoading && UpToDatetrigger && (
                   <motion.div

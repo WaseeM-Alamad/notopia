@@ -1,0 +1,68 @@
+import React, { useCallback, useRef, useState } from "react";
+import PersonAdd from "./icons/PersonAdd";
+import Bell from "./icons/Bell";
+import ArchiveIcon from "./icons/ArchiveIcon";
+import ImageIcon from "./icons/ImageIcon";
+import Button from "./Tools/Button";
+import ColorIcon from "./icons/ColorIcon";
+import MoreVert from "./icons/MoreVert";
+import ColorSelectMenu from "./ColorSelectMenu";
+
+const ModalTools = ({ setNote, selectedColor, setSelectedColor }) => {
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+  const [isOpen, setIsOpen] = useState(false);
+  const colorButtonRef = useRef(null);
+
+  const handleColorClick = useCallback((color) => {
+    if (color === selectedColor) return;
+    setSelectedColor(color);
+    setNote((prev) => ({ ...prev, color: color }));
+  });
+
+  const toggleMenu = useCallback(() => {
+    const rect = colorButtonRef.current.getBoundingClientRect();
+    setMenuPosition({
+      top: rect.bottom + window.scrollY, // Account for scrolling
+      left: rect.left + window.scrollX, // Account for scrolling
+    });
+    setIsOpen(!isOpen);
+  });
+
+  return (
+    <div>
+      <div style={{ opacity: "1" }} className="modal-bottom">
+        {/* <p className="date">{FormattedDate}</p> */}
+        <div className="modal-bottom-icons">
+          <Button>
+            <Bell size={15} opacity={0.8} />
+          </Button>
+          <Button>
+            <PersonAdd size={15} opacity={0.8} />
+          </Button>
+          <Button>
+            <ArchiveIcon size={15} opacity={0.8} color="#212121" />
+          </Button>
+          <Button>
+            <ImageIcon size={15} opacity={0.8} />
+          </Button>
+          <Button ref={colorButtonRef} onClick={toggleMenu}>
+            <ColorIcon size={15} opacity={0.8} />
+          </Button>
+          <ColorSelectMenu
+            handleColorClick={handleColorClick}
+            menuPosition={menuPosition}
+            selectedColor={selectedColor}
+            isOpen={isOpen}
+            setIsOpen={setIsOpen}
+            buttonRef={colorButtonRef}
+          />
+          <Button>
+            <MoreVert size={15} opacity={0.8} />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ModalTools;
