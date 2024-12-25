@@ -9,7 +9,7 @@
 }
 
 .modal {
-  position: fixed;
+  position: absolute;
   overflow: hidden;
   max-width: "37.5rem";
   max-height: "51.8125rem";
@@ -41,6 +41,13 @@
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
+.modal-closed-title-input {
+  padding: 0.8rem 0.8rem 0 0.8rem;
+  font-weight: 500;
+  font-size: 1.2rem;
+
+}
+
 .modal-content-input {
   padding: 12px 16px 12px 16px;
   min-height: 24px;
@@ -48,6 +55,13 @@
   outline: none;
   overflow-wrap: break-word;
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.modal-closed-content-input {
+  padding: 0.6rem 0.8rem 0.8rem 0.8rem;
+  font-weight: 400;
+  font-size: 1.1rem;
+
 }
 
 .modal-editable-content:empty::before {
@@ -68,7 +82,20 @@
 .modal-inputs-container {
   max-height: 40.5rem;
   overflow-x: hidden;
-  overflow-y: auto;
+}
+
+.modal-inputs-container::-webkit-scrollbar {
+  width: 7px;
+}
+
+.modal-inputs-container::-webkit-scrollbar-track {
+  outline: none;
+  background-color: transparent;
+}
+
+.modal-inputs-container::-webkit-scrollbar-thumb {
+  background-color: rgba(0,0,0,.2);
+  border-radius: 2rem;
 }
 
 .modal-date-section {
@@ -77,9 +104,8 @@
 }
 
 .modal-bottom {
+  user-select: none;
   opacity: 0;
-  position: absolute;
-  bottom: 0;
   gap: 1rem;
   display: flex;
   justify-content: flex-start;
@@ -96,5 +122,39 @@
 .modal-bottom-icons {
   display: flex;
   padding-bottom: 3px;
-  gap: 1.5rem;
+  gap: 1.3rem;
+}
+
+.close-btn {
+  margin-left: auto;
+  margin-right: 1rem;
+  margin-bottom: 0.4rem;
+  padding: .65rem 1.5rem .65rem 1.5rem;
+  background-color: rgba(0, 0, 0, 0);
+  border: none;
+  border-radius: 0.4rem;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  background-color: rgba(0, 0, 0, 0.07);
+}
+
+.close-btn:focus {
+  background-color: rgba(0, 0, 0, 0.07);
+}
+
+.modal-corner {
+  height: 38px;
+  width: 46px;
+  float: right;
+}
+
+.modal-pin {
+  position: absolute;
+  right: 0;
+  padding: 0.5rem 0.8rem 0rem 0rem;
+  transition: all 0.3s ease;
 }

@@ -4,11 +4,12 @@ import React, { memo, useRef } from "react";
 const Button = ({
   children,
   onClick,
+  disabled,
   className,
   ref,
   style 
 }) => {
-  return <button className={`${className} btn`} ref={ref} onClick={onClick} style={style}>{children}</button>;
+  return <button disabled={disabled} className={`${className} btn`} ref={ref} onClick={onClick} style={style}>{children}</button>;
 };
 
 export default memo(Button);

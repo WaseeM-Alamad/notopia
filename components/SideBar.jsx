@@ -30,7 +30,7 @@ const springTransition = {
 };
 
 const Sidebar = memo(() => {
-  const { setModalOpen, modalPosition, setModalPosition } = useAppContext();
+  const { setModalOpen } = useAppContext();
   const addButtonRef = useRef(null);
   const pathName = usePathname();
 
@@ -44,14 +44,7 @@ const Sidebar = memo(() => {
   if (pathName === "/") return null;
 
   const handleAddNote = () => {
-    const rect = addButtonRef.current.getBoundingClientRect();
-    setModalPosition({
-      top: rect.top,
-      left: rect.left,
-      width: rect.width,
-      height: rect.height,
-      borderRadius: "30%",
-    });
+    
     setModalOpen(true);
   };
 

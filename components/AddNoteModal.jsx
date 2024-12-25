@@ -5,6 +5,9 @@ import { useAppContext } from "@/context/AppContext";
 import { createNoteAction } from "@/utils/actions";
 import { v4 as uuid } from "uuid";
 import ModalTools from "./ModalTools";
+import PinIcon from "./icons/PinIcon";
+import Button from "./Tools/Button";
+import { motion } from "framer-motion";
 
 const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
   const [note, setNote] = useState({
@@ -18,10 +21,19 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
     isTrash: false,
     images: [],
   });
-  const { modalPosition, setModalPosition } = useAppContext();
+  const [modalPosition, setModalPosition] = useState({
+    top: "30%",
+    left: "50%",
+    width: 600,
+    height: 185,
+    borderRadius: "0.7rem",
+    transform: "translate(-50%, -30%)",
+    margin: "25px",
+  });
   const [isClient, setIsClient] = useState(false);
   const [trigger2, setTrigger2] = useState(false);
   const [selectedColor, setSelectedColor] = useState("#FFFFFF");
+  const [isEmptyNote, setIsEmptyNote] = useState(true);
   const modalRef = useRef(null);
   const titleRef = useRef(null);
   const contentRef = useRef(null);
@@ -39,14 +51,21 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
   }, [trigger]);
 
   useEffect(() => {
+    
     if (trigger2) {
       const scrollbarWidth =
         window.innerWidth - document.documentElement.clientWidth;
-      document.body.style.overflow = "hidden";
-      document.body.style.paddingRight = `${scrollbarWidth}px`; // Add padding
+      document.body.style.overflow = "hidden"
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+      modalRef.current.style.marginLeft = `${0}px`;
+      //marginLeft: trigger2? '0px': "5px",
     } else {
+      const scrollbarWidth =
+        window.innerWidth - document.documentElement.clientWidth;
       document.body.style.overflow = "auto";
       document.body.style.paddingRight = ""; // Remove padding
+      if (modalRef.current)
+      modalRef.current.style.marginLeft = `${scrollbarWidth === 0? 0 :  scrollbarWidth-5}px`;
     }
     return () => (document.body.style.overflow = "auto"); // Cleanup
   }, [trigger2]);
@@ -55,15 +74,19 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
     return null; // Return nothing on the server side
   }
 
-  const handleClose = async (e) => {
-    if (modalContainerRef.current === e.target) {
+  const handleClose = async (e, closeRef) => {
+    if (
+      modalContainerRef.current === e.target ||
+      closeRef?.current === e.target
+    ) {
       setTrigger2(false);
       setTimeout(() => {
         setTrigger(false);
-      }, 200);
+      }, 260);
 
       if (note.title.trim() || note.content.trim()) {
         try {
+          setIsEmptyNote(false);
           setTimeout(() => {
             const rect = lastAddedNoteRef.current.getBoundingClientRect();
             setModalPosition({
@@ -96,6 +119,16 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
           window.dispatchEvent(new Event("loadingEnd"));
         }, 800);
       }
+      setIsEmptyNote(true);
+      setModalPosition({
+        top: "30%",
+        left: "50%",
+        width: 600,
+        height: 185,
+        borderRadius: "0.7rem",
+        transform: "translate(-50%, -30%)",
+        margin: "25px",
+      });
       titleRef.current.textContent = "";
       contentRef.current.textContent = "";
       setSelectedColor("#FFFFFF");
@@ -137,6 +170,10 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
     }
   };
 
+  const handlePinClick = () => {
+    setNote((prev) => ({ ...prev, isPinned: !prev.isPinned }));
+  };
+
   return createPortal(
     <div
       ref={modalContainerRef}
@@ -150,21 +187,39 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
       <div
         ref={modalRef}
         style={{
-          opacity: trigger2 ? "1" : "0",
-          top: trigger2 ? "30%" : `${modalPosition.top}px`,
-          left: trigger2 ? "50%" : `${modalPosition.left}px`,
-          width: trigger2 ? "600px" : `${modalPosition.width}px`,
-          height: trigger2 ? "" : `${modalPosition.height}px`,
+          opacity: trigger2 ? "1" : isEmptyNote ? "0" : "1",
+          top: modalPosition.top,
+          left: modalPosition.left,
+          width: modalPosition.width,
+          height: trigger2 ? "" : modalPosition.height,
+          marginTop: trigger2 ? "0px" : modalPosition.margin,
           minHeight: trigger2 ? "185px" : "",
-          transform: trigger2 && "translate(-50%, -30%)",
-          borderRadius: trigger2 ? "0.7rem" : modalPosition.borderRadius,
+          transform: modalPosition.transform,
+          borderRadius: modalPosition.borderRadius,
           backgroundColor: selectedColor,
           transition:
-            "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), width 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), height 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), background-color 0.25s linear, borderRadius 0.1s",
+            "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), width 0.1s ease, height 0.1s ease, background-color 0.25s linear, border-radius 0.1s, margin-left 0s",
         }}
         className="modal"
       >
-        <div className="modal-inputs-container">
+        <div
+          style={{ overflowY: trigger2 ? "auto" : "hidden" }}
+          className="modal-inputs-container"
+        >
+          <div className="modal-corner" />
+          <div className="modal-pin">
+            <Button
+              disabled={!trigger2}
+              style={{ opacity: !trigger2 && "0" }}
+              onClick={handlePinClick}
+            >
+              <PinIcon
+                color={note.isPinned ? "#212121" : "transparent"}
+                opacity={0.8}
+                rotation={note.isPinned ? "0deg" : "40deg"}
+              />
+            </Button>
+          </div>
           <div
             style={{
               display: trigger2
@@ -180,7 +235,9 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
             onInput={handleTitleInput}
             onPaste={handlePaste}
             ref={titleRef}
-            className="modal-title-input modal-editable-title"
+            className={`${
+              trigger2 ? "modal-title-input" : "modal-closed-title-input"
+            } modal-editable-title`}
             role="textbox"
             tabIndex="0"
             aria-multiline="true"
@@ -196,6 +253,7 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
                 : !note.title && !note.content
                 ? "none"
                 : "",
+              minHeight: "3.8rem",
               transition: "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)",
             }}
             contentEditable
@@ -203,7 +261,9 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
             onInput={handleContentInput}
             onPaste={handlePaste}
             ref={contentRef}
-            className="modal-content-input modal-editable-content"
+            className={`${
+              trigger2 ? "modal-content-input" : "modal-closed-content-input"
+            } modal-editable-content`}
             role="textbox"
             tabIndex="0"
             aria-multiline="true"
@@ -211,12 +271,14 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
             spellCheck="false"
           />
         </div>
-        { trigger2 &&
-        <ModalTools
-          setNote={setNote}
-          selectedColor={selectedColor}
-          setSelectedColor={setSelectedColor}
-        />}
+        {trigger2 && (
+          <ModalTools
+            setNote={setNote}
+            selectedColor={selectedColor}
+            setSelectedColor={setSelectedColor}
+            handleClose={handleClose}
+          />
+        )}
       </div>
     </div>,
     document.getElementById("modal-portal")

@@ -31,7 +31,6 @@ const Note = memo(
       height: 20,
     }));
 
-    // Memoize note style
     const noteStyle = useMemo(
       () => ({
         opacity: opacityTrigger ? "1" : "0",
@@ -42,19 +41,6 @@ const Note = memo(
       [note.color, opacityTrigger]
     );
 
-    // Memoize button style
-    const buttonStyle = useMemo(
-      () => ({
-        padding: "6px",
-        height: "32px",
-        width: "32px",
-        margin: "auto",
-        "&:hover": {
-          backgroundColor: "rgba(95, 99, 104, 0.157)",
-        },
-      }),
-      []
-    );
 
     const handleNoteClick = useCallback((e) => {
       if (
@@ -122,7 +108,7 @@ const Note = memo(
               style={{ opacity: menuIsOpen ? "1" : undefined }}
               className="pin"
             >
-              <Button sx={buttonStyle} onClick={handlePinClick}>
+              <Button onClick={handlePinClick}>
                 <PinIcon
                   color={Note.isPinned ? "#212121" : "transparent"}
                   opacity={0.8}

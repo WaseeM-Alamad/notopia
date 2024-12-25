@@ -42,12 +42,19 @@ const Header = memo(() => (
 Header.displayName = "Header";
 
 const NoteWrapper = memo(({ note, togglePin, isVisible, ref }) => {
+  const { modalOpen, setModalOpen } = useAppContext();
   const [mounted, setMounted] = useState(false);
+  const [mountOpacity, setMountOpacity] = useState(false);
   useEffect(() => {
     setTimeout(() => {
       setMounted(true);
     }, 100);
   }, []);
+
+  useEffect(()=> {
+    if (!modalOpen) setMountOpacity(true);
+  }, [modalOpen])
+
   return (
     <motion.div
       ref={ref}
@@ -56,8 +63,8 @@ const NoteWrapper = memo(({ note, togglePin, isVisible, ref }) => {
       style={{
         width: `${COLUMN_WIDTH}px`,
         marginBottom: `${GUTTER}px`,
-        transition: `transform ${mounted ? "0.2s" : "0"} ease`,
-        opacity: isVisible ? 1 : 0,
+        transition: `transform ${mounted ? "0.2s" : "0"} ease, opacity 0s`,
+        opacity: isVisible ? mountOpacity? 1: 0 : 0,
         pointerEvents: isVisible ? "auto" : "none",
       }}
     >

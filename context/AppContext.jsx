@@ -32,12 +32,7 @@ export function AppProvider({ children }) {
 
   
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalPosition, setModalPosition] = useState({
-    top: 0,
-    left: 0,
-    width: 0,
-    height: 0,
-  })
+  
   const [user, setUser] = useState(null);
   const { data: session, status } = useSession();
 
@@ -54,8 +49,6 @@ export function AppProvider({ children }) {
         user,
         session,
         status,
-        modalPosition,
-        setModalPosition,
         modalOpen,
         setModalOpen
       }}
