@@ -17,7 +17,6 @@ const Navbar = ({ user }) => {
   const [UpToDatetrigger, setUpToDateTrigger] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
   const image = user?.image;
-  console.log(image);
   const pathName = usePathname();
   const firstRun = useRef(true);
 

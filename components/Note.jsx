@@ -12,6 +12,7 @@ import NoteModal from "./NoteModal";
 import PinIcon from "./icons/PinIcon";
 import { NoteUpdateAction } from "@/utils/actions";
 import Button from "./Tools/Button";
+import NoteImagesLayout from "./Tools/NoteImagesLayout";
 
 const Note = memo(
   ({ Note, togglePin }) => {
@@ -40,7 +41,6 @@ const Note = memo(
       }),
       [note.color, opacityTrigger]
     );
-
 
     const handleNoteClick = useCallback((e) => {
       if (
@@ -103,7 +103,7 @@ const Note = memo(
           ref={noteRef}
         >
           <div>
-            <div className="corner" />
+            {note.images.length === 0 && <div className="corner" />}
             <div
               style={{ opacity: menuIsOpen ? "1" : undefined }}
               className="pin"
@@ -116,6 +116,7 @@ const Note = memo(
                 />
               </Button>
             </div>
+            {/* <NoteImagesLayout images={note.images} /> */}
             <div ref={inputsRef}>
               {Note.title && (
                 <div className="title">

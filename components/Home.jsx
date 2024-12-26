@@ -248,6 +248,7 @@ const Home = memo(() => {
     <>
       <div className="starting-div">
         <Header />
+        <button onClick={()=> console.log(notes)}>g</button>
         <div
           ref={containerRef}
           className="notes-container"

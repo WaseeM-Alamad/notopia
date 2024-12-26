@@ -81,6 +81,7 @@
 
 .modal-inputs-container {
   max-height: 40.5rem;
+  box-sizing: border-box;
   overflow-x: hidden;
 }
 

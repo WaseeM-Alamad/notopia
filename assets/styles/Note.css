@@ -11,6 +11,7 @@
   padding-bottom: 45px;
   font-weight: 400;
   user-select: none;
+  overflow: hidden;
   transition: all 0.3s ease-in-out, opacity 0s, box-shadow 0.2s ease;
   overflow-wrap: break-word;
 }

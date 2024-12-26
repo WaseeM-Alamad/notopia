@@ -8,12 +8,19 @@ import ColorIcon from "./icons/ColorIcon";
 import MoreVert from "./icons/MoreVert";
 import ColorSelectMenu from "./ColorSelectMenu";
 import BackIcon from "./icons/BackIcon";
+import { v4 as uuid } from "uuid";
 
-const ModalTools = ({ setNote, selectedColor, setSelectedColor, handleClose }) => {
+const ModalTools = ({
+  setNote,
+  selectedColor,
+  setSelectedColor,
+  handleClose,
+}) => {
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const [isOpen, setIsOpen] = useState(false);
   const colorButtonRef = useRef(null);
   const closeRef = useRef(null);
+  const inputRef = useRef(null);
 
   const handleColorClick = useCallback((color) => {
     if (color === selectedColor) return;
@@ -44,7 +51,21 @@ const ModalTools = ({ setNote, selectedColor, setSelectedColor, handleClose }) =
           <Button>
             <ArchiveIcon size={15} opacity={0.8} color="#212121" />
           </Button>
-          <Button>
+          <Button onClick={() => inputRef.current.click()}>
+            <input
+              ref={inputRef}
+              style={{ display: "none" }}
+              type="file"
+              onChange={(event) => {
+                const file = event.target?.files[0];
+                const imageURL = URL.createObjectURL(file);
+                setNote((prevNote) => ({
+                  ...prevNote,
+                  images: [...prevNote.images, { URL: imageURL, id: uuid() }],
+                }));
+                inputRef.current.value = "";
+              }}
+            />
             <ImageIcon size={15} opacity={0.8} />
           </Button>
           <Button ref={colorButtonRef} onClick={toggleMenu}>
@@ -68,7 +89,13 @@ const ModalTools = ({ setNote, selectedColor, setSelectedColor, handleClose }) =
             <BackIcon size={15} opacity={0.8} direction="1" />
           </Button>
         </div>
-        <button ref={closeRef} onClick={(e)=> handleClose(e, closeRef)} className="close-btn">Close</button>
+        <button
+          ref={closeRef}
+          onClick={(e) => handleClose(e, closeRef)}
+          className="close-btn"
+        >
+          Close
+        </button>
       </div>
     </div>
   );

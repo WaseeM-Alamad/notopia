@@ -8,6 +8,7 @@ import ModalTools from "./ModalTools";
 import PinIcon from "./icons/PinIcon";
 import Button from "./Tools/Button";
 import { motion } from "framer-motion";
+import NoteImagesLayout from "./Tools/NoteImagesLayout";
 
 const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
   const [note, setNote] = useState({
@@ -51,11 +52,10 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
   }, [trigger]);
 
   useEffect(() => {
-    
     if (trigger2) {
       const scrollbarWidth =
         window.innerWidth - document.documentElement.clientWidth;
-      document.body.style.overflow = "hidden"
+      document.body.style.overflow = "hidden";
       document.body.style.paddingRight = `${scrollbarWidth}px`;
       modalRef.current.style.marginLeft = `${0}px`;
       //marginLeft: trigger2? '0px': "5px",
@@ -65,7 +65,9 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
       document.body.style.overflow = "auto";
       document.body.style.paddingRight = ""; // Remove padding
       if (modalRef.current)
-      modalRef.current.style.marginLeft = `${scrollbarWidth === 0? 0 :  scrollbarWidth-5}px`;
+        modalRef.current.style.marginLeft = `${
+          scrollbarWidth === 0 ? 0 : scrollbarWidth - 5
+        }px`;
     }
     return () => (document.body.style.overflow = "auto"); // Cleanup
   }, [trigger2]);
@@ -84,7 +86,11 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
         setTrigger(false);
       }, 260);
 
-      if (note.title.trim() || note.content.trim()) {
+      if (
+        note.title.trim() ||
+        note.content.trim() ||
+        (note.images && note.images.length > 0)
+      ) {
         try {
           setIsEmptyNote(false);
           setTimeout(() => {
@@ -114,7 +120,7 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
         };
         setNotes((prev) => [newNote, ...prev]);
         window.dispatchEvent(new Event("loadingStart"));
-        await createNoteAction(newNote);
+        await createNoteAction({ ...newNote, images: [] });
         setTimeout(() => {
           window.dispatchEvent(new Event("loadingEnd"));
         }, 800);
@@ -206,7 +212,8 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
           style={{ overflowY: trigger2 ? "auto" : "hidden" }}
           className="modal-inputs-container"
         >
-          <div className="modal-corner" />
+          {note.images.length === 0 ||
+            (!note.images && <div className="modal-corner" />)}
           <div className="modal-pin">
             <Button
               disabled={!trigger2}
@@ -219,6 +226,9 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
                 rotation={note.isPinned ? "0deg" : "40deg"}
               />
             </Button>
+          </div>
+          <div style={{ padding: "0.05rem 0.05rem 0 0.05rem" }}>
+            <NoteImagesLayout images={note.images} />
           </div>
           <div
             style={{
