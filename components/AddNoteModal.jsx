@@ -1,16 +1,18 @@
 import React, { useState, useEffect, useRef } from "react";
 import "@/assets/styles/modal.css";
 import { createPortal } from "react-dom";
-import { useAppContext } from "@/context/AppContext";
 import { createNoteAction } from "@/utils/actions";
 import { v4 as uuid } from "uuid";
 import ModalTools from "./ModalTools";
 import PinIcon from "./icons/PinIcon";
 import Button from "./Tools/Button";
-import { motion } from "framer-motion";
 import NoteImagesLayout from "./Tools/NoteImagesLayout";
+import { useSession } from "next-auth/react";
+import { createClient } from "@supabase/supabase-js";
 
 const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
+  const { data: session } = useSession();
+  const userID = session?.user?.id;
   const [note, setNote] = useState({
     uuid: "",
     title: "",
@@ -21,6 +23,7 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
     isArchived: false,
     isTrash: false,
     images: [],
+    imageFiles: [],
   });
   const [modalPosition, setModalPosition] = useState({
     top: "30%",
@@ -120,7 +123,8 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
         };
         setNotes((prev) => [newNote, ...prev]);
         window.dispatchEvent(new Event("loadingStart"));
-        await createNoteAction({ ...newNote, images: [] });
+        await createNoteAction(newNote);
+        await UploadImagesAction(note.imageFiles, newNote.uuid);
         setTimeout(() => {
           window.dispatchEvent(new Event("loadingEnd"));
         }, 800);
@@ -148,6 +152,7 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
         isArchived: false,
         isTrash: false,
         images: [],
+        imageFiles: [],
       });
     }
   };
@@ -178,6 +183,31 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
 
   const handlePinClick = () => {
     setNote((prev) => ({ ...prev, isPinned: !prev.isPinned }));
+  };
+
+  const UploadImagesAction = async (images, noteUUID) => {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    );
+
+    try {
+      const bucketName = "notopia";
+
+      for (const image of images) {
+        const filePath = `${userID}/${noteUUID}/${image.id}`;
+        const { data, error } = await supabase.storage
+          .from(bucketName)
+          .upload(filePath, image.file);
+
+        if (error) {
+          console.error("Error uploading file:", error);
+          continue;
+        }
+      }
+    } catch (error) {
+      console.log("couldn't upload images", error);
+    }
   };
 
   return createPortal(

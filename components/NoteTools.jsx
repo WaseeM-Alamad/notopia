@@ -11,7 +11,7 @@ import Bell from "./icons/Bell";
 import MoreVert from "./icons/MoreVert";
 import Button from "./Tools/Button";
 
-const NoteTools = ({ setNote, noteVals, isOpen, setIsOpen }) => {
+const NoteTools = ({ images, setNote, noteVals, isOpen, setIsOpen }) => {
   const [selectedColor, setSelectedColor] = useState(noteVals.color);
 
   const colorButtonRef = useRef(null);
@@ -21,13 +21,13 @@ const NoteTools = ({ setNote, noteVals, isOpen, setIsOpen }) => {
 
   const handleColorClick = useCallback(async (color) => {
     if (color === selectedColor) return;
-      setSelectedColor(color);
-      setNote((prev) => ({ ...prev, color: color }));
-      window.dispatchEvent(new Event("loadingStart"));
-      await NoteUpdateAction("color", color, noteVals.uuid);
-      setTimeout(() => {
-        window.dispatchEvent(new Event("loadingEnd"));
-      }, 800);
+    setSelectedColor(color);
+    setNote((prev) => ({ ...prev, color: color }));
+    window.dispatchEvent(new Event("loadingStart"));
+    await NoteUpdateAction("color", color, noteVals.uuid);
+    setTimeout(() => {
+      window.dispatchEvent(new Event("loadingEnd"));
+    }, 800);
   });
 
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
@@ -42,26 +42,29 @@ const NoteTools = ({ setNote, noteVals, isOpen, setIsOpen }) => {
   };
 
   return (
-    <div style={{ opacity: isOpen && "1" }} className="note-bottom">
+    <span style={{opacity: images.length !== 0? "0.8": "1"}}>
+    <div
+      style={{
+        opacity: isOpen && "1",
+        backgroundColor: images.length !== 0 && selectedColor,
+      }}
+      className="note-bottom"
+    >
       {/* <p className="date">{FormattedDate}</p> */}
       <div className="note-bottom-icons">
-        <Button >
+        <Button>
           <Bell size={16} opacity={0.9} />
         </Button>
-        <Button >
+        <Button>
           <PersonAdd size={16} opacity={0.9} />
         </Button>
-        <Button >
+        <Button>
           <ArchiveIcon size={16} opacity={0.9} color="#212121" />
         </Button>
-        <Button >
+        <Button>
           <ImageIcon size={16} opacity={0.9} />
         </Button>
-        <Button
-          ref={colorButtonRef}
-          onClick={toggleMenu}
-          
-        >
+        <Button ref={colorButtonRef} onClick={toggleMenu}>
           <ColorIcon size={16} opacity={0.9} />
         </Button>
         <ColorSelectMenu
@@ -72,11 +75,12 @@ const NoteTools = ({ setNote, noteVals, isOpen, setIsOpen }) => {
           setIsOpen={setIsOpen}
           buttonRef={colorButtonRef}
         />
-        <Button >
+        <Button>
           <MoreVert size={16} opacity={0.9} />
         </Button>
       </div>
     </div>
+    </span>
   );
 };
 

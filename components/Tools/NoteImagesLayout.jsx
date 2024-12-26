@@ -13,7 +13,7 @@ const NoteImagesLayout = ({ images }) => {
           resolve({ src, width: img.naturalWidth, height: img.naturalHeight });
         };
         img.onerror = (err) => {
-          console.error(`Error loading image: ${src}`, err);
+          console.log(`Error loading image: ${src}`, err);
           reject(err);
         };
         img.src = src;
@@ -21,9 +21,9 @@ const NoteImagesLayout = ({ images }) => {
     };
 
     if (images.length > 0) {
-      Promise.all(images.map((image) => loadImage(image.URL)))
+      Promise.all(images.map((image) => loadImage(image.url)))
         .then(setLoadedImages)
-        .catch(console.error);
+        .catch(console.log);
     }
   }, [images]);
 
@@ -81,7 +81,7 @@ const NoteImagesLayout = ({ images }) => {
           item.height *= scale;
         });
 
-        newLayout.push(row);
+        newLayout.unshift(row)
       }
 
       setLayout(newLayout);
@@ -120,7 +120,6 @@ const NoteImagesLayout = ({ images }) => {
           <div key={rowIndex} style={rowStyle}>
             {row.map((item, index) => (
               <img
-                onClick={() => console.log(index)}
                 key={index}
                 src={item.src}
                 alt={`Grid item ${rowIndex * 3 + index + 1}`}
@@ -134,7 +133,7 @@ const NoteImagesLayout = ({ images }) => {
           </div>
         ))
       ) : (
-        <p>Loading images...</p>
+        <></>
       )}
     </div>
   );

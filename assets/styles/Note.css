@@ -1,5 +1,6 @@
 .note {
   display: flex;
+  position: relative;
   flex-direction: column;
   width: 16.25rem;
   height: fit-content;
@@ -8,7 +9,6 @@
   box-sizing: border-box;
   font-size: 1.2rem;
   box-sizing: border-box;
-  padding-bottom: 45px;
   font-weight: 400;
   user-select: none;
   overflow: hidden;
@@ -29,6 +29,7 @@
 .note-bottom {
   opacity: 0;
   position: absolute;
+  overflow: hidden;
   bottom: 0;
   gap: 1rem;
   display: flex;
@@ -74,4 +75,20 @@
   opacity: 0;
   padding: 0.3rem 0.4rem 0rem 0rem;
   transition: all 0.3s ease;
+}
+
+.empty-note::before {
+  display: flex;
+  content: attr(aria-label);
+  color: rgb(95, 99, 104);
+  margin-left: 0.8rem;
+  font-family: "DM Sans";
+  text-align: center;
+  height: fit-content;
+  width: fit-content;
+  margin-top: 1.8rem;
+  letter-spacing: 0.00625em;
+  font-size: 1.375rem;
+  line-height: 1.5rem;
+  cursor: text;
 }

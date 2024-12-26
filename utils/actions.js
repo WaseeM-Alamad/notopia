@@ -4,6 +4,7 @@ import Note from "@/models/Note";
 import User from "@/models/User";
 import { getServerSession } from "next-auth";
 import { authOptions } from "./authOptions";
+import { createClient } from "@supabase/supabase-js";
 
 export const fetchNotes = async () => {
   const session = await getServerSession(authOptions);
@@ -27,7 +28,10 @@ export const fetchNotes = async () => {
       isPinned: note.isPinned,
       isArchived: note.isArchived,
       isTrash: note.isTrash,
-      images: note.images,
+      images: Array.isArray(note.images) ? note.images.map(image => ({
+        url: image.url,
+        id: image.id,
+      })) : [], 
       createdAt: note.createdAt.toISOString(), // If it's a Date, convert to string
       updatedAt: note.updatedAt.toISOString(),
       __v: note.__v,
@@ -47,6 +51,12 @@ export const fetchNotes = async () => {
 export const createNoteAction = async (note) => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
+  const starter =
+    "https://fopkycgspstkfctmhyyq.supabase.co/storage/v1/object/public/notopia";
+  const images = note.images.map((image) => ({
+    url: `${starter}/${userID}/${note.uuid}/${image.id}`,
+    id: image.id,
+  }));
   try {
     if (!session) {
       return new Response("Unauthorized", { status: 401 });
@@ -55,6 +65,7 @@ export const createNoteAction = async (note) => {
     const user = await User.findById(userID);
     const noteData = {
       ...note,
+      images: images,
       creator: userID,
     };
     const newNote = new Note(noteData);
@@ -84,3 +95,4 @@ export const NoteUpdateAction = async (type, value, noteUUID) => {
     return new Response("Failed to update note", { status: 500 });
   }
 };
+

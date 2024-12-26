@@ -59,10 +59,20 @@ const ModalTools = ({
               onChange={(event) => {
                 const file = event.target?.files[0];
                 const imageURL = URL.createObjectURL(file);
-                setNote((prevNote) => ({
-                  ...prevNote,
-                  images: [...prevNote.images, { URL: imageURL, id: uuid() }],
-                }));
+                setNote((prevNote) => {
+                  const newUUID = uuid();
+                  return {
+                    ...prevNote,
+                    images: [
+                      ...prevNote.images,
+                      { url: imageURL, id: newUUID },
+                    ],
+                    imageFiles: [
+                      ...prevNote.imageFiles,
+                      { file: file, id: newUUID },
+                    ],
+                  };
+                });
                 inputRef.current.value = "";
               }}
             />

@@ -24,6 +24,7 @@ const Note = memo(
     const noteRef = useRef(null);
     const inputsRef = useRef(null);
     const timeoutRef = useRef(null);
+    const imagesRef = useRef(null);
 
     const [notePos, setNotePos] = useState(() => ({
       top: 0,
@@ -45,7 +46,8 @@ const Note = memo(
     const handleNoteClick = useCallback((e) => {
       if (
         (noteRef.current && noteRef.current === e.target) ||
-        inputsRef.current.contains(e.target)
+        inputsRef.current.contains(e.target) ||
+        imagesRef.current.contains(e.target)
       ) {
         const rect = noteRef.current.getBoundingClientRect();
         setNotePos({
@@ -97,7 +99,7 @@ const Note = memo(
     return (
       <>
         <div
-          style={noteStyle}
+          style={{...noteStyle, paddingBottom: note.images.length === 0 && '45px'}}
           className="note"
           onClick={handleNoteClick}
           ref={noteRef}
@@ -116,7 +118,10 @@ const Note = memo(
                 />
               </Button>
             </div>
-            {/* <NoteImagesLayout images={note.images} /> */}
+            <div ref={imagesRef}>
+              <NoteImagesLayout images={note.images} />
+            </div>
+            { note.images.length === 0 && !note.title && !note.content &&  <div className="empty-note" aria-label="Empty note" />}
             <div ref={inputsRef}>
               {Note.title && (
                 <div className="title">
@@ -134,6 +139,7 @@ const Note = memo(
             isOpen={menuIsOpen}
             setIsOpen={handleMenuIsOpenChange}
             setNote={setNote}
+            images={note.images}
             noteVals={{
               color: note.color,
               updatedAt: note.updatedAt,

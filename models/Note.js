@@ -42,6 +42,7 @@ const NoteSchema = new Schema(
     },
     images: [
       {
+        _id: false,
         url: { type: String, required: true },
         id: { type: String, required: true },
       },
