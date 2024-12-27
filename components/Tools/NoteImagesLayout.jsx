@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, memo } from "react";
 
-const NoteImagesLayout = ({ width ,images }) => {
+const NoteImagesLayout = ({ width, images, calculateMasonryLayout }) => {
   const containerRef = useRef(null);
   const [layout, setLayout] = useState([]);
   const [loadedImages, setLoadedImages] = useState([]);
@@ -27,9 +27,14 @@ const NoteImagesLayout = ({ width ,images }) => {
     }
   }, [images]);
 
+  useEffect(() => {
+    if (layout.length > 0) {
+      if (calculateMasonryLayout) calculateMasonryLayout();
+    }
+  }, [layout.length]);
+
   const calculateLayout = () => {
     if (!containerRef.current || loadedImages.length === 0) return;
-
     const containerWidth = containerRef.current.offsetWidth; // Account for gaps
     const maxRows = 4;
     const maxImagesPerRow = 3;
@@ -80,19 +85,15 @@ const NoteImagesLayout = ({ width ,images }) => {
         item.height *= scale;
       });
 
-      newLayout.unshift(row)
+      newLayout.unshift(row);
     }
 
     setLayout(newLayout);
   };
 
   useEffect(() => {
-    
-
     calculateLayout();
-    
   }, [loadedImages, width]);
-
 
   const containerStyle = {
     display: "flex",

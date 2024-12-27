@@ -52,16 +52,14 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
   useEffect(() => {
     const observer = new ResizeObserver(() => {
       if (modalRef.current) {
-        console.log('Element width:', modalRef.current.offsetWidth);  // Check the computed width
         setWidth(modalRef.current.offsetWidth);
       }
     });
-  
+
     if (modalRef.current) {
-      console.log('Observing modal', modalRef.current);
       observer.observe(modalRef.current);
     }
-  
+
     return () => {
       observer.disconnect();
     };
@@ -152,7 +150,6 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
       titleRef.current.textContent = "";
       contentRef.current.textContent = "";
       setSelectedColor("#FFFFFF");
-      
     }
   };
 
@@ -229,12 +226,11 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
       console.log("couldn't upload images", error);
     }
   };
-  
 
   return createPortal(
     <div
       ref={modalContainerRef}
-      onClick={handleClose}
+      onMouseDown={handleClose}
       style={{
         display: trigger ? "" : "none",
         backgroundColor: trigger2 && "rgba(0,0,0,0.5)",
@@ -259,7 +255,6 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
         }}
         className="modal"
       >
-        
         <div
           style={{ overflowY: trigger2 ? "auto" : "hidden" }}
           className="modal-inputs-container"
@@ -279,7 +274,7 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
               />
             </Button>
           </div>
-            <NoteImagesLayout width={width} images={note.images} />
+          <NoteImagesLayout width={width} images={note.images} />
           <div
             style={{
               display: trigger2

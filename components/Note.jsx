@@ -15,7 +15,7 @@ import Button from "./Tools/Button";
 import NoteImagesLayout from "./Tools/NoteImagesLayout";
 
 const Note = memo(
-  ({ Note, togglePin }) => {
+  ({ Note, togglePin, calculateLayout }) => {
     const [note, setNote] = useState(Note);
     const [modalTrigger, setModalTrigger] = useState(false);
     const [menuIsOpen, setMenuIsOpen] = useState(false);
@@ -25,6 +25,7 @@ const Note = memo(
     const inputsRef = useRef(null);
     const timeoutRef = useRef(null);
     const imagesRef = useRef(null);
+    const noteStuffRef = useRef(null);
 
     const [notePos, setNotePos] = useState(() => ({
       top: 0,
@@ -47,7 +48,8 @@ const Note = memo(
       if (
         (noteRef.current && noteRef.current === e.target) ||
         inputsRef.current.contains(e.target) ||
-        imagesRef.current.contains(e.target)
+        imagesRef.current.contains(e.target) ||
+        noteStuffRef.current.contains(e.target)
       ) {
         const rect = noteRef.current.getBoundingClientRect();
         setNotePos({
@@ -101,13 +103,16 @@ const Note = memo(
         <div
           style={{
             ...noteStyle,
-            paddingBottom: note.images.length === 0 || note.title || note.content ? "45px": '0px  ',
+            paddingBottom:
+              note.images.length === 0 || note.title || note.content
+                ? "45px"
+                : "0px  ",
           }}
           className="note"
           onClick={handleNoteClick}
           ref={noteRef}
         >
-          <div>
+          <div ref={noteStuffRef}>
             {note.images.length === 0 && <div className="corner" />}
             <div
               style={{ opacity: menuIsOpen ? "1" : undefined }}
@@ -124,13 +129,16 @@ const Note = memo(
               </Button>
             </div>
             <div ref={imagesRef}>
-              <NoteImagesLayout images={note.images} />
+              <NoteImagesLayout
+                images={note.images}
+                calculateMasonryLayout={calculateLayout}
+              />
             </div>
             {note.images.length === 0 && !note.title && !note.content && (
               <div className="empty-note" aria-label="Empty note" />
             )}
             <div ref={inputsRef}>
-              {Note.title && (
+              {note.title && (
                 <div className="title">
                   <p>{note.title}</p>
                 </div>
@@ -161,11 +169,9 @@ const Note = memo(
           trigger2={trigger2}
           setTrigger2={handleTrigger2Change}
           notePos={notePos}
-          noteVals={{
-            color: note.color,
-            updatedAt: note.updatedAt,
-            uuid: note.uuid,
-          }}
+          note={note}
+          setNote={setNote}
+          calculateLayout={calculateLayout}
         />
       </>
     );

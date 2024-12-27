@@ -41,7 +41,7 @@ const Header = memo(() => (
 
 Header.displayName = "Header";
 
-const NoteWrapper = memo(({ note, togglePin, isVisible, ref }) => {
+const NoteWrapper = memo(({ note, togglePin, isVisible, ref, calculateLayout }) => {
   const { modalOpen, setModalOpen } = useAppContext();
   const [mounted, setMounted] = useState(false);
   const [mountOpacity, setMountOpacity] = useState(false);
@@ -68,7 +68,7 @@ const NoteWrapper = memo(({ note, togglePin, isVisible, ref }) => {
         pointerEvents: isVisible ? "auto" : "none",
       }}
     >
-      <Note Note={note} togglePin={togglePin} />
+      <Note Note={note} togglePin={togglePin} calculateLayout={calculateLayout} />
     </motion.div>
   );
 });
@@ -187,6 +187,7 @@ const Home = memo(() => {
     });
   }, [isLayoutReady]);
 
+
   const debouncedCalculateLayout = useCallback(() => {
     if (resizeTimeoutRef.current) {
       clearTimeout(resizeTimeoutRef.current);
@@ -281,6 +282,7 @@ const Home = memo(() => {
               note={note}
               togglePin={togglePin}
               isVisible={isLayoutReady}
+              calculateLayout={calculateLayout}
             />
           ))}
         </div>

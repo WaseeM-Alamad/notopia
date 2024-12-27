@@ -3,19 +3,6 @@ import React, { memo } from "react";
 const PinIcon = ({ opacity, rotation, color, images, pinColor }) => {
   return (
     <>
-      {images && (
-        <div
-          style={{
-            position: "absolute",
-            backgroundColor: pinColor,
-            width: "28px",
-            height: "28px",
-            borderRadius: "30%",
-            opacity: 0.5,
-            transition: 'all 0.2s ease'
-          }}
-        />
-      )}
       <svg
         opacity={opacity}
         style={{ transition: "all 0.15s ease", rotate: rotation }}

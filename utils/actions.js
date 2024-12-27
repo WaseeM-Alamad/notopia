@@ -28,10 +28,12 @@ export const fetchNotes = async () => {
       isPinned: note.isPinned,
       isArchived: note.isArchived,
       isTrash: note.isTrash,
-      images: Array.isArray(note.images) ? note.images.map(image => ({
-        url: image.url,
-        id: image.id,
-      })) : [], 
+      images: Array.isArray(note.images)
+        ? note.images.map((image) => ({
+            url: image.url,
+            id: image.id,
+          }))
+        : [],
       createdAt: note.createdAt.toISOString(), // If it's a Date, convert to string
       updatedAt: note.updatedAt.toISOString(),
       __v: note.__v,
@@ -96,3 +98,16 @@ export const NoteUpdateAction = async (type, value, noteUUID) => {
   }
 };
 
+export const NoteTextUpdateAction = async (values, noteUUID) => {
+  try {
+    await connectDB();
+
+    await Note.updateOne(
+      { uuid: noteUUID },
+      { $set: { title: values.title, content: values.content } }
+    );
+  } catch (error) {
+    console.log("Error updating note:", error);
+    return new Response("Failed to update note", { status: 500 });
+  }
+};

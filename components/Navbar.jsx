@@ -64,7 +64,8 @@ const Navbar = ({ user }) => {
   }, []);
 
   const handleRefresh = () => {
-    window.dispatchEvent(new Event("refresh"));
+    if (!isLoading && UpToDatetrigger)
+      window.dispatchEvent(new Event("refresh"));
   };
 
   return (

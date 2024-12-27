@@ -12,7 +12,7 @@
   position: absolute;
   overflow: hidden;
   max-width: "37.5rem";
-  max-height: "51.8125rem";
+  max-height: "51px";
 }
 
 .modal-editable-title:empty::before {
