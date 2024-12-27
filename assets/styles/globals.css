@@ -48,8 +48,7 @@ body {
   min-height: 3.125rem;
   justify-content: flex-start;
   align-items: center;
-  padding-left: 2rem;
-  padding-right: 4rem;
+  padding-right: 2.4rem;
   margin-top: 1rem;
   user-select: none;
 }

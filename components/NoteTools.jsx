@@ -42,44 +42,44 @@ const NoteTools = ({ images, setNote, noteVals, isOpen, setIsOpen }) => {
   };
 
   return (
-    <span style={{opacity: images.length !== 0? "0.8": "1"}}>
-    <div
-      style={{
-        opacity: isOpen && "1",
-        backgroundColor: images.length !== 0 && selectedColor,
-      }}
-      className="note-bottom"
-    >
-      {/* <p className="date">{FormattedDate}</p> */}
-      <div className="note-bottom-icons">
-        <Button>
-          <Bell size={16} opacity={0.9} />
-        </Button>
-        <Button>
-          <PersonAdd size={16} opacity={0.9} />
-        </Button>
-        <Button>
-          <ArchiveIcon size={16} opacity={0.9} color="#212121" />
-        </Button>
-        <Button>
-          <ImageIcon size={16} opacity={0.9} />
-        </Button>
-        <Button ref={colorButtonRef} onClick={toggleMenu}>
-          <ColorIcon size={16} opacity={0.9} />
-        </Button>
-        <ColorSelectMenu
-          handleColorClick={handleColorClick}
-          menuPosition={menuPosition}
-          selectedColor={selectedColor}
-          isOpen={isOpen}
-          setIsOpen={setIsOpen}
-          buttonRef={colorButtonRef}
-        />
-        <Button>
-          <MoreVert size={16} opacity={0.9} />
-        </Button>
+    <span style={{ opacity: images ? "0.8" : "1" }}>
+      <div
+        style={{
+          opacity: isOpen && "1",
+          backgroundColor: images && selectedColor,
+        }}
+        className="note-bottom"
+      >
+        {/* <p className="date">{FormattedDate}</p> */}
+        <div className="note-bottom-icons">
+          <Button>
+            <Bell size={15} opacity={0.9} />
+          </Button>
+          <Button>
+            <PersonAdd size={15} opacity={0.9} />
+          </Button>
+          <Button>
+            <ArchiveIcon size={15} opacity={0.9} color="#212121" />
+          </Button>
+          <Button>
+            <ImageIcon size={15} opacity={0.9} />
+          </Button>
+          <Button ref={colorButtonRef} onClick={toggleMenu}>
+            <ColorIcon size={15} opacity={0.9} />
+          </Button>
+          <ColorSelectMenu
+            handleColorClick={handleColorClick}
+            menuPosition={menuPosition}
+            selectedColor={selectedColor}
+            isOpen={isOpen}
+            setIsOpen={setIsOpen}
+            buttonRef={colorButtonRef}
+          />
+          <Button>
+            <MoreVert size={15} opacity={0.9} />
+          </Button>
+        </div>
       </div>
-    </div>
     </span>
   );
 };

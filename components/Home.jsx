@@ -17,8 +17,8 @@ import { useAppContext } from "@/context/AppContext";
 import { fetchNotes } from "@/utils/actions";
 import { motion } from "framer-motion";
 
-const COLUMN_WIDTH = 260;
-const GUTTER = 15;
+const COLUMN_WIDTH = 240;
+const GUTTER = 10;
 const GAP_BETWEEN_SECTIONS = 120;
 
 const Header = memo(() => (

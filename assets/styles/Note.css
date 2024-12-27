@@ -2,7 +2,7 @@
   display: flex;
   position: relative;
   flex-direction: column;
-  width: 16.25rem;
+  width: 15rem;
   height: fit-content;
   min-height: 7.95rem;
   border-radius: 0.7rem;
@@ -32,6 +32,8 @@
   overflow: hidden;
   bottom: 0;
   gap: 1rem;
+  border-bottom-left-radius: 0.55rem;
+  border-bottom-right-radius: 0.55rem;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -40,7 +42,7 @@
   min-height: 40px;
   width: 100%;
   box-sizing: border-box;
-  transition: all 0.3s ease;
+  transition: all 0.3s ease-in-out;
 }
 
 .note:hover .note-bottom {
@@ -66,7 +68,7 @@
 .note-bottom-icons {
   display: flex;
   padding-bottom: 3px;
-  gap: 9px;
+  gap: 6px;
 }
 
 .pin {
@@ -74,21 +76,21 @@
   right: 0;
   opacity: 0;
   padding: 0.3rem 0.4rem 0rem 0rem;
-  transition: all 0.3s ease;
+  transition: all 0.3s ease-in-out;
 }
 
 .empty-note::before {
   display: flex;
   content: attr(aria-label);
   color: rgb(95, 99, 104);
-  margin-left: 0.8rem;
+  margin-left: 1.5rem;
   font-family: "DM Sans";
   text-align: center;
   height: fit-content;
   width: fit-content;
-  margin-top: 1.8rem;
+  margin-top: 2.3rem;
   letter-spacing: 0.00625em;
-  font-size: 1.375rem;
+  font-size: 1.475rem;
   line-height: 1.5rem;
   cursor: text;
 }

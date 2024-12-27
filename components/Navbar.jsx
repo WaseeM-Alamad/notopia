@@ -11,6 +11,7 @@ import { Box } from "@mui/system";
 import CloudIcon from "./icons/CloudIcon";
 import { AnimatePresence, motion } from "framer-motion";
 import Logo from "./logo";
+import Button from "./Tools/Button";
 
 const Navbar = ({ user }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -76,12 +77,12 @@ const Navbar = ({ user }) => {
         >
           <input className="search" placeholder="Search" spellCheck="false" />
           <div className="top-icons">
-            <IconButton sx={{ width: "2.8rem", height: "2.8rem" }}>
+            <Button style={{ width: "2.8rem", height: "2.8rem" }}>
               <GridIcon />
-            </IconButton>
-            <IconButton
+            </Button>
+            <Button
               onClick={handleRefresh}
-              sx={{ width: "2.8rem", height: "2.8rem" }}
+              style={{ width: "2.8rem", height: "2.8rem" }}
             >
               <AnimatePresence>
                 {!isLoading && UpToDatetrigger && (
@@ -90,7 +91,7 @@ const Navbar = ({ user }) => {
                     animate={{ opacity: 1 }} // Fade in to opacity 1 when it becomes visible
                     exit={{ opacity: 0, transition: { delay: 0.1 } }} // Fade out to opacity 0 when the component unmounts
                     transition={{ duration: 0.2 }}
-                    style={{ position: "absolute" }}
+                    style={{ position: "absolute", height: "18px" }}
                   >
                     <RefreshIcon />
                   </motion.div>
@@ -103,7 +104,7 @@ const Navbar = ({ user }) => {
                     animate={{ opacity: 1 }} // Fade in to opacity 1 when it becomes visible
                     exit={{ opacity: 0, transition: { delay: 0.07 } }} // Fade out to opacity 0 when the component unmounts
                     transition={{ duration: 0.15 }}
-                    style={{ position: "absolute" }}
+                    style={{ position: "absolute", marginTop: "4px" }}
                   >
                     <Box>
                       <CircularProgress
@@ -122,16 +123,16 @@ const Navbar = ({ user }) => {
                     animate={{ opacity: 1, transition: { duration: 0.35 } }} // Fade in to opacity 1 when it becomes visible
                     exit={{ opacity: 0, transition: { duration: 0.1 } }} // Fade out to opacity 0 when the component unmounts
                     transition={{ duration: 0.25 }}
-                    style={{ position: "absolute", height: "25px" }}
+                    style={{ position: "absolute", height: "22px" }}
                   >
                     <CloudIcon />
                   </motion.div>
                 )}
               </AnimatePresence>
-            </IconButton>
-            <IconButton sx={{ width: "2.8rem", height: "2.8rem" }}>
+            </Button>
+            <Button style={{ width: "2.8rem", height: "2.8rem" }}>
               <SettingsIcon />
-            </IconButton>
+            </Button>
           </div>
           <div>
             <img

@@ -48,6 +48,25 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
     setIsClient(true);
   }, []);
 
+  const [width, setWidth] = useState(0);
+  useEffect(() => {
+    const observer = new ResizeObserver(() => {
+      if (modalRef.current) {
+        console.log('Element width:', modalRef.current.offsetWidth);  // Check the computed width
+        setWidth(modalRef.current.offsetWidth);
+      }
+    });
+  
+    if (modalRef.current) {
+      console.log('Observing modal', modalRef.current);
+      observer.observe(modalRef.current);
+    }
+  
+    return () => {
+      observer.disconnect();
+    };
+  }, [trigger]);
+
   useEffect(() => {
     setTimeout(() => {
       setTrigger2(trigger);
@@ -130,30 +149,10 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
         }, 800);
       }
       setIsEmptyNote(true);
-      setModalPosition({
-        top: "30%",
-        left: "50%",
-        width: 600,
-        height: 185,
-        borderRadius: "0.7rem",
-        transform: "translate(-50%, -30%)",
-        margin: "25px",
-      });
       titleRef.current.textContent = "";
       contentRef.current.textContent = "";
       setSelectedColor("#FFFFFF");
-      setNote({
-        uuid: "",
-        title: "",
-        content: "",
-        color: "#FFFFFF",
-        labels: [],
-        isPinned: false,
-        isArchived: false,
-        isTrash: false,
-        images: [],
-        imageFiles: [],
-      });
+      
     }
   };
 
@@ -186,6 +185,27 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
   };
 
   const UploadImagesAction = async (images, noteUUID) => {
+    setModalPosition({
+      top: "30%",
+      left: "50%",
+      width: 600,
+      height: 185,
+      borderRadius: "0.7rem",
+      transform: "translate(-50%, -30%)",
+      margin: "25px",
+    });
+    setNote({
+      uuid: "",
+      title: "",
+      content: "",
+      color: "#FFFFFF",
+      labels: [],
+      isPinned: false,
+      isArchived: false,
+      isTrash: false,
+      images: [],
+      imageFiles: [],
+    });
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -209,6 +229,7 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
       console.log("couldn't upload images", error);
     }
   };
+  
 
   return createPortal(
     <div
@@ -238,6 +259,7 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
         }}
         className="modal"
       >
+        
         <div
           style={{ overflowY: trigger2 ? "auto" : "hidden" }}
           className="modal-inputs-container"
@@ -257,9 +279,7 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
               />
             </Button>
           </div>
-          <div style={{ padding: "0.05rem 0.05rem 0 0.05rem" }}>
-            <NoteImagesLayout images={note.images} />
-          </div>
+            <NoteImagesLayout width={width} images={note.images} />
           <div
             style={{
               display: trigger2

@@ -99,7 +99,10 @@ const Note = memo(
     return (
       <>
         <div
-          style={{...noteStyle, paddingBottom: note.images.length === 0 && '45px'}}
+          style={{
+            ...noteStyle,
+            paddingBottom: note.images.length === 0 || note.title || note.content ? "45px": '0px  ',
+          }}
           className="note"
           onClick={handleNoteClick}
           ref={noteRef}
@@ -112,16 +115,20 @@ const Note = memo(
             >
               <Button onClick={handlePinClick}>
                 <PinIcon
+                  pinColor={note.color}
                   color={Note.isPinned ? "#212121" : "transparent"}
                   opacity={0.8}
                   rotation={Note.isPinned ? "0deg" : "40deg"}
+                  images={note.images.length !== 0}
                 />
               </Button>
             </div>
             <div ref={imagesRef}>
               <NoteImagesLayout images={note.images} />
             </div>
-            { note.images.length === 0 && !note.title && !note.content &&  <div className="empty-note" aria-label="Empty note" />}
+            {note.images.length === 0 && !note.title && !note.content && (
+              <div className="empty-note" aria-label="Empty note" />
+            )}
             <div ref={inputsRef}>
               {Note.title && (
                 <div className="title">
@@ -139,7 +146,7 @@ const Note = memo(
             isOpen={menuIsOpen}
             setIsOpen={handleMenuIsOpenChange}
             setNote={setNote}
-            images={note.images}
+            images={note.images.length !== 0}
             noteVals={{
               color: note.color,
               updatedAt: note.updatedAt,
