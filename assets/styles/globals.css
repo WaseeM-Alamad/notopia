@@ -121,7 +121,7 @@ body {
 }
 
 .btn:hover {
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: rgba(0, 0, 0, 0.08);
 }
 
 .btn-click:active {
@@ -137,4 +137,8 @@ body {
   color: rgb(95,99,104);
   user-select: none;
   
+}
+
+img {
+  user-select: none;
 }

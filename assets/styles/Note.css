@@ -7,7 +7,7 @@
   min-height: 7.95rem;
   border-radius: 0.7rem;
   box-sizing: border-box;
-  font-size: 1.2rem;
+  font-size: 1rem;
   box-sizing: border-box;
   font-weight: 400;
   user-select: none;
@@ -23,7 +23,7 @@
 
 .content {
   padding: 0.6rem 0.8rem 0.8rem 0.8rem;
-  font-size: 1.1rem;
+  font-size: 1.125rem;
 }
 
 .note-bottom {
@@ -82,7 +82,7 @@
 .empty-note::before {
   display: flex;
   content: attr(aria-label);
-  color: rgb(95, 99, 104);
+  color: rgba(0,0,0,0.55);
   margin-left: 1.5rem;
   font-family: "DM Sans";
   text-align: center;

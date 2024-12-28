@@ -94,6 +94,7 @@ const NoteImagesLayout = ({ width, images, calculateMasonryLayout }) => {
   useEffect(() => {
     calculateLayout();
   }, [loadedImages, width]);
+  
 
   const containerStyle = {
     display: "flex",

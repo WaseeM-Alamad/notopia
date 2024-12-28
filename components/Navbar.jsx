@@ -63,6 +63,22 @@ const Navbar = ({ user }) => {
     };
   }, []);
 
+  useEffect(() => {
+    const handleBeforeUnload = (event) => {
+      if (isLoading) {
+        const message = "Your request is still in progress. Are you sure you want to leave?";
+        event.returnValue = message; // Standard for most browsers
+        return message; // For some browsers
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [isLoading]);
+
   const handleRefresh = () => {
     if (!isLoading && UpToDatetrigger)
       window.dispatchEvent(new Event("refresh"));

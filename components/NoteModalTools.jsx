@@ -8,10 +8,10 @@ import ColorIcon from "./icons/ColorIcon";
 import MoreVert from "./icons/MoreVert";
 import ColorSelectMenu from "./ColorSelectMenu";
 import BackIcon from "./icons/BackIcon";
-import { v4 as uuid } from "uuid";
 
-const ModalTools = ({
+const NoteModalTools = ({
   setNote,
+  note,
   selectedColor,
   setSelectedColor,
   handleClose,
@@ -39,7 +39,7 @@ const ModalTools = ({
 
   return (
     <div>
-      <div style={{ opacity: "1" }} className="modal-bottom bottom-box-shadow">
+      <div style={{ opacity: "1" }} className="modal-bottom">
         {/* <p className="date">{FormattedDate}</p> */}
         <div className="modal-bottom-icons">
           <Button>
@@ -56,25 +56,6 @@ const ModalTools = ({
               ref={inputRef}
               style={{ display: "none" }}
               type="file"
-              onChange={(event) => {
-                const file = event.target?.files[0];
-                const imageURL = URL.createObjectURL(file);
-                setNote((prevNote) => {
-                  const newUUID = uuid();
-                  return {
-                    ...prevNote,
-                    images: [
-                      ...prevNote.images,
-                      { url: imageURL, id: newUUID },
-                    ],
-                    imageFiles: [
-                      ...prevNote.imageFiles,
-                      { file: file, id: newUUID },
-                    ],
-                  };
-                });
-                inputRef.current.value = "";
-              }}
             />
             <ImageIcon size={15} opacity={0.8} />
           </Button>
@@ -111,4 +92,4 @@ const ModalTools = ({
   );
 };
 
-export default ModalTools;
+export default NoteModalTools;

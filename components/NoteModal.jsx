@@ -6,6 +6,7 @@ import PinIcon from "./icons/PinIcon";
 import NoteImagesLayout from "./Tools/NoteImagesLayout";
 import { NoteTextUpdateAction } from "@/utils/actions";
 import { debounce } from "lodash";
+import NoteModalTools from "./NoteModalTools";
 
 const NoteModal = ({
   trigger,
@@ -21,8 +22,10 @@ const NoteModal = ({
   const [width, setWidth] = useState(5);
   const [modalNote, setModalNote] = useState(note);
   const [isClient, setIsClient] = useState(false);
+  const [selectedColor, setSelectedColor] = useState(note.color)
   const titleRef = useRef(null);
   const contentRef = useRef(null);
+  const containerRef = useRef(null);
 
   useEffect(() => {
     // Set isClient to true once the component is mounted on the client side
@@ -30,7 +33,7 @@ const NoteModal = ({
   }, []);
 
   const handleClose = (e) => {
-    if (!modalRef.current.contains(e.target)) {
+    if (containerRef.current === e.target) {
       setTrigger2(false);
       setTimeout(() => {
         setTrigger(false);
@@ -74,10 +77,10 @@ const NoteModal = ({
 
   useEffect(() => {
     const observer = new ResizeObserver(() => {
-      if (modalRef.current) {
+      if (modalRef.current ) {
         setTimeout(() => {
           // console.log("Element width:", modalRef.current.offsetWidth); // Check the computed width
-          setWidth(modalRef.current.offsetWidth);
+          setWidth(modalRef.current?.offsetWidth);
         }, 0);
       }
     });
@@ -102,14 +105,14 @@ const NoteModal = ({
     [] // Dependencies array, make sure it's updated when `note.uuid` changes
   );
 
-  if (!isClient) {
+  if (!isClient || !trigger) {
     return null; // Return nothing on the server side
   }
 
   const handlePinClick = () => {};
 
   const handleTitleInput = (e) => {
-    const text = e.target.textContent.trim();
+    const text = e.target.textContent;
     setModalNote((prev) => ({ ...prev, title: text }));
     updateTextDebounced({ title: text, content: modalNote.content });
 
@@ -119,7 +122,7 @@ const NoteModal = ({
   };
 
   const handleContentInput = (e) => {
-    const text = e.target.textContent.trim();
+    const text = e.target.textContent;
     setModalNote((prev) => ({ ...prev, content: text }));
     updateTextDebounced({ title: modalNote.title, content: text });
 
@@ -139,6 +142,7 @@ const NoteModal = ({
   return createPortal(
     <>
       <div
+        ref={containerRef}
         onClick={handleClose}
         style={{
           display: trigger ? "" : "none",
@@ -156,7 +160,7 @@ const NoteModal = ({
             minHeight: trigger2 ? "185px" : "",
             transform: trigger2 && "translate(-50%, -30%)",
             borderRadius: "0.7rem",
-            backgroundColor: note.color,
+            backgroundColor: selectedColor,
             transition:
               "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), width 0.25s cubic-bezier(0.25, 0.8, 0.25, 1), background-color 0.25s linear",
           }}
@@ -183,8 +187,8 @@ const NoteModal = ({
             <NoteImagesLayout width={width} images={modalNote.images} />
             {!trigger2 &&
               modalNote.images.length === 0 &&
-              !modalNote.title &&
-              !modalNote.content && (
+              !modalNote.title.trim() &&
+              !modalNote.content.trim() && (
                 <div className="empty-note" aria-label="Empty note" />
               )}
             <div
@@ -238,14 +242,15 @@ const NoteModal = ({
               spellCheck="false"
             />
           </div>
-          {/* {trigger2 && (
-            <ModalTools
-              setNote={setNote}
+          {trigger2 && (
+            <NoteModalTools
+              setNote={setModalNote}
+              note={modalNote}
               selectedColor={selectedColor}
               setSelectedColor={setSelectedColor}
               handleClose={handleClose}
             />
-          )} */}
+          )}
         </div>
       </div>
     </>,

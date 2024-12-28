@@ -61,7 +61,7 @@ const Sidebar = memo(() => {
               className="selected-highlight"
             />
             {navItems.map(({ path, Icon }) => (
-              <Link prefetch={true} key={path} href={path} style={{ zIndex: "9" }}>
+              <Link className="link-btn" prefetch={true} key={path} href={path} style={{ zIndex: "9" }}>
                 <Icon
                   size={ICON_SIZE}
                   color={pathName.includes(path) ? "#212121" : "#535353"}

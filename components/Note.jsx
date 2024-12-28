@@ -65,6 +65,14 @@ const Note = memo(
     useEffect(() => {
       if (trigger2) {
         setOpacityTrigger(false);
+      } else {
+        const rect = noteRef.current.getBoundingClientRect();
+        setNotePos({
+          top: rect.top,
+          left: rect.left,
+          width: rect.width,
+          height: rect.height,
+        });
       }
       if (!modalTrigger) setOpacityTrigger(true);
     }, [trigger2, modalTrigger]);
@@ -134,16 +142,18 @@ const Note = memo(
                 calculateMasonryLayout={calculateLayout}
               />
             </div>
-            {note.images.length === 0 && !note.title && !note.content && (
-              <div className="empty-note" aria-label="Empty note" />
-            )}
+            {note.images.length === 0 &&
+              !note.title.trim() &&
+              !note.content.trim() && (
+                <div className="empty-note" aria-label="Empty note" />
+              )}
             <div ref={inputsRef}>
-              {note.title && (
+              {note.title.trim() && (
                 <div className="title">
                   <p>{note.title}</p>
                 </div>
               )}
-              {note.content && (
+              {note.content.trim() && (
                 <div className="content">
                   <p>{note.content}</p>
                 </div>
