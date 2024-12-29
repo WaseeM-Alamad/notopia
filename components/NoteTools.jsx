@@ -15,9 +15,6 @@ const NoteTools = ({ images, setNote, noteVals, isOpen, setIsOpen }) => {
   const [selectedColor, setSelectedColor] = useState(noteVals.color);
 
   const colorButtonRef = useRef(null);
-  const FormattedDate = noteVals.createdAt
-    ? getNoteFormattedDate(noteVals.createdAt)
-    : format(new Date(), "h:mm a");
 
   const handleColorClick = useCallback(async (color) => {
     if (color === selectedColor) return;

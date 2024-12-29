@@ -3,7 +3,7 @@ import React, { memo } from "react";
 const SideArchiveIcon = ({ size, color = "#535353" }) => {
   return (
     <svg
-      style={{ zIndex: "10", transition: "fill 0.2s ease" }}
+      style={{ zIndex: "10", transition: "fill 0.2s ease", display: "block" }}
       width={size + 1}
       height={size + 1}
       fill={color}

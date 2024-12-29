@@ -1,14 +1,27 @@
 import { format } from "date-fns";
 
-export const getNoteFormattedDate = (createdAt) => {
+export const getNoteFormattedDate = (recievedDate) => {
   const currentDate = new Date();
-  const noteYear = new Date(createdAt).getFullYear();
-  const noteDay = new Date(createdAt).getDate();
-  const FormattedDate =
-    noteYear === currentDate.getFullYear()
-      ? noteDay === currentDate.getDate()
-        ? format(new Date(createdAt), "h:mm a")
-        : format(new Date(createdAt), `MMM dd`)
-      : format(new Date(createdAt), `MMM yyyy`);
-      return FormattedDate;
+  const noteYear = new Date(recievedDate).getFullYear();
+  const noteDay = new Date(recievedDate).getDate();
+  let FormattedDate;
+  if (noteYear === currentDate.getFullYear()) {
+    if (noteDay === currentDate.getDate()) {
+      FormattedDate = format(new Date(recievedDate), "h:mm a");
+    } else if (noteDay === currentDate.getDate() - 1) {
+      FormattedDate = format(new Date(recievedDate), " 'yesterday, ' h:mm a");
+    } else {
+      FormattedDate = format(new Date(recievedDate), `MMM dd`);
+    }
+  } else {
+    FormattedDate = format(new Date(recievedDate), `MMM yyyy`);
+  }
+
+  return FormattedDate;
 };
+
+// noteYear === currentDate.getFullYear()
+//   ? noteDay === currentDate.getDate()
+//     ? format(new Date(recievedDate), "h:mm a")
+//     : format(new Date(recievedDate), `MMM dd`)
+//   : format(new Date(recievedDate), `MMM yyyy`);

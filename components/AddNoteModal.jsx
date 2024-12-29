@@ -136,6 +136,8 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
           isPinned: note.isPinned,
           isArchived: note.isArchived,
           isTrash: note.isArchived,
+          createdAt: new Date(),
+          updatedAt: new Date(),
           images: note.images,
         };
         setNotes((prev) => [newNote, ...prev]);
@@ -215,7 +217,9 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
         const filePath = `${userID}/${noteUUID}/${image.id}`;
         const { data, error } = await supabase.storage
           .from(bucketName)
-          .upload(filePath, image.file);
+          .upload(filePath, image.file, {
+            cacheControl: '0'
+          });
 
         if (error) {
           console.error("Error uploading file:", error);

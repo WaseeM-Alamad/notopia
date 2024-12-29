@@ -26,6 +26,8 @@ const Note = memo(
     const timeoutRef = useRef(null);
     const imagesRef = useRef(null);
     const noteStuffRef = useRef(null);
+    const titleRef = useRef(null);
+    const contentRef = useRef(null);
 
     const [notePos, setNotePos] = useState(() => ({
       top: 0,
@@ -57,12 +59,22 @@ const Note = memo(
           left: rect.left,
           width: rect.width,
           height: rect.height,
+          source:
+            e.target === contentRef
+              ? "note"
+              : e.target === titleRef
+              ? "title"
+              : "note",
         });
         setModalTrigger(true);
       }
     }, []);
 
     useEffect(() => {
+      if (window.location.hash.includes(note.uuid)) {
+        noteRef.current.click();
+      }
+
       if (trigger2) {
         setOpacityTrigger(false);
       } else {
@@ -74,7 +86,10 @@ const Note = memo(
           height: rect.height,
         });
       }
-      if (!modalTrigger) setOpacityTrigger(true);
+      if (!modalTrigger) {
+        setOpacityTrigger(true);
+        
+      }
     }, [trigger2, modalTrigger]);
 
     const handlePinClick = useCallback(
@@ -149,13 +164,13 @@ const Note = memo(
               )}
             <div ref={inputsRef}>
               {note.title.trim() && (
-                <div className="title">
-                  <p>{note.title}</p>
+                <div ref={titleRef} className="title">
+                  {note.title}
                 </div>
               )}
               {note.content.trim() && (
-                <div className="content">
-                  <p>{note.content}</p>
+                <div ref={contentRef} className="content">
+                  {note.content}
                 </div>
               )}
             </div>
@@ -173,16 +188,19 @@ const Note = memo(
             }}
           />
         </div>
-        <NoteModal
-          trigger={modalTrigger}
-          setTrigger={handleModalTriggerChange}
-          trigger2={trigger2}
-          setTrigger2={handleTrigger2Change}
-          notePos={notePos}
-          note={note}
-          setNote={setNote}
-          calculateLayout={calculateLayout}
-        />
+        {modalTrigger && (
+          <NoteModal
+            trigger={modalTrigger}
+            setTrigger={handleModalTriggerChange}
+            trigger2={trigger2}
+            setTrigger2={handleTrigger2Change}
+            notePos={notePos}
+            note={{ ...note, isPinned: Note.isPinned }}
+            setNote={setNote}
+            calculateLayout={calculateLayout}
+            togglePin={togglePin}
+          />
+        )}
       </>
     );
   },

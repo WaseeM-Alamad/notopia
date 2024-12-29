@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { memo, useCallback, useRef, useState } from "react";
 import PersonAdd from "./icons/PersonAdd";
 import Bell from "./icons/Bell";
 import ArchiveIcon from "./icons/ArchiveIcon";
@@ -8,13 +8,15 @@ import ColorIcon from "./icons/ColorIcon";
 import MoreVert from "./icons/MoreVert";
 import ColorSelectMenu from "./ColorSelectMenu";
 import BackIcon from "./icons/BackIcon";
+import { NoteUpdateAction } from "@/utils/actions";
 
 const NoteModalTools = ({
   setNote,
-  note,
   selectedColor,
   setSelectedColor,
+  note,
   handleClose,
+  isAtBottom,
 }) => {
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const [isOpen, setIsOpen] = useState(false);
@@ -22,10 +24,15 @@ const NoteModalTools = ({
   const closeRef = useRef(null);
   const inputRef = useRef(null);
 
-  const handleColorClick = useCallback((color) => {
+  const handleColorClick = useCallback(async (color) => {
     if (color === selectedColor) return;
     setSelectedColor(color);
     setNote((prev) => ({ ...prev, color: color }));
+    window.dispatchEvent(new Event("loadingStart"));
+    await NoteUpdateAction("color", color, note.uuid);
+    setTimeout(() => {
+      window.dispatchEvent(new Event("loadingEnd"));
+    }, 800);
   });
 
   const toggleMenu = useCallback(() => {
@@ -38,8 +45,7 @@ const NoteModalTools = ({
   });
 
   return (
-    <div>
-      <div style={{ opacity: "1" }} className="modal-bottom">
+      <div style={{ opacity: "1" }} className={`modal-bottom ${!isAtBottom && `bottom-box-shadow`} `}>
         {/* <p className="date">{FormattedDate}</p> */}
         <div className="modal-bottom-icons">
           <Button>
@@ -88,8 +94,7 @@ const NoteModalTools = ({
           Close
         </button>
       </div>
-    </div>
   );
 };
 
-export default NoteModalTools;
+export default memo (NoteModalTools);

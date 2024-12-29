@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import "@/assets/styles/modal.css";
 import { createPortal } from "react-dom";
 import Button from "./Tools/Button";
@@ -7,6 +7,7 @@ import NoteImagesLayout from "./Tools/NoteImagesLayout";
 import { NoteTextUpdateAction } from "@/utils/actions";
 import { debounce } from "lodash";
 import NoteModalTools from "./NoteModalTools";
+import { getNoteFormattedDate } from "@/utils/noteDateFormatter";
 
 const NoteModal = ({
   trigger,
@@ -17,44 +18,77 @@ const NoteModal = ({
   note,
   setNote,
   calculateLayout,
+  togglePin,
 }) => {
   const modalRef = useRef(null);
   const [width, setWidth] = useState(5);
-  const [modalNote, setModalNote] = useState(note);
   const [isClient, setIsClient] = useState(false);
-  const [selectedColor, setSelectedColor] = useState(note.color)
+  const [isPinned, setIsPinned] = useState(note.isPinned);
+  const [selectedColor, setSelectedColor] = useState(note.color);
+  const [isAtBottom, setIsAtBottom] = useState(true);
   const titleRef = useRef(null);
   const contentRef = useRef(null);
   const containerRef = useRef(null);
+  const isFirstRun = useRef(true);
+  const FormattedEditedDate = getNoteFormattedDate(note.updatedAt);
 
   useEffect(() => {
     // Set isClient to true once the component is mounted on the client side
     setIsClient(true);
+
+    window.location.hash = `NOTE/${note.uuid}`; // Set the hash
   }, []);
 
   const handleClose = (e) => {
     if (containerRef.current === e.target) {
       setTrigger2(false);
       setTimeout(() => {
+        if (isPinned !== note.isPinned) {
+          togglePin(note.uuid);
+        }
+        window.location.hash = ``;
+        calculateLayout();
         setTrigger(false);
       }, 250);
     }
   };
 
   useEffect(() => {
+    if (isFirstRun.current === true) {
+      isFirstRun.current = false;
+      return;
+    }
+    if (isPinned !== note.isPinned) {
+      setNote((prev) => ({ ...prev, updatedAt: new Date() }));
+    }
+  }, [
+    note.title,
+    note.content,
+    note.color,
+    note.labels,
+    isPinned,
+    note.isArchived,
+    note.isTrash,
+    note.images,
+  ]);
+
+  useEffect(() => {
     setTimeout(() => {
       setTrigger2(trigger);
     }, 10);
-    if (trigger) {
-      if (contentRef.current) contentRef.current.textContent = note.content;
-      if (titleRef.current) titleRef.current.textContent = note.title;
-    } else {
-      calculateLayout();
-    }
   }, [trigger]);
 
   useEffect(() => {
     if (trigger2) {
+      if (notePos.source === "note") {
+        contentRef.current.focus();
+      } else if (notePos.source === "title") {
+        titleRef.current.focus();
+      } else {
+        contentRef.current.focus();
+      }
+      if (contentRef.current) contentRef.current.textContent = note.content;
+      if (titleRef.current) titleRef.current.innerText = note.title;
       const scrollbarWidth =
         window.innerWidth - document.documentElement.clientWidth;
       document.body.style.overflow = "hidden";
@@ -62,7 +96,6 @@ const NoteModal = ({
       modalRef.current.style.marginLeft = `${0}px`;
       //marginLeft: trigger2? '0px': "5px",
     } else {
-      setNote(modalNote);
       const scrollbarWidth =
         window.innerWidth - document.documentElement.clientWidth;
       document.body.style.overflow = "auto";
@@ -77,11 +110,8 @@ const NoteModal = ({
 
   useEffect(() => {
     const observer = new ResizeObserver(() => {
-      if (modalRef.current ) {
-        setTimeout(() => {
-          // console.log("Element width:", modalRef.current.offsetWidth); // Check the computed width
-          setWidth(modalRef.current?.offsetWidth);
-        }, 0);
+      if (modalRef.current) {
+        setWidth(modalRef.current?.offsetWidth);
       }
     });
 
@@ -92,7 +122,7 @@ const NoteModal = ({
     return () => {
       observer.disconnect();
     };
-  }, [trigger]);
+  }, [trigger2]);
 
   const updateTextDebounced = useCallback(
     debounce(async (values) => {
@@ -109,25 +139,39 @@ const NoteModal = ({
     return null; // Return nothing on the server side
   }
 
-  const handlePinClick = () => {};
+  const handlePinClick = () => {
+    setIsPinned((prev) => !prev);
+  };
 
   const handleTitleInput = (e) => {
-    const text = e.target.textContent;
-    setModalNote((prev) => ({ ...prev, title: text }));
-    updateTextDebounced({ title: text, content: modalNote.content });
+    const text = e.target.innerText;
+    const t = text === "\n" ? "" : text;
+    setNote((prev) => ({ ...prev, title: t }));
+    updateTextDebounced({ title: t, content: note.content });
 
-    if (!text) {
-      e.target.textContent = "";
+    if (text === "\n") {
+      e.target.innerText = "";
     }
   };
 
   const handleContentInput = (e) => {
-    const text = e.target.textContent;
-    setModalNote((prev) => ({ ...prev, content: text }));
-    updateTextDebounced({ title: modalNote.title, content: text });
+    const text = e.target.innerText;
+    const t = text === "\n" ? "" : text;
+    setNote((prev) => ({ ...prev, content: t }));
+    updateTextDebounced({ title: note.title, content: t });
 
-    if (!text) {
-      e.target.textContent = "";
+    if (text === "\n") {
+      e.target.innerText = "";
+    }
+  };
+
+  const handleTitleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      contentRef.current.focus();
+    } else if (e.shiftKey && e.key === "Enter") {
+      e.preventDefault();
+      document.execCommand("insertLineBreak");
     }
   };
 
@@ -139,11 +183,32 @@ const NoteModal = ({
     document.execCommand("insertText", false, text);
   };
 
+  const handleScroll = (event) => {
+    const { scrollTop, scrollHeight, clientHeight } = event.target;
+
+    // Check if the scroll position is at the bottom
+    if (scrollTop + clientHeight === scrollHeight) {
+      setIsAtBottom(true); // Set state to true when at the bottom
+    } else {
+      setIsAtBottom(false); // Set state to false when not at the bottom
+    }
+  };
+
+  const closeKeyDown = (e) => {
+    if (e.key === "Escape") {
+      setTrigger2(false);
+      setTimeout(() => {
+        setTrigger(false);
+      }, 250);
+    }
+  };
+
   return createPortal(
     <>
       <div
         ref={containerRef}
         onClick={handleClose}
+        onKeyDown={closeKeyDown}
         style={{
           display: trigger ? "" : "none",
           backgroundColor: trigger2 && "rgba(0,0,0,0.5)",
@@ -160,7 +225,7 @@ const NoteModal = ({
             minHeight: trigger2 ? "185px" : "",
             transform: trigger2 && "translate(-50%, -30%)",
             borderRadius: "0.7rem",
-            backgroundColor: selectedColor,
+            backgroundColor: note.color,
             transition:
               "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), width 0.25s cubic-bezier(0.25, 0.8, 0.25, 1), background-color 0.25s linear",
           }}
@@ -169,6 +234,7 @@ const NoteModal = ({
           <div
             style={{ overflowY: trigger2 ? "auto" : "hidden" }}
             className="modal-inputs-container"
+            onScroll={handleScroll}
           >
             {note.images.length === 0 && <div className="modal-corner" />}
             <div className="modal-pin">
@@ -178,17 +244,17 @@ const NoteModal = ({
                 onClick={handlePinClick}
               >
                 <PinIcon
-                  color={note.isPinned ? "#212121" : "transparent"}
+                  color={isPinned ? "#212121" : "transparent"}
                   opacity={0.8}
-                  rotation={note.isPinned ? "0deg" : "40deg"}
+                  rotation={isPinned ? "0deg" : "40deg"}
                 />
               </Button>
             </div>
-            <NoteImagesLayout width={width} images={modalNote.images} />
+            <NoteImagesLayout width={width} images={note.images} />
             {!trigger2 &&
-              modalNote.images.length === 0 &&
-              !modalNote.title.trim() &&
-              !modalNote.content.trim() && (
+              note.images.length === 0 &&
+              !note.title.trim() &&
+              !note.content.trim() && (
                 <div className="empty-note" aria-label="Empty note" />
               )}
             <div
@@ -204,6 +270,7 @@ const NoteModal = ({
               contentEditable
               suppressContentEditableWarning
               onInput={handleTitleInput}
+              onKeyDown={handleTitleKeyDown}
               onPaste={handlePaste}
               ref={titleRef}
               className={`${
@@ -224,7 +291,7 @@ const NoteModal = ({
                   : !note.title && !note.content
                   ? "none"
                   : "",
-                minHeight: "3.8rem",
+                // minHeight: "3.8rem",
                 transition: "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)",
               }}
               contentEditable
@@ -238,17 +305,27 @@ const NoteModal = ({
               role="textbox"
               tabIndex="0"
               aria-multiline="true"
-              aria-label="Take a note...."
+              aria-label="Note"
               spellCheck="false"
             />
+            {trigger2 && (
+              <div className="modal-date-section">
+                <div className="edited">
+                  Edited
+                  {" " + FormattedEditedDate}
+                </div>
+              </div>
+            )}
           </div>
+
           {trigger2 && (
             <NoteModalTools
-              setNote={setModalNote}
-              note={modalNote}
+              setNote={setNote}
+              note={note}
               selectedColor={selectedColor}
               setSelectedColor={setSelectedColor}
               handleClose={handleClose}
+              isAtBottom={isAtBottom}
             />
           )}
         </div>
@@ -258,4 +335,4 @@ const NoteModal = ({
   );
 };
 
-export default NoteModal;
+export default memo(NoteModal);

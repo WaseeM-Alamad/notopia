@@ -1,3 +1,4 @@
+import zIndex from "@mui/material/styles/zIndex";
 import React, { useState, useEffect, useRef, memo } from "react";
 
 const NoteImagesLayout = ({ width, images, calculateMasonryLayout }) => {
@@ -100,6 +101,7 @@ const NoteImagesLayout = ({ width, images, calculateMasonryLayout }) => {
     display: "flex",
     flexDirection: "column",
     gap: "3px",
+    zIndex: '10',
     overflow: "hidden", // Prevent images from spilling out
   };
 

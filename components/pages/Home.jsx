@@ -8,13 +8,12 @@ import React, {
   useMemo,
 } from "react";
 import "@/assets/styles/home.css";
-import Note from "./Note";
-import NotesIcon from "./icons/NotesIcon";
-import SortByIcon from "./icons/SortByIcon";
-import LabelIcon from "./icons/LabelIcon";
-import AddNoteModal from "./AddNoteModal";
+import Note from "../Note";
+import NotesIcon from "../icons/NotesIcon";
+import SortByIcon from "../icons/SortByIcon";
+import LabelIcon from "../icons/LabelIcon";
+import AddNoteModal from "../AddNoteModal";
 import { useAppContext } from "@/context/AppContext";
-import { fetchNotes } from "@/utils/actions";
 import { motion } from "framer-motion";
 
 const COLUMN_WIDTH = 240;
@@ -41,42 +40,48 @@ const Header = memo(() => (
 
 Header.displayName = "Header";
 
-const NoteWrapper = memo(({ note, togglePin, isVisible, ref, calculateLayout }) => {
-  const { modalOpen, setModalOpen } = useAppContext();
-  const [mounted, setMounted] = useState(false);
-  const [mountOpacity, setMountOpacity] = useState(false);
-  useEffect(() => {
-    setTimeout(() => {
-      setMounted(true);
-    }, 100);
-  }, []);
+const NoteWrapper = memo(
+  ({ note, togglePin, isVisible, ref, calculateLayout }) => {
+    const { modalOpen, setModalOpen } = useAppContext();
+    const [mounted, setMounted] = useState(false);
+    const [mountOpacity, setMountOpacity] = useState(false);
+    useEffect(() => {
+      setTimeout(() => {
+        setMounted(true);
+      }, 100);
+    }, []);
 
-  useEffect(()=> {
-    if (!modalOpen) setMountOpacity(true);
-  }, [modalOpen])
+    useEffect(() => {
+      if (!modalOpen) setMountOpacity(true);
+    }, [modalOpen]);
 
-  return (
-    <motion.div
-      ref={ref}
-      data-pinned={note.isPinned}
-      className="grid-item"
-      style={{
-        width: `${COLUMN_WIDTH}px`,
-        marginBottom: `${GUTTER}px`,
-        transition: `transform ${mounted ? "0.2s" : "0"} ease, opacity 0s`,
-        opacity: isVisible ? mountOpacity? 1: 0 : 0,
-        pointerEvents: isVisible ? "auto" : "none",
-      }}
-    >
-      <Note Note={note} togglePin={togglePin} calculateLayout={calculateLayout} />
-    </motion.div>
-  );
-});
+    return (
+      <motion.div
+        ref={ref}
+        data-pinned={note.isPinned}
+        className="grid-item"
+        style={{
+          width: `${COLUMN_WIDTH}px`,
+          marginBottom: `${GUTTER}px`,
+          transition: `transform ${mounted ? "0.2s" : "0"} ease, opacity 0s`,
+          opacity: isVisible ? (mountOpacity ? 1 : 0) : 0,
+          pointerEvents: isVisible ? "auto" : "none",
+        }}
+      >
+        <Note
+          Note={note}
+          togglePin={togglePin}
+          calculateLayout={calculateLayout}
+        />
+      </motion.div>
+    );
+  }
+);
 
 NoteWrapper.displayName = "NoteWrapper";
 
-const Home = memo(() => {
-  const [notes, setNotes] = useState([]);
+const Home = memo(({ initialNotes }) => {
+  const [notes, setNotes] = useState(initialNotes || []);
   const [isLayoutReady, setIsLayoutReady] = useState(false);
   const [othersHeight, setOthersHeight] = useState(null);
   const { modalOpen, setModalOpen } = useAppContext();
@@ -85,23 +90,6 @@ const Home = memo(() => {
   const resizeTimeoutRef = useRef(null);
   const layoutFrameRef = useRef(null);
 
-  const getNotes = async () => {
-    window.dispatchEvent(new Event("loadingStart"));
-    const fetchedNotes = await fetchNotes();
-    setTimeout(() => {
-      window.dispatchEvent(new Event("loadingEnd"));
-    }, 800);
-
-    setNotes(fetchedNotes.data);
-  };
-
-  useEffect(() => {
-    getNotes();
-    window.addEventListener("refresh", getNotes);
-
-    return () => window.removeEventListener("refresh", getNotes);
-  }, []);
-
   const { pinnedNotes, unpinnedNotes } = useMemo(
     () => ({
       pinnedNotes: notes.filter((note) => note.isPinned),
@@ -109,6 +97,12 @@ const Home = memo(() => {
     }),
     [notes]
   );
+
+  useEffect(() => {
+    if (notes !== initialNotes) {
+      setNotes(initialNotes);
+    }
+  }, [initialNotes]);
 
   const [unpinnedNotesNumber, setUnpinnedNotesNumber] = useState(null);
   const [pinnedNotesNumber, setPinnedNotesNumber] = useState(null);
@@ -186,7 +180,6 @@ const Home = memo(() => {
       }
     });
   }, [isLayoutReady]);
-
 
   const debouncedCalculateLayout = useCallback(() => {
     if (resizeTimeoutRef.current) {

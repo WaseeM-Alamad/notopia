@@ -3,7 +3,7 @@ import React, { memo } from "react";
 const TrashIcon = ({ size, color = "#535353" }) => {
   return (
     <svg
-      style={{ zIndex: "10" }}
+      style={{ zIndex: "10", display: "block", flexShrink: "0" }}
       xmlns="http://www.w3.org/2000/svg"
       width={size}
       height={size}

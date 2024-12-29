@@ -1,21 +1,23 @@
 .modal-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 100;
-    transition: all 0.3s ease;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 100;
+  transition: all 0.3s ease;
 }
 
 .modal {
+  display: flex;
+  flex-direction: column;
   position: absolute;
   overflow: hidden;
   max-width: "37.5rem";
   max-height: "71rem";
 }
 
-.modal-editable-title:empty::before {
+.modal-editable-title:empty:before {
   content: attr(aria-label);
   color: rgba(32, 33, 36, 0.7);
   font-weight: 400;
@@ -37,6 +39,8 @@
   font-size: 1.375rem;
   line-height: 1.5rem;
   overflow-wrap: break-word;
+  word-wrap: break-word;
+  white-space: pre-wrap;
   outline: none;
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
@@ -45,7 +49,9 @@
   padding: 0.8rem 0.8rem 0 0.8rem;
   font-weight: 500;
   font-size: 1rem;
-
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  white-space: pre-wrap;
 }
 
 .modal-content-input {
@@ -54,6 +60,8 @@
   font-size: 1.125rem;
   outline: none;
   overflow-wrap: break-word;
+  word-wrap: break-word;
+  white-space: pre-wrap;
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
@@ -61,17 +69,16 @@
   padding: 0.6rem 0.8rem 0.8rem 0.8rem;
   font-weight: 400;
   font-size: 1.1rem;
-
+  white-space: pre-wrap;
 }
 
 .modal-editable-content:empty::before {
   content: attr(aria-label);
   color: rgba(32, 33, 36, 0.8);
-  font-weight: 450;
   text-align: center;
-  font-size: 1rem;
+  font-size: 0.91rem;
   line-height: 1.5rem;
-  font-weight: 400;
+  font-weight: 550;
   letter-spacing: 0.0142857143em;
   position: relative;
   top: 0.1rem;
@@ -95,18 +102,26 @@
 }
 
 .modal-inputs-container::-webkit-scrollbar-thumb {
-  background-color: rgba(0,0,0,.2);
+  background-color: rgba(0, 0, 0, 0.2);
   border-radius: 2rem;
 }
 
 .modal-date-section {
+  display: flex;
   min-height: 25px;
-  padding: 5px 10px 5px 10px;
+  padding: 5px 18px 5px 18px;
+}
+
+.edited {
+  font-size: .75rem;
+  margin-left: auto;
+  color: rgba(0,0,0,0.7);
 }
 
 .modal-bottom {
   user-select: none;
   opacity: 0;
+  margin-top: auto;
   gap: 1rem;
   display: flex;
   justify-content: flex-start;
@@ -117,14 +132,14 @@
   min-height: 2.76rem;
   width: 100%;
   box-sizing: border-box;
+  z-index: 11;
   transition: all 0.3s ease;
 }
 
 .bottom-box-shadow {
-  box-shadow: 0px -3px 3px rgba(0, 0, 0, 0.2);
+  box-shadow: 0px -3px 3px rgba(0, 0, 0, 0.25);
   transition: all 0.3s ease;
 }
-
 
 .modal-bottom-icons {
   display: flex;
@@ -137,7 +152,7 @@
   margin-right: 1rem;
   margin-bottom: auto;
   margin-top: auto;
-  padding: .65rem 1.5rem .65rem 1.5rem;
+  padding: 0.65rem 1.5rem 0.65rem 1.5rem;
   background-color: rgba(0, 0, 0, 0);
   border: none;
   border-radius: 0.4rem;
