@@ -11,7 +11,7 @@ import BackIcon from "../icons/BackIcon";
 import { NoteUpdateAction } from "@/utils/actions";
 
 const NoteModalTools = ({
-  setNote,
+  setNotes,
   selectedColor,
   setSelectedColor,
   note,
@@ -27,7 +27,11 @@ const NoteModalTools = ({
   const handleColorClick = useCallback(async (color) => {
     if (color === selectedColor) return;
     setSelectedColor(color);
-    setNote((prev) => ({ ...prev, color: color }));
+    setNotes((prevNotes) =>
+      prevNotes.map((mapNote) =>
+        mapNote.uuid === note.uuid ? { ...mapNote, color: color } : mapNote
+      )
+    );
     window.dispatchEvent(new Event("loadingStart"));
     await NoteUpdateAction("color", color, note.uuid);
     setTimeout(() => {

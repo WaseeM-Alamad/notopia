@@ -64,6 +64,7 @@ const page = () => {
             initial={{ opacity: 0.3 }}
             animate={{ opacity: 1, transition: { duration: 0.2 } }}
           >
+            <button onClick={()=> console.log(notes)}>gg</button>
             <div className="divider-tool">
               <SortByIcon />
               <span className="divider-tool-text">Sort by</span>

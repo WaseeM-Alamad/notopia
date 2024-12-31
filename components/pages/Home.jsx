@@ -11,14 +11,14 @@ import "@/assets/styles/home.css";
 import Note from "../others/Note";
 import AddNoteModal from "../others/AddNoteModal";
 import { useAppContext } from "@/context/AppContext";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 
 const COLUMN_WIDTH = 240;
 const GUTTER = 15;
 const GAP_BETWEEN_SECTIONS = 120;
 
 const NoteWrapper = memo(
-  ({ note, togglePin, isVisible, ref, calculateLayout }) => {
+  ({ note, setNotes, togglePin, isVisible, ref, calculateLayout }) => {
     const { modalOpen, setModalOpen } = useAppContext();
     const [mounted, setMounted] = useState(false);
     const [mountOpacity, setMountOpacity] = useState(false);
@@ -34,6 +34,15 @@ const NoteWrapper = memo(
 
     return (
       <motion.div
+        initial={{ opacity: 1 }}
+        animate={{ opacity: !note.isArchived ? 1 : 0 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        onAnimationComplete={() => {
+          setTimeout(() => {
+            calculateLayout();
+          }, 100);
+        }}
         ref={ref}
         data-pinned={note.isPinned}
         className="grid-item"
@@ -41,15 +50,21 @@ const NoteWrapper = memo(
           width: `${COLUMN_WIDTH}px`,
           marginBottom: `${GUTTER}px`,
           transition: `transform ${mounted ? "0.2s" : "0"} ease, opacity 0s`,
-          opacity: isVisible ? (mountOpacity ? 1 : 0) : 0,
           pointerEvents: isVisible ? "auto" : "none",
         }}
       >
-        <Note
-          Note={note}
-          togglePin={togglePin}
-          calculateLayout={calculateLayout}
-        />
+        <motion.div
+          style={{
+            opacity: isVisible ? (mountOpacity ? 1 : 0) : 0,
+          }}
+        >
+          <Note
+            note={note}
+            setNotes={setNotes}
+            togglePin={togglePin}
+            calculateLayout={calculateLayout}
+          />
+        </motion.div>
       </motion.div>
     );
   }
@@ -73,7 +88,6 @@ const Home = memo(({ notes, setNotes }) => {
     }),
     [notes]
   );
-
 
   const [unpinnedNotesNumber, setUnpinnedNotesNumber] = useState(null);
   const [pinnedNotesNumber, setPinnedNotesNumber] = useState(null);
@@ -238,16 +252,22 @@ const Home = memo(({ notes, setNotes }) => {
           >
             OTHERS
           </p>
-          {notes.map((note, index) => (
-            <NoteWrapper
-              ref={index === 0 ? lastAddedNoteRef : null}
-              key={note.uuid}
-              note={note}
-              togglePin={togglePin}
-              isVisible={isLayoutReady}
-              calculateLayout={calculateLayout}
-            />
-          ))}
+          <AnimatePresence>
+            {notes.map(
+              (note, index) =>
+                !note.isArchived && (
+                  <NoteWrapper
+                    ref={index === 0 ? lastAddedNoteRef : null}
+                    key={note.uuid}
+                    note={note}
+                    setNotes={setNotes}
+                    togglePin={togglePin}
+                    isVisible={isLayoutReady}
+                    calculateLayout={calculateLayout}
+                  />
+                )
+            )}
+          </AnimatePresence>
         </div>
       </div>
       <AddNoteModal

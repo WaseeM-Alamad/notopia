@@ -16,7 +16,7 @@ import { motion } from "framer-motion";
 const COLUMN_WIDTH = 240;
 const GUTTER = 15;
 
-const NoteWrapper = memo(({ note, isVisible, ref }) => {
+const NoteWrapper = memo(({ note, setNotes, isVisible, ref }) => {
   const { modalOpen } = useAppContext();
   const [mounted, setMounted] = useState(false);
   const [mountOpacity, setMountOpacity] = useState(false);
@@ -43,7 +43,7 @@ const NoteWrapper = memo(({ note, isVisible, ref }) => {
         pointerEvents: isVisible ? "auto" : "none",
       }}
     >
-      <Note Note={note} />
+      <Note note={note} setNotes={setNotes} />
     </motion.div>
   );
 });
@@ -161,6 +161,7 @@ const Home = memo(({ notes, setNotes }) => {
                 <NoteWrapper
                   key={note.uuid}
                   note={note}
+                  setNotes={setNotes}
                   isVisible={isLayoutReady}
                 />
               );

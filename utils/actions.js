@@ -90,8 +90,16 @@ export const createNoteAction = async (note) => {
 export const NoteUpdateAction = async (type, value, noteUUID) => {
   try {
     await connectDB();
-
-    await Note.updateOne({ uuid: noteUUID }, { $set: { [type]: value } });
+    if (type === "images") {
+      await Note.updateOne({ uuid: noteUUID }, { $push: { images: value } });
+    } else if (type !== "isArchived") {
+      await Note.updateOne({ uuid: noteUUID }, { $set: { [type]: value } });
+    } else if (type === "isArchived") {
+      await Note.updateOne(
+        { uuid: noteUUID },
+        { $set: { [type]: value, isPinned: false } }
+      );
+    }
   } catch (error) {
     console.log("Error updating note:", error);
     return new Response("Failed to update note", { status: 500 });

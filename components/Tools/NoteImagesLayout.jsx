@@ -30,9 +30,12 @@ const NoteImagesLayout = ({ width, images, calculateMasonryLayout }) => {
 
   useEffect(() => {
     if (layout.length > 0) {
-      if (calculateMasonryLayout) setTimeout(() => {
+      if (calculateMasonryLayout) {
         calculateMasonryLayout();
-      }, 100); 
+        setTimeout(() => {
+          calculateMasonryLayout();
+        }, 100);
+      }
     }
   }, [layout.length]);
 
@@ -97,13 +100,12 @@ const NoteImagesLayout = ({ width, images, calculateMasonryLayout }) => {
   useEffect(() => {
     calculateLayout();
   }, [loadedImages, width]);
-  
 
   const containerStyle = {
     display: "flex",
     flexDirection: "column",
     gap: "3px",
-    zIndex: '10',
+    zIndex: "10",
     overflow: "hidden", // Prevent images from spilling out
   };
 

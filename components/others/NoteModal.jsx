@@ -16,7 +16,7 @@ const NoteModal = ({
   setTrigger2,
   notePos,
   note,
-  setNote,
+  setNotes,
   calculateLayout,
   togglePin,
 }) => {
@@ -60,7 +60,11 @@ const NoteModal = ({
       return;
     }
     if (isPinned !== note.isPinned) {
-      setNote((prev) => ({ ...prev, updatedAt: new Date() }));
+      setNotes((prevNotes) =>
+        prevNotes.map((mapNote) =>
+          mapNote.uuid === note.uuid ? { ...mapNote, updatedAt: new Date() } : mapNote
+        )
+      );
     }
   }, [
     note.title,
@@ -155,7 +159,11 @@ const NoteModal = ({
   const handleTitleInput = (e) => {
     const text = e.target.innerText;
     const t = text === "\n" ? "" : text;
-    setNote((prev) => ({ ...prev, title: t }));
+    setNotes((prevNotes) =>
+      prevNotes.map((mapNote) =>
+        mapNote.uuid === note.uuid ? { ...mapNote, title: t } : mapNote
+      )
+    );
     updateTextDebounced({ title: t, content: note.content });
 
     if (text === "\n") {
@@ -166,7 +174,11 @@ const NoteModal = ({
   const handleContentInput = (e) => {
     const text = e.target.innerText;
     const t = text === "\n" ? "" : text;
-    setNote((prev) => ({ ...prev, content: t }));
+    setNotes((prevNotes) =>
+      prevNotes.map((mapNote) =>
+        mapNote.uuid === note.uuid ? { ...mapNote, content: t } : mapNote
+      )
+    );
     updateTextDebounced({ title: note.title, content: t });
 
     if (text === "\n") {
@@ -329,7 +341,7 @@ const NoteModal = ({
 
           {trigger2 && (
             <NoteModalTools
-              setNote={setNote}
+              setNotes={setNotes}
               note={note}
               selectedColor={selectedColor}
               setSelectedColor={setSelectedColor}

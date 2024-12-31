@@ -10,16 +10,34 @@ import ArchiveIcon from "../icons/ArchiveIcon";
 import Bell from "../icons/Bell";
 import MoreVert from "../icons/MoreVert";
 import Button from "../Tools/Button";
+import { v4 as uuid } from "uuid";
+import { useSession } from "next-auth/react";
+import { createClient } from "@supabase/supabase-js";
 
-const NoteTools = ({ images, setNote, note, isOpen, setIsOpen }) => {
+const NoteTools = ({
+  images,
+  setNotes,
+  note,
+  isOpen,
+  setIsOpen,
+  togglePin,
+}) => {
   const [selectedColor, setSelectedColor] = useState(note.color);
+  const {data: session} = useSession();
+  const userID = session?.user?.id;
 
   const colorButtonRef = useRef(null);
+  const inputRef = useRef(null);
 
   const handleColorClick = useCallback(async (color) => {
     if (color === selectedColor) return;
     setSelectedColor(color);
-    setNote((prev) => ({ ...prev, color: color }));
+    // setNote((prev) => ({ ...prev, color: color }));
+    setNotes((prevNotes) =>
+      prevNotes.map((mapNote) =>
+        mapNote.uuid === note.uuid ? { ...mapNote, color: color } : mapNote
+      )
+    );
     window.dispatchEvent(new Event("loadingStart"));
     await NoteUpdateAction("color", color, note.uuid);
     setTimeout(() => {
@@ -39,7 +57,13 @@ const NoteTools = ({ images, setNote, note, isOpen, setIsOpen }) => {
   };
 
   const handleArchive = useCallback(async () => {
-    setNote((prev) => ({ ...prev, isArchived: !prev.isArchived }));
+    setNotes((prevNotes) =>
+      prevNotes.map((mapNote) =>
+        mapNote.uuid === note.uuid
+          ? { ...mapNote, isArchived: !mapNote.isArchived, isPinned: false }
+          : mapNote
+      )
+    );
     window.dispatchEvent(new Event("loadingStart"));
     await NoteUpdateAction("isArchived", !note.isArchived, note.uuid);
     setTimeout(() => {
@@ -47,6 +71,63 @@ const NoteTools = ({ images, setNote, note, isOpen, setIsOpen }) => {
     }, 800);
   });
 
+  const handleImageAdd = async () => {
+    window.dispatchEvent(new Event("loadingStart"));
+    await NoteUpdateAction("isArchived", !note.isArchived, note.uuid);
+    setTimeout(() => {
+      window.dispatchEvent(new Event("loadingEnd"));
+    }, 800);
+  };
+
+  const UploadImageAction = async (image) => {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    );
+
+    try {
+      const bucketName = "notopia";
+
+        const filePath = `${userID}/${note.uuid}/${image.id}`;
+        const { data, error } = await supabase.storage
+          .from(bucketName)
+          .upload(filePath, image.file, {
+            cacheControl: '0'
+          });
+
+        if (error) {
+          console.error("Error uploading file:", error);
+        }
+    } catch (error) {
+      console.log("couldn't upload images", error);
+    }
+  };
+
+  const handleOnChange = async (event) => {
+    const file = event.target?.files[0];
+    const imageURL = URL.createObjectURL(file);
+    const newUUID = uuid();
+    setNotes((prevNotes) =>
+      prevNotes.map((mapNote) =>
+        mapNote.uuid === note.uuid
+          ? {
+              ...mapNote,
+              images: [...mapNote.images, { url: imageURL, uuid: newUUID }],
+            }
+          : mapNote
+      )
+    );
+    inputRef.current.value = "";
+    window.dispatchEvent(new Event("loadingStart"));
+    const starter =
+    "https://fopkycgspstkfctmhyyq.supabase.co/storage/v1/object/public/notopia";
+    const path = `${starter}/${userID}/${note.uuid}/${newUUID}`
+    await NoteUpdateAction("images", {url: path, id: newUUID} ,note.uuid)
+    await UploadImageAction({file: file, id: newUUID}, note.uuid);
+    setTimeout(() => {
+      window.dispatchEvent(new Event("loadingEnd"));
+    }, 800);
+  };
   return (
     <span style={{ opacity: images ? "0.8" : "1" }}>
       <div
@@ -67,7 +148,13 @@ const NoteTools = ({ images, setNote, note, isOpen, setIsOpen }) => {
           <Button onClick={handleArchive}>
             <ArchiveIcon size={15} opacity={0.9} color="#212121" />
           </Button>
-          <Button>
+          <Button onClick={() => inputRef.current.click()}>
+            <input
+              ref={inputRef}
+              style={{ display: "none" }}
+              type="file"
+              onChange={handleOnChange}
+            />
             <ImageIcon size={15} opacity={0.9} />
           </Button>
           <Button ref={colorButtonRef} onClick={toggleMenu}>
