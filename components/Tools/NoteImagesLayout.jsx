@@ -30,7 +30,9 @@ const NoteImagesLayout = ({ width, images, calculateMasonryLayout }) => {
 
   useEffect(() => {
     if (layout.length > 0) {
-      if (calculateMasonryLayout) calculateMasonryLayout();
+      if (calculateMasonryLayout) setTimeout(() => {
+        calculateMasonryLayout();
+      }, 100); 
     }
   }, [layout.length]);
 

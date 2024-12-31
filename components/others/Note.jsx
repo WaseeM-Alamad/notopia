@@ -6,13 +6,13 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
-import "../assets/styles/note.css";
+import "@/assets/styles/note.css";
 import NoteTools from "./NoteTools";
 import NoteModal from "./NoteModal";
-import PinIcon from "./icons/PinIcon";
+import PinIcon from "../icons/PinIcon";
 import { NoteUpdateAction } from "@/utils/actions";
-import Button from "./Tools/Button";
-import NoteImagesLayout from "./Tools/NoteImagesLayout";
+import Button from "../Tools/Button";
+import NoteImagesLayout from "../Tools/NoteImagesLayout";
 
 const Note = memo(
   ({ Note, togglePin, calculateLayout }) => {
@@ -180,12 +180,7 @@ const Note = memo(
             setIsOpen={handleMenuIsOpenChange}
             setNote={setNote}
             images={note.images.length !== 0}
-            noteVals={{
-              color: note.color,
-              updatedAt: note.updatedAt,
-              createdAt: note.createdAt,
-              uuid: note.uuid,
-            }}
+            note={note}
           />
         </div>
         {modalTrigger && (

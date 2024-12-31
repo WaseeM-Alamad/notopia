@@ -1,13 +1,13 @@
 "use client";
 import React, { memo, useEffect, useMemo, useRef, useState } from "react";
-import "../assets/styles/sidebar.css";
-import HomeIcon from "./icons/HomeIcon";
-import FolderIcon from "./icons/FolderIcon";
-import BellIcon from "./icons/BellIcon";
-import SideArchiveIcon from "./icons/SideArchiveIcon";
-import TrashIcon from "./icons/TrashIcon";
+import "@/assets/styles/sidebar.css";
+import HomeIcon from "../icons/HomeIcon";
+import FolderIcon from "../icons/FolderIcon";
+import BellIcon from "../icons/BellIcon";
+import SideArchiveIcon from "../icons/SideArchiveIcon";
+import TrashIcon from "../icons/TrashIcon";
 import { motion } from "framer-motion";
-import AddButton from "./icons/AddButton";
+import AddButton from "../icons/AddButton";
 import { useAppContext } from "@/context/AppContext";
 
 const ICON_SIZE = 22;
@@ -21,7 +21,6 @@ const springTransition = {
 
 const Sidebar = memo(() => {
   const { setModalOpen } = useAppContext();
-  const [currentSection, setCurrentSection] = useState();
   const addButtonRef = useRef(null);
   const homeRef = useRef(null);
   const foldersRef = useRef(null);
@@ -37,9 +36,22 @@ const Sidebar = memo(() => {
     { hash: "trash", Icon: TrashIcon, ref: trashRef },
   ];
 
-  const [highlightPosition, setHighlightPosition] = useState({
-    top: 0,
-    left: 0,
+  const [highlightPosition, setHighlightPosition] = useState(() => {
+    const hash = window.location.hash.replace("#", "");
+    switch (hash) {
+      case "home":
+        return { top: 0, left: 0, section: "home" };
+      case "folders":
+        return { top: 62.390625, left: 0, section: "folders" };
+      case "reminders":
+        return { top: 124.78125, left: 0, section: "reminders" };
+      case "archive":
+        return { top: 187.171875, left: 0, section: "archive" };
+      case "trash":
+        return { top: 249.5625, left: 0, section: "trash" };
+      default:
+        return { top: 0, left: 0, section: "home" };
+    }
   });
 
   const currentYear = useMemo(() => new Date().getFullYear(), []);
@@ -52,6 +64,12 @@ const Sidebar = memo(() => {
     window.location.hash = hash;
     const rect = ref.current?.getBoundingClientRect();
     const containerRect = ref.current?.parentElement?.getBoundingClientRect(); // parent is .sidebar-icons-container
+    console.log(
+      "top: ",
+      rect.top - containerRect.top,
+      "left: ",
+      rect.left - containerRect.left
+    );
     if (rect && containerRect) {
       setHighlightPosition({
         top: rect.top - containerRect.top, // Adjust top relative to the container
@@ -63,19 +81,10 @@ const Sidebar = memo(() => {
   useEffect(() => {
     const handleHashChange = () => {
       const currentHash = window.location.hash.replace("#", "");
-      // navItems.map(({hash, Icon, ref}) => {
-        
-      //   if (currentHash === hash) {
-      //     const rect = ref.current?.getBoundingClientRect();
-      //     const containerRect =
-      //       ref.current?.parentElement?.getBoundingClientRect(); // parent is .sidebar-icons-container
-      //     setHighlightPosition({
-      //       top: rect.top - containerRect.top, // Adjust top relative to the container
-      //       left: rect.left - containerRect.left, // Adjust left relative to the container
-      //     });
-      //   }
-      // });
-      setCurrentSection(currentHash);
+      setHighlightPosition((prev) => ({
+        ...prev,
+        section: currentHash,
+      }));
     };
 
     handleHashChange();
@@ -110,7 +119,9 @@ const Sidebar = memo(() => {
               >
                 <Icon
                   size={ICON_SIZE}
-                  color={hash.includes(currentSection) ? "#212121" : "#535353"}
+                  color={
+                    highlightPosition.section === hash ? "#212121" : "#535353"
+                  }
                 />
               </button>
             ))}

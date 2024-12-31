@@ -18,8 +18,8 @@ export const authOptions = {
   ],
   callbacks: {
     async redirect({ url, baseUrl }) {
-      // Always redirect to /home after sign in
-      return `${baseUrl}/home`;
+      // Always redirect to /app after sign in
+      return `${baseUrl}/app`;
     },
     // Invoked on successful sign-in
     async signIn({ profile }) {

@@ -24,10 +24,15 @@ body {
   border-radius: 0.3em;
 }
 
-.starting-div {
-  padding-left: 7.8625rem;
-  padding-right: 1rem;
+.starting-div-header {
+  padding-left: 7rem;
+  /* padding-right: 1rem; */
   padding-top: 4.625rem;
+}
+
+.starting-div {
+  padding-left: 7rem;
+  /* padding-right: 1rem; */
 }
 
 .add-button-icon-circle {
@@ -50,30 +55,36 @@ body {
   justify-content: flex-start;
   align-items: center;
   padding-right: 2.4rem;
+  padding-left: 1rem;
   margin-top: 1rem;
   user-select: none;
+  transition: all 1.2s ease;
 }
 
 .page-header-title {
   color: #212121;
-  margin-left: 0.7rem;
-  font-size: 1.8rem;
+  margin-left: 0.4rem;
+  font-size: 1.5rem;
   white-space: nowrap;
   flex-shrink: 0;
+  transition: all 1.2s ease;
 }
 
 .page-header-divider {
   border-top: solid 0.12rem #a5a5a5;
-  width: 100%;
   margin-left: 1.2rem;
   margin-top: auto;
   margin-bottom: 1.2rem;
   margin-right: 1.2rem;
+  width: 100dvw;
+  transition: all 1.2s ease;
 }
 
 .divider-tools-container {
   display: flex;
+  margin-left: auto;
   gap: 1rem;
+  transition: all 1.2s ease;
 }
 
 .divider-tool-text {
@@ -81,6 +92,7 @@ body {
   white-space: nowrap;
   font-size: 0.85rem;
   font-weight: 500;
+  transition: all 1.2s ease;
 }
 
 .divider-tool {

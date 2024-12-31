@@ -3,16 +3,16 @@ import { NoteUpdateAction } from "@/utils/actions";
 import { getNoteFormattedDate } from "@/utils/noteDateFormatter";
 import { format } from "date-fns";
 import ColorSelectMenu from "./ColorSelectMenu";
-import PersonAdd from "./icons/PersonAdd";
-import ImageIcon from "./icons/ImageIcon";
-import ColorIcon from "./icons/ColorIcon";
-import ArchiveIcon from "./icons/ArchiveIcon";
-import Bell from "./icons/Bell";
-import MoreVert from "./icons/MoreVert";
-import Button from "./Tools/Button";
+import PersonAdd from "../icons/PersonAdd";
+import ImageIcon from "../icons/ImageIcon";
+import ColorIcon from "../icons/ColorIcon";
+import ArchiveIcon from "../icons/ArchiveIcon";
+import Bell from "../icons/Bell";
+import MoreVert from "../icons/MoreVert";
+import Button from "../Tools/Button";
 
-const NoteTools = ({ images, setNote, noteVals, isOpen, setIsOpen }) => {
-  const [selectedColor, setSelectedColor] = useState(noteVals.color);
+const NoteTools = ({ images, setNote, note, isOpen, setIsOpen }) => {
+  const [selectedColor, setSelectedColor] = useState(note.color);
 
   const colorButtonRef = useRef(null);
 
@@ -21,7 +21,7 @@ const NoteTools = ({ images, setNote, noteVals, isOpen, setIsOpen }) => {
     setSelectedColor(color);
     setNote((prev) => ({ ...prev, color: color }));
     window.dispatchEvent(new Event("loadingStart"));
-    await NoteUpdateAction("color", color, noteVals.uuid);
+    await NoteUpdateAction("color", color, note.uuid);
     setTimeout(() => {
       window.dispatchEvent(new Event("loadingEnd"));
     }, 800);
@@ -38,12 +38,21 @@ const NoteTools = ({ images, setNote, noteVals, isOpen, setIsOpen }) => {
     setIsOpen(!isOpen);
   };
 
+  const handleArchive = useCallback(async () => {
+    setNote((prev) => ({ ...prev, isArchived: !prev.isArchived }));
+    window.dispatchEvent(new Event("loadingStart"));
+    await NoteUpdateAction("isArchived", !note.isArchived, note.uuid);
+    setTimeout(() => {
+      window.dispatchEvent(new Event("loadingEnd"));
+    }, 800);
+  });
+
   return (
     <span style={{ opacity: images ? "0.8" : "1" }}>
       <div
         style={{
           opacity: isOpen && "1",
-          backgroundColor: images && selectedColor,
+          backgroundColor: images && note.color,
         }}
         className="note-bottom"
       >
@@ -55,7 +64,7 @@ const NoteTools = ({ images, setNote, noteVals, isOpen, setIsOpen }) => {
           <Button>
             <PersonAdd size={15} opacity={0.9} />
           </Button>
-          <Button>
+          <Button onClick={handleArchive}>
             <ArchiveIcon size={15} opacity={0.9} color="#212121" />
           </Button>
           <Button>

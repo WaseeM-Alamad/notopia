@@ -2,16 +2,16 @@
 import React, { memo, useEffect, useRef, useState } from "react";
 import "@/assets/styles/navbar.css";
 import { signOut } from "next-auth/react";
-import RefreshIcon from "./icons/RefreshIcon";
-import SettingsIcon from "./icons/SettingsIcon";
-import GridIcon from "./icons/GridIcon";
+import RefreshIcon from "../icons/RefreshIcon";
+import SettingsIcon from "../icons/SettingsIcon";
+import GridIcon from "../icons/GridIcon";
 import { CircularProgress, IconButton } from "@mui/material";
 import { usePathname } from "next/navigation";
 import { Box } from "@mui/system";
-import CloudIcon from "./icons/CloudIcon";
+import CloudIcon from "../icons/CloudIcon";
 import { AnimatePresence, motion } from "framer-motion";
 import Logo from "./logo";
-import Button from "./Tools/Button";
+import Button from "../Tools/Button";
 
 const Navbar = ({ user }) => {
   const [isLoading, setIsLoading] = useState(false);

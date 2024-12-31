@@ -8,37 +8,14 @@ import React, {
   useMemo,
 } from "react";
 import "@/assets/styles/home.css";
-import Note from "../Note";
-import NotesIcon from "../icons/NotesIcon";
-import SortByIcon from "../icons/SortByIcon";
-import LabelIcon from "../icons/LabelIcon";
-import AddNoteModal from "../AddNoteModal";
+import Note from "../others/Note";
+import AddNoteModal from "../others/AddNoteModal";
 import { useAppContext } from "@/context/AppContext";
 import { motion } from "framer-motion";
 
 const COLUMN_WIDTH = 240;
-const GUTTER = 10;
+const GUTTER = 15;
 const GAP_BETWEEN_SECTIONS = 120;
-
-const Header = memo(() => (
-  <div className="page-header">
-    <NotesIcon />
-    <h1 className="page-header-title">All Notes</h1>
-    <div className="page-header-divider" />
-    <div className="divider-tools-container">
-      <div className="divider-tool">
-        <SortByIcon />
-        <span className="divider-tool-text">Sort by</span>
-      </div>
-      <div className="divider-tool">
-        <LabelIcon />
-        <span className="divider-tool-text">Labels</span>
-      </div>
-    </div>
-  </div>
-));
-
-Header.displayName = "Header";
 
 const NoteWrapper = memo(
   ({ note, togglePin, isVisible, ref, calculateLayout }) => {
@@ -80,8 +57,7 @@ const NoteWrapper = memo(
 
 NoteWrapper.displayName = "NoteWrapper";
 
-const Home = memo(({ initialNotes }) => {
-  const [notes, setNotes] = useState(initialNotes || []);
+const Home = memo(({ notes, setNotes }) => {
   const [isLayoutReady, setIsLayoutReady] = useState(false);
   const [othersHeight, setOthersHeight] = useState(null);
   const { modalOpen, setModalOpen } = useAppContext();
@@ -98,11 +74,6 @@ const Home = memo(({ initialNotes }) => {
     [notes]
   );
 
-  useEffect(() => {
-    if (notes !== initialNotes) {
-      setNotes(initialNotes);
-    }
-  }, [initialNotes]);
 
   const [unpinnedNotesNumber, setUnpinnedNotesNumber] = useState(null);
   const [pinnedNotesNumber, setPinnedNotesNumber] = useState(null);
@@ -241,7 +212,6 @@ const Home = memo(({ initialNotes }) => {
   return (
     <>
       <div className="starting-div">
-        <Header />
         <div
           ref={containerRef}
           className="notes-container"

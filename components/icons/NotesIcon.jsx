@@ -5,8 +5,8 @@ const NotesIcon = () => {
     <svg
     style={{flexShrink: "0"}}
       xmlns="http://www.w3.org/2000/svg"
-      height="32px"
-      width="32px"
+      height="28px"
+      width="28px"
       viewBox="0 -960 960 960"
       fill="#212121"
     >

@@ -1,9 +1,9 @@
 import React from "react";
 import "../assets/styles/globals.css";
-import AuthProvider from "@/components/AuthProvider";
+import AuthProvider from "@/components/others/AuthProvider";
 import { AppProvider } from "@/context/AppContext";
-import Navbar from "@/components/Navbar";
-import Sidebar from "@/components/Sidebar";
+import Navbar from "@/components/others/Navbar";
+import Sidebar from "@/components/others/Sidebar";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/utils/authOptions";
 

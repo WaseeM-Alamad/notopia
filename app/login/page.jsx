@@ -21,7 +21,7 @@ export default function Page() {
   const { data: session, status } = useSession();
   useEffect(() => {
     if (status === "authenticated") {
-      redirect("/home");
+      redirect("/app");
     }
   }, [status]);
 

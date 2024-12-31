@@ -1,10 +1,10 @@
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import "@/assets/styles/modal.css";
 import { createPortal } from "react-dom";
-import Button from "./Tools/Button";
-import PinIcon from "./icons/PinIcon";
-import NoteImagesLayout from "./Tools/NoteImagesLayout";
-import { NoteTextUpdateAction } from "@/utils/actions";
+import Button from "../Tools/Button";
+import PinIcon from "../icons/PinIcon";
+import NoteImagesLayout from "../Tools/NoteImagesLayout";
+import { NoteTextUpdateAction, NoteUpdateAction } from "@/utils/actions";
 import { debounce } from "lodash";
 import NoteModalTools from "./NoteModalTools";
 import { getNoteFormattedDate } from "@/utils/noteDateFormatter";
@@ -26,6 +26,7 @@ const NoteModal = ({
   const [isPinned, setIsPinned] = useState(note.isPinned);
   const [selectedColor, setSelectedColor] = useState(note.color);
   const [isAtBottom, setIsAtBottom] = useState(true);
+  const hash = window.location.hash.includes("archive") ? "archive" : "home";
   const titleRef = useRef(null);
   const contentRef = useRef(null);
   const containerRef = useRef(null);
@@ -36,17 +37,17 @@ const NoteModal = ({
     // Set isClient to true once the component is mounted on the client side
     setIsClient(true);
 
-    window.location.hash = `NOTE/${note.uuid}`; // Set the hash
+    window.location.hash = `${hash}/NOTE/${note.uuid}`; // Set the hash
   }, []);
 
-  const handleClose = (e) => {
-    if (containerRef.current === e.target) {
+  const handleClose = (e, closeRef) => {
+    if (containerRef.current === e.target || closeRef?.current === e.target) {
       setTrigger2(false);
       setTimeout(() => {
         if (isPinned !== note.isPinned) {
           togglePin(note.uuid);
         }
-        window.location.hash = ``;
+        window.location.hash = hash;
         calculateLayout();
         setTrigger(false);
       }, 250);
@@ -139,8 +140,16 @@ const NoteModal = ({
     return null; // Return nothing on the server side
   }
 
-  const handlePinClick = () => {
+  const handlePinClick = async () => {
     setIsPinned((prev) => !prev);
+    window.dispatchEvent(new Event("loadingStart"));
+    try {
+      await NoteUpdateAction("isPinned", !note.isPinned, note.uuid);
+    } finally {
+      setTimeout(() => {
+        window.dispatchEvent(new Event("loadingEnd"));
+      }, 800);
+    }
   };
 
   const handleTitleInput = (e) => {

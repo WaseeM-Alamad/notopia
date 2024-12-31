@@ -1,13 +1,13 @@
 import React, { useCallback, useRef, useState } from "react";
-import PersonAdd from "./icons/PersonAdd";
-import Bell from "./icons/Bell";
-import ArchiveIcon from "./icons/ArchiveIcon";
-import ImageIcon from "./icons/ImageIcon";
-import Button from "./Tools/Button";
-import ColorIcon from "./icons/ColorIcon";
-import MoreVert from "./icons/MoreVert";
+import PersonAdd from "../icons/PersonAdd";
+import Bell from "../icons/Bell";
+import ArchiveIcon from "../icons/ArchiveIcon";
+import ImageIcon from "../icons/ImageIcon";
+import Button from "../Tools/Button";
+import ColorIcon from "../icons/ColorIcon";
+import MoreVert from "../icons/MoreVert";
 import ColorSelectMenu from "./ColorSelectMenu";
-import BackIcon from "./icons/BackIcon";
+import BackIcon from "../icons/BackIcon";
 import { v4 as uuid } from "uuid";
 
 const ModalTools = ({

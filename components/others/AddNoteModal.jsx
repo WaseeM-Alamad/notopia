@@ -4,9 +4,9 @@ import { createPortal } from "react-dom";
 import { createNoteAction } from "@/utils/actions";
 import { v4 as uuid } from "uuid";
 import ModalTools from "./ModalTools";
-import PinIcon from "./icons/PinIcon";
-import Button from "./Tools/Button";
-import NoteImagesLayout from "./Tools/NoteImagesLayout";
+import PinIcon from "../icons/PinIcon";
+import Button from "../Tools/Button";
+import NoteImagesLayout from "../Tools/NoteImagesLayout";
 import { useSession } from "next-auth/react";
 import { createClient } from "@supabase/supabase-js";
 
