@@ -1,0 +1,32 @@
+.linear-loader {
+    width: 100%;
+    height: 4px;
+    background-color: #ddd;
+    overflow: hidden;
+    position: absolute;
+    bottom: 0;
+  }
+  
+  .linear-loader::after {
+    content: "";
+    display: block;
+    position: absolute;
+    height: 100%;
+    width: 30%;
+    background-color: #007bff;
+    animation: loading 1s infinite linear; /* Changed from 1.5s to 1s */
+  }
+  
+  @keyframes loading {
+    0% {
+      left: -30%;
+    }
+    50% {
+      left: 50%;
+      width: 50%;
+    }
+    100% {
+      left: 100%;
+      width: 30%;
+    }
+  }

@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { memo, useCallback, useRef, useState } from "react";
 import PersonAdd from "../icons/PersonAdd";
 import Bell from "../icons/Bell";
 import ArchiveIcon from "../icons/ArchiveIcon";
@@ -39,7 +39,7 @@ const ModalTools = ({
 
   return (
     <div>
-      <div style={{ opacity: "1" }} className="modal-bottom bottom-box-shadow">
+      <div style={{ opacity: "1" }} className="modal-bottom">
         {/* <p className="date">{FormattedDate}</p> */}
         <div className="modal-bottom-icons">
           <Button>
@@ -65,7 +65,7 @@ const ModalTools = ({
                     ...prevNote,
                     images: [
                       ...prevNote.images,
-                      { url: imageURL, id: newUUID },
+                      { url: imageURL, uuid: newUUID },
                     ],
                     imageFiles: [
                       ...prevNote.imageFiles,
@@ -111,4 +111,4 @@ const ModalTools = ({
   );
 };
 
-export default ModalTools;
+export default memo(ModalTools);

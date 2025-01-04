@@ -177,6 +177,7 @@
 
 .modal-pin {
   position: absolute;
+  z-index: 1;
   right: 0;
   padding: 0.5rem 0.8rem 0rem 0rem;
   transition: all 0.3s ease;

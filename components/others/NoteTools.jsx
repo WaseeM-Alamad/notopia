@@ -20,11 +20,10 @@ const NoteTools = ({
   note,
   isOpen,
   setIsOpen,
-  togglePin,
+  setIsLoadingImages,
+  userID,
 }) => {
   const [selectedColor, setSelectedColor] = useState(note.color);
-  const {data: session} = useSession();
-  const userID = session?.user?.id;
 
   const colorButtonRef = useRef(null);
   const inputRef = useRef(null);
@@ -88,16 +87,16 @@ const NoteTools = ({
     try {
       const bucketName = "notopia";
 
-        const filePath = `${userID}/${note.uuid}/${image.id}`;
-        const { data, error } = await supabase.storage
-          .from(bucketName)
-          .upload(filePath, image.file, {
-            cacheControl: '0'
-          });
+      const filePath = `${userID}/${note.uuid}/${image.id}`;
+      const { data, error } = await supabase.storage
+        .from(bucketName)
+        .upload(filePath, image.file, {
+          cacheControl: "0",
+        });
 
-        if (error) {
-          console.error("Error uploading file:", error);
-        }
+      if (error) {
+        console.error("Error uploading file:", error);
+      }
     } catch (error) {
       console.log("couldn't upload images", error);
     }
@@ -120,10 +119,12 @@ const NoteTools = ({
     inputRef.current.value = "";
     window.dispatchEvent(new Event("loadingStart"));
     const starter =
-    "https://fopkycgspstkfctmhyyq.supabase.co/storage/v1/object/public/notopia";
-    const path = `${starter}/${userID}/${note.uuid}/${newUUID}`
-    await NoteUpdateAction("images", {url: path, id: newUUID} ,note.uuid)
-    await UploadImageAction({file: file, id: newUUID}, note.uuid);
+      "https://fopkycgspstkfctmhyyq.supabase.co/storage/v1/object/public/notopia";
+    const path = `${starter}/${userID}/${note.uuid}/${newUUID}`;
+    setIsLoadingImages((prev) => [...prev, newUUID]);
+    await NoteUpdateAction("images", { url: path, uuid: newUUID }, note.uuid);
+    await UploadImageAction({ file: file, id: newUUID }, note.uuid);
+    setIsLoadingImages((prev) => prev.filter((id) => id !== newUUID));
     setTimeout(() => {
       window.dispatchEvent(new Event("loadingEnd"));
     }, 800);

@@ -44,7 +44,7 @@ const NoteSchema = new Schema(
       {
         _id: false,
         url: { type: String, required: true },
-        id: { type: String, required: true },
+        uuid: { type: String, required: true },
       },
     ],
   },

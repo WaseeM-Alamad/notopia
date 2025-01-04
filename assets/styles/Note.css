@@ -75,6 +75,7 @@
 
 .pin {
   position: absolute;
+  z-index: 1;
   right: 0;
   opacity: 0;
   padding: 0.3rem 0.4rem 0rem 0rem;

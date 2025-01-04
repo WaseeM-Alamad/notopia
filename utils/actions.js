@@ -31,7 +31,7 @@ export const fetchNotes = async () => {
       images: Array.isArray(note.images)
         ? note.images.map((image) => ({
             url: image.url,
-            id: image.id,
+            uuid: image.uuid,
           }))
         : [],
       createdAt: note.createdAt.toISOString(), // If it's a Date, convert to string
@@ -56,8 +56,8 @@ export const createNoteAction = async (note) => {
   const starter =
     "https://fopkycgspstkfctmhyyq.supabase.co/storage/v1/object/public/notopia";
   const images = note.images.map((image) => ({
-    url: `${starter}/${userID}/${note.uuid}/${image.id}`,
-    id: image.id,
+    url: `${starter}/${userID}/${note.uuid}/${image.uuid}`,
+    uuid: image.uuid,
   }));
   try {
     if (!session) {
@@ -117,5 +117,23 @@ export const NoteTextUpdateAction = async (values, noteUUID) => {
   } catch (error) {
     console.log("Error updating note:", error);
     return new Response("Failed to update note", { status: 500 });
+  }
+};
+
+export const NoteImageDeleteAction = async (filePath, noteUUID, imageID) => {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_SUPABASE_SERVICE_ROLE_KEY
+  );
+
+  try {
+    await connectDB();
+    await Note.updateOne(
+      { uuid: noteUUID, "images.uuid": imageID }, // Make sure both the note's uuid and image's uuid are matched
+      { $pull: { images: { uuid: imageID } } }    // Remove the image with the specified uuid
+    );
+    await supabase.storage.from("notopia").remove([filePath]);
+  } catch (error) {
+    console.log("Error removing note.", error);
   }
 };

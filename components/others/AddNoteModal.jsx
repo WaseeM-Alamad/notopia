@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, memo } from "react";
 import "@/assets/styles/modal.css";
+import "@/assets/styles/LinearLoader.css";
 import { createPortal } from "react-dom";
 import { createNoteAction } from "@/utils/actions";
 import { v4 as uuid } from "uuid";
@@ -10,7 +11,13 @@ import NoteImagesLayout from "../Tools/NoteImagesLayout";
 import { useSession } from "next-auth/react";
 import { createClient } from "@supabase/supabase-js";
 
-const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
+const AddNoteModal = ({
+  trigger,
+  setTrigger,
+  setNotes,
+  lastAddedNoteRef,
+  setIsLoadingImages,
+}) => {
   const { data: session } = useSession();
   const userID = session?.user?.id;
   const [note, setNote] = useState({
@@ -142,8 +149,10 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
         };
         setNotes((prev) => [newNote, ...prev]);
         window.dispatchEvent(new Event("loadingStart"));
+        setIsLoadingImages((prev) => [...prev, newNote.uuid]);
         await createNoteAction(newNote);
         await UploadImagesAction(note.imageFiles, newNote.uuid);
+        setIsLoadingImages((prev) => prev.filter((id) => id !== newNote.uuid));
         setTimeout(() => {
           window.dispatchEvent(new Event("loadingEnd"));
         }, 800);
@@ -218,7 +227,7 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
         const { data, error } = await supabase.storage
           .from(bucketName)
           .upload(filePath, image.file, {
-            cacheControl: '0'
+            cacheControl: "0",
           });
 
         if (error) {
@@ -278,7 +287,17 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
               />
             </Button>
           </div>
-          <NoteImagesLayout width={width} images={note.images} />
+          <div
+            style={{
+              position: "relative",
+              opacity: !trigger2 && note.images.length > 0 ? "0.6" : "1",
+            }}
+          >
+            <NoteImagesLayout width={width} images={note.images} />
+            {!trigger2 && note.images.length > 0 && (
+              <div className="linear-loader" />
+            )}
+          </div>
           <div
             style={{
               display: trigger2
@@ -344,4 +363,4 @@ const AddNoteModal = ({ trigger, setTrigger, setNotes, lastAddedNoteRef }) => {
   );
 };
 
-export default AddNoteModal;
+export default memo(AddNoteModal);

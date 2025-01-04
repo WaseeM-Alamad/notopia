@@ -18,7 +18,7 @@ const GUTTER = 15;
 const GAP_BETWEEN_SECTIONS = 120;
 
 const NoteWrapper = memo(
-  ({ note, setNotes, togglePin, isVisible, ref, calculateLayout }) => {
+  ({ note, setNotes, togglePin, isVisible, ref, calculateLayout, isLoadingImages }) => {
     const { modalOpen, setModalOpen } = useAppContext();
     const [mounted, setMounted] = useState(false);
     const [mountOpacity, setMountOpacity] = useState(false);
@@ -63,6 +63,7 @@ const NoteWrapper = memo(
             setNotes={setNotes}
             togglePin={togglePin}
             calculateLayout={calculateLayout}
+            isLoadingImagesAddNote={isLoadingImages}
           />
         </motion.div>
       </motion.div>
@@ -75,6 +76,7 @@ NoteWrapper.displayName = "NoteWrapper";
 const Home = memo(({ notes, setNotes }) => {
   const [isLayoutReady, setIsLayoutReady] = useState(false);
   const [othersHeight, setOthersHeight] = useState(null);
+  const [isLoadingImages, setIsLoadingImages] = useState([]);
   const { modalOpen, setModalOpen } = useAppContext();
   const lastAddedNoteRef = useRef(null);
   const containerRef = useRef(null);
@@ -252,7 +254,6 @@ const Home = memo(({ notes, setNotes }) => {
           >
             OTHERS
           </p>
-          <AnimatePresence>
             {notes.map(
               (note, index) =>
                 !note.isArchived && (
@@ -263,11 +264,11 @@ const Home = memo(({ notes, setNotes }) => {
                     setNotes={setNotes}
                     togglePin={togglePin}
                     isVisible={isLayoutReady}
+                    isLoadingImages={isLoadingImages}
                     calculateLayout={calculateLayout}
                   />
                 )
             )}
-          </AnimatePresence>
         </div>
       </div>
       <AddNoteModal
@@ -275,6 +276,7 @@ const Home = memo(({ notes, setNotes }) => {
         setTrigger={setModalOpen}
         setNotes={setNotes}
         lastAddedNoteRef={lastAddedNoteRef}
+        setIsLoadingImages={setIsLoadingImages}
       />
     </>
   );

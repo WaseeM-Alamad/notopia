@@ -4,7 +4,11 @@ import { createPortal } from "react-dom";
 import Button from "../Tools/Button";
 import PinIcon from "../icons/PinIcon";
 import NoteImagesLayout from "../Tools/NoteImagesLayout";
-import { NoteTextUpdateAction, NoteUpdateAction } from "@/utils/actions";
+import {
+  NoteTextUpdateAction,
+  NoteUpdateAction,
+  NoteImageDeleteAction,
+} from "@/utils/actions";
 import { debounce } from "lodash";
 import NoteModalTools from "./NoteModalTools";
 import { getNoteFormattedDate } from "@/utils/noteDateFormatter";
@@ -19,6 +23,10 @@ const NoteModal = ({
   setNotes,
   calculateLayout,
   togglePin,
+  isLoadingImages,
+  setIsLoadingImages,
+  isLoading,
+  userID,
 }) => {
   const modalRef = useRef(null);
   const [width, setWidth] = useState(5);
@@ -62,7 +70,9 @@ const NoteModal = ({
     if (isPinned !== note.isPinned) {
       setNotes((prevNotes) =>
         prevNotes.map((mapNote) =>
-          mapNote.uuid === note.uuid ? { ...mapNote, updatedAt: new Date() } : mapNote
+          mapNote.uuid === note.uuid
+            ? { ...mapNote, updatedAt: new Date() }
+            : mapNote
         )
       );
     }
@@ -140,10 +150,6 @@ const NoteModal = ({
     [] // Dependencies array, make sure it's updated when `note.uuid` changes
   );
 
-  if (!isClient || !trigger) {
-    return null; // Return nothing on the server side
-  }
-
   const handlePinClick = async () => {
     setIsPinned((prev) => !prev);
     window.dispatchEvent(new Event("loadingStart"));
@@ -156,35 +162,42 @@ const NoteModal = ({
     }
   };
 
-  const handleTitleInput = (e) => {
-    const text = e.target.innerText;
-    const t = text === "\n" ? "" : text;
-    setNotes((prevNotes) =>
-      prevNotes.map((mapNote) =>
-        mapNote.uuid === note.uuid ? { ...mapNote, title: t } : mapNote
-      )
-    );
-    updateTextDebounced({ title: t, content: note.content });
+  const handleTitleInput = useCallback(
+    (e) => {
+      const text = e.target.innerText;
+      const t = text === "\n" ? "" : text;
+      setNotes((prevNotes) => {
+      return prevNotes.map((noteItem) =>
+        noteItem.uuid === note.uuid ? { ...noteItem, title: t } : noteItem
+      );
+    });
 
-    if (text === "\n") {
-      e.target.innerText = "";
-    }
-  };
+      updateTextDebounced({ title: t, content: note.content });
 
-  const handleContentInput = (e) => {
-    const text = e.target.innerText;
-    const t = text === "\n" ? "" : text;
-    setNotes((prevNotes) =>
-      prevNotes.map((mapNote) =>
-        mapNote.uuid === note.uuid ? { ...mapNote, content: t } : mapNote
-      )
-    );
-    updateTextDebounced({ title: note.title, content: t });
+      if (text === "\n") {
+        e.target.innerText = "";
+      }
+    },
+    [note.uuid, note.content]
+  );
 
-    if (text === "\n") {
-      e.target.innerText = "";
-    }
-  };
+  const handleContentInput = useCallback(
+    (e) => {
+      const text = e.target.innerText;
+      const t = text === "\n" ? "" : text;
+      setNotes((prevNotes) => {
+        return prevNotes.map((noteItem) =>
+          noteItem.uuid === note.uuid ? { ...noteItem, content: t } : noteItem
+        );
+      });
+      updateTextDebounced({ title: note.title, content: t });
+
+      if (text === "\n") {
+        e.target.innerText = "";
+      }
+    },
+    [note.uuid, note.title]
+  );
 
   const handleTitleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -223,6 +236,29 @@ const NoteModal = ({
       }, 250);
     }
   };
+
+  const noteImageDelete = useCallback(async (imageID) => {
+    setNotes((prevNotes) =>
+      prevNotes.map((mapNote) =>
+        mapNote.uuid === note.uuid
+          ? {
+              ...mapNote,
+              images: mapNote.images.filter((image) => image.uuid !== imageID),
+            }
+          : mapNote
+      )
+    );
+    const filePath = `${userID}/${note.uuid}/${imageID}`;
+    window.dispatchEvent(new Event("loadingStart"));
+    await NoteImageDeleteAction(filePath, note.uuid, imageID);
+    setTimeout(() => {
+      window.dispatchEvent(new Event("loadingEnd"));
+    }, 800);
+  }, []);
+
+  if (!isClient || !trigger) {
+    return null; // Return nothing on the server side
+  }
 
   return createPortal(
     <>
@@ -271,7 +307,23 @@ const NoteModal = ({
                 />
               </Button>
             </div>
-            <NoteImagesLayout width={width} images={note.images} />
+            <div
+              style={{
+                position: "relative",
+                opacity: isLoading ? "0.6" : "1",
+                transition: "all 0.2s ease",
+              }}
+            >
+              <NoteImagesLayout
+                width={width}
+                images={note.images}
+                isLoadingImages={isLoadingImages}
+                deleteSource="note"
+                noteImageDelete={noteImageDelete}
+                modalOpen={true}
+              />
+              {isLoading && <div className="linear-loader" />}
+            </div>
             {!trigger2 &&
               note.images.length === 0 &&
               !note.title.trim() &&
@@ -347,6 +399,7 @@ const NoteModal = ({
               setSelectedColor={setSelectedColor}
               handleClose={handleClose}
               isAtBottom={isAtBottom}
+              setIsLoadingImages={setIsLoadingImages}
             />
           )}
         </div>

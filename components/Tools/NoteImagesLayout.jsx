@@ -1,17 +1,31 @@
-import zIndex from "@mui/material/styles/zIndex";
-import React, { useState, useEffect, useRef, memo } from "react";
+import React, { useState, useEffect, useRef, memo, useCallback } from "react";
+import ImageTrashIcon from "../icons/ImageTrashIcon";
+import "@/assets/styles/LinearLoader.css";
 
-const NoteImagesLayout = ({ width, images, calculateMasonryLayout }) => {
+const NoteImagesLayout = ({
+  width,
+  images,
+  calculateMasonryLayout,
+  isLoadingImages = [],
+  modalOpen,
+  deleteSource,
+  noteImageDelete,
+}) => {
   const containerRef = useRef(null);
   const [layout, setLayout] = useState([]);
   const [loadedImages, setLoadedImages] = useState([]);
 
   useEffect(() => {
-    const loadImage = (src) => {
+    const loadImage = (src, id) => {
       return new Promise((resolve, reject) => {
         const img = new Image();
         img.onload = () => {
-          resolve({ src, width: img.naturalWidth, height: img.naturalHeight });
+          resolve({
+            src,
+            id,
+            width: img.naturalWidth,
+            height: img.naturalHeight,
+          });
         };
         img.onerror = (err) => {
           console.log(`Error loading image: ${src}`, err);
@@ -22,7 +36,7 @@ const NoteImagesLayout = ({ width, images, calculateMasonryLayout }) => {
     };
 
     if (images.length > 0) {
-      Promise.all(images.map((image) => loadImage(image.url)))
+      Promise.all(images.map((image) => loadImage(image.url, image.uuid)))
         .then(setLoadedImages)
         .catch(console.log);
     }
@@ -41,7 +55,7 @@ const NoteImagesLayout = ({ width, images, calculateMasonryLayout }) => {
 
   const calculateLayout = () => {
     if (!containerRef.current || loadedImages.length === 0) return;
-    const containerWidth = containerRef.current.offsetWidth; // Account for gaps
+    const containerWidth = containerRef.current.offsetWidth;
     const maxRows = 4;
     const maxImagesPerRow = 3;
     const minImageHeight = 80;
@@ -57,32 +71,28 @@ const NoteImagesLayout = ({ width, images, calculateMasonryLayout }) => {
         (i + 1) * maxImagesPerRow
       );
 
-      // Calculate total aspect ratio for the row
       const rowAspectRatioSum = rowImages.reduce(
         (sum, img) => sum + img.width / img.height,
         0
       );
 
-      // Calculate row height based on container width
       let rowHeight =
         (containerWidth - (rowImages.length - 1) * 3) / rowAspectRatioSum;
 
-      // Ensure minimum height
       if (rowHeight < minImageHeight) {
         rowHeight = minImageHeight;
       }
 
-      // Calculate widths while maintaining aspect ratios
       const row = rowImages.map((image) => {
         const width = (image.width / image.height) * rowHeight;
         return {
           src: image.src,
+          id: image.id,
           width,
           height: rowHeight,
         };
       });
 
-      // Adjust widths to exactly fit container
       const totalWidth = row.reduce((sum, img) => sum + img.width, 0);
       const scale = containerWidth / (totalWidth + (row.length - 1) * 3);
 
@@ -106,7 +116,7 @@ const NoteImagesLayout = ({ width, images, calculateMasonryLayout }) => {
     flexDirection: "column",
     gap: "3px",
     zIndex: "10",
-    overflow: "hidden", // Prevent images from spilling out
+    overflow: "hidden",
   };
 
   const rowStyle = {
@@ -120,6 +130,12 @@ const NoteImagesLayout = ({ width, images, calculateMasonryLayout }) => {
     display: "block",
   };
 
+  const handleImageDeletion = useCallback((imageID) => {
+    if (deleteSource === "note") {
+      noteImageDelete(imageID);
+    }
+  }, []);
+
   if (images?.length === 0 || !images) return;
 
   return (
@@ -127,17 +143,35 @@ const NoteImagesLayout = ({ width, images, calculateMasonryLayout }) => {
       {layout.length > 0 ? (
         layout.map((row, rowIndex) => (
           <div key={rowIndex} style={rowStyle}>
-            {row.map((item, index) => (
-              <img
-                key={index}
-                src={item.src}
-                alt={`Grid item ${rowIndex * 3 + index + 1}`}
+            {row.map((item) => (
+              <div
                 style={{
-                  ...imageStyle,
-                  width: `${item.width}px`,
-                  height: `${item.height}px`,
+                  opacity: isLoadingImages.includes(item.id) ? "0.6" : "1",
                 }}
-              />
+                className="img-wrapper"
+                key={item.src}
+              >
+                <img
+                  src={item.src}
+                  alt={`Grid item ${item.src}`}
+                  style={{
+                    ...imageStyle,
+                    width: `${item.width}px`,
+                    height: `${item.height}px`,
+                  }}
+                />
+                {isLoadingImages.includes(item.id) && (
+                  <div key={item.src} className="linear-loader" />
+                )}
+                {modalOpen && (
+                  <div
+                    onClick={() => handleImageDeletion(item.id)}
+                    className="img-delete"
+                  >
+                    <ImageTrashIcon size={18} />
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         ))

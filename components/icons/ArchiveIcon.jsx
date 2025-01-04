@@ -3,6 +3,7 @@ import React from "react";
 const ArchiveIcon = ({ size, opacity, color = "#535353" }) => {
   return (
     <svg
+    style={{flexShrink: "0"}}
       width={size + 2.5}
       height={size + 2.5}
       opacity={opacity}
