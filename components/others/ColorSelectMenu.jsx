@@ -54,13 +54,15 @@ const ColorSelectMenu = ({
         !menuRef.current?.contains(e.target) &&
         !buttonRef?.current?.contains(e.target)
       )
+      if (isOpen){
         setIsOpen(false);
+      }
     };
 
     document.addEventListener("click", handler);
 
     return () => document.removeEventListener("click", handler);
-  }, []);
+  }, [isOpen]);
 
   if (!isClient) {
     return null; // Return nothing on the server side
@@ -69,9 +71,9 @@ const ColorSelectMenu = ({
   return createPortal(
     <motion.div
       ref={menuRef}
-      initial={{ y: 12, display: "none", opacity: 0 }}
+      initial={{ y: 5, display: "none", opacity: 0 }}
       animate={{
-        y: isOpen ? 0 : 12,
+        y: isOpen ? 0 : 5,
         display: isOpen ? "grid" : "none",
         opacity: isOpen ? 1 : 0,
       }}

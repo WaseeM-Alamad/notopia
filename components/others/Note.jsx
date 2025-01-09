@@ -15,6 +15,8 @@ import { NoteUpdateAction } from "@/utils/actions";
 import Button from "../Tools/Button";
 import NoteImagesLayout from "../Tools/NoteImagesLayout";
 import { useSession } from "next-auth/react";
+import CheckMark from "../icons/CheckMark";
+import { motion } from "framer-motion";
 
 const Note = memo(
   ({
@@ -23,14 +25,18 @@ const Note = memo(
     togglePin,
     calculateLayout,
     isLoadingImagesAddNote = [],
+    setSelectedNotesIDs,
+    selectedNotes,
   }) => {
     const { data: session } = useSession();
     const userID = session?.user?.id;
+    const [localIsArchived, setLocalIsArchived] = useState(false);
     const [modalTrigger, setModalTrigger] = useState(false);
     const [menuIsOpen, setMenuIsOpen] = useState(false);
     const [trigger2, setTrigger2] = useState(false);
     const [opacityTrigger, setOpacityTrigger] = useState(true);
     const [isLoadingImages, setIsLoadingImages] = useState([]);
+    const [selected, setSelected] = useState(false);
     const isLoading = isLoadingImagesAddNote.includes(note.uuid);
     const noteRef = useRef(null);
     const inputsRef = useRef(null);
@@ -39,6 +45,7 @@ const Note = memo(
     const noteStuffRef = useRef(null);
     const titleRef = useRef(null);
     const contentRef = useRef(null);
+    const checkRef = useRef(null);
 
     const [notePos, setNotePos] = useState(() => ({
       top: 0,
@@ -52,12 +59,20 @@ const Note = memo(
         opacity: opacityTrigger ? "1" : "0",
         backgroundColor: note.color,
         border: "solid 1px transparent",
-        borderColor: note.color === "#FFFFFF" ? "#e0e0e0" : "transparent",
       }),
       [note.color, opacityTrigger]
     );
 
-    const handleNoteClick = useCallback((e) => {
+    const handleNoteClick = (e) => {
+      if (!selectedNotes.current) {
+        openNote(e);
+      } else {
+        // if (!inputsRef.current?.contains(e.target))
+        handleCheckClick();
+      }
+    };
+
+    const openNote = useCallback((e) => {
       if (
         (noteRef.current && noteRef.current === e.target) ||
         inputsRef.current.contains(e.target) ||
@@ -104,6 +119,10 @@ const Note = memo(
 
     const handlePinClick = useCallback(
       async (e) => {
+        if (selectedNotes.current) {
+          setSelectedNotesIDs([]);
+          window.dispatchEvent(new Event("topMenuClose"));
+        }
         e.stopPropagation(); // Prevent note click event
         if (!note.isArchived) {
           togglePin(note.uuid);
@@ -111,7 +130,6 @@ const Note = memo(
           window.dispatchEvent(new Event("loadingStart"));
 
           try {
-            console.log(!note.isPinned);
             await NoteUpdateAction("isPinned", !note.isPinned, note.uuid);
           } finally {
             timeoutRef.current = setTimeout(() => {
@@ -131,7 +149,7 @@ const Note = memo(
           }
         }
       },
-      [note.uuid, Note.isPinned, togglePin]
+      [note.uuid, note.isPinned, togglePin]
     );
 
     const handleMenuIsOpenChange = useCallback((value) => {
@@ -146,8 +164,63 @@ const Note = memo(
       setTrigger2(value);
     }, []);
 
+    const handleCheckClick = () => {
+      setSelected((prev) => !prev);
+
+      if (selected) {
+        setSelected(false);
+        setSelectedNotesIDs((prev) => prev.filter((id) => id !== note.uuid));
+      } else {
+        setSelected(true);
+        setSelectedNotesIDs((prev) => [...prev, note.uuid]);
+      }
+    };
+
+    useEffect(() => {
+      const handleCloseMenu = () => {
+        setSelected(false);
+      };
+
+      window.addEventListener("topMenuClose", handleCloseMenu);
+
+      return () => {
+        window.removeEventListener("topMenuClose", handleCloseMenu);
+      };
+    }, []);
+
     return (
-      <>
+      <motion.div
+        animate={{ opacity: !localIsArchived ? 1 : 0 }}
+        transition={{duration: 0.21}}
+        onAnimationComplete={() => {
+          if (localIsArchived){
+          console.log("yes")
+          setNotes((prevNotes) =>
+            prevNotes.map((mapNote) =>
+              mapNote.uuid === note.uuid
+                ? {
+                    ...mapNote,
+                    isArchived: !mapNote.isArchived,
+                    isPinned: false,
+                  }
+                : mapNote
+            )
+          );
+        }}}
+        className="note-wrapper"
+        style={{ position: "relative" }}
+      >
+        <span
+          style={{ opacity: selected && "1" }}
+          ref={checkRef}
+          className="checkmark"
+          onClick={handleCheckClick}
+        >
+          <CheckMark
+            color={selected ? "rgb(111, 111, 111)" : note.color}
+            size="23"
+          />
+        </span>
         <div
           style={{
             ...noteStyle,
@@ -155,6 +228,12 @@ const Note = memo(
               note.images.length === 0 || note.title || note.content
                 ? "45px"
                 : "0px  ",
+            borderColor: selected
+              ? "#212121"
+              : note.color === "#FFFFFF"
+              ? "#e0e0e0"
+              : "transparent",
+            outline: `solid 1px ${selected ? "#212121" : "transparent"} `,
           }}
           className="note"
           onClick={handleNoteClick}
@@ -163,7 +242,10 @@ const Note = memo(
           <div ref={noteStuffRef}>
             {note.images.length === 0 && <div className="corner" />}
             <div
-              style={{ opacity: menuIsOpen ? "1" : undefined }}
+              style={{
+                opacity: menuIsOpen ? "1" : undefined,
+                opacity: selected && "1",
+              }}
               className="pin"
             >
               <Button onClick={handlePinClick}>
@@ -179,7 +261,7 @@ const Note = memo(
             <div
               style={{
                 position: "relative",
-                opacity: isLoading ? "0.6" : "1",
+                opacity: isLoading && note.images.length > 0 ? "0.6" : "1",
                 transition: "all 0.2s ease",
               }}
               ref={imagesRef}
@@ -189,7 +271,9 @@ const Note = memo(
                 calculateMasonryLayout={calculateLayout}
                 isLoadingImages={isLoadingImages}
               />
-              {isLoading && <div className="linear-loader" />}
+              {isLoading && note.images.length > 0 && (
+                <div className="linear-loader" />
+              )}
             </div>
             {note.images.length === 0 &&
               !note.title.trim() &&
@@ -210,14 +294,15 @@ const Note = memo(
             </div>
           </div>
           <NoteTools
-            isOpen={menuIsOpen}
-            setIsOpen={handleMenuIsOpenChange}
+            colorMenuOpen={menuIsOpen}
+            setColorMenuOpen={handleMenuIsOpenChange}
             setNotes={setNotes}
             images={note.images.length !== 0}
             note={note}
             togglePin={togglePin}
             setIsLoadingImages={setIsLoadingImages}
             userID={userID}
+            setLocalIsArchived={setLocalIsArchived}
           />
         </div>
         {modalTrigger && (
@@ -227,7 +312,7 @@ const Note = memo(
             trigger2={trigger2}
             setTrigger2={handleTrigger2Change}
             notePos={notePos}
-            note={note}  
+            note={note}
             setNotes={setNotes}
             calculateLayout={calculateLayout}
             togglePin={togglePin}
@@ -237,7 +322,7 @@ const Note = memo(
             userID={userID}
           />
         )}
-      </>
+      </motion.div>
     );
   }
 );

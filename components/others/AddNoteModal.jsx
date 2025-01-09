@@ -12,8 +12,6 @@ import { useSession } from "next-auth/react";
 import { createClient } from "@supabase/supabase-js";
 
 const AddNoteModal = ({
-  trigger,
-  setTrigger,
   setNotes,
   lastAddedNoteRef,
   setIsLoadingImages,
@@ -42,6 +40,7 @@ const AddNoteModal = ({
     margin: "25px",
   });
   const [isClient, setIsClient] = useState(false);
+  const [trigger, setTrigger]= useState(false);
   const [trigger2, setTrigger2] = useState(false);
   const [selectedColor, setSelectedColor] = useState("#FFFFFF");
   const [isEmptyNote, setIsEmptyNote] = useState(true);
@@ -56,6 +55,17 @@ const AddNoteModal = ({
   }, []);
 
   const [width, setWidth] = useState(0);
+
+  useEffect(()=> {
+
+    const handler = ()=> {
+      if (!trigger)
+      setTrigger(true)
+    }
+
+    window.addEventListener("openModal", handler)
+  }, [trigger])
+
   useEffect(() => {
     const observer = new ResizeObserver(() => {
       if (modalRef.current) {
@@ -110,6 +120,7 @@ const AddNoteModal = ({
     ) {
       setTrigger2(false);
       setTimeout(() => {
+        window.dispatchEvent(new Event("closeModal"));
         setTrigger(false);
       }, 260);
 
@@ -142,17 +153,23 @@ const AddNoteModal = ({
           labels: note.labels,
           isPinned: note.isPinned,
           isArchived: note.isArchived,
-          isTrash: note.isArchived,
+          isTrash: note.isTrash,
           createdAt: new Date(),
           updatedAt: new Date(),
           images: note.images,
         };
         setNotes((prev) => [newNote, ...prev]);
         window.dispatchEvent(new Event("loadingStart"));
-        setIsLoadingImages((prev) => [...prev, newNote.uuid]);
+        if (newNote.images.length > 0) {
+          setIsLoadingImages((prev) => [...prev, newNote.uuid]);
+        }
         await createNoteAction(newNote);
         await UploadImagesAction(note.imageFiles, newNote.uuid);
-        setIsLoadingImages((prev) => prev.filter((id) => id !== newNote.uuid));
+        if (newNote.images.length > 0) {
+          setIsLoadingImages((prev) =>
+            prev.filter((id) => id !== newNote.uuid)
+          );
+        }
         setTimeout(() => {
           window.dispatchEvent(new Event("loadingEnd"));
         }, 800);
@@ -240,6 +257,26 @@ const AddNoteModal = ({
     }
   };
 
+  const insert = async()=> {
+
+    for (let i=0; i<20; i++){
+      const newNote = {
+      uuid: uuid(),
+      title: note.title,
+      content: note.content,
+      color: note.color,
+      labels: note.labels,
+      isPinned: note.isPinned,
+      isArchived: note.isArchived,
+      isTrash: note.isTrash,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      images: note.images,
+    }
+       createNoteAction(newNote)
+    }
+  }
+
   return createPortal(
     <div
       ref={modalContainerRef}
@@ -250,6 +287,7 @@ const AddNoteModal = ({
       }}
       className="modal-container"
     >
+      {/* <button onClick={insert}>insert</button> */}
       <div
         ref={modalRef}
         style={{

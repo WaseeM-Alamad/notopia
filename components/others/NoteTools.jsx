@@ -1,7 +1,5 @@
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import { NoteUpdateAction } from "@/utils/actions";
-import { getNoteFormattedDate } from "@/utils/noteDateFormatter";
-import { format } from "date-fns";
 import ColorSelectMenu from "./ColorSelectMenu";
 import PersonAdd from "../icons/PersonAdd";
 import ImageIcon from "../icons/ImageIcon";
@@ -11,22 +9,25 @@ import Bell from "../icons/Bell";
 import MoreVert from "../icons/MoreVert";
 import Button from "../Tools/Button";
 import { v4 as uuid } from "uuid";
-import { useSession } from "next-auth/react";
 import { createClient } from "@supabase/supabase-js";
+import MoreMenu from "./MoreMenu";
 
 const NoteTools = ({
   images,
   setNotes,
   note,
-  isOpen,
-  setIsOpen,
+  colorMenuOpen,
+  setColorMenuOpen,
   setIsLoadingImages,
   userID,
+  setLocalIsArchived,
 }) => {
   const [selectedColor, setSelectedColor] = useState(note.color);
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
 
   const colorButtonRef = useRef(null);
   const inputRef = useRef(null);
+  const moreRef = useRef(null);
 
   const handleColorClick = useCallback(async (color) => {
     if (color === selectedColor) return;
@@ -44,39 +45,33 @@ const NoteTools = ({
     }, 800);
   });
 
-  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+  const [colorMenuPosition, setColorMenuPosition] = useState({
+    top: 0,
+    left: 0,
+  });
+
+  const [moreMenuPosition, setMoreMenuPosition] = useState({
+    top: 0,
+    left: 0,
+  });
 
   const toggleMenu = () => {
     const rect = colorButtonRef.current.getBoundingClientRect();
-    setMenuPosition({
+    setColorMenuPosition({
       top: rect.bottom + window.scrollY, // Account for scrolling
       left: rect.left + window.scrollX, // Account for scrolling
     });
-    setIsOpen(!isOpen);
+    setColorMenuOpen(!colorMenuOpen);
   };
 
   const handleArchive = useCallback(async () => {
-    setNotes((prevNotes) =>
-      prevNotes.map((mapNote) =>
-        mapNote.uuid === note.uuid
-          ? { ...mapNote, isArchived: !mapNote.isArchived, isPinned: false }
-          : mapNote
-      )
-    );
+    setLocalIsArchived((prev) => !prev);
     window.dispatchEvent(new Event("loadingStart"));
     await NoteUpdateAction("isArchived", !note.isArchived, note.uuid);
     setTimeout(() => {
       window.dispatchEvent(new Event("loadingEnd"));
     }, 800);
   });
-
-  const handleImageAdd = async () => {
-    window.dispatchEvent(new Event("loadingStart"));
-    await NoteUpdateAction("isArchived", !note.isArchived, note.uuid);
-    setTimeout(() => {
-      window.dispatchEvent(new Event("loadingEnd"));
-    }, 800);
-  };
 
   const UploadImageAction = async (image) => {
     const supabase = createClient(
@@ -129,11 +124,26 @@ const NoteTools = ({
       window.dispatchEvent(new Event("loadingEnd"));
     }, 800);
   };
+
+  const handleMoreClick = useCallback(() => {
+    const rect = moreRef.current?.getBoundingClientRect();
+    setMoreMenuPosition({
+      top: rect.top,
+      left: rect.left,
+    });
+    setMoreMenuOpen((prev) => !prev);
+  }, []);
+
   return (
-    <span style={{ opacity: images ? "0.8" : "1" }}>
+    <span
+      style={{
+        opacity: images ? "0.8" : "1",
+        transition: "all 0.3s ease",
+      }}
+    >
       <div
         style={{
-          opacity: isOpen && "1",
+          opacity: (colorMenuOpen || moreMenuOpen) && "1",
           backgroundColor: images && note.color,
         }}
         className="note-bottom"
@@ -163,15 +173,21 @@ const NoteTools = ({
           </Button>
           <ColorSelectMenu
             handleColorClick={handleColorClick}
-            menuPosition={menuPosition}
+            menuPosition={colorMenuPosition}
             selectedColor={selectedColor}
-            isOpen={isOpen}
-            setIsOpen={setIsOpen}
+            isOpen={colorMenuOpen}
+            setIsOpen={setColorMenuOpen}
             buttonRef={colorButtonRef}
           />
-          <Button>
+          <Button onClick={handleMoreClick} ref={moreRef}>
             <MoreVert size={15} opacity={0.9} />
           </Button>
+          <MoreMenu
+            setIsOpen={setMoreMenuOpen}
+            buttonRef={moreRef}
+            menuPosition={moreMenuPosition}
+            isOpen={moreMenuOpen}
+          />
         </div>
       </div>
     </span>

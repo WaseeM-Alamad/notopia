@@ -35,8 +35,10 @@ const MainLayout = async ({ children }) => {
 
             {children}
           </AppProvider>
+          <div id="profileMenu"></div>
           <div id="colorMenuPortal"></div>
           <div id="modal-portal"></div>
+          <div id="moreMenu"></div>
         </body>
       </html>
     </AuthProvider>

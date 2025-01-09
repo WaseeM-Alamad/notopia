@@ -1,12 +1,12 @@
 import React, { memo } from "react";
 
-const NotesIcon = () => {
+const NotesIcon = ({size = 28}) => {
   return (
     <svg
     style={{flexShrink: "0"}}
       xmlns="http://www.w3.org/2000/svg"
-      height="28px"
-      width="28px"
+      height={size}
+      width={size}
       viewBox="0 -960 960 960"
       fill="#212121"
     >

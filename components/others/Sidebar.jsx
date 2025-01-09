@@ -8,25 +8,25 @@ import SideArchiveIcon from "../icons/SideArchiveIcon";
 import TrashIcon from "../icons/TrashIcon";
 import { motion } from "framer-motion";
 import AddButton from "../icons/AddButton";
-import { useAppContext } from "@/context/AppContext";
-
-const ICON_SIZE = 22;
-
-const springTransition = {
-  type: "spring",
-  stiffness: 1400,
-  damping: 70,
-  mass: 1,
-};
 
 const Sidebar = memo(() => {
-  const { setModalOpen } = useAppContext();
+  const [mounted, setMounted] = useState(false);
   const addButtonRef = useRef(null);
   const homeRef = useRef(null);
   const foldersRef = useRef(null);
   const remindersRef = useRef(null);
   const archiveRef = useRef(null);
   const trashRef = useRef(null);
+
+  const ICON_SIZE = 22;
+
+  const springTransition = {
+    type: "spring",
+    stiffness: 1400,
+    damping: 70,
+    mass: 1,
+    duration: !mounted && 0,
+  };
 
   const navItems = [
     { hash: "home", Icon: HomeIcon, ref: homeRef },
@@ -36,28 +36,15 @@ const Sidebar = memo(() => {
     { hash: "trash", Icon: TrashIcon, ref: trashRef },
   ];
 
-  const [highlightPosition, setHighlightPosition] = useState(() => {
-    const hash = window.location.hash.replace("#", "");
-    switch (hash) {
-      case "home":
-        return { top: 0, left: 0, section: "home" };
-      case "folders":
-        return { top: 62.390625, left: 0, section: "folders" };
-      case "reminders":
-        return { top: 124.78125, left: 0, section: "reminders" };
-      case "archive":
-        return { top: 187.171875, left: 0, section: "archive" };
-      case "trash":
-        return { top: 249.5625, left: 0, section: "trash" };
-      default:
-        return { top: 0, left: 0, section: "home" };
-    }
+  const [highlightPosition, setHighlightPosition] = useState({
+    top: 0,
+    left: 0,
   });
 
   const currentYear = useMemo(() => new Date().getFullYear(), []);
 
   const handleAddNote = () => {
-    setModalOpen(true);
+    window.dispatchEvent(new Event("openModal"));
   };
 
   const handleIconClick = (hash, ref) => {
@@ -79,6 +66,24 @@ const Sidebar = memo(() => {
   };
 
   useEffect(() => {
+    setHighlightPosition(() => {
+      const hash = window.location.hash.replace("#", "");
+      switch (hash) {
+        case "home":
+          return { top: 0, left: 0, section: "home" };
+        case "folders":
+          return { top: 62.390625, left: 0, section: "folders" };
+        case "reminders":
+          return { top: 124.78125, left: 0, section: "reminders" };
+        case "archive":
+          return { top: 187.171875, left: 0, section: "archive" };
+        case "trash":
+          return { top: 249.5625, left: 0, section: "trash" };
+        default:
+          return { top: 0, left: 0, section: "home" };
+      }
+    });
+
     const handleHashChange = () => {
       const currentHash = window.location.hash.replace("#", "");
       setHighlightPosition((prev) => ({
@@ -90,7 +95,10 @@ const Sidebar = memo(() => {
     handleHashChange();
 
     window.addEventListener("hashchange", handleHashChange);
-
+    setTimeout(() => {
+    setMounted(true);  
+    }, 10);
+    
     // Cleanup event listener on component unmount
     return () => {
       window.removeEventListener("hashchange", handleHashChange);
@@ -100,7 +108,7 @@ const Sidebar = memo(() => {
   return (
     <>
       <aside className="sidebar">
-        <div>
+        <div style={{display: 'flex', flexDirection: 'column'}}>
           <AddButton ref={addButtonRef} onClick={handleAddNote} />
           <div className="sidebar-icons-container">
             <motion.div

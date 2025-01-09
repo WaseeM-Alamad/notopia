@@ -5,21 +5,29 @@ import { signOut } from "next-auth/react";
 import RefreshIcon from "../icons/RefreshIcon";
 import SettingsIcon from "../icons/SettingsIcon";
 import GridIcon from "../icons/GridIcon";
-import { CircularProgress, IconButton } from "@mui/material";
+import { CircularProgress } from "@mui/material";
 import { usePathname } from "next/navigation";
-import { Box } from "@mui/system";
+import { Box, margin } from "@mui/system";
 import CloudIcon from "../icons/CloudIcon";
 import { AnimatePresence, motion } from "framer-motion";
-import Logo from "./logo";
 import Button from "../Tools/Button";
+import Logo from "../icons/Logo";
+import ProfileModal from "./ProfileModal";
 
 const Navbar = ({ user }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [UpToDatetrigger, setUpToDateTrigger] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({
+    top: 100,
+    left: 600,
+  });
   const image = user?.image;
   const pathName = usePathname();
   const firstRun = useRef(true);
+  const imageRef = useRef(null);
+  const menuRef = useRef(null);
 
   useEffect(() => {
     const startLoading = () => setIsLoading(true);
@@ -66,32 +74,82 @@ const Navbar = ({ user }) => {
   useEffect(() => {
     const handleBeforeUnload = (event) => {
       if (isLoading) {
-        const message = "Your request is still in progress. Are you sure you want to leave?";
+        const message =
+          "Your request is still in progress. Are you sure you want to leave?";
         event.returnValue = message; // Standard for most browsers
         return message; // For some browsers
       }
     };
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [isLoading]);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (
+        isMenuOpen &&
+        !imageRef.current?.contains(e.target) &&
+        !menuRef.current?.contains(e.target)
+      ) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    const handleResize = () => {
+      if (isMenuOpen) {
+        // setIsMenuOpen(false);
+        const rect = imageRef.current?.getBoundingClientRect();
+        setMenuPosition({
+          top: rect.top,
+          left: rect.left,
+        });
+      }
+    };
+
+    document.addEventListener("click", handler);
+    window.addEventListener("resize", handleResize);
+    return () => {
+      document.removeEventListener("click", handler);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [isMenuOpen]);
 
   const handleRefresh = () => {
     if (!isLoading && UpToDatetrigger)
       window.dispatchEvent(new Event("refresh"));
   };
 
+  const handleProfileOpen = () => {
+    const rect = imageRef.current?.getBoundingClientRect();
+    setMenuPosition({
+      top: rect.top,
+      left: rect.left,
+    });
+    setIsMenuOpen((prev) => !prev);
+  };
+
   return (
     <>
+      <ProfileModal
+        user={user}
+        ref={menuRef}
+        menuPosition={menuPosition}
+        isOpen={isMenuOpen}
+      />
       {pathName !== "/" && (
         <nav
           style={{
             boxShadow: isScrolled ? "0 3px 10px rgba(0, 0, 0, 0.2)" : "",
           }}
         >
+          {/* <div className="logo"> */}
+          {/* <Logo style={{margin: "auto 0"}} /> */}
+          {/* <span style={{marginLeft: "0.5rem"}}>notopia</span> */}
+          {/* </div> */}
           <input className="search" placeholder="Search" spellCheck="false" />
           <div className="top-icons">
             <Button style={{ width: "2.8rem", height: "2.8rem" }}>
@@ -151,7 +209,12 @@ const Navbar = ({ user }) => {
               <SettingsIcon />
             </Button>
           </div>
-          <div>
+          <div
+            style={{ marginRight: "2.3rem", padding: "8px" }}
+            className="btn"
+            onClick={handleProfileOpen}
+            ref={imageRef}
+          >
             <img
               style={{ display: "block", userSelect: "none" }}
               className="profile-image"

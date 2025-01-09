@@ -12,46 +12,56 @@ import Note from "../others/Note";
 import AddNoteModal from "../others/AddNoteModal";
 import { useAppContext } from "@/context/AppContext";
 import { motion } from "framer-motion";
+import TopMenuHome from "../others/topMenu/TopMenuHome";
 
 const COLUMN_WIDTH = 240;
 const GUTTER = 15;
 
-const NoteWrapper = memo(({ note, setNotes, isVisible, ref }) => {
-  const { modalOpen } = useAppContext();
-  const [mounted, setMounted] = useState(false);
-  const [mountOpacity, setMountOpacity] = useState(false);
+const NoteWrapper = memo(
+  ({ note, setNotes, isVisible, ref, setSelectedNotesIDs, selectedNotes }) => {
+    const { modalOpen } = useAppContext();
+    const [mounted, setMounted] = useState(false);
+    const [mountOpacity, setMountOpacity] = useState(false);
 
-  useEffect(() => {
-    setTimeout(() => {
-      setMounted(true);
-    }, 100);
-  }, []);
+    useEffect(() => {
+      setTimeout(() => {
+        setMounted(true);
+      }, 100);
+    }, []);
 
-  useEffect(() => {
-    if (!modalOpen) setMountOpacity(true);
-  }, [modalOpen]);
+    useEffect(() => {
+      if (!modalOpen) setMountOpacity(true);
+    }, [modalOpen]);
 
-  return (
-    <motion.div
-      ref={ref}
-      className="grid-item"
-      style={{
-        width: `${COLUMN_WIDTH}px`,
-        marginBottom: `${GUTTER}px`,
-        transition: `transform ${mounted ? "0.2s" : "0"} ease, opacity 0s`,
-        opacity: isVisible ? (mountOpacity ? 1 : 0) : 0,
-        pointerEvents: isVisible ? "auto" : "none",
-      }}
-    >
-      <Note note={note} setNotes={setNotes} />
-    </motion.div>
-  );
-});
+    return (
+      <motion.div
+        ref={ref}
+        className="grid-item"
+        style={{
+          width: `${COLUMN_WIDTH}px`,
+          marginBottom: `${GUTTER}px`,
+          transition: `transform ${mounted ? "0.2s" : "0"} ease, opacity 0s`,
+          opacity: isVisible ? (mountOpacity ? 1 : 0) : 0,
+          pointerEvents: isVisible ? "auto" : "none",
+        }}
+      >
+        <Note
+          note={note}
+          setNotes={setNotes}
+          setSelectedNotesIDs={setSelectedNotesIDs}
+          selectedNotes={selectedNotes}
+        />
+      </motion.div>
+    );
+  }
+);
 
 NoteWrapper.displayName = "NoteWrapper";
 
 const Home = memo(({ notes, setNotes }) => {
   const [isLayoutReady, setIsLayoutReady] = useState(false);
+  const [selectedNotesIDs, setSelectedNotesIDs] = useState([]);
+  const selectedRef = useRef(false);
   const containerRef = useRef(null);
   const resizeTimeoutRef = useRef(null);
   const layoutFrameRef = useRef(null);
@@ -145,8 +155,16 @@ const Home = memo(({ notes, setNotes }) => {
     }
   }, [notes, calculateLayout]);
 
+  useEffect(() => {
+    selectedRef.current = selectedNotesIDs.length > 0;
+  }, [selectedNotesIDs]);
+
   return (
     <>
+      <TopMenuHome
+        selectedNotesIDs={selectedNotesIDs}
+        setSelectedNotesIDs={setSelectedNotesIDs}
+      />
       <div className="starting-div">
         <div
           ref={containerRef}
@@ -163,6 +181,8 @@ const Home = memo(({ notes, setNotes }) => {
                   note={note}
                   setNotes={setNotes}
                   isVisible={isLayoutReady}
+                  setSelectedNotesIDs={setSelectedNotesIDs}
+                  selectedNotes={selectedRef}
                 />
               );
           })}

@@ -12,14 +12,25 @@ import Note from "../others/Note";
 import AddNoteModal from "../others/AddNoteModal";
 import { useAppContext } from "@/context/AppContext";
 import { AnimatePresence, motion } from "framer-motion";
+import TopMenuHome from "../others/topMenu/TopMenuHome";
 
 const COLUMN_WIDTH = 240;
 const GUTTER = 15;
 const GAP_BETWEEN_SECTIONS = 120;
 
 const NoteWrapper = memo(
-  ({ note, setNotes, togglePin, isVisible, ref, calculateLayout, isLoadingImages }) => {
-    const { modalOpen, setModalOpen } = useAppContext();
+  ({
+    note,
+    setNotes,
+    togglePin,
+    isVisible,
+    ref,
+    calculateLayout,
+    isLoadingImages,
+    setSelectedNotesIDs,
+    selectedNotes,
+  }) => {
+    // const { modalOpen, setModalOpen } = useAppContext();
     const [mounted, setMounted] = useState(false);
     const [mountOpacity, setMountOpacity] = useState(false);
     useEffect(() => {
@@ -28,21 +39,23 @@ const NoteWrapper = memo(
       }, 100);
     }, []);
 
+    // useEffect(() => {
+    // if (!modalOpen) setMountOpacity(true);
+    // }, [modalOpen]);
+
     useEffect(() => {
-      if (!modalOpen) setMountOpacity(true);
-    }, [modalOpen]);
+      const handler = () => {
+        setMountOpacity(true);
+      };
+
+      window.addEventListener("closeModal", handler);
+      return () => {
+        window.removeEventListener("closeModal", handler);
+      };
+    }, []);
 
     return (
       <motion.div
-        initial={{ opacity: 1 }}
-        animate={{ opacity: !note.isArchived ? 1 : 0 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }}
-        onAnimationComplete={() => {
-          setTimeout(() => {
-            calculateLayout();
-          }, 100);
-        }}
         ref={ref}
         data-pinned={note.isPinned}
         className="grid-item"
@@ -64,6 +77,8 @@ const NoteWrapper = memo(
             togglePin={togglePin}
             calculateLayout={calculateLayout}
             isLoadingImagesAddNote={isLoadingImages}
+            setSelectedNotesIDs={setSelectedNotesIDs}
+            selectedNotes={selectedNotes}
           />
         </motion.div>
       </motion.div>
@@ -77,19 +92,14 @@ const Home = memo(({ notes, setNotes }) => {
   const [isLayoutReady, setIsLayoutReady] = useState(false);
   const [othersHeight, setOthersHeight] = useState(null);
   const [isLoadingImages, setIsLoadingImages] = useState([]);
-  const { modalOpen, setModalOpen } = useAppContext();
+  const [selectedNotesIDs, setSelectedNotesIDs] = useState([]);
+  const selectedRef = useRef(false);
   const lastAddedNoteRef = useRef(null);
   const containerRef = useRef(null);
   const resizeTimeoutRef = useRef(null);
   const layoutFrameRef = useRef(null);
-
-  const { pinnedNotes, unpinnedNotes } = useMemo(
-    () => ({
-      pinnedNotes: notes.filter((note) => note.isPinned),
-      unpinnedNotes: notes.filter((note) => !note.isPinned),
-    }),
-    [notes]
-  );
+  const hasDispatched = useRef(false);
+  const isFirstRender = useRef(true);
 
   const [unpinnedNotesNumber, setUnpinnedNotesNumber] = useState(null);
   const [pinnedNotesNumber, setPinnedNotesNumber] = useState(null);
@@ -200,24 +210,6 @@ const Home = memo(({ notes, setNotes }) => {
     );
   }, []);
 
-  // const togglePin = useCallback((uuid) => {
-  //   setNotes((prevNotes) => {
-  //     // Find the note to toggle
-  //     const toggledNote = prevNotes.find((note) => note.uuid === uuid);
-
-  //     // Remove the toggled note from the list
-  //     const remainingNotes = prevNotes.filter((note) => note.uuid !== uuid);
-
-  //     if (toggledNote.isPinned) {
-  //       // If the note was pinned, unpin it and add it to the start of unpinned notes
-  //       return [{ ...toggledNote, isPinned: false }, ...remainingNotes];
-  //     } else {
-  //       // If the note was unpinned, pin it and add it to the start of pinned notes
-  //       return [{ ...toggledNote, isPinned: true }, ...remainingNotes];
-  //     }
-  //   });
-  // }, []);
-
   useEffect(() => {
     if (notes.length > 0) {
       const timer = setTimeout(calculateLayout, 50);
@@ -225,8 +217,28 @@ const Home = memo(({ notes, setNotes }) => {
     }
   }, [notes, calculateLayout]);
 
+  useEffect(() => {
+    selectedRef.current = selectedNotesIDs.length > 0;
+  }, [selectedNotesIDs]);
+
+  useEffect(() => {
+
+    if (!hasDispatched.current && !isFirstRender.current) {
+      console.log("dispatch")
+      window.dispatchEvent(new Event("closeModal"));
+      hasDispatched.current = true;
+    }
+    if (isFirstRender.current){
+      isFirstRender.current = false;
+    }
+  }, [notes]); // Runs after notes are rendered
+
   return (
     <>
+      <TopMenuHome
+        selectedNotesIDs={selectedNotesIDs}
+        setSelectedNotesIDs={setSelectedNotesIDs}
+      />
       <div className="starting-div">
         <div
           ref={containerRef}
@@ -235,6 +247,26 @@ const Home = memo(({ notes, setNotes }) => {
             visibility: isLayoutReady ? "visible" : "hidden",
           }}
         >
+          {pinnedNotesNumber === 0 &&
+            unpinnedNotesNumber === 0 &&
+            isLayoutReady && (
+              <AnimatePresence>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0, transition: { duration: 0.3 } }}
+                  style={{
+                    margin: "auto",
+                    marginTop: "auto",
+                    paddingRight: "4.5rem",
+                    fontSize: "1.8rem",
+                    color: "#cecece",
+                  }}
+                >
+                  Notes you add appear here
+                </motion.div>
+              </AnimatePresence>
+            )}
           <p
             className="section-label"
             style={{
@@ -254,26 +286,28 @@ const Home = memo(({ notes, setNotes }) => {
           >
             OTHERS
           </p>
-            {notes.map(
-              (note, index) =>
-                !note.isArchived && (
-                  <NoteWrapper
-                    ref={index === 0 ? lastAddedNoteRef : null}
-                    key={note.uuid}
-                    note={note}
-                    setNotes={setNotes}
-                    togglePin={togglePin}
-                    isVisible={isLayoutReady}
-                    isLoadingImages={isLoadingImages}
-                    calculateLayout={calculateLayout}
-                  />
-                )
-            )}
+          {notes.map(
+            (note, index) =>
+              !note.isArchived && (
+                <NoteWrapper
+                  ref={index === 0 ? lastAddedNoteRef : null}
+                  key={note.uuid}
+                  note={note}
+                  setNotes={setNotes}
+                  togglePin={togglePin}
+                  isVisible={isLayoutReady}
+                  setSelectedNotesIDs={setSelectedNotesIDs}
+                  {...(isLoadingImages.includes(note.uuid)
+                    ? { isLoadingImages }
+                    : {})}
+                  calculateLayout={calculateLayout}
+                  selectedNotes={selectedRef}
+                />
+              )
+          )}
         </div>
       </div>
       <AddNoteModal
-        trigger={modalOpen}
-        setTrigger={setModalOpen}
         setNotes={setNotes}
         lastAddedNoteRef={lastAddedNoteRef}
         setIsLoadingImages={setIsLoadingImages}

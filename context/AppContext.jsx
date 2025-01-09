@@ -31,7 +31,6 @@ export function AppProvider({ children }) {
   };
 
   
-  const [modalOpen, setModalOpen] = useState(false);
   
   const [user, setUser] = useState(null);
   const { data: session, status } = useSession();
@@ -49,8 +48,6 @@ export function AppProvider({ children }) {
         user,
         session,
         status,
-        modalOpen,
-        setModalOpen
       }}
     >
       {children}

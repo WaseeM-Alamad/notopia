@@ -16,8 +16,10 @@ import React, { memo, useEffect, useState } from "react";
 const page = () => {
   const [currentPage, setCurrentPage] = useState();
   const [notes, setNotes] = useState([]);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
     const handleHashChange = () => {
       const currentHash = window.location.hash;
       setCurrentPage(currentHash);
@@ -52,26 +54,26 @@ const page = () => {
 
   const Header = memo(() => (
     <div className="starting-div-header">
-      <div className="page-header">
-      {window.location.hash.includes("archive") ? (
+      { isClient && <div className="page-header">
+      {/* {window.location.hash.includes("archive") ? (
             <ArchiveIcon size={22} color="#212121"/>
           ) : window.location.hash.includes("trash") ? (
             <TrashIcon size={22} color="#212121"/>
           ) : (
-            <NotesIcon/>
-          )}
+            <NotesIcon size={34}/>
+          )} */}
         <h1 className="page-header-title">
           {window.location.hash.includes("archive") ? (
             <span>Archive</span>
           ) : window.location.hash.includes("trash") ? (
             <span>Trash</span>
           ) : (
-            <span>All Notes</span>
+            <span style={{fontSize: "2.2rem"}}>All Notes</span>
           )}
         </h1>
         <div
           // animate={{ width: "100%" }}
-          className="page-header-divider"
+          // className="page-header-divider"
         />
         <motion.div
           className="divider-tools-container"
@@ -87,27 +89,13 @@ const page = () => {
             <span className="divider-tool-text">Labels</span>
           </div>
         </motion.div>
-      </div>
+      </div>}
     </div>
   ));
 
   Header.displayName = "Header";
 
   const renderPage = () => {
-    // switch (currentPage) {
-    //   case "trash":
-    //     return <Trash notes={notes} setNotes={setNotes} />;
-    //   case "home":
-    //     return <Home notes={notes} setNotes={setNotes} />;
-    //   case "folders":
-    //     return <Folders />;
-    //   case "archive":
-    //     return <Archive notes={notes} setNotes={setNotes} />;
-    //   case "reminders":
-    //     return <Reminders />;
-    //   default:
-    //     return <Home notes={notes} setNotes={setNotes} />;
-    // }
     if (currentPage?.includes("trash"))
       return <Trash notes={notes} setNotes={setNotes} />;
     else if (currentPage?.includes("home"))

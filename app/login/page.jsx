@@ -18,16 +18,8 @@ export default function Page() {
   const [isChecked, setIsChecked] = useState(false);
   const checkBoxRef = useRef(null);
 
-  const { data: session, status } = useSession();
-  useEffect(() => {
-    if (status === "authenticated") {
-      redirect("/app");
-    }
-  }, [status]);
-
   return (
     <>
-      {status !== "authenticated" && (
         <div className="container">
           <div className="box">
             <div className="left-container">
@@ -209,7 +201,6 @@ export default function Page() {
             </div>
           </div>
         </div>
-      )}
     </>
   );
 }
