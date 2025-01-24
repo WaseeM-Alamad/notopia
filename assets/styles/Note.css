@@ -93,6 +93,8 @@
 .note-bottom-icons {
   display: flex;
   padding-bottom: 3px;
+  width: 100%;
+  padding-left: 0.4rem;
   gap: 6px;
 }
 

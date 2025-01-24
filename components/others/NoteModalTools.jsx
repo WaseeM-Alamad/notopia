@@ -12,6 +12,7 @@ import { NoteUpdateAction } from "@/utils/actions";
 import { createClient } from "@supabase/supabase-js";
 import { v4 as uuid } from "uuid";
 import { useSession } from "next-auth/react";
+import { AnimatePresence } from "framer-motion";
 
 const NoteModalTools = ({
   setNotes,
@@ -22,9 +23,8 @@ const NoteModalTools = ({
   isAtBottom,
   setIsLoadingImages,
 }) => {
-  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const [isOpen, setIsOpen] = useState(false);
-  const {data: session} = useSession();
+  const { data: session } = useSession();
   const userID = session?.user?.id;
   const colorButtonRef = useRef(null);
   const closeRef = useRef(null);
@@ -46,11 +46,6 @@ const NoteModalTools = ({
   });
 
   const toggleMenu = useCallback(() => {
-    const rect = colorButtonRef.current.getBoundingClientRect();
-    setMenuPosition({
-      top: rect.bottom + window.scrollY, // Account for scrolling
-      left: rect.left + window.scrollX, // Account for scrolling
-    });
     setIsOpen(!isOpen);
   });
 
@@ -134,14 +129,17 @@ const NoteModalTools = ({
         <Button ref={colorButtonRef} onClick={toggleMenu}>
           <ColorIcon size={15} opacity={0.8} />
         </Button>
-        <ColorSelectMenu
-          handleColorClick={handleColorClick}
-          menuPosition={menuPosition}
-          selectedColor={selectedColor}
-          isOpen={isOpen}
-          setIsOpen={setIsOpen}
-          buttonRef={colorButtonRef}
-        />
+        <AnimatePresence>
+          {isOpen && (
+            <ColorSelectMenu
+              handleColorClick={handleColorClick}
+              selectedColor={selectedColor}
+              isOpen={isOpen}
+              setIsOpen={setIsOpen}
+              buttonRef={colorButtonRef}
+            />
+          )}
+        </AnimatePresence>
         <Button>
           <MoreVert size={15} opacity={0.8} />
         </Button>

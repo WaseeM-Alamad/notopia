@@ -14,6 +14,7 @@ import { createClient } from "@supabase/supabase-js";
 const AddNoteModal = ({
   setNotes,
   lastAddedNoteRef,
+  smallestPos,
   setIsLoadingImages,
 }) => {
   const { data: session } = useSession();
@@ -40,7 +41,7 @@ const AddNoteModal = ({
     margin: "25px",
   });
   const [isClient, setIsClient] = useState(false);
-  const [trigger, setTrigger]= useState(false);
+  const [trigger, setTrigger] = useState(false);
   const [trigger2, setTrigger2] = useState(false);
   const [selectedColor, setSelectedColor] = useState("#FFFFFF");
   const [isEmptyNote, setIsEmptyNote] = useState(true);
@@ -56,15 +57,41 @@ const AddNoteModal = ({
 
   const [width, setWidth] = useState(0);
 
-  useEffect(()=> {
-
-    const handler = ()=> {
-      if (!trigger)
-      setTrigger(true)
+  useEffect(() => {
+    if (!trigger) {
+      setIsEmptyNote(true);
+      if (titleRef.current) titleRef.current.textContent = "";
+      if (contentRef.current) contentRef.current.textContent = "";
+      setSelectedColor("#FFFFFF");
+      setModalPosition({
+        top: "30%",
+        left: "50%",
+        width: 600,
+        height: 185,
+        borderRadius: "0.7rem",
+        transform: "translate(-50%, -30%)",
+        margin: "25px",
+      });
+      setNote({
+        uuid: "",
+        title: "",
+        content: "",
+        color: "#FFFFFF",
+        labels: [],
+        isPinned: false,
+        isArchived: false,
+        isTrash: false,
+        images: [],
+        imageFiles: [],
+      });
     }
 
-    window.addEventListener("openModal", handler)
-  }, [trigger])
+    const handler = () => {
+      if (!trigger) setTrigger(true);
+    };
+
+    window.addEventListener("openModal", handler);
+  }, [trigger]);
 
   useEffect(() => {
     const observer = new ResizeObserver(() => {
@@ -89,13 +116,15 @@ const AddNoteModal = ({
   }, [trigger]);
 
   useEffect(() => {
+    const nav = document.querySelector("nav");
     if (trigger2) {
       const scrollbarWidth =
         window.innerWidth - document.documentElement.clientWidth;
       document.body.style.overflow = "hidden";
       document.body.style.paddingRight = `${scrollbarWidth}px`;
       modalRef.current.style.marginLeft = `${0}px`;
-      //marginLeft: trigger2? '0px': "5px",
+      if (nav) nav.style.marginLeft = `${-scrollbarWidth}px`;
+      if (nav) nav.style.paddingLeft = `${scrollbarWidth}px`;
     } else {
       const scrollbarWidth =
         window.innerWidth - document.documentElement.clientWidth;
@@ -105,6 +134,8 @@ const AddNoteModal = ({
         modalRef.current.style.marginLeft = `${
           scrollbarWidth === 0 ? 0 : scrollbarWidth - 5
         }px`;
+      if (nav) nav.style.marginLeft = "0px";
+      if (nav) nav.style.paddingLeft = "0px";
     }
     return () => (document.body.style.overflow = "auto"); // Cleanup
   }, [trigger2]);
@@ -115,9 +146,11 @@ const AddNoteModal = ({
 
   const handleClose = async (e, closeRef) => {
     if (
-      modalContainerRef.current === e.target ||
-      closeRef?.current === e.target
+      (modalContainerRef.current === e.target ||
+        closeRef?.current === e.target) &&
+      trigger2
     ) {
+      console.log("handle close");
       setTrigger2(false);
       setTimeout(() => {
         window.dispatchEvent(new Event("closeModal"));
@@ -157,6 +190,7 @@ const AddNoteModal = ({
           createdAt: new Date(),
           updatedAt: new Date(),
           images: note.images,
+          position: smallestPos - 1,
         };
         setNotes((prev) => [newNote, ...prev]);
         window.dispatchEvent(new Event("loadingStart"));
@@ -174,10 +208,6 @@ const AddNoteModal = ({
           window.dispatchEvent(new Event("loadingEnd"));
         }, 800);
       }
-      setIsEmptyNote(true);
-      titleRef.current.textContent = "";
-      contentRef.current.textContent = "";
-      setSelectedColor("#FFFFFF");
     }
   };
 
@@ -210,27 +240,7 @@ const AddNoteModal = ({
   };
 
   const UploadImagesAction = async (images, noteUUID) => {
-    setModalPosition({
-      top: "30%",
-      left: "50%",
-      width: 600,
-      height: 185,
-      borderRadius: "0.7rem",
-      transform: "translate(-50%, -30%)",
-      margin: "25px",
-    });
-    setNote({
-      uuid: "",
-      title: "",
-      content: "",
-      color: "#FFFFFF",
-      labels: [],
-      isPinned: false,
-      isArchived: false,
-      isTrash: false,
-      images: [],
-      imageFiles: [],
-    });
+    if (images.length === 0) return;
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -257,25 +267,27 @@ const AddNoteModal = ({
     }
   };
 
-  const insert = async()=> {
-
-    for (let i=0; i<20; i++){
+  const insert = async () => {
+    let newPosition = smallestPos - 1;
+    for (let i = 0; i < 70; i++) {
       const newNote = {
-      uuid: uuid(),
-      title: note.title,
-      content: note.content,
-      color: note.color,
-      labels: note.labels,
-      isPinned: note.isPinned,
-      isArchived: note.isArchived,
-      isTrash: note.isTrash,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      images: note.images,
+        uuid: uuid(),
+        title: note.title,
+        content: note.content,
+        color: note.color,
+        labels: note.labels,
+        isPinned: note.isPinned,
+        isArchived: note.isArchived,
+        isTrash: note.isTrash,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        images: note.images,
+        position: newPosition,
+      };
+      createNoteAction(newNote);
+      newPosition -= 1;
     }
-       createNoteAction(newNote)
-    }
-  }
+  };
 
   return createPortal(
     <div
@@ -287,7 +299,10 @@ const AddNoteModal = ({
       }}
       className="modal-container"
     >
-      {/* <button onClick={insert}>insert</button> */}
+      <button onClick={() => console.log("first note", firstArrayNotePos)}>
+        first
+      </button>
+      <button onClick={insert}>insertff</button>
       <div
         ref={modalRef}
         style={{

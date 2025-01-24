@@ -22,7 +22,6 @@ export function AppProvider({ children }) {
         height: "fit-content",
         margin: "0",
         backgroundColor: "rgba(0, 0, 0, 0.7)",
-        fontFamily: "Roboto",
         fontWeight: "400",
         fontSize: "0.76rem",
         padding: "5px 8px 5px 8px",

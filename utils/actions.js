@@ -6,9 +6,10 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "./authOptions";
 import { createClient } from "@supabase/supabase-js";
 
+const session = await getServerSession(authOptions);
+const userID = session?.user?.id;
+
 export const fetchNotes = async () => {
-  const session = await getServerSession(authOptions);
-  const userID = session?.user?.id;
   if (!session) {
     return new Response("Unauthorized", { status: 401 });
   }
@@ -34,6 +35,7 @@ export const fetchNotes = async () => {
             uuid: image.uuid,
           }))
         : [],
+      position: note.position,
       createdAt: note.createdAt.toISOString(), // If it's a Date, convert to string
       updatedAt: note.updatedAt.toISOString(),
       __v: note.__v,
@@ -51,8 +53,6 @@ export const fetchNotes = async () => {
 };
 
 export const createNoteAction = async (note) => {
-  const session = await getServerSession(authOptions);
-  const userID = session?.user?.id;
   const starter =
     "https://fopkycgspstkfctmhyyq.supabase.co/storage/v1/object/public/notopia";
   const images = note.images.map((image) => ({
@@ -87,18 +87,26 @@ export const createNoteAction = async (note) => {
   }
 };
 
-export const NoteUpdateAction = async (type, value, noteUUID) => {
+export const NoteUpdateAction = async (type, value, noteUUID, newPosition) => {
   try {
     await connectDB();
     if (type === "images") {
       await Note.updateOne({ uuid: noteUUID }, { $push: { images: value } });
-    } else if (type !== "isArchived") {
-      await Note.updateOne({ uuid: noteUUID }, { $set: { [type]: value } });
-    } else if (type === "isArchived") {
+    } 
+      else if (type === "isArchived") {
       await Note.updateOne(
         { uuid: noteUUID },
         { $set: { [type]: value, isPinned: false } }
       );
+    }
+    else if (type === "isPinned"){
+      await Note.updateOne({ uuid: noteUUID }, { $set: { [type]: value, position: newPosition } });
+    }
+    else if (type === "position"){
+      await Note.updateOne({uuid: noteUUID}, {$set: {[type]: value}});
+    }
+    else {
+      await Note.updateOne({ uuid: noteUUID }, { $set: { [type]: value } });
     }
   } catch (error) {
     console.log("Error updating note:", error);
@@ -130,10 +138,28 @@ export const NoteImageDeleteAction = async (filePath, noteUUID, imageID) => {
     await connectDB();
     await Note.updateOne(
       { uuid: noteUUID, "images.uuid": imageID }, // Make sure both the note's uuid and image's uuid are matched
-      { $pull: { images: { uuid: imageID } } }    // Remove the image with the specified uuid
+      { $pull: { images: { uuid: imageID } } } // Remove the image with the specified uuid
     );
     await supabase.storage.from("notopia").remove([filePath]);
   } catch (error) {
     console.log("Error removing note.", error);
+  }
+};
+
+export const DeleteNoteAction = async (noteUUID) => {
+  const starter =
+    "https://fopkycgspstkfctmhyyq.supabase.co/storage/v1/object/public/notopia";
+  try {
+    await connectDB();
+    const note = await Note.findOne({ uuid: noteUUID });
+    await User.updateOne({ _id: userID }, { $pull: { notes: note._id } });
+    const result = await Note.deleteOne({ uuid: noteUUID });
+    if (result.deletedCount === 0) {
+      return { success: false, message: "Note not found" };
+    }
+    return { success: true, message: "Note deleted successfully" };
+  } catch (error) {
+    console.log("Error deleting note.", error);
+    return { success: false, message: "Error deleting note" };
   }
 };

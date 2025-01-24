@@ -47,6 +47,9 @@ const NoteSchema = new Schema(
         uuid: { type: String, required: true },
       },
     ],
+    position: {
+      type: Number,
+    }
   },
   {
     timestamps: true,

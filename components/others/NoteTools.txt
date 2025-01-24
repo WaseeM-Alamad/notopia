@@ -14,6 +14,8 @@ import MoreMenu from "./MoreMenu";
 import DeleteIcon from "../icons/DeleteIcon";
 import RestoreIcon from "../icons/RestoreIcon";
 import { AnimatePresence } from "framer-motion";
+import { Tooltip } from "@mui/material";
+import { useAppContext } from "@/context/AppContext";
 
 const NoteTools = ({
   images,
@@ -29,6 +31,8 @@ const NoteTools = ({
 }) => {
   const [selectedColor, setSelectedColor] = useState(note.color);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  const [buttonHover, setButtonHover] = useState(false);
+  const { slotProps } = useAppContext();
 
   const colorButtonRef = useRef(null);
   const colorMenuRef = useRef(null);
@@ -62,17 +66,12 @@ const NoteTools = ({
   });
 
   const toggleMenu = () => {
-    // const rect = colorButtonRef.current.getBoundingClientRect();
-    // const menuRect = colorMenuRef.current.getBoundingClientRect();
-    // console.log("left", menuRect.left)
-    // setColorMenuPosition({
-    //   top: rect.bottom + window.scrollY, // Account for scrolling
-    //   left: rect.left + window.scrollX, // Account for scrolling
-    // });
+    setButtonHover(false);
     setColorMenuOpen(!colorMenuOpen);
   };
 
   const handleArchive = useCallback(async () => {
+    setButtonHover(false);
     setLocalIsArchived((prev) => !prev);
     window.dispatchEvent(new Event("loadingStart"));
     await NoteUpdateAction("isArchived", !note.isArchived, note.uuid);
@@ -134,6 +133,7 @@ const NoteTools = ({
   };
 
   const handleMoreClick = useCallback(() => {
+    setButtonHover(false);
     const rect = moreRef.current?.getBoundingClientRect();
     setMoreMenuPosition({
       top: rect.top,
@@ -178,28 +178,115 @@ const NoteTools = ({
         <div className="note-bottom-icons">
           {!note.isTrash ? (
             <>
-              {" "}
-              <Button>
-                <Bell size={15} opacity={0.9} />
-              </Button>
-              <Button>
-                <PersonAdd size={15} opacity={0.9} />
-              </Button>
-              <Button onClick={handleArchive}>
-                <ArchiveIcon size={15} opacity={0.9} color="#212121" />
-              </Button>
-              <Button onClick={() => inputRef.current.click()}>
-                <input
-                  ref={inputRef}
-                  style={{ display: "none" }}
-                  type="file"
-                  onChange={handleOnChange}
-                />
-                <ImageIcon size={15} opacity={0.9} />
-              </Button>
-              <Button ref={colorButtonRef} onClick={toggleMenu}>
-                <ColorIcon size={15} opacity={0.9} />
-              </Button>
+              {buttonHover ? (
+                <Tooltip
+                  slotProps={slotProps}
+                  disableInteractive
+                  title="Remind me"
+                >
+                  <Button onMouseLeave={() => setButtonHover(false)}>
+                    <Bell size={15} opacity={0.9} />
+                  </Button>
+                </Tooltip>
+              ) : (
+                <Button
+                  onMouseMove={() => {
+                    setButtonHover(true);
+                  }}
+                >
+                  <Bell size={15} opacity={0.9} />
+                </Button>
+              )}
+              {buttonHover ? (
+                <Tooltip
+                  slotProps={slotProps}
+                  disableInteractive
+                  title="Collaborator"
+                >
+                  <Button onMouseLeave={() => setButtonHover(false)}>
+                    <PersonAdd size={15} opacity={0.9} />
+                  </Button>
+                </Tooltip>
+              ) : (
+                <Button
+                  onMouseMove={() => {
+                    setButtonHover(true);
+                  }}
+                >
+                  <PersonAdd size={15} opacity={0.9} />
+                </Button>
+              )}
+              {buttonHover ? (
+                <Tooltip
+                  slotProps={slotProps}
+                  disableInteractive
+                  title={note.isArchived ? "Unarchive" : "Archive"}
+                >
+                  <Button
+                    onMouseLeave={() => setButtonHover(false)}
+                    onClick={handleArchive}
+                  >
+                    <ArchiveIcon size={15} opacity={0.9} color="#212121" />
+                  </Button>
+                </Tooltip>
+              ) : (
+                <Button
+                  onMouseMove={() => {
+                    setButtonHover(true);
+                  }}
+                  onClick={handleArchive}
+                >
+                  <ArchiveIcon size={15} opacity={0.9} color="#212121" />
+                </Button>
+              )}
+              {buttonHover ? (
+                <Tooltip
+                  slotProps={slotProps}
+                  disableInteractive
+                  title="Add image"
+                >
+                  <Button
+                    onMouseLeave={() => setButtonHover(false)}
+                    onClick={() => inputRef.current.click()}
+                  >
+                    <ImageIcon size={15} opacity={0.9} />
+                  </Button>
+                </Tooltip>
+              ) : (
+                <Button
+                  onMouseMove={() => {
+                    setButtonHover(true);
+                  }}
+                  onClick={() => inputRef.current.click()}
+                >
+                  <ImageIcon size={15} opacity={0.9} />
+                </Button>
+              )}
+              {buttonHover ? (
+                <Tooltip
+                  slotProps={slotProps}
+                  disableInteractive
+                  title="Background settings"
+                >
+                  <Button
+                    onMouseLeave={() => setButtonHover(false)}
+                    ref={colorButtonRef}
+                    onClick={toggleMenu}
+                  >
+                    <ColorIcon size={15} opacity={0.9} />
+                  </Button>
+                </Tooltip>
+              ) : (
+                <Button
+                  onMouseMove={() => {
+                    setButtonHover(true);
+                  }}
+                  ref={colorButtonRef}
+                  onClick={toggleMenu}
+                >
+                  <ColorIcon size={15} opacity={0.9} />
+                </Button>
+              )}
               <AnimatePresence>
                 {colorMenuOpen && (
                   <ColorSelectMenu
@@ -213,9 +300,27 @@ const NoteTools = ({
                   />
                 )}
               </AnimatePresence>
-              <Button onClick={handleMoreClick} ref={moreRef}>
-                <MoreVert size={15} opacity={0.9} />
-              </Button>
+              {buttonHover ? (
+                <Tooltip slotProps={slotProps} disableInteractive title="More">
+                  <Button
+                    onMouseLeave={() => setButtonHover(false)}
+                    onClick={handleMoreClick}
+                    ref={moreRef}
+                  >
+                    <MoreVert size={15} opacity={0.9} />
+                  </Button>
+                </Tooltip>
+              ) : (
+                <Button
+                  onMouseMove={() => {
+                    setButtonHover(true);
+                  }}
+                  onClick={handleMoreClick}
+                  ref={moreRef}
+                >
+                  <MoreVert size={15} opacity={0.9} />
+                </Button>
+              )}
               <MoreMenu
                 setIsOpen={setMoreMenuOpen}
                 buttonRef={moreRef}
@@ -239,6 +344,12 @@ const NoteTools = ({
           )}
         </div>
       </div>
+      <input
+        ref={inputRef}
+        style={{ display: "none" }}
+        type="file"
+        onChange={handleOnChange}
+      />
     </span>
   );
 };

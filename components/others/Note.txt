@@ -17,6 +17,8 @@ import NoteImagesLayout from "../Tools/NoteImagesLayout";
 import { useSession } from "next-auth/react";
 import CheckMark from "../icons/CheckMark";
 import { motion } from "framer-motion";
+import { Tooltip } from "@mui/material";
+import { useAppContext } from "@/context/AppContext";
 
 const Note = memo(
   ({
@@ -39,6 +41,8 @@ const Note = memo(
     const [opacityTrigger, setOpacityTrigger] = useState(true);
     const [isLoadingImages, setIsLoadingImages] = useState([]);
     const [selected, setSelected] = useState(false);
+    const [buttonHover, setButtonHover] = useState(false);
+    const { slotProps } = useAppContext();
     const isLoading = isLoadingImagesAddNote.includes(note.uuid);
     const noteRef = useRef(null);
     const inputsRef = useRef(null);
@@ -136,19 +140,19 @@ const Note = memo(
 
     const handlePinClick = useCallback(
       async (e) => {
+        setButtonHover(false);
         if (selectedNotes.current) {
           setSelectedNotesIDs([]);
           window.dispatchEvent(new Event("topMenuClose"));
         }
         e.stopPropagation(); // Prevent note click event
         if (!note.isArchived) {
-          const pos = togglePin(note.uuid);
-          console.log("note pos", pos)
+          togglePin(note.uuid);
 
           window.dispatchEvent(new Event("loadingStart"));
 
           try {
-            await NoteUpdateAction("isPinned", !note.isPinned, note.uuid, pos);
+            await NoteUpdateAction("isPinned", !note.isPinned, note.uuid);
           } finally {
             timeoutRef.current = setTimeout(() => {
               window.dispatchEvent(new Event("loadingEnd"));
@@ -183,6 +187,7 @@ const Note = memo(
     }, []);
 
     const handleCheckClick = () => {
+      setButtonHover(false);
       setSelected((prev) => !prev);
 
       if (selected) {
@@ -247,17 +252,35 @@ const Note = memo(
           className="note-wrapper"
           style={{ position: "relative" }}
         >
-          <span
-            style={{ opacity: selected && "1" }}
-            ref={checkRef}
-            className="checkmark"
-            onClick={handleCheckClick}
-          >
-            <CheckMark
-              color={selected ? "rgb(111, 111, 111)" : note.color}
-              size="23"
-            />
-          </span>
+          {buttonHover ? (
+            <Tooltip slotProps={slotProps} disableInteractive title={selected? "Deselect note": "Select note"}>
+              <span
+                onMouseLeave={() => setButtonHover(false)}
+                style={{ opacity: selected && "1" }}
+                ref={checkRef}
+                className="checkmark"
+                onClick={handleCheckClick}
+              >
+                <CheckMark
+                  color={selected ? "rgb(111, 111, 111)" : note.color}
+                  size="23"
+                />
+              </span>
+            </Tooltip>
+          ) : (
+            <span
+              onMouseMove={() => setButtonHover(true)}
+              style={{ opacity: selected && "1" }}
+              ref={checkRef}
+              className="checkmark"
+              onClick={handleCheckClick}
+            >
+              <CheckMark
+                color={selected ? "rgb(111, 111, 111)" : note.color}
+                size="23"
+              />
+            </span>
+          )}
           <div
             style={{
               ...noteStyle,
@@ -276,7 +299,6 @@ const Note = memo(
             onClick={handleNoteClick}
             ref={noteRef}
           >
-            <button style={{width: "20%", marginLeft: "2%"}} onClick={()=> console.log("pos", note.position)}>pos</button>
             <div ref={noteStuffRef}>
               {note.images.length === 0 && <div className="corner" />}
               <div
@@ -286,17 +308,40 @@ const Note = memo(
                 }}
                 className="pin"
               >
-                {!note.isTrash && (
-                  <Button onClick={handlePinClick}>
-                    <PinIcon
-                      pinColor={note.color}
-                      color={note.isPinned ? "#212121" : "transparent"}
-                      opacity={0.8}
-                      rotation={note.isPinned ? "0deg" : "40deg"}
-                      images={note.images.length !== 0}
-                    />
-                  </Button>
-                )}
+                {!note.isTrash &&
+                  (buttonHover ? (
+                    <Tooltip
+                      slotProps={slotProps}
+                      disableInteractive
+                      title={note.isPinned? "Unpin note": "Pin note"}
+                    >
+                      <Button
+                        onMouseLeave={() => setButtonHover(false)}
+                        onClick={handlePinClick}
+                      >
+                        <PinIcon
+                          pinColor={note.color}
+                          color={note.isPinned ? "#212121" : "transparent"}
+                          opacity={0.8}
+                          rotation={note.isPinned ? "0deg" : "40deg"}
+                          images={note.images.length !== 0}
+                        />
+                      </Button>
+                    </Tooltip>
+                  ) : (
+                    <Button
+                      onMouseMove={() => setButtonHover(true)}
+                      onClick={handlePinClick}
+                    >
+                      <PinIcon
+                        pinColor={note.color}
+                        color={note.isPinned ? "#212121" : "transparent"}
+                        opacity={0.8}
+                        rotation={note.isPinned ? "0deg" : "40deg"}
+                        images={note.images.length !== 0}
+                      />
+                    </Button>
+                  ))}
               </div>
               <div
                 style={{

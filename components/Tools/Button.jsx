@@ -7,9 +7,10 @@ const Button = ({
   disabled,
   className,
   ref,
-  style 
+  style,
+  ...props
 }) => {
-  return <button disabled={disabled} className={`${className} btn`} ref={ref} onClick={onClick} style={style}>{children}</button>;
+  return <button {...props} disabled={disabled} className={`${className} btn`} ref={ref} onClick={onClick} style={style}>{children}</button>;
 };
 
 export default memo(Button);

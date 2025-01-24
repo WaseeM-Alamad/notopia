@@ -5,7 +5,7 @@ const addButton = ({ onClick, ref}) => {
     <svg
       ref={ref}
       onClick={onClick}
-      className="add-button-icon"
+      className="add-button-icon pulse-button"
       width="43"
       height="45"
       viewBox="0 0 53 53"

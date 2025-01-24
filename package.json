@@ -17,6 +17,7 @@
     "@mui/system": "^6.1.7",
     "@supabase/supabase-js": "^2.46.1",
     "@tanstack/react-virtual": "^3.11.2",
+    "@tippyjs/react": "^4.2.6",
     "date-fns": "^4.1.0",
     "framer-motion": "^11.11.17",
     "isotope-layout": "^3.0.6",
@@ -30,6 +31,8 @@
     "react-masonry-component": "^6.3.0",
     "react-masonry-css": "^1.0.16",
     "react-router-dom": "^6.28.0",
+    "react-simple-tooltip": "^2.6.3",
+    "react-tooltip": "^5.28.0",
     "uuid": "^11.0.3"
   }
 }

@@ -49,7 +49,11 @@ const NoteModal = ({
   }, []);
 
   const handleClose = (e, closeRef) => {
-    if (containerRef.current === e.target || closeRef?.current === e.target) {
+    if (
+      containerRef.current === e.target ||
+      closeRef?.current === e.target ||
+      e.key === "Escape"
+    ) {
       setTrigger2(false);
       setTimeout(() => {
         if (isPinned !== note.isPinned) {
@@ -62,30 +66,22 @@ const NoteModal = ({
     }
   };
 
-  useEffect(() => {
-    if (isFirstRun.current === true) {
-      isFirstRun.current = false;
-      return;
+  const setCursorAtEnd = (ref) => {
+    const element = ref?.current;
+    if (element) {
+      element.focus();
+
+      // Wait a bit for focus to apply, then set the cursor at the end
+      setTimeout(() => {
+        const selection = window.getSelection();
+        const range = document.createRange();
+        range.selectNodeContents(element);
+        range.collapse(false); // Move to the end
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }, 0); // Small delay to ensure focus happens first
     }
-    if (isPinned !== note.isPinned) {
-      setNotes((prevNotes) =>
-        prevNotes.map((mapNote) =>
-          mapNote.uuid === note.uuid
-            ? { ...mapNote, updatedAt: new Date() }
-            : mapNote
-        )
-      );
-    }
-  }, [
-    note.title,
-    note.content,
-    note.color,
-    note.labels,
-    isPinned,
-    note.isArchived,
-    note.isTrash,
-    note.images,
-  ]);
+  };
 
   useEffect(() => {
     setTimeout(() => {
@@ -94,22 +90,25 @@ const NoteModal = ({
   }, [trigger]);
 
   useEffect(() => {
+    // console.log("source:", notePos.source)
+    const nav = document.querySelector("nav");
     if (trigger2) {
       if (notePos.source === "note") {
-        contentRef.current.focus();
+        setCursorAtEnd(contentRef);
       } else if (notePos.source === "title") {
-        titleRef.current.focus();
+        setCursorAtEnd(titleRef);
       } else {
-        contentRef.current.focus();
+        setCursorAtEnd(contentRef);
       }
-      if (contentRef.current) contentRef.current.textContent = note.content;
-      if (titleRef.current) titleRef.current.innerText = note.title;
+      if (contentRef?.current) contentRef.current.textContent = note.content;
+      if (titleRef?.current) titleRef.current.innerText = note.title;
       const scrollbarWidth =
         window.innerWidth - document.documentElement.clientWidth;
       document.body.style.overflow = "hidden";
       document.body.style.paddingRight = `${scrollbarWidth}px`;
-      modalRef.current.style.marginLeft = `${0}px`;
-      //marginLeft: trigger2? '0px': "5px",
+      if (modalRef.current) modalRef.current.style.marginLeft = `${0}px`;
+      if (nav) nav.style.marginLeft = `${-scrollbarWidth}px`;
+      if (nav) nav.style.paddingLeft = `${scrollbarWidth}px`;
     } else {
       const scrollbarWidth =
         window.innerWidth - document.documentElement.clientWidth;
@@ -119,19 +118,21 @@ const NoteModal = ({
         modalRef.current.style.marginLeft = `${
           scrollbarWidth === 0 ? 0 : scrollbarWidth - 5
         }px`;
+      if (nav) nav.style.marginLeft = "0px";
+      if (nav) nav.style.paddingLeft = "0px";
     }
     return () => (document.body.style.overflow = "auto"); // Cleanup
   }, [trigger2]);
 
   useEffect(() => {
     const observer = new ResizeObserver(() => {
-      if (modalRef.current) {
-        setWidth(modalRef.current?.offsetWidth);
+      if (modalRef?.current) {
+        setWidth(modalRef?.current?.offsetWidth);
       }
     });
 
-    if (modalRef.current) {
-      observer.observe(modalRef.current);
+    if (modalRef?.current) {
+      observer.observe(modalRef?.current);
     }
 
     return () => {
@@ -167,10 +168,10 @@ const NoteModal = ({
       const text = e.target.innerText;
       const t = text === "\n" ? "" : text;
       setNotes((prevNotes) => {
-      return prevNotes.map((noteItem) =>
-        noteItem.uuid === note.uuid ? { ...noteItem, title: t } : noteItem
-      );
-    });
+        return prevNotes.map((noteItem) =>
+          noteItem.uuid === note.uuid ? { ...noteItem, title: t } : noteItem
+        );
+      });
 
       updateTextDebounced({ title: t, content: note.content });
 
@@ -202,7 +203,7 @@ const NoteModal = ({
   const handleTitleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      contentRef.current.focus();
+      contentRef?.current?.focus();
     } else if (e.shiftKey && e.key === "Enter") {
       e.preventDefault();
       document.execCommand("insertLineBreak");
@@ -230,10 +231,7 @@ const NoteModal = ({
 
   const closeKeyDown = (e) => {
     if (e.key === "Escape") {
-      setTrigger2(false);
-      setTimeout(() => {
-        setTrigger(false);
-      }, 250);
+      handleClose(e);
     }
   };
 
@@ -283,6 +281,11 @@ const NoteModal = ({
             transform: trigger2 && "translate(-50%, -30%)",
             borderRadius: "0.7rem",
             backgroundColor: note.color,
+            border: "solid 1px",
+            borderColor: 
+               note.color === "#FFFFFF"
+              ? "#e0e0e0"
+              : "transparent",
             transition:
               "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), width 0.25s cubic-bezier(0.25, 0.8, 0.25, 1), background-color 0.25s linear",
           }}
@@ -293,7 +296,9 @@ const NoteModal = ({
             className="modal-inputs-container"
             onScroll={handleScroll}
           >
-            {note.images.length === 0 && <div className="modal-corner" />}
+            {note.images.length === 0 && (
+              <div className={trigger2 ? `modal-corner` : `corner`} />
+            )}
             <div className="modal-pin">
               <Button
                 disabled={!trigger2}
@@ -320,7 +325,7 @@ const NoteModal = ({
                 isLoadingImages={isLoadingImages}
                 deleteSource="note"
                 noteImageDelete={noteImageDelete}
-                modalOpen={true}
+                modalOpen={trigger2}
               />
               {isLoading && <div className="linear-loader" />}
             </div>

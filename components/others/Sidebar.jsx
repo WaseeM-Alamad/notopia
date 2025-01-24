@@ -45,18 +45,21 @@ const Sidebar = memo(() => {
 
   const handleAddNote = () => {
     window.dispatchEvent(new Event("openModal"));
+    addButtonRef.current.classList.remove("animate");
+    void addButtonRef.current.offsetWidth;
+    addButtonRef.current.classList.add("animate");
   };
 
   const handleIconClick = (hash, ref) => {
     window.location.hash = hash;
     const rect = ref.current?.getBoundingClientRect();
     const containerRect = ref.current?.parentElement?.getBoundingClientRect(); // parent is .sidebar-icons-container
-    console.log(
-      "top: ",
-      rect.top - containerRect.top,
-      "left: ",
-      rect.left - containerRect.left
-    );
+    // console.log(
+    //   "top: ",
+    //   rect.top - containerRect.top,
+    //   "left: ",
+    //   rect.left - containerRect.left
+    // );
     if (rect && containerRect) {
       setHighlightPosition({
         top: rect.top - containerRect.top, // Adjust top relative to the container
@@ -96,9 +99,9 @@ const Sidebar = memo(() => {
 
     window.addEventListener("hashchange", handleHashChange);
     setTimeout(() => {
-    setMounted(true);  
+      setMounted(true);
     }, 10);
-    
+
     // Cleanup event listener on component unmount
     return () => {
       window.removeEventListener("hashchange", handleHashChange);
@@ -108,8 +111,18 @@ const Sidebar = memo(() => {
   return (
     <>
       <aside className="sidebar">
-        <div style={{display: 'flex', flexDirection: 'column'}}>
-          <AddButton ref={addButtonRef} onClick={handleAddNote} />
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <div
+            ref={addButtonRef}
+            onClick={handleAddNote}
+            className="add-button-icon pulse-button"
+            style={{
+              borderRadius: "50%",
+              display: "flex",
+            }}
+          >
+            <AddButton />
+          </div>
           <div className="sidebar-icons-container">
             <motion.div
               initial={{ y: highlightPosition.top, x: highlightPosition.left }}
