@@ -143,7 +143,6 @@ const Note = memo(
         e.stopPropagation(); // Prevent note click event
         if (!note.isArchived) {
           const pos = togglePin(note.uuid);
-          console.log("note pos", pos)
 
           window.dispatchEvent(new Event("loadingStart"));
 
@@ -273,7 +272,7 @@ const Note = memo(
               outline: `solid 1px ${selected ? "#212121" : "transparent"} `,
             }}
             className="note"
-            onClick={handleNoteClick}
+            // onClick={handleNoteClick}
             ref={noteRef}
           >
             {/* <button style={{width: "20%", marginLeft: "2%"}} onClick={()=> console.log("pos", note.position)}>pos</button> */}
@@ -306,6 +305,7 @@ const Note = memo(
                 }}
                 ref={imagesRef}
               >
+                <div style={{color: "blue", fontWeight: "500"}}> {note.position} </div>
                 <NoteImagesLayout
                   images={note.images}
                   calculateMasonryLayout={calculateLayout}
@@ -315,6 +315,7 @@ const Note = memo(
                   <div className="linear-loader" />
                 )}
               </div>
+              
               {note.images.length === 0 &&
                 !note.title.trim() &&
                 !note.content.trim() && (

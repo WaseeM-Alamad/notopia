@@ -32,11 +32,12 @@ const NoteWrapper = memo(
     selectedNotes,
     handleDragStart,
     handleDragOver,
-    handleDragEnd,
+    isDragging,
   }) => {
     // const { modalOpen, setModalOpen } = useAppContext();
     const [mounted, setMounted] = useState(false);
     const [mountOpacity, setMountOpacity] = useState(false);
+    const timeoutRef = useRef(null);
     useEffect(() => {
       setTimeout(() => {
         setMounted(true);
@@ -63,10 +64,16 @@ const NoteWrapper = memo(
         ref={ref}
         data-pinned={note.isPinned}
         data-position={note.position}
-        draggable={true}
-        onDragStart={(e) => handleDragStart(e, note.uuid, note.isPinned)}
-        onDragOver={(e) => handleDragOver(e, note.uuid, note.isPinned)}
-        onDragEnd={handleDragEnd}
+        draggable={false}
+        onMouseDown={(e) => {
+          if (isDragging) return;
+          handleDragStart(e, note.uuid, note.isPinned);
+        }}
+        onMouseMove={(e) => {
+          if (!isDragging) return;
+          handleDragOver(e, note.uuid, note.isPinned);
+        }}
+        // onDragEnd={handleDragEnd}
         className="grid-item"
         style={{
           width: `${COLUMN_WIDTH}px`,
@@ -263,106 +270,130 @@ const Home = memo(({ notes, setNotes }) => {
 
   const draggedNoteRef = useRef(null);
   const draggedNotePinRef = useRef(null);
+  const ghostElementRef = useRef(null);
   const overNoteRef = useRef(null); // To store the over note UUID
   const lastSwapRef = useRef(0);
+  const [isDragging, setIsDragging] = useState(false);
 
-  const handleDragStart = (e, uuid, isPinned) => {
-    draggedNoteRef.current = uuid; // Store the dragged item's ID
-    draggedNotePinRef.current = isPinned;
-    const draggedElement = e.target;
-    // Make the original item fully invisible
-    draggedElement.style.opacity = "0"; // Hide the original element during drag
-    const draggedHeight = window.getComputedStyle(draggedElement).height;
-    const IntHeight = parseInt(draggedHeight, 10);
-    console.log("height", IntHeight)
+  const handleDragStart = useCallback(
+    (e, uuid, isPinned) => {
+      e.preventDefault();
+      setIsDragging(true);
+      draggedNoteRef.current = uuid;
+      document.body.style.cursor = "move";
+      draggedNotePinRef.current = isPinned;
+      const draggedElement = e.currentTarget;
+      draggedElement.style.opacity = "0";
+      draggedElement.style.transition = "none";
+      const draggedHeight = window.getComputedStyle(draggedElement).height;
+      const IntHeight = Number.parseInt(draggedHeight, 10);
 
-    // Calculate the offset between the cursor and the top-left corner of the dragged element
-    const rect = draggedElement.getBoundingClientRect();
-    const offsetX = e.clientX - rect.left;
-    const offsetY = e.clientY - rect.top;
+      console.log(draggedHeight);
 
-    // Create a new ghost element
-    const ghostElement = draggedElement.cloneNode(true);
-    const ghostStyle = ghostElement.children[0].children[0].children[1];
-    ghostElement.style.position = "fixed";
-    ghostElement.style.pointerEvents = "none";
-    ghostStyle.style.height = `${IntHeight + 20}px`;
-    ghostElement.style.zIndex = "9999";
-    ghostElement.style.opacity = "1";
-    ghostElement.style.display = "none";
-    ghostElement.style.borderRadius = "0.8rem";
-    ghostElement.style.boxShadow = "2px 1px 22px 0px rgba(112,112,112,0.8)";
-    ghostElement.style.transform = `translate(-${offsetX}px, -${offsetY}px)`; // Apply offset
-    document.body.appendChild(ghostElement);
+      const rect = draggedElement.getBoundingClientRect();
+      const offsetX = e.clientX - rect.left;
+      const offsetY = e.clientY - rect.top;
 
-    // Hide the default drag image
-    const dragImage = new Image();
-    dragImage.src = '';
-    e.dataTransfer.setDragImage(dragImage, 0, 0);
+      const ghostElement = draggedElement.cloneNode(true);
+      const ghostStyle = ghostElement.children[0].children[0].children[1];
+      ghostElement.style.position = "fixed";
+      ghostElement.style.pointerEvents = "none";
+      ghostStyle.style.height = `${IntHeight + 20}px`;
+      ghostElement.style.zIndex = "9999";
+      ghostElement.style.opacity = "0.95";
+      ghostElement.style.borderRadius = "0.8rem";
+      ghostElement.style.boxShadow = "2px 1px 22px 0px rgba(112,112,112,0.8)";
+      ghostElement.style.transform = `none`;
+      ghostElement.style.left = `${rect.left}px`; // Set initial left
+      ghostElement.style.top = `${rect.top}px`; // Set initial top
+      document.body.appendChild(ghostElement);
+      ghostElementRef.current = ghostElement;
 
-    // Update ghost position to follow the cursor, accounting for the offset
-    const updateGhostPosition = (moveEvent) => {
-      ghostElement.style.left = `${moveEvent.clientX}px`;
-      ghostElement.style.top = `${moveEvent.clientY}px`;
-    };
+      const updateGhostPosition = (moveEvent) => {
+        ghostElement.style.left = `${moveEvent.clientX - offsetX}px`; // Update left with offset
+        ghostElement.style.top = `${moveEvent.clientY - offsetY}px`; // Update top with offset
+      };
 
-    setTimeout(() => {
-      ghostElement.style.display = "";
-    }, 0);
+      document.addEventListener("mousemove", updateGhostPosition);
 
-    // Attach the mousemove event listener
-    document.addEventListener("dragover", updateGhostPosition);
+      const handleDragEnd = () => {
+        document.body.removeAttribute("style");
+        if (ghostElement && document.body.contains(ghostElement)) {
+          setTimeout(() => {
+            const rect = draggedElement.getBoundingClientRect();
+            ghostElement.style.transition =
+              " all 0.3s cubic-bezier(0.42, 0, 0.58, 1)";
+            ghostElement.style.boxShadow = "none";
+            ghostStyle.style.height = `${IntHeight}px`;
+            ghostElement.style.top = `${rect.top}px`;
+            ghostElement.style.left = `${rect.left}px`;
+            ghostElement.style.opacity = "1";
 
-    // Remove the ghost element and clean up on drag end
-    const removeGhost = () => {
-      if (ghostElement && document.body.contains(ghostElement)) {
-        document.body.removeChild(ghostElement);
-      }
-      document.removeEventListener("dragover", updateGhostPosition); // Clean up the event listener
-    };
+            setTimeout(() => {
+              document.body.removeChild(ghostElement);
+              draggedElement.style.opacity = "1";
+              draggedElement.style.transition =
+                "transform 0.2s ease, opacity 0s";
+              setIsDragging(false);
+            }, 300);
+          }, 30);
+        }
+        document.removeEventListener("mousemove", updateGhostPosition);
+        document.removeEventListener("mouseup", handleDragEnd);
+        draggedNoteRef.current = null;
+        draggedNotePinRef.current = null;
+        calculateLayout();
+      };
 
-    // Cleanup when drag ends
-    e.target.addEventListener("dragend", removeGhost, { once: true });
-  };
+      document.addEventListener("mouseup", handleDragEnd);
+    },
+    [calculateLayout]
+  );
 
-  const handleDragOver = async (e, overUUID, overIsPinned) => {
-    e.preventDefault(); // Allow dropping
+  const handleDragOver = useCallback(async (e, overUUID, overIsPinned) => {
+    e.preventDefault();
     const draggedUUID = draggedNoteRef.current;
     const draggedIsPinned = draggedNotePinRef.current;
-  
-    if (!draggedUUID || draggedUUID === overUUID || draggedIsPinned !== overIsPinned) return;
-  
+    if (
+      !draggedUUID ||
+      draggedUUID === overUUID ||
+      draggedIsPinned !== overIsPinned
+    )
+      return;
+    console.log("over");
+    
+
+    
+
     const now = Date.now();
-    if (now - lastSwapRef.current < 150) return; // Throttle swap rate to avoid jittering
-  
+    if (now - lastSwapRef.current < 150) return;
+
     lastSwapRef.current = now;
-  
+
     let draggedNote, overNote;
-  
-    // Swap the positions of dragged and hovered items
+
     setNotes((prevNotes) => {
       draggedNote = prevNotes.find((note) => note.uuid === draggedUUID);
       overNote = prevNotes.find((note) => note.uuid === overUUID);
-  
+
       if (!draggedNote || !overNote) return prevNotes;
-  
+
       return prevNotes.map((note) => {
         if (note.uuid === draggedUUID) {
-          return { ...note, position: overNote.position }; // Swap dragged note
+          return { ...note, position: overNote.position };
         } else if (note.uuid === overUUID) {
-          return { ...note, position: draggedNote.position }; // Swap hovered note
+          return { ...note, position: draggedNote.position };
         } else {
-          return note; // No change for other notes
+          return note;
         }
       });
     });
-  
-    // After state updates, trigger server actions
+
     if (draggedNote && overNote) {
       try {
         window.dispatchEvent(new Event("loadingStart"));
-        await NoteUpdateAction("position", overNote.position, draggedNote.uuid); // Update dragged note
-        await NoteUpdateAction("position", draggedNote.position, overNote.uuid); // Update hovered note
+        await NoteUpdateAction("position", overNote.position, draggedNote.uuid);
+        await NoteUpdateAction("position", draggedNote.position, overNote.uuid);
         setTimeout(() => {
           window.dispatchEvent(new Event("loadingEnd"));
         }, 800);
@@ -370,14 +401,7 @@ const Home = memo(({ notes, setNotes }) => {
         console.error("Error updating note positions:", error);
       }
     }
-  };
-
-  const handleDragEnd = (e) => {
-    e.target.style.opacity = "1"; // Reset opacity
-    draggedNoteRef.current = null; // Clear dragged item reference
-    draggedNotePinRef.current = null;
-    calculateLayout(); // Recalculate layout after drop
-  };
+  }, []);
 
   return (
     <>
@@ -450,7 +474,7 @@ const Home = memo(({ notes, setNotes }) => {
                   note={note}
                   handleDragStart={handleDragStart}
                   handleDragOver={handleDragOver}
-                  handleDragEnd={handleDragEnd}
+                  isDragging={isDragging}
                   setNotes={setNotes}
                   togglePin={togglePin}
                   isVisible={isLayoutReady}
