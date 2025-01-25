@@ -64,8 +64,8 @@ const NoteWrapper = memo(
         data-pinned={note.isPinned}
         data-position={note.position}
         draggable={true}
-        onDragStart={(e) => handleDragStart(e, note.uuid)}
-        onDragOver={(e) => handleDragOver(e, note.uuid)}
+        onDragStart={(e) => handleDragStart(e, note.uuid, note.isPinned)}
+        onDragOver={(e) => handleDragOver(e, note.uuid, note.isPinned)}
         onDragEnd={handleDragEnd}
         className="grid-item"
         style={{
@@ -73,7 +73,6 @@ const NoteWrapper = memo(
           marginBottom: `${GUTTER}px`,
           transition: `transform ${mounted ? "0.2s" : "0"} ease, opacity 0s`,
           pointerEvents: isVisible ? "auto" : "none",
-          cursor: "grab",
         }}
       >
         <motion.div
@@ -263,20 +262,75 @@ const Home = memo(({ notes, setNotes }) => {
   }, [notes]); // Runs after notes are rendered
 
   const draggedNoteRef = useRef(null);
+  const draggedNotePinRef = useRef(null);
   const overNoteRef = useRef(null); // To store the over note UUID
   const lastSwapRef = useRef(0);
 
-  const handleDragStart = (e, uuid) => {
+  const handleDragStart = (e, uuid, isPinned) => {
     draggedNoteRef.current = uuid; // Store the dragged item's ID
+    draggedNotePinRef.current = isPinned;
     const draggedElement = e.target;
-    draggedElement.style.opacity = "0.5"; // Visual feedback
+    // Make the original item fully invisible
+    draggedElement.style.opacity = "0"; // Hide the original element during drag
+    const draggedHeight = window.getComputedStyle(draggedElement).height;
+    const IntHeight = parseInt(draggedHeight, 10);
+    console.log("height", IntHeight)
+
+    // Calculate the offset between the cursor and the top-left corner of the dragged element
+    const rect = draggedElement.getBoundingClientRect();
+    const offsetX = e.clientX - rect.left;
+    const offsetY = e.clientY - rect.top;
+
+    // Create a new ghost element
+    const ghostElement = draggedElement.cloneNode(true);
+    const ghostStyle = ghostElement.children[0].children[0].children[1];
+    ghostElement.style.position = "fixed";
+    ghostElement.style.pointerEvents = "none";
+    ghostStyle.style.height = `${IntHeight + 20}px`;
+    ghostElement.style.zIndex = "9999";
+    ghostElement.style.opacity = "1";
+    ghostElement.style.display = "none";
+    ghostElement.style.borderRadius = "0.8rem";
+    ghostElement.style.boxShadow = "2px 1px 22px 0px rgba(112,112,112,0.8)";
+    ghostElement.style.transform = `translate(-${offsetX}px, -${offsetY}px)`; // Apply offset
+    document.body.appendChild(ghostElement);
+
+    // Hide the default drag image
+    const dragImage = new Image();
+    dragImage.src = '';
+    e.dataTransfer.setDragImage(dragImage, 0, 0);
+
+    // Update ghost position to follow the cursor, accounting for the offset
+    const updateGhostPosition = (moveEvent) => {
+      ghostElement.style.left = `${moveEvent.clientX}px`;
+      ghostElement.style.top = `${moveEvent.clientY}px`;
+    };
+
+    setTimeout(() => {
+      ghostElement.style.display = "";
+    }, 0);
+
+    // Attach the mousemove event listener
+    document.addEventListener("dragover", updateGhostPosition);
+
+    // Remove the ghost element and clean up on drag end
+    const removeGhost = () => {
+      if (ghostElement && document.body.contains(ghostElement)) {
+        document.body.removeChild(ghostElement);
+      }
+      document.removeEventListener("dragover", updateGhostPosition); // Clean up the event listener
+    };
+
+    // Cleanup when drag ends
+    e.target.addEventListener("dragend", removeGhost, { once: true });
   };
 
-  const handleDragOver = async (e, overUUID) => {
+  const handleDragOver = async (e, overUUID, overIsPinned) => {
     e.preventDefault(); // Allow dropping
     const draggedUUID = draggedNoteRef.current;
+    const draggedIsPinned = draggedNotePinRef.current;
   
-    if (!draggedUUID || draggedUUID === overUUID) return;
+    if (!draggedUUID || draggedUUID === overUUID || draggedIsPinned !== overIsPinned) return;
   
     const now = Date.now();
     if (now - lastSwapRef.current < 150) return; // Throttle swap rate to avoid jittering
@@ -321,6 +375,7 @@ const Home = memo(({ notes, setNotes }) => {
   const handleDragEnd = (e) => {
     e.target.style.opacity = "1"; // Reset opacity
     draggedNoteRef.current = null; // Clear dragged item reference
+    draggedNotePinRef.current = null;
     calculateLayout(); // Recalculate layout after drop
   };
 

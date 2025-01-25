@@ -276,7 +276,7 @@ const Note = memo(
             onClick={handleNoteClick}
             ref={noteRef}
           >
-            <button style={{width: "20%", marginLeft: "2%"}} onClick={()=> console.log("pos", note.position)}>pos</button>
+            {/* <button style={{width: "20%", marginLeft: "2%"}} onClick={()=> console.log("pos", note.position)}>pos</button> */}
             <div ref={noteStuffRef}>
               {note.images.length === 0 && <div className="corner" />}
               <div
