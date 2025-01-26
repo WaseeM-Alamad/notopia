@@ -27,6 +27,7 @@ const Note = memo(
     isLoadingImagesAddNote = [],
     setSelectedNotesIDs,
     selectedNotes,
+    localIsDragging,
   }) => {
     const { data: session } = useSession();
     const userID = session?.user?.id;
@@ -272,7 +273,8 @@ const Note = memo(
               outline: `solid 1px ${selected ? "#212121" : "transparent"} `,
             }}
             className="note"
-            // onClick={handleNoteClick}
+            data-isdragging={localIsDragging}
+            onClick={handleNoteClick}
             ref={noteRef}
           >
             {/* <button style={{width: "20%", marginLeft: "2%"}} onClick={()=> console.log("pos", note.position)}>pos</button> */}
@@ -305,7 +307,7 @@ const Note = memo(
                 }}
                 ref={imagesRef}
               >
-                <div style={{color: "blue", fontWeight: "500"}}> {note.position} </div>
+                {/* <div style={{color: "blue", fontWeight: "500"}}> {note.position} </div> */}
                 <NoteImagesLayout
                   images={note.images}
                   calculateMasonryLayout={calculateLayout}

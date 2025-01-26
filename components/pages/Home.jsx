@@ -32,7 +32,6 @@ const NoteWrapper = memo(
     selectedNotes,
     handleDragStart,
     handleDragOver,
-    isDragging,
   }) => {
     // const { modalOpen, setModalOpen } = useAppContext();
     const [mounted, setMounted] = useState(false);
@@ -43,10 +42,6 @@ const NoteWrapper = memo(
         setMounted(true);
       }, 100);
     }, []);
-
-    // useEffect(() => {
-    // if (!modalOpen) setMountOpacity(true);
-    // }, [modalOpen]);
 
     useEffect(() => {
       const handler = () => {
@@ -64,16 +59,12 @@ const NoteWrapper = memo(
         ref={ref}
         data-pinned={note.isPinned}
         data-position={note.position}
-        draggable={false}
         onMouseDown={(e) => {
-          if (isDragging) return;
           handleDragStart(e, note.uuid, note.isPinned);
         }}
-        onMouseMove={(e) => {
-          if (!isDragging) return;
+        onMouseEnter={(e) => {
           handleDragOver(e, note.uuid, note.isPinned);
         }}
-        // onDragEnd={handleDragEnd}
         className="grid-item"
         style={{
           width: `${COLUMN_WIDTH}px`,
@@ -273,18 +264,21 @@ const Home = memo(({ notes, setNotes }) => {
   const ghostElementRef = useRef(null);
   const overNoteRef = useRef(null); // To store the over note UUID
   const lastSwapRef = useRef(0);
-  const [isDragging, setIsDragging] = useState(false);
 
   const handleDragStart = useCallback(
     (e, uuid, isPinned) => {
-      e.preventDefault();
-      setIsDragging(true);
+      // e.preventDefault();
+      if (draggedNoteRef.current) {
+        return;
+      }
+
       draggedNoteRef.current = uuid;
-      document.body.style.cursor = "move";
+      document.body.classList.add("dragging");
       draggedNotePinRef.current = isPinned;
       const draggedElement = e.currentTarget;
       draggedElement.style.opacity = "0";
       draggedElement.style.transition = "none";
+      draggedElement.style.pointerEvents = "none";
       const draggedHeight = window.getComputedStyle(draggedElement).height;
       const IntHeight = Number.parseInt(draggedHeight, 10);
 
@@ -294,15 +288,17 @@ const Home = memo(({ notes, setNotes }) => {
       const offsetX = e.clientX - rect.left;
       const offsetY = e.clientY - rect.top;
 
-      const ghostElement = draggedElement.cloneNode(true);
-      const ghostStyle = ghostElement.children[0].children[0].children[1];
+      const ghostElement =
+        draggedElement.children[0].children[0].children[1].cloneNode(true);
       ghostElement.style.position = "fixed";
-      ghostElement.style.pointerEvents = "none";
-      ghostStyle.style.height = `${IntHeight + 20}px`;
+      // ghostElement.style.height = `${IntHeight + 25}px`;
       ghostElement.style.zIndex = "9999";
-      ghostElement.style.opacity = "0.95";
+      ghostElement.style.opacity = "0.97";
+      ghostElement.style.pointerEvents = "none";
+      ghostElement.style.transition = "none";
+      ghostElement.style.cursor = "move";
       ghostElement.style.borderRadius = "0.8rem";
-      ghostElement.style.boxShadow = "2px 1px 22px 0px rgba(112,112,112,0.8)";
+      ghostElement.style.boxShadow = "2px 1px 25px -3px rgba(112,112,112,0.8)";
       ghostElement.style.transform = `none`;
       ghostElement.style.left = `${rect.left}px`; // Set initial left
       ghostElement.style.top = `${rect.top}px`; // Set initial top
@@ -317,14 +313,14 @@ const Home = memo(({ notes, setNotes }) => {
       document.addEventListener("mousemove", updateGhostPosition);
 
       const handleDragEnd = () => {
-        document.body.removeAttribute("style");
         if (ghostElement && document.body.contains(ghostElement)) {
           setTimeout(() => {
             const rect = draggedElement.getBoundingClientRect();
             ghostElement.style.transition =
-              " all 0.3s cubic-bezier(0.42, 0, 0.58, 1)";
+              " all 0.25s cubic-bezier(0.52, 0, 0.18, 1), height 0.1s ";
             ghostElement.style.boxShadow = "none";
-            ghostStyle.style.height = `${IntHeight}px`;
+            ghostElement.style.pointerEvents = "auto";
+            // ghostElement.style.height = `${IntHeight}px`;
             ghostElement.style.top = `${rect.top}px`;
             ghostElement.style.left = `${rect.left}px`;
             ghostElement.style.opacity = "1";
@@ -334,13 +330,15 @@ const Home = memo(({ notes, setNotes }) => {
               draggedElement.style.opacity = "1";
               draggedElement.style.transition =
                 "transform 0.2s ease, opacity 0s";
-              setIsDragging(false);
-            }, 300);
+              draggedElement.style.pointerEvents = "all";
+              document.body.classList.remove("dragging");
+              draggedNoteRef.current = null;
+            }, 250);
           }, 30);
         }
         document.removeEventListener("mousemove", updateGhostPosition);
         document.removeEventListener("mouseup", handleDragEnd);
-        draggedNoteRef.current = null;
+
         draggedNotePinRef.current = null;
         calculateLayout();
       };
@@ -358,12 +356,10 @@ const Home = memo(({ notes, setNotes }) => {
       !draggedUUID ||
       draggedUUID === overUUID ||
       draggedIsPinned !== overIsPinned
-    )
+    ) {
       return;
+    }
     console.log("over");
-    
-
-    
 
     const now = Date.now();
     if (now - lastSwapRef.current < 150) return;
@@ -389,7 +385,7 @@ const Home = memo(({ notes, setNotes }) => {
       });
     });
 
-    if (draggedNote && overNote) {
+    if (draggedNote && overNote && draggedNote.position !== overNote.position) {
       try {
         window.dispatchEvent(new Event("loadingStart"));
         await NoteUpdateAction("position", overNote.position, draggedNote.uuid);
@@ -474,7 +470,6 @@ const Home = memo(({ notes, setNotes }) => {
                   note={note}
                   handleDragStart={handleDragStart}
                   handleDragOver={handleDragOver}
-                  isDragging={isDragging}
                   setNotes={setNotes}
                   togglePin={togglePin}
                   isVisible={isLayoutReady}

@@ -56,7 +56,7 @@ body {
   justify-content: flex-start;
   align-items: center;
   padding-right: 2.4rem;
-  
+
   margin-top: 1rem;
   user-select: none;
   transition: all 1.2s ease;
@@ -192,7 +192,6 @@ img {
   opacity: 0.85;
 }
 
-
 .top-menu {
   position: fixed;
   display: flex;
@@ -211,7 +210,6 @@ img {
   margin-right: 27px;
   gap: 20px;
 }
-
 
 .menu {
   position: fixed;
@@ -260,4 +258,32 @@ img {
   justify-content: center;
   font-weight: 600;
   gap: 8px;
+}
+
+.dragging * {
+  cursor: move !important;
+}
+
+.dashed-border {
+  border-radius: 0.7rem;
+  background: linear-gradient(90deg, #212121 50%, transparent 0) repeat-x,
+    linear-gradient(90deg, #212121 50%, transparent 0) repeat-x,
+    linear-gradient(0deg, #212121 50%, transparent 0) repeat-y,
+    linear-gradient(0deg, #212121 50%, transparent 0) repeat-y;
+  background-size: 9px 3px, 9px 3px, 3px 9px, 3px 9px; /* Increase thickness and spacing */
+  background-position: 0 0, 0 100%, 0 0, 100% 0;
+  cursor: pointer;
+
+  animation: linearGradientMove 0.3s infinite linear;
+}
+
+
+@keyframes linearGradientMove {
+  100% {
+    background-position: 8px 0, -8px 100%, 0 -8px, 100% 8px; /* Match the spacing and thickness */
+  }
+}
+
+.relative {
+  position: relative;
 }
