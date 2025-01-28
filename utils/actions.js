@@ -17,7 +17,8 @@ export const fetchNotes = async () => {
   try {
     await connectDB();
     const notes = await Note.find({ creator: userID }).sort({ createdAt: -1 });
-
+    const user = await User.findById(userID);
+    const order = user.notesOrder;
     // Manually serialize the MongoDB-specific fields
     const serializedNotes = notes.map((note) => ({
       _id: note._id.toString(), // Convert ObjectId to string
@@ -45,6 +46,7 @@ export const fetchNotes = async () => {
       success: true,
       status: 200,
       data: serializedNotes,
+      order: order,
     };
   } catch (error) {
     console.log("Error fetching notes:", error);
@@ -53,6 +55,9 @@ export const fetchNotes = async () => {
 };
 
 export const createNoteAction = async (note) => {
+  if (!session) {
+    return new Response("Unauthorized", { status: 401 });
+  }
   const starter =
     "https://fopkycgspstkfctmhyyq.supabase.co/storage/v1/object/public/notopia";
   const images = note.images.map((image) => ({
@@ -73,6 +78,7 @@ export const createNoteAction = async (note) => {
     const newNote = new Note(noteData);
     await newNote.save();
     user.notes.push(newNote._id);
+    user.notesOrder.unshift(newNote.uuid);
 
     await user.save();
 
@@ -87,25 +93,20 @@ export const createNoteAction = async (note) => {
   }
 };
 
-export const NoteUpdateAction = async (type, value, noteUUID, newPosition) => {
+export const NoteUpdateAction = async (type, value, noteUUID) => {
+  if (!session) {
+    return new Response("Unauthorized", { status: 401 });
+  }
   try {
     await connectDB();
     if (type === "images") {
       await Note.updateOne({ uuid: noteUUID }, { $push: { images: value } });
-    } 
-      else if (type === "isArchived") {
+    } else if (type === "isArchived") {
       await Note.updateOne(
         { uuid: noteUUID },
         { $set: { [type]: value, isPinned: false } }
       );
-    }
-    else if (type === "isPinned"){
-      await Note.updateOne({ uuid: noteUUID }, { $set: { [type]: value, position: newPosition } });
-    }
-    else if (type === "position"){
-      await Note.updateOne({uuid: noteUUID}, {$set: {[type]: value}});
-    }
-    else {
+    } else {
       await Note.updateOne({ uuid: noteUUID }, { $set: { [type]: value } });
     }
   } catch (error) {
@@ -115,6 +116,9 @@ export const NoteUpdateAction = async (type, value, noteUUID, newPosition) => {
 };
 
 export const NoteTextUpdateAction = async (values, noteUUID) => {
+  if (!session) {
+    return new Response("Unauthorized", { status: 401 });
+  }
   try {
     await connectDB();
 
@@ -129,6 +133,9 @@ export const NoteTextUpdateAction = async (values, noteUUID) => {
 };
 
 export const NoteImageDeleteAction = async (filePath, noteUUID, imageID) => {
+  if (!session) {
+    return new Response("Unauthorized", { status: 401 });
+  }
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.NEXT_SUPABASE_SERVICE_ROLE_KEY
@@ -147,6 +154,9 @@ export const NoteImageDeleteAction = async (filePath, noteUUID, imageID) => {
 };
 
 export const DeleteNoteAction = async (noteUUID) => {
+  if (!session) {
+    return new Response("Unauthorized", { status: 401 });
+  }
   const starter =
     "https://fopkycgspstkfctmhyyq.supabase.co/storage/v1/object/public/notopia";
   try {
@@ -161,5 +171,28 @@ export const DeleteNoteAction = async (noteUUID) => {
   } catch (error) {
     console.log("Error deleting note.", error);
     return { success: false, message: "Error deleting note" };
+  }
+};
+
+export const updateOrderAction = async (data) => {
+  if (!session) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
+  try {
+    await connectDB();
+    const user = await User.findById(userID);
+    const { notesOrder } = user;
+    // console.log(user)
+
+    const updatedOrder = [...notesOrder];
+    const [draggedNote] = updatedOrder.splice(data.initialIndex, 1);
+    updatedOrder.splice(data.endIndex, 0, draggedNote);
+
+    user.notesOrder = updatedOrder;
+
+    await user.save();
+  } catch (error) {
+    console.log(error);
   }
 };

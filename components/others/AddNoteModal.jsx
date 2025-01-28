@@ -13,8 +13,8 @@ import { createClient } from "@supabase/supabase-js";
 
 const AddNoteModal = ({
   setNotes,
+  setOrder,
   lastAddedNoteRef,
-  smallestPos,
   setIsLoadingImages,
 }) => {
   const { data: session } = useSession();
@@ -178,8 +178,10 @@ const AddNoteModal = ({
           console.log("Couldn't fetch note position on add.");
         }
 
+        const newUUID = uuid();
+
         const newNote = {
-          uuid: uuid(),
+          uuid: newUUID,
           title: note.title,
           content: note.content,
           color: note.color,
@@ -190,9 +192,13 @@ const AddNoteModal = ({
           createdAt: new Date(),
           updatedAt: new Date(),
           images: note.images,
-          position: smallestPos - 1,
         };
-        setNotes((prev) => [newNote, ...prev]);
+        setNotes((prev) => {
+          const newNotes = new Map(prev); // Create a shallow copy of the current map
+          newNotes.set(newNote.uuid, newNote); // Add the new note with its unique ID
+          return newNotes; // Return the updated map
+        });
+        setOrder((prevOrder) => [newUUID, ...prevOrder]);
         window.dispatchEvent(new Event("loadingStart"));
         if (newNote.images.length > 0) {
           setIsLoadingImages((prev) => [...prev, newNote.uuid]);
@@ -268,8 +274,7 @@ const AddNoteModal = ({
   };
 
   const insert = async () => {
-    let newPosition = smallestPos - 1;
-    for (let i = 0; i < 70; i++) {
+    for (let i = 0; i < 130; i++) {
       const newNote = {
         uuid: uuid(),
         title: note.title,
@@ -282,10 +287,8 @@ const AddNoteModal = ({
         createdAt: new Date(),
         updatedAt: new Date(),
         images: note.images,
-        position: newPosition,
       };
       createNoteAction(newNote);
-      newPosition -= 1;
     }
   };
 

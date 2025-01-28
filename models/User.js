@@ -16,6 +16,9 @@ const UserSchema = new Schema({
   notes: [{
     type: Schema.Types.ObjectId,
     ref: 'Note'
+  }],
+  notesOrder: [{
+    type: String
   }]
 });
 

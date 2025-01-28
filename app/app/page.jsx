@@ -15,7 +15,8 @@ import React, { memo, useEffect, useState } from "react";
 
 const page = () => {
   const [currentPage, setCurrentPage] = useState();
-  const [notes, setNotes] = useState([]);
+  const [notes, setNotes] = useState(new Map());
+  const [order, setOrder] = useState([]);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -38,11 +39,15 @@ const page = () => {
   const getNotes = async () => {
     window.dispatchEvent(new Event("loadingStart"));
     const fetchedNotes = await fetchNotes();
+    // console.log("initial notes", fetchedNotes.data)
     setTimeout(() => {
       window.dispatchEvent(new Event("loadingEnd"));
     }, 800);
 
-    setNotes(fetchedNotes.data);
+    const notesMap = new Map(fetchedNotes.data.map(note => [note.uuid, note]));
+    setNotes(notesMap);
+    setOrder(fetchedNotes.order)
+    console.log("order", order)
   };
 
   useEffect(() => {
@@ -97,12 +102,12 @@ const page = () => {
     if (currentPage?.includes("trash"))
       return <Trash notes={notes} setNotes={setNotes} />;
     else if (currentPage?.includes("home"))
-      return <Home notes={notes} setNotes={setNotes} />;
+      return <Home notes={notes} setNotes={setNotes} order={order} setOrder={setOrder} />;
     else if (currentPage?.includes("folders")) return <Folders />;
     else if (currentPage?.includes("archive"))
       return <Archive notes={notes} setNotes={setNotes} />;
     else if (currentPage?.includes("reminders")) return <Reminders />;
-    else return <Home notes={notes} setNotes={setNotes} />;
+    else return <Home notes={notes} setNotes={setNotes} order={order} setOrder={setOrder} />;
   };
 
   return (

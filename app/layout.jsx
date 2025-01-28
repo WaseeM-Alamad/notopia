@@ -25,7 +25,6 @@ const MainLayout = async ({ children }) => {
           />
         </head>
         <body suppressHydrationWarning>
-          <AppProvider>
             {session && (
               <>
                 <Navbar user={session?.user} />
@@ -34,7 +33,6 @@ const MainLayout = async ({ children }) => {
             )}
 
             {children}
-          </AppProvider>
           <div id="profileMenu"></div>
           <div id="colorMenuPortal"></div>
           <div id="modal-portal"></div>

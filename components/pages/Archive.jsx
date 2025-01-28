@@ -10,7 +10,6 @@ import React, {
 import "@/assets/styles/home.css";
 import Note from "../others/Note";
 import AddNoteModal from "../others/AddNoteModal";
-import { useAppContext } from "@/context/AppContext";
 import { motion } from "framer-motion";
 import TopMenuHome from "../others/topMenu/TopMenuHome";
 
@@ -19,7 +18,6 @@ const GUTTER = 15;
 
 const NoteWrapper = memo(
   ({ note, setNotes, isVisible, ref, setSelectedNotesIDs, selectedNotes }) => {
-    const { modalOpen } = useAppContext();
     const [mounted, setMounted] = useState(false);
     const [mountOpacity, setMountOpacity] = useState(false);
 
@@ -29,9 +27,6 @@ const NoteWrapper = memo(
       }, 100);
     }, []);
 
-    useEffect(() => {
-      if (!modalOpen) setMountOpacity(true);
-    }, [modalOpen]);
 
     return (
       <motion.div

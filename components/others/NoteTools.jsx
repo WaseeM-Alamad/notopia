@@ -13,7 +13,7 @@ import { createClient } from "@supabase/supabase-js";
 import MoreMenu from "./MoreMenu";
 import DeleteIcon from "../icons/DeleteIcon";
 import RestoreIcon from "../icons/RestoreIcon";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 
 const NoteTools = ({
   images,
@@ -167,7 +167,11 @@ const NoteTools = ({
         transition: "all 0.3s ease",
       }}
     >
-      <div
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
         style={{
           opacity: (colorMenuOpen || moreMenuOpen) && "1",
           backgroundColor: images && note.color,
@@ -238,7 +242,7 @@ const NoteTools = ({
             </>
           )}
         </div>
-      </div>
+      </motion.div>
     </span>
   );
 };

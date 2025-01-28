@@ -16,7 +16,7 @@ import Button from "../Tools/Button";
 import NoteImagesLayout from "../Tools/NoteImagesLayout";
 import { useSession } from "next-auth/react";
 import CheckMark from "../icons/CheckMark";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 
 const Note = memo(
   ({
@@ -28,6 +28,7 @@ const Note = memo(
     setSelectedNotesIDs,
     selectedNotes,
     localIsDragging,
+    isDragging,
   }) => {
     const { data: session } = useSession();
     const userID = session?.user?.id;
@@ -40,6 +41,7 @@ const Note = memo(
     const [opacityTrigger, setOpacityTrigger] = useState(true);
     const [isLoadingImages, setIsLoadingImages] = useState([]);
     const [selected, setSelected] = useState(false);
+    const [isHovered, setIsHovered] = useState(false);
     const isLoading = isLoadingImagesAddNote.includes(note.uuid);
     const noteRef = useRef(null);
     const inputsRef = useRef(null);
@@ -143,12 +145,12 @@ const Note = memo(
         }
         e.stopPropagation(); // Prevent note click event
         if (!note.isArchived) {
-          const pos = togglePin(note.uuid);
+          togglePin(note);
 
           window.dispatchEvent(new Event("loadingStart"));
 
           try {
-            await NoteUpdateAction("isPinned", !note.isPinned, note.uuid, pos);
+            await NoteUpdateAction("isPinned", !note.isPinned, note.uuid);
           } finally {
             timeoutRef.current = setTimeout(() => {
               window.dispatchEvent(new Event("loadingEnd"));
@@ -244,6 +246,14 @@ const Note = memo(
               );
             }
           }}
+          onMouseEnter={() => {
+            if (isDragging.current) return
+            setIsHovered(true);
+          }}
+          onMouseLeave={() => {
+            if (menuIsOpen) return;
+            setIsHovered(false);
+          }}
           className="note-wrapper"
           style={{ position: "relative" }}
         >
@@ -277,7 +287,6 @@ const Note = memo(
             onClick={handleNoteClick}
             ref={noteRef}
           >
-            {/* <button style={{width: "20%", marginLeft: "2%"}} onClick={()=> console.log("pos", note.position)}>pos</button> */}
             <div ref={noteStuffRef}>
               {note.images.length === 0 && <div className="corner" />}
               <div
@@ -307,7 +316,6 @@ const Note = memo(
                 }}
                 ref={imagesRef}
               >
-                {/* <div style={{color: "blue", fontWeight: "500"}}> {note.position} </div> */}
                 <NoteImagesLayout
                   images={note.images}
                   calculateMasonryLayout={calculateLayout}
@@ -317,7 +325,7 @@ const Note = memo(
                   <div className="linear-loader" />
                 )}
               </div>
-              
+
               {note.images.length === 0 &&
                 !note.title.trim() &&
                 !note.content.trim() && (
@@ -336,19 +344,23 @@ const Note = memo(
                 )}
               </div>
             </div>
-            <NoteTools
-              colorMenuOpen={menuIsOpen}
-              setColorMenuOpen={handleMenuIsOpenChange}
-              setNotes={setNotes}
-              images={note.images.length !== 0}
-              note={note}
-              togglePin={togglePin}
-              setIsLoadingImages={setIsLoadingImages}
-              userID={userID}
-              setLocalIsArchived={setLocalIsArchived}
-              setLocalIsTrash={setLocalIsTrash}
-              setIsNoteDeleted={setIsNoteDeleted}
-            />
+            <AnimatePresence>
+              {isHovered && (
+                <NoteTools
+                  colorMenuOpen={menuIsOpen}
+                  setColorMenuOpen={handleMenuIsOpenChange}
+                  setNotes={setNotes}
+                  images={note.images.length !== 0}
+                  note={note}
+                  togglePin={togglePin}
+                  setIsLoadingImages={setIsLoadingImages}
+                  userID={userID}
+                  setLocalIsArchived={setLocalIsArchived}
+                  setLocalIsTrash={setLocalIsTrash}
+                  setIsNoteDeleted={setIsNoteDeleted}
+                />
+              )}
+            </AnimatePresence>
           </div>
         </motion.div>
         {modalTrigger && (
