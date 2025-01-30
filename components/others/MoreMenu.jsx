@@ -13,6 +13,7 @@ const MoreMenu = ({
   uuid,
   note,
   setNotes,
+  setOrder,
 }) => {
   const [isClient, setIsClient] = useState();
   const menuRef = useRef(null);
@@ -41,17 +42,17 @@ const MoreMenu = ({
     setIsOpen(false);
     window.dispatchEvent(new Event("loadingStart"));
     await NoteUpdateAction("isTrash", true, uuid);
-    setTimeout(() => {
-      window.dispatchEvent(new Event("loadingEnd"));
-    }, 800);
+    window.dispatchEvent(new Event("loadingEnd"));
   };
 
   const handleMakeCopy = () => {
     const newUUID = generateUUID();
-    setNotes((prevNotes) => [
-      { ...note, isPinned: false, uuid: newUUID },
-      ...prevNotes,
-    ]);
+    setNotes((prev) => {
+      const newNotes = new Map(prev);
+      newNotes.set(newUUID, { ...note, isPinned: false, uuid: newUUID, isArchived: false });
+      return newNotes; // Return the updated map
+    });
+    setOrder((prev) => [newUUID, ...prev]);
     setTimeout(() => {
       window.dispatchEvent(new Event("closeModal"));
     }, 1);
@@ -63,17 +64,14 @@ const MoreMenu = ({
       color: note.color,
       labels: note.labels,
       isPinned: false,
-      isArchived: note.isArchived,
+      isArchived: false,
       isTrash: note.isTrash,
       createdAt: new Date(),
       updatedAt: new Date(),
       images: note.images,
     };
-    createNoteAction(newNote);
-    setTimeout(() => {
-      window.dispatchEvent(new Event("loadingEnd"));
-    }, 800);
-
+    createNoteAction(newNote).then(()=> window.dispatchEvent(new Event("loadingEnd")));
+    
     setIsOpen(false);
   };
 
@@ -96,9 +94,9 @@ const MoreMenu = ({
               borderRadius: "0.4rem",
             }}
             ref={menuRef}
-            className="menu"
+            className="menu not-draggable"
           >
-            <div className="menu-buttons">
+            <div className="menu-buttons not-draggable">
               <div
                 onClick={handleDelete}
                 style={{
@@ -106,7 +104,7 @@ const MoreMenu = ({
                   fontSize: "0.9rem",
                   color: "#3c4043",
                 }}
-                className="menu-btn"
+                className="menu-btn not-draggable"
               >
                 Delete note
               </div>
@@ -116,7 +114,7 @@ const MoreMenu = ({
                   fontSize: "0.9rem",
                   color: "#3c4043",
                 }}
-                className="menu-btn"
+                className="menu-btn not-draggable"
               >
                 Add label
               </div>
@@ -126,7 +124,7 @@ const MoreMenu = ({
                   fontSize: "0.9rem",
                   color: "#3c4043",
                 }}
-                className="menu-btn"
+                className="menu-btn not-draggable"
                 onClick={handleMakeCopy}
               >
                 Make a copy

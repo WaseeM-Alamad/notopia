@@ -17,9 +17,10 @@ const COLUMN_WIDTH = 240;
 const GUTTER = 15;
 
 const NoteWrapper = memo(
-  ({ note, setNotes, isVisible, ref, setSelectedNotesIDs, selectedNotes }) => {
+  ({ note, setNotes, setOrder, isVisible, ref, setSelectedNotesIDs, selectedNotes, index }) => {
     const [mounted, setMounted] = useState(false);
     const [mountOpacity, setMountOpacity] = useState(false);
+    const [modalTrigger, setModalTrigger] = useState(false);
 
     useEffect(() => {
       setTimeout(() => {
@@ -27,6 +28,16 @@ const NoteWrapper = memo(
       }, 100);
     }, []);
 
+    useEffect(() => {
+          const handler = () => {
+            setMountOpacity(true);
+          };
+    
+          window.addEventListener("closeModal", handler);
+          return () => {
+            window.removeEventListener("closeModal", handler);
+          };
+        }, []);
 
     return (
       <motion.div
@@ -43,9 +54,13 @@ const NoteWrapper = memo(
         <Note
           note={note}
           setNotes={setNotes}
+          setOrder={setOrder}
           setSelectedNotesIDs={setSelectedNotesIDs}
           selectedNotes={selectedNotes}
+          modalTrigger={modalTrigger}
+          setModalTrigger={setModalTrigger}
         />
+        {/* <p>{index}</p> */}
       </motion.div>
     );
   }
@@ -53,9 +68,11 @@ const NoteWrapper = memo(
 
 NoteWrapper.displayName = "NoteWrapper";
 
-const Home = memo(({ notes, setNotes }) => {
+const Home = memo(({ notes, setNotes, order, setOrder }) => {
   const [isLayoutReady, setIsLayoutReady] = useState(false);
   const [selectedNotesIDs, setSelectedNotesIDs] = useState([]);
+  const hasDispatched = useRef(false);
+  const isFirstRender = useRef(true);
   const selectedRef = useRef(false);
   const containerRef = useRef(null);
   const resizeTimeoutRef = useRef(null);
@@ -154,6 +171,16 @@ const Home = memo(({ notes, setNotes }) => {
     selectedRef.current = selectedNotesIDs.length > 0;
   }, [selectedNotesIDs]);
 
+  useEffect(() => {
+      if (!hasDispatched.current && !isFirstRender.current) {
+        window.dispatchEvent(new Event("closeModal"));
+        hasDispatched.current = true;
+      }
+      if (isFirstRender.current) {
+        isFirstRender.current = false;
+      }
+    }, [notes]); // Runs after notes are rendered
+
   return (
     <>
       <TopMenuHome
@@ -168,14 +195,17 @@ const Home = memo(({ notes, setNotes }) => {
             visibility: isLayoutReady ? "visible" : "hidden",
           }}
         >
-          {notes.map((note, index) => {
+          {order.map((uuid, index) => {
+            const note = notes.get(uuid);
             if (note.isArchived)
               return (
                 <NoteWrapper
                   key={note.uuid}
                   note={note}
                   setNotes={setNotes}
+                  setOrder={setOrder}
                   isVisible={isLayoutReady}
+                  index={index}
                   setSelectedNotesIDs={setSelectedNotesIDs}
                   selectedNotes={selectedRef}
                 />

@@ -127,6 +127,7 @@ const ColorSelectMenu = forwardRef(
 
     return createPortal(
       <motion.div
+        className="not-draggable"
         ref={setColorMenuRef}
         initial={{ y: 5, opacity: 0 }}
         animate={{
@@ -163,6 +164,7 @@ const ColorSelectMenu = forwardRef(
             onMouseLeave={() => setHoveredColor(null)}
             disabled={!isOpen}
             key={index}
+            className="not-draggable"
             style={{
               outline: `solid 0.1rem ${
                 hoveredColor === color && selectedColor !== color
@@ -208,6 +210,7 @@ const ColorSelectMenu = forwardRef(
                   initial={{ scale: 0.5, opacity: 1 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0, opacity: 0, transition: { duration: 0.2 } }}
+                  className="not-draggable"
                   style={{
                     backgroundColor: "#a142f4",
                     position: "absolute",

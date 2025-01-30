@@ -210,9 +210,7 @@ const AddNoteModal = ({
             prev.filter((id) => id !== newNote.uuid)
           );
         }
-        setTimeout(() => {
           window.dispatchEvent(new Event("loadingEnd"));
-        }, 800);
       }
     }
   };

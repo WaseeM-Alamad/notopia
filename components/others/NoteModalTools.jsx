@@ -16,6 +16,7 @@ import { AnimatePresence } from "framer-motion";
 
 const NoteModalTools = ({
   setNotes,
+  setLocalImages,
   selectedColor,
   setSelectedColor,
   note,
@@ -40,9 +41,7 @@ const NoteModalTools = ({
     );
     window.dispatchEvent(new Event("loadingStart"));
     await NoteUpdateAction("color", color, note.uuid);
-    setTimeout(() => {
-      window.dispatchEvent(new Event("loadingEnd"));
-    }, 800);
+    window.dispatchEvent(new Event("loadingEnd"));
   });
 
   const toggleMenu = useCallback(() => {
@@ -77,16 +76,8 @@ const NoteModalTools = ({
     const file = event.target?.files[0];
     const imageURL = URL.createObjectURL(file);
     const newUUID = uuid();
-    setNotes((prevNotes) =>
-      prevNotes.map((mapNote) =>
-        mapNote.uuid === note.uuid
-          ? {
-              ...mapNote,
-              images: [...mapNote.images, { url: imageURL, uuid: newUUID }],
-            }
-          : mapNote
-      )
-    );
+
+    setLocalImages((prev) => [...prev, { url: imageURL, uuid: newUUID }]);
     inputRef.current.value = "";
     window.dispatchEvent(new Event("loadingStart"));
     const starter =
@@ -96,9 +87,7 @@ const NoteModalTools = ({
     await NoteUpdateAction("images", { url: path, id: newUUID }, note.uuid);
     await UploadImageAction({ file: file, id: newUUID }, note.uuid);
     setIsLoadingImages((prev) => prev.filter((id) => id !== newUUID));
-    setTimeout(() => {
-      window.dispatchEvent(new Event("loadingEnd"));
-    }, 800);
+    window.dispatchEvent(new Event("loadingEnd"));
   };
 
   return (

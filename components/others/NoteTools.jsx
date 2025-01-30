@@ -1,5 +1,9 @@
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
-import { DeleteNoteAction, NoteUpdateAction } from "@/utils/actions";
+import {
+  DeleteNoteAction,
+  NoteUpdateAction,
+  updateOrderAction,
+} from "@/utils/actions";
 import ColorSelectMenu from "./ColorSelectMenu";
 import PersonAdd from "../icons/PersonAdd";
 import ImageIcon from "../icons/ImageIcon";
@@ -18,9 +22,12 @@ import { AnimatePresence, motion } from "framer-motion";
 const NoteTools = ({
   images,
   setNotes,
+  setOrder,
   note,
   colorMenuOpen,
   setColorMenuOpen,
+  moreMenuOpen,
+  setMoreMenuOpen,
   setIsLoadingImages,
   userID,
   setLocalIsArchived,
@@ -28,27 +35,24 @@ const NoteTools = ({
   setIsNoteDeleted,
 }) => {
   const [selectedColor, setSelectedColor] = useState(note.color);
-  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
 
   const colorButtonRef = useRef(null);
   const colorMenuRef = useRef(null);
   const inputRef = useRef(null);
   const moreRef = useRef(null);
 
-  const handleColorClick = useCallback(async (color) => {
-    if (color === selectedColor) return;
-    setSelectedColor(color);
-    // setNote((prev) => ({ ...prev, color: color }));
-    setNotes((prevNotes) =>
-      prevNotes.map((mapNote) =>
-        mapNote.uuid === note.uuid ? { ...mapNote, color: color } : mapNote
-      )
-    );
+  const handleColorClick = useCallback(async (newColor) => {
+    if (newColor === selectedColor) return;
+    setSelectedColor(newColor);
+    const updatedNote = { ...note, color: newColor };
+    setNotes((prev) => {
+      const newNotes = new Map(prev);
+      newNotes.set(note.uuid, updatedNote);
+      return newNotes; // Return the updated map
+    });
     window.dispatchEvent(new Event("loadingStart"));
-    await NoteUpdateAction("color", color, note.uuid);
-    setTimeout(() => {
-      window.dispatchEvent(new Event("loadingEnd"));
-    }, 800);
+    await NoteUpdateAction("color", newColor, note.uuid);
+    window.dispatchEvent(new Event("loadingEnd"));
   });
 
   const [colorMenuPosition, setColorMenuPosition] = useState({
@@ -76,9 +80,7 @@ const NoteTools = ({
     setLocalIsArchived((prev) => !prev);
     window.dispatchEvent(new Event("loadingStart"));
     await NoteUpdateAction("isArchived", !note.isArchived, note.uuid);
-    setTimeout(() => {
-      window.dispatchEvent(new Event("loadingEnd"));
-    }, 800);
+    window.dispatchEvent(new Event("loadingEnd"));
   });
 
   const UploadImageAction = async (image) => {
@@ -109,16 +111,15 @@ const NoteTools = ({
     const file = event.target?.files[0];
     const imageURL = URL.createObjectURL(file);
     const newUUID = uuid();
-    setNotes((prevNotes) =>
-      prevNotes.map((mapNote) =>
-        mapNote.uuid === note.uuid
-          ? {
-              ...mapNote,
-              images: [...mapNote.images, { url: imageURL, uuid: newUUID }],
-            }
-          : mapNote
-      )
-    );
+    const updatedNote = {
+      ...note,
+      images: [...note.images, { url: imageURL, uuid: newUUID }],
+    };
+    setNotes((prev) => {
+      const newNotes = new Map(prev);
+      newNotes.set(note.uuid, updatedNote);
+      return newNotes; // Return the updated map
+    });
     inputRef.current.value = "";
     window.dispatchEvent(new Event("loadingStart"));
     const starter =
@@ -128,9 +129,7 @@ const NoteTools = ({
     await NoteUpdateAction("images", { url: path, uuid: newUUID }, note.uuid);
     await UploadImageAction({ file: file, id: newUUID }, note.uuid);
     setIsLoadingImages((prev) => prev.filter((id) => id !== newUUID));
-    setTimeout(() => {
-      window.dispatchEvent(new Event("loadingEnd"));
-    }, 800);
+    window.dispatchEvent(new Event("loadingEnd"));
   };
 
   const handleMoreClick = useCallback(() => {
@@ -146,18 +145,18 @@ const NoteTools = ({
     setIsNoteDeleted(true);
     window.dispatchEvent(new Event("loadingStart"));
     await DeleteNoteAction(note.uuid);
-    setTimeout(() => {
-      window.dispatchEvent(new Event("loadingEnd"));
-    }, 800);
+    window.dispatchEvent(new Event("loadingEnd"));
   };
 
   const handleRestoreNote = async () => {
     setLocalIsTrash(true);
     window.dispatchEvent(new Event("loadingStart"));
     await NoteUpdateAction("isTrash", false, note.uuid);
-    setTimeout(() => {
-      window.dispatchEvent(new Event("loadingEnd"));
-    }, 800);
+    await updateOrderAction({
+      uuid: note.uuid,
+      type: "shift to start",
+    });
+    window.dispatchEvent(new Event("loadingEnd"));
   };
 
   return (
@@ -229,6 +228,7 @@ const NoteTools = ({
                 uuid={note.uuid}
                 note={note}
                 setNotes={setNotes}
+                setOrder={setOrder}
               />
             </>
           ) : (

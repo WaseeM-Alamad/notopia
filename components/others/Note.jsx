@@ -11,7 +11,7 @@ import "@/assets/styles/LinearLoader.css";
 import NoteTools from "./NoteTools";
 import NoteModal from "./NoteModal";
 import PinIcon from "../icons/PinIcon";
-import { NoteUpdateAction } from "@/utils/actions";
+import { NoteUpdateAction, updateOrderAction } from "@/utils/actions";
 import Button from "../Tools/Button";
 import NoteImagesLayout from "../Tools/NoteImagesLayout";
 import { useSession } from "next-auth/react";
@@ -22,21 +22,25 @@ const Note = memo(
   ({
     note,
     setNotes,
+    setOrder,
     togglePin,
     calculateLayout,
     isLoadingImagesAddNote = [],
     setSelectedNotesIDs,
     selectedNotes,
-    localIsDragging,
     isDragging,
+    modalTrigger,
+    setModalTrigger,
+    index,
   }) => {
     const { data: session } = useSession();
     const userID = session?.user?.id;
     const [localIsArchived, setLocalIsArchived] = useState(false);
     const [localIsTrash, setLocalIsTrash] = useState(false);
+    const [localArchivedPin, setLocalArchivedPin] = useState(false);
     const [isNoteDeleted, setIsNoteDeleted] = useState(false);
-    const [modalTrigger, setModalTrigger] = useState(false);
-    const [menuIsOpen, setMenuIsOpen] = useState(false);
+    const [colorMenuOpen, setColorMenuOpen] = useState(false);
+    const [moreMenuOpen, setMoreMenuOpen] = useState(false);
     const [trigger2, setTrigger2] = useState(false);
     const [opacityTrigger, setOpacityTrigger] = useState(true);
     const [isLoadingImages, setIsLoadingImages] = useState([]);
@@ -45,7 +49,6 @@ const Note = memo(
     const isLoading = isLoadingImagesAddNote.includes(note.uuid);
     const noteRef = useRef(null);
     const inputsRef = useRef(null);
-    const timeoutRef = useRef(null);
     const imagesRef = useRef(null);
     const noteStuffRef = useRef(null);
     const titleRef = useRef(null);
@@ -145,27 +148,26 @@ const Note = memo(
         }
         e.stopPropagation(); // Prevent note click event
         if (!note.isArchived) {
-          togglePin(note);
+          togglePin(note, index);
 
           window.dispatchEvent(new Event("loadingStart"));
 
           try {
             await NoteUpdateAction("isPinned", !note.isPinned, note.uuid);
           } finally {
-            timeoutRef.current = setTimeout(() => {
-              window.dispatchEvent(new Event("loadingEnd"));
-            }, 800);
+            window.dispatchEvent(new Event("loadingEnd"));
           }
         } else {
+          setLocalArchivedPin((prev) => !prev);
           window.dispatchEvent(new Event("loadingStart"));
-
           try {
-            await NoteUpdateAction("isPinned", !note.isPinned, note.uuid);
-            await NoteUpdateAction("isArchived", false, note.uuid);
+            await NoteUpdateAction("pinArchived", true, note.uuid);
+            await updateOrderAction({
+              uuid: note.uuid,
+              type: "shift to start",
+            });
           } finally {
-            timeoutRef.current = setTimeout(() => {
-              window.dispatchEvent(new Event("loadingEnd"));
-            }, 800);
+            window.dispatchEvent(new Event("loadingEnd"));
           }
         }
       },
@@ -173,7 +175,7 @@ const Note = memo(
     );
 
     const handleMenuIsOpenChange = useCallback((value) => {
-      setMenuIsOpen(value);
+      setColorMenuOpen(value);
     }, []);
 
     const handleModalTriggerChange = useCallback((value) => {
@@ -212,46 +214,89 @@ const Note = memo(
       <>
         <motion.div
           animate={{
-            opacity: localIsArchived || localIsTrash || isNoteDeleted ? 0 : 1,
+            opacity:
+              localIsArchived ||
+              localIsTrash ||
+              isNoteDeleted ||
+              localArchivedPin
+                ? 0
+                : 1,
           }}
           transition={{ duration: 0.16 }}
           onAnimationComplete={() => {
             if (localIsArchived) {
-              setNotes((prevNotes) =>
-                prevNotes.map((mapNote) =>
-                  mapNote.uuid === note.uuid
-                    ? {
-                        ...mapNote,
-                        isArchived: !mapNote.isArchived,
-                        isPinned: false,
-                      }
-                    : mapNote
-                )
-              );
+              const updatedNote = {
+                ...note,
+                isArchived: !note.isArchived,
+                isPinned: false,
+              };
+              setNotes((prev) => {
+                const newNotes = new Map(prev);
+                newNotes.set(note.uuid, updatedNote);
+                return newNotes; // Return the updated map
+              });
+              setOrder((prev) => {
+                const filteredOrder = prev.filter((uuid) => uuid !== note.uuid);
+                return [note.uuid, ...filteredOrder];
+              });
+              window.dispatchEvent(new Event("loadingStart"));
+              updateOrderAction({
+                type: "shift to start",
+                uuid: note.uuid,
+              }).then(() => window.dispatchEvent(new Event("loadingEnd")));
             } else if (localIsTrash) {
-              setNotes((prevNotes) =>
-                prevNotes.map((mapNote) =>
-                  mapNote.uuid === note.uuid
-                    ? {
-                        ...mapNote,
-                        isTrash: !mapNote.isTrash,
-                        isPinned: false,
-                      }
-                    : mapNote
-                )
-              );
+              const updatedNote = {
+                ...note,
+                isTrash: !note.isTrash,
+                isPinned: false,
+              };
+              setNotes((prev) => {
+                const newNotes = new Map(prev);
+                newNotes.set(note.uuid, updatedNote);
+                return newNotes; // Return the updated map
+              });
+              setOrder((prev) => {
+                const filteredOrder = prev.filter((uuid) => uuid !== note.uuid);
+                return [note.uuid, ...filteredOrder];
+              });
             } else if (isNoteDeleted) {
-              setNotes((prevNotes) =>
-                prevNotes.filter((mapNote) => mapNote.uuid !== note.uuid)
-              );
+              setNotes((prev) => {
+                const newNotes = new Map(prev);
+                newNotes.delete(note.uuid);
+                return newNotes; // Return the updated map
+              });
+              setOrder((prev) => {
+                const filteredOrder = prev.filter((uuid) => uuid !== note.uuid);
+                return filteredOrder;
+              });
+            } else if (localArchivedPin) {
+              const updatedNote = {
+                ...note,
+                isPinned: true,
+                isArchived: false,
+              };
+              setNotes((prev) => {
+                const newNotes = new Map(prev);
+                newNotes.set(note.uuid, updatedNote);
+                return newNotes;
+              });
+
+              setOrder((prev) => {
+                const filteredOrder = prev.filter((uuid) => uuid !== note.uuid);
+                return [note.uuid, ...filteredOrder];
+              });
             }
           }}
           onMouseEnter={() => {
-            if (isDragging.current) return
-            setIsHovered(true);
+            if (!isDragging) {
+              setIsHovered(true);
+            } else if (isDragging?.current) return;
+            else {
+              setIsHovered(true);
+            }
           }}
           onMouseLeave={() => {
-            if (menuIsOpen) return;
+            if (colorMenuOpen || moreMenuOpen) return;
             setIsHovered(false);
           }}
           className="note-wrapper"
@@ -283,7 +328,6 @@ const Note = memo(
               outline: `solid 1px ${selected ? "#212121" : "transparent"} `,
             }}
             className="note"
-            data-isdragging={localIsDragging}
             onClick={handleNoteClick}
             ref={noteRef}
           >
@@ -291,7 +335,7 @@ const Note = memo(
               {note.images.length === 0 && <div className="corner" />}
               <div
                 style={{
-                  opacity: menuIsOpen ? "1" : undefined,
+                  opacity: colorMenuOpen ? "1" : undefined,
                   opacity: selected && "1",
                 }}
                 className="pin"
@@ -300,9 +344,15 @@ const Note = memo(
                   <Button onClick={handlePinClick}>
                     <PinIcon
                       pinColor={note.color}
-                      color={note.isPinned ? "#212121" : "transparent"}
+                      color={
+                        note.isPinned || localArchivedPin
+                          ? "#212121"
+                          : "transparent"
+                      }
                       opacity={0.8}
-                      rotation={note.isPinned ? "0deg" : "40deg"}
+                      rotation={
+                        note.isPinned || localArchivedPin ? "0deg" : "40deg"
+                      }
                       images={note.images.length !== 0}
                     />
                   </Button>
@@ -347,12 +397,14 @@ const Note = memo(
             <AnimatePresence>
               {isHovered && (
                 <NoteTools
-                  colorMenuOpen={menuIsOpen}
+                  colorMenuOpen={colorMenuOpen}
                   setColorMenuOpen={handleMenuIsOpenChange}
+                  moreMenuOpen={moreMenuOpen}
+                  setMoreMenuOpen={setMoreMenuOpen}
                   setNotes={setNotes}
+                  setOrder={setOrder}
                   images={note.images.length !== 0}
                   note={note}
-                  togglePin={togglePin}
                   setIsLoadingImages={setIsLoadingImages}
                   userID={userID}
                   setLocalIsArchived={setLocalIsArchived}
@@ -374,6 +426,7 @@ const Note = memo(
             setNotes={setNotes}
             calculateLayout={calculateLayout}
             togglePin={togglePin}
+            index={index}
             isLoadingImages={isLoadingImages}
             setIsLoadingImages={setIsLoadingImages}
             isLoading={isLoading}

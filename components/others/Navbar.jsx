@@ -15,7 +15,7 @@ import Logo from "../icons/Logo";
 import ProfileModal from "./ProfileModal";
 
 const Navbar = ({ user }) => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(0);
   const [UpToDatetrigger, setUpToDateTrigger] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -30,8 +30,14 @@ const Navbar = ({ user }) => {
   const menuRef = useRef(null);
 
   useEffect(() => {
-    const startLoading = () => setIsLoading(true);
-    const stopLoading = () => setIsLoading(false);
+    const startLoading = () => setIsLoading((prev) => prev + 1);
+    const stopLoading = () => {
+      setTimeout(() => {
+        setIsLoading((prev) => {
+          if (prev > 0) return prev - 1;
+        });
+      }, 800);
+    };
 
     // Listen for custom events
     window.addEventListener("loadingStart", startLoading);

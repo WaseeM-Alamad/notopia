@@ -106,6 +106,11 @@ export const NoteUpdateAction = async (type, value, noteUUID) => {
         { uuid: noteUUID },
         { $set: { [type]: value, isPinned: false } }
       );
+    } else if (type == "pinArchived") {
+      await Note.updateOne(
+        { uuid: noteUUID },
+        { $set: { isPinned: value, isArchived: false } }
+      );
     } else {
       await Note.updateOne({ uuid: noteUUID }, { $set: { [type]: value } });
     }
@@ -162,7 +167,10 @@ export const DeleteNoteAction = async (noteUUID) => {
   try {
     await connectDB();
     const note = await Note.findOne({ uuid: noteUUID });
-    await User.updateOne({ _id: userID }, { $pull: { notes: note._id } });
+    await User.updateOne(
+      { _id: userID },
+      { $pull: { notes: note._id, notesOrder: noteUUID } }
+    );
     const result = await Note.deleteOne({ uuid: noteUUID });
     if (result.deletedCount === 0) {
       return { success: false, message: "Note not found" };
@@ -185,12 +193,17 @@ export const updateOrderAction = async (data) => {
     const { notesOrder } = user;
     // console.log(user)
 
-    const updatedOrder = [...notesOrder];
-    const [draggedNote] = updatedOrder.splice(data.initialIndex, 1);
-    updatedOrder.splice(data.endIndex, 0, draggedNote);
+    if (data.type === "shift to start") {
+      const order = notesOrder.filter((uuid) => uuid !== data.uuid);
+      const updatedOrder = [data.uuid, ...order];
+      user.notesOrder = updatedOrder;
+    } else {
+      const updatedOrder = [...notesOrder];
+      const [draggedNote] = updatedOrder.splice(data.initialIndex, 1);
+      updatedOrder.splice(data.endIndex, 0, draggedNote);
 
-    user.notesOrder = updatedOrder;
-
+      user.notesOrder = updatedOrder;
+    }
     await user.save();
   } catch (error) {
     console.log(error);

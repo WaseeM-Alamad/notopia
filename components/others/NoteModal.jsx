@@ -34,7 +34,10 @@ const NoteModal = ({
   const [isPinned, setIsPinned] = useState(note.isPinned);
   const [selectedColor, setSelectedColor] = useState(note.color);
   const [isAtBottom, setIsAtBottom] = useState(true);
+  const [localImages, setLocalImages] = useState(note.images);
   const hash = window.location.hash.includes("archive") ? "archive" : "home";
+  const titleTextRef = useRef(note.title);
+  const contentTextRef = useRef(note.content);
   const titleRef = useRef(null);
   const contentRef = useRef(null);
   const containerRef = useRef(null);
@@ -54,10 +57,30 @@ const NoteModal = ({
       closeRef?.current === e.target ||
       e.key === "Escape"
     ) {
-      setTrigger2(false);
+      if (
+        titleTextRef.current !== note.title ||
+        contentTextRef.current !== note.content ||
+        localImages !== note.images
+      ) {
+        setNotes((prev) => {
+          const newNotes = new Map(prev);
+          newNotes.set(note.uuid, {
+            ...note,
+            content: contentTextRef.current,
+            title: titleTextRef.current,
+            images: localImages,
+          });
+          return newNotes;
+        });
+      }
+
+      setTimeout(() => {
+        setTrigger2(false);
+      }, 10);
+
       setTimeout(() => {
         if (isPinned !== note.isPinned) {
-          togglePin(note.uuid);
+          togglePin(note, index);
         }
         window.location.hash = hash;
         calculateLayout();
@@ -144,9 +167,7 @@ const NoteModal = ({
     debounce(async (values) => {
       window.dispatchEvent(new Event("loadingStart"));
       await NoteTextUpdateAction(values, note.uuid);
-      setTimeout(() => {
-        window.dispatchEvent(new Event("loadingEnd"));
-      }, 800);
+      window.dispatchEvent(new Event("loadingEnd"));
     }, 600),
     [] // Dependencies array, make sure it's updated when `note.uuid` changes
   );
@@ -157,9 +178,7 @@ const NoteModal = ({
     try {
       await NoteUpdateAction("isPinned", !note.isPinned, note.uuid);
     } finally {
-      setTimeout(() => {
-        window.dispatchEvent(new Event("loadingEnd"));
-      }, 800);
+      window.dispatchEvent(new Event("loadingEnd"));
     }
   };
 
@@ -167,11 +186,13 @@ const NoteModal = ({
     (e) => {
       const text = e.target.innerText;
       const t = text === "\n" ? "" : text;
-      setNotes((prevNotes) => {
-        return prevNotes.map((noteItem) =>
-          noteItem.uuid === note.uuid ? { ...noteItem, title: t } : noteItem
-        );
-      });
+      titleTextRef.current = t;
+
+      // setNotes((prev) => {
+      //   const newNotes = new Map(prev);
+      //   newNotes.set(note.uuid, { ...note, title: t });
+      //   return newNotes;
+      // });
 
       updateTextDebounced({ title: t, content: note.content });
 
@@ -186,11 +207,12 @@ const NoteModal = ({
     (e) => {
       const text = e.target.innerText;
       const t = text === "\n" ? "" : text;
-      setNotes((prevNotes) => {
-        return prevNotes.map((noteItem) =>
-          noteItem.uuid === note.uuid ? { ...noteItem, content: t } : noteItem
-        );
-      });
+      contentTextRef.current = t;
+      // setNotes((prev) => {
+      //   const newNotes = new Map(prev);
+      //   newNotes.set(note.uuid, { ...note, content: t });
+      //   return newNotes;
+      // });
       updateTextDebounced({ title: note.title, content: t });
 
       if (text === "\n") {
@@ -236,22 +258,15 @@ const NoteModal = ({
   };
 
   const noteImageDelete = useCallback(async (imageID) => {
-    setNotes((prevNotes) =>
-      prevNotes.map((mapNote) =>
-        mapNote.uuid === note.uuid
-          ? {
-              ...mapNote,
-              images: mapNote.images.filter((image) => image.uuid !== imageID),
-            }
-          : mapNote
-      )
-    );
+    setLocalImages((prev) => {
+      const filteredImages = prev.filter((img) => img.uuid !== imageID);
+      return filteredImages;
+    });
+
     const filePath = `${userID}/${note.uuid}/${imageID}`;
     window.dispatchEvent(new Event("loadingStart"));
     await NoteImageDeleteAction(filePath, note.uuid, imageID);
-    setTimeout(() => {
-      window.dispatchEvent(new Event("loadingEnd"));
-    }, 800);
+    window.dispatchEvent(new Event("loadingEnd"));
   }, []);
 
   if (!isClient || !trigger) {
@@ -282,10 +297,7 @@ const NoteModal = ({
             borderRadius: "0.7rem",
             backgroundColor: note.color,
             border: "solid 1px",
-            borderColor: 
-               note.color === "#FFFFFF"
-              ? "#e0e0e0"
-              : "transparent",
+            borderColor: note.color === "#FFFFFF" ? "#e0e0e0" : "transparent",
             transition:
               "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), width 0.25s cubic-bezier(0.25, 0.8, 0.25, 1), background-color 0.25s linear",
           }}
@@ -321,7 +333,7 @@ const NoteModal = ({
             >
               <NoteImagesLayout
                 width={width}
-                images={note.images}
+                images={localImages}
                 isLoadingImages={isLoadingImages}
                 deleteSource="note"
                 noteImageDelete={noteImageDelete}
@@ -399,6 +411,7 @@ const NoteModal = ({
           {trigger2 && (
             <NoteModalTools
               setNotes={setNotes}
+              setLocalImages={setLocalImages}
               note={note}
               selectedColor={selectedColor}
               setSelectedColor={setSelectedColor}

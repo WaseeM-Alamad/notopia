@@ -23,6 +23,7 @@ const NoteWrapper = memo(
   ({
     note,
     setNotes,
+    setOrder,
     togglePin,
     isVisible,
     lastAddedNoteRef,
@@ -38,6 +39,7 @@ const NoteWrapper = memo(
     // const { modalOpen, setModalOpen } = useAppContext();
     const [mounted, setMounted] = useState(false);
     const [mountOpacity, setMountOpacity] = useState(false);
+    const [modalTrigger, setModalTrigger] = useState(false);
     const noteRef = useRef(null);
     const timeoutRef = useRef(null);
 
@@ -63,19 +65,48 @@ const NoteWrapper = memo(
       };
     }, []);
 
+    let startX, startY;
+
+    const handleMouseDown = (e) => {
+      startX = e.clientX;
+      startY = e.clientY;
+      const targetElement = e.currentTarget;
+      const target = e.target;
+
+      const detectDrag = (event) => {
+        const deltaX = Math.abs(event.clientX - startX);
+        const deltaY = Math.abs(event.clientY - startY);
+
+        if (deltaX > 5 || deltaY > 5) {
+          if (
+            targetElement === noteRef.current &&
+            !modalTrigger &&
+            !target.classList.contains("not-draggable")
+          ) {
+            handleDragStart(e, targetElement);
+          }
+        }
+      };
+
+      const handleMouseUp = () => {
+        document.removeEventListener("mousemove", detectDrag);
+        document.removeEventListener("mouseup", handleMouseUp);
+      };
+
+      document.addEventListener("mousemove", detectDrag);
+      document.addEventListener("mouseup", handleMouseUp);
+    };
+
     return (
       <motion.div
         ref={setRefs}
         data-pinned={note.isPinned}
         data-position={index}
         data-uuid={note.uuid}
-        onMouseDown={(e) => {
-          if (e.currentTarget === noteRef.current)
-            handleDragStart(e, note.uuid, note.isPinned);
-        }}
-        onMouseEnter={(e) => {
-          handleDragOver(e, note.uuid, note.isPinned, index);
-        }}
+        onMouseDown={handleMouseDown}
+        // onMouseEnter={(e) => {
+        // handleDragOver(e, note.uuid, note.isPinned, index);
+        // }}
         className="grid-item"
         style={{
           width: `${COLUMN_WIDTH}px`,
@@ -92,14 +123,19 @@ const NoteWrapper = memo(
           <Note
             note={note}
             setNotes={setNotes}
+            setOrder={setOrder}
             togglePin={togglePin}
             calculateLayout={calculateLayout}
             isLoadingImagesAddNote={isLoadingImages}
             setSelectedNotesIDs={setSelectedNotesIDs}
             selectedNotes={selectedNotes}
             isDragging={isDragging}
+            modalTrigger={modalTrigger}
+            setModalTrigger={setModalTrigger}
+            index={index}
           />
         </motion.div>
+        {/* <p>{index}</p> */}
       </motion.div>
     );
   }
@@ -112,7 +148,7 @@ const Home = memo(({ notes, setNotes, order, setOrder }) => {
   const [othersHeight, setOthersHeight] = useState(null);
   const [isLoadingImages, setIsLoadingImages] = useState([]);
   const [selectedNotesIDs, setSelectedNotesIDs] = useState([]);
-  const smallestPosRef = useRef(0);
+  const firstUUIDRef = useRef(null);
   const selectedRef = useRef(false);
   const lastAddedNoteRef = useRef(null);
   const containerRef = useRef(null);
@@ -233,25 +269,29 @@ const Home = memo(({ notes, setNotes, order, setOrder }) => {
     };
   }, [calculateLayout, debouncedCalculateLayout, notes, order]);
 
-  const togglePin = useCallback((note) => {
-    const smallestPos = smallestPosRef.current;
+  const togglePin = useCallback(async (note, index) => {
     const updatedNote = { ...note, isPinned: !note.isPinned };
 
-    setNotes((prevNotes) => {
-      // Find the index of the note you want to move
-      const noteIndex = prevNotes.findIndex((n) => n.uuid === note.uuid);
-
-      if (noteIndex === -1) return prevNotes; // If note is not found, no changes
-
-      // Remove the note from the array
-      const newNotes = [...prevNotes];
-      newNotes.splice(noteIndex, 1); // Remove the note
-      newNotes.unshift(updatedNote); // Add it to the start
-
-      return newNotes;
+    setNotes((prev) => {
+      const newNotes = new Map(prev);
+      newNotes.set(note.uuid, updatedNote);
+      return newNotes; // Return the updated map
     });
 
-    return smallestPos - 1;
+    const firstNote = firstUUIDRef.current;
+    if (firstNote === note.uuid) return;
+    console.log("not first");
+    setOrder((prev) => {
+      const filteredOrder = prev.filter((uuid) => uuid !== note.uuid); // Remove the UUID
+      return [note.uuid, ...filteredOrder]; // Add it to the start
+    });
+
+    window.dispatchEvent(new Event("loadingStart"));
+    await updateOrderAction({
+      type: "shift to start",
+      uuid: note.uuid,
+    });
+    window.dispatchEvent(new Event("loadingEnd"));
   }, []);
 
   useEffect(() => {
@@ -282,15 +322,15 @@ const Home = memo(({ notes, setNotes, order, setOrder }) => {
   const lastSwapRef = useRef(0);
 
   const handleDragStart = useCallback(
-    (e) => {
+    (e, targetElement) => {
       // e.preventDefault();
       if (draggedNoteRef.current) {
         return;
       }
       isDragging.current = true;
-      draggedNoteRef.current = e.currentTarget;
+      draggedNoteRef.current = targetElement;
       document.body.classList.add("dragging");
-      const draggedElement = e.currentTarget;
+      const draggedElement = targetElement;
       const draggedInitialIndex = parseInt(
         draggedNoteRef.current.dataset.position,
         10
@@ -307,8 +347,12 @@ const Home = memo(({ notes, setNotes, order, setOrder }) => {
 
       const ghostElement =
         draggedElement.children[0].children[0].children[1].cloneNode(true);
-      if (ghostElement.children[1])
-        ghostElement.children[1].style.visibility = "hidden";
+      if (ghostElement.children[1]) {
+        ghostElement.children[1].style.transition = "0.1s ease-in-out";
+        setTimeout(() => {
+          ghostElement.children[1].style.opacity = "0";
+        }, 1);
+      }
       ghostElement.style.position = "fixed";
       // ghostElement.style.height = `${IntHeight + 25}px`;
       ghostElement.style.zIndex = "9999";
@@ -319,14 +363,14 @@ const Home = memo(({ notes, setNotes, order, setOrder }) => {
       ghostElement.style.borderRadius = "0.8rem";
       ghostElement.style.boxShadow = "2px 1px 25px -3px rgba(112,112,112,0.8)";
       ghostElement.style.transform = `none`;
-      ghostElement.style.left = `${rect.left}px`; // Set initial left
-      ghostElement.style.top = `${rect.top}px`; // Set initial top
+      ghostElement.style.left = `${rect.left - 15}px`; // Set initial left
+      ghostElement.style.top = `${rect.top - 15}px`; // Set initial top
       document.body.appendChild(ghostElement);
       ghostElementRef.current = ghostElement;
 
       const updateGhostPosition = (moveEvent) => {
-        ghostElement.style.left = `${moveEvent.clientX - offsetX}px`; // Update left with offset
-        ghostElement.style.top = `${moveEvent.clientY - offsetY}px`; // Update top with offset
+        ghostElement.style.left = `${moveEvent.clientX - offsetX - 15}px`; // Update left with offset
+        ghostElement.style.top = `${moveEvent.clientY - offsetY - 15}px`; // Update top with offset
       };
 
       document.addEventListener("mousemove", updateGhostPosition);
@@ -343,11 +387,7 @@ const Home = memo(({ notes, setNotes, order, setOrder }) => {
                 initialIndex: draggedInitialIndex,
                 endIndex: endIndexRef.current,
               })
-                .then(
-                  setTimeout(() => {
-                    window.dispatchEvent(new Event("loadingEnd"));
-                  }, 800)
-                )
+                .then(() => window.dispatchEvent(new Event("loadingEnd")))
                 .catch((err) => {
                   console.log(err);
                 });
@@ -388,8 +428,7 @@ const Home = memo(({ notes, setNotes, order, setOrder }) => {
   );
 
   const handleDragOver = useCallback(
-    async (e, overUUID, overIsPinned, overIndex) => {
-      e.preventDefault();
+    async (overUUID, overIsPinned, overIndex) => {
       if (!isDragging.current) return;
       const draggedUUID = draggedNoteRef.current.dataset.uuid;
       const draggedIsPinned = draggedNoteRef.current.dataset.pinned === "true";
@@ -401,6 +440,7 @@ const Home = memo(({ notes, setNotes, order, setOrder }) => {
         return;
       }
 
+      console.log("hi");
       const now = Date.now();
       if (now - lastSwapRef.current < 150) return;
 
@@ -425,6 +465,29 @@ const Home = memo(({ notes, setNotes, order, setOrder }) => {
     []
   );
 
+  const handleMouseMove = (e) => {
+    if (!isDragging.current) return;
+
+    const mouseX = e.clientX;
+    const mouseY = e.clientY;
+
+    const overNoteElement = document
+      .elementFromPoint(mouseX, mouseY)
+      .closest(".grid-item");
+
+    if (!overNoteElement || !overNoteElement.dataset.uuid) return;
+    // console.log("overNote", overNoteElement);
+
+    const overNoteIsPinned = overNoteElement.dataset.pinned === "true";
+    const overNoteUUID = overNoteElement.dataset.uuid;
+    const overIndex = parseInt(overNoteElement.dataset.position, 10);
+
+    // console.log("isPinned", overNoteIsPinned, "index", overIndex)
+    // console.log("uuid", overNoteUUID)
+
+    handleDragOver(overNoteUUID, overNoteIsPinned, overIndex);
+  };
+
   return (
     <>
       <TopMenuHome
@@ -435,6 +498,7 @@ const Home = memo(({ notes, setNotes, order, setOrder }) => {
         <div
           ref={containerRef}
           className="notes-container"
+          onMouseMove={handleMouseMove}
           style={{
             visibility: isLayoutReady ? "visible" : "hidden",
           }}
@@ -485,6 +549,9 @@ const Home = memo(({ notes, setNotes, order, setOrder }) => {
           </p>
           {order.map((uuid, index) => {
             const note = notes.get(uuid);
+            if (index === 0) {
+              firstUUIDRef.current = uuid;
+            }
             return (
               !note.isArchived &&
               !note.isTrash && (
@@ -497,6 +564,7 @@ const Home = memo(({ notes, setNotes, order, setOrder }) => {
                   handleDragStart={handleDragStart}
                   handleDragOver={handleDragOver}
                   setNotes={setNotes}
+                  setOrder={setOrder}
                   togglePin={togglePin}
                   isVisible={isLayoutReady}
                   setSelectedNotesIDs={setSelectedNotesIDs}
@@ -515,7 +583,6 @@ const Home = memo(({ notes, setNotes, order, setOrder }) => {
         setNotes={setNotes}
         setOrder={setOrder}
         lastAddedNoteRef={lastAddedNoteRef}
-        smallestPos={smallestPosRef?.current}
         setIsLoadingImages={setIsLoadingImages}
       />
     </>
