@@ -23,6 +23,7 @@ const NoteTools = ({
   images,
   setNotes,
   setOrder,
+  index,
   note,
   colorMenuOpen,
   setColorMenuOpen,
@@ -66,20 +67,14 @@ const NoteTools = ({
   });
 
   const toggleMenu = () => {
-    // const rect = colorButtonRef.current.getBoundingClientRect();
-    // const menuRect = colorMenuRef.current.getBoundingClientRect();
-    // console.log("left", menuRect.left)
-    // setColorMenuPosition({
-    //   top: rect.bottom + window.scrollY, // Account for scrolling
-    //   left: rect.left + window.scrollX, // Account for scrolling
-    // });
     setColorMenuOpen(!colorMenuOpen);
   };
 
   const handleArchive = useCallback(async () => {
     setLocalIsArchived((prev) => !prev);
+    const first = index === 0;
     window.dispatchEvent(new Event("loadingStart"));
-    await NoteUpdateAction("isArchived", !note.isArchived, note.uuid);
+    await NoteUpdateAction("isArchived", !note.isArchived, note.uuid, first);
     window.dispatchEvent(new Event("loadingEnd"));
   });
 

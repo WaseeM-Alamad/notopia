@@ -21,9 +21,7 @@ import { AnimatePresence, motion } from "framer-motion";
 const Note = memo(
   ({
     note,
-    setNotes,
-    setOrder,
-    togglePin,
+    dispatchNotes,
     calculateLayout,
     isLoadingImagesAddNote = [],
     setSelectedNotesIDs,
@@ -140,39 +138,39 @@ const Note = memo(
       }
     }, [trigger2, modalTrigger]);
 
-    const handlePinClick = useCallback(
-      async (e) => {
-        if (selectedNotes.current) {
-          setSelectedNotesIDs([]);
-          window.dispatchEvent(new Event("topMenuClose"));
-        }
-        e.stopPropagation(); // Prevent note click event
-        if (!note.isArchived) {
-          togglePin(note, index);
+    const handlePinClick = async (e) => {
+      if (selectedNotes.current) {
+        setSelectedNotesIDs([]);
+        window.dispatchEvent(new Event("topMenuClose"));
+      }
+      e.stopPropagation(); // Prevent note click event
+      if (!note.isArchived) {
+        window.dispatchEvent(new Event("loadingStart"));
+        dispatchNotes({
+          type: "PIN_NOTE",
+          note: note,
+        });
 
-          window.dispatchEvent(new Event("loadingStart"));
-
-          try {
-            await NoteUpdateAction("isPinned", !note.isPinned, note.uuid);
-          } finally {
-            window.dispatchEvent(new Event("loadingEnd"));
-          }
-        } else {
-          setLocalArchivedPin((prev) => !prev);
-          window.dispatchEvent(new Event("loadingStart"));
-          try {
-            await NoteUpdateAction("pinArchived", true, note.uuid);
-            await updateOrderAction({
-              uuid: note.uuid,
-              type: "shift to start",
-            });
-          } finally {
-            window.dispatchEvent(new Event("loadingEnd"));
-          }
+        try {
+          const first = index === 0;
+          await NoteUpdateAction("isPinned", !note.isPinned, note.uuid, first);
+        } finally {
+          window.dispatchEvent(new Event("loadingEnd"));
         }
-      },
-      [note.uuid, note.isPinned, togglePin]
-    );
+      } else {
+        setLocalArchivedPin((prev) => !prev);
+        window.dispatchEvent(new Event("loadingStart"));
+        try {
+          await NoteUpdateAction("pinArchived", true, note.uuid);
+          await updateOrderAction({
+            uuid: note.uuid,
+            type: "shift to start",
+          });
+        } finally {
+          window.dispatchEvent(new Event("loadingEnd"));
+        }
+      }
+    };
 
     const handleMenuIsOpenChange = useCallback((value) => {
       setColorMenuOpen(value);
@@ -225,25 +223,10 @@ const Note = memo(
           transition={{ duration: 0.16 }}
           onAnimationComplete={() => {
             if (localIsArchived) {
-              const updatedNote = {
-                ...note,
-                isArchived: !note.isArchived,
-                isPinned: false,
-              };
-              setNotes((prev) => {
-                const newNotes = new Map(prev);
-                newNotes.set(note.uuid, updatedNote);
-                return newNotes; // Return the updated map
+              dispatchNotes({
+                type: "ARCHIVE_NOTE",
+                note: note,
               });
-              setOrder((prev) => {
-                const filteredOrder = prev.filter((uuid) => uuid !== note.uuid);
-                return [note.uuid, ...filteredOrder];
-              });
-              window.dispatchEvent(new Event("loadingStart"));
-              updateOrderAction({
-                type: "shift to start",
-                uuid: note.uuid,
-              }).then(() => window.dispatchEvent(new Event("loadingEnd")));
             } else if (localIsTrash) {
               const updatedNote = {
                 ...note,
@@ -401,8 +384,6 @@ const Note = memo(
                   setColorMenuOpen={handleMenuIsOpenChange}
                   moreMenuOpen={moreMenuOpen}
                   setMoreMenuOpen={setMoreMenuOpen}
-                  setNotes={setNotes}
-                  setOrder={setOrder}
                   images={note.images.length !== 0}
                   note={note}
                   setIsLoadingImages={setIsLoadingImages}
@@ -410,6 +391,7 @@ const Note = memo(
                   setLocalIsArchived={setLocalIsArchived}
                   setLocalIsTrash={setLocalIsTrash}
                   setIsNoteDeleted={setIsNoteDeleted}
+                  index={index}
                 />
               )}
             </AnimatePresence>
@@ -423,7 +405,6 @@ const Note = memo(
             setTrigger2={handleTrigger2Change}
             notePos={notePos}
             note={note}
-            setNotes={setNotes}
             calculateLayout={calculateLayout}
             togglePin={togglePin}
             index={index}

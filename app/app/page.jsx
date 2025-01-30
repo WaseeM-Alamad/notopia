@@ -11,13 +11,61 @@ import Reminders from "@/components/pages/Reminders";
 import Trash from "@/components/pages/Trash";
 import { fetchNotes } from "@/utils/actions";
 import { motion } from "framer-motion";
-import React, { memo, useEffect, useState } from "react";
+import React, { memo, useEffect, useReducer, useState } from "react";
+
+const initialStates = {
+  notes: new Map(),
+  order: [],
+};
+
+function notesReducer(state, action) {
+  switch (action.type) {
+    case "SET_INITIAL_DATA":
+      return {
+        ...state,
+        notes: action.notes,
+        order: action.order,
+      };
+      
+    case "ADD_NOTE":
+      return {
+        ...state,
+        notes: new Map(state.notes).set(action.newNote.uuid, action.newNote),
+        order: [action.newNote.uuid, ...state.order],
+      };
+
+      case "PIN_NOTE":
+        const pinnedNote = {...action.note, isPinned: !action.note.isPinned};
+        const updatedNotesPIN = new Map(state.notes).set(action.note.uuid, pinnedNote);
+        const updatedOrderPIN = [...state.order].filter((uuid)=> uuid !== action.note.uuid);
+        return {
+          ...state,
+          notes: updatedNotesPIN,
+          order: [action.note.uuid, ...updatedOrderPIN]
+        }
+
+        case "ARCHIVE_NOTE": 
+        const archivedNote = {...action.note, isArchived: !action.note.isArchived, isPinned: false };
+        const updatedNotesArchive = new Map(state.notes).set(action.note.uuid, archivedNote);
+        const updatedOrderArchive = [...state.order].filter((uuid)=> uuid !== action.note.uuid);
+        return {
+          ...state,
+          notes: updatedNotesArchive,
+          order: [action.note.uuid, ...updatedOrderArchive]
+        }
+        
+    case "DND":
+      return {
+        ...state,
+        order: action.updatedOrder,
+      };
+  }
+}
 
 const page = () => {
   const [currentPage, setCurrentPage] = useState();
-  const [notes, setNotes] = useState(new Map());
-  const [order, setOrder] = useState([]);
   const [isClient, setIsClient] = useState(false);
+  const [notesState, dispatchNotes] = useReducer(notesReducer, initialStates);
 
   useEffect(() => {
     setIsClient(true);
@@ -45,9 +93,11 @@ const page = () => {
     const notesMap = new Map(
       fetchedNotes.data.map((note) => [note.uuid, note])
     );
-    setNotes(notesMap);
-    setOrder(fetchedNotes.order);
-    console.log("order", order);
+    dispatchNotes({
+      type: "SET_INITIAL_DATA",
+      notes: notesMap,
+      order: fetchedNotes.order,
+    });
   };
 
   useEffect(() => {
@@ -111,10 +161,9 @@ const page = () => {
     else if (currentPage?.includes("home"))
       return (
         <Home
-          notes={notes}
-          setNotes={setNotes}
-          order={order}
-          setOrder={setOrder}
+          dispatchNotes={dispatchNotes}
+          notes={notesState.notes}
+          order={notesState.order}
         />
       );
     else if (currentPage?.includes("folders")) return <Folders />;
@@ -131,10 +180,9 @@ const page = () => {
     else
       return (
         <Home
-          notes={notes}
-          setNotes={setNotes}
-          order={order}
-          setOrder={setOrder}
+          dispatchNotes={dispatchNotes}
+          notes={notesState.notes}
+          order={notesState.order}
         />
       );
   };

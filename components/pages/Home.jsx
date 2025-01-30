@@ -21,10 +21,8 @@ const GAP_BETWEEN_SECTIONS = 120;
 
 const NoteWrapper = memo(
   ({
+    dispatchNotes,
     note,
-    setNotes,
-    setOrder,
-    togglePin,
     isVisible,
     lastAddedNoteRef,
     calculateLayout,
@@ -33,7 +31,6 @@ const NoteWrapper = memo(
     selectedNotes,
     handleDragStart,
     index,
-    handleDragOver,
     isDragging,
   }) => {
     // const { modalOpen, setModalOpen } = useAppContext();
@@ -104,9 +101,6 @@ const NoteWrapper = memo(
         data-position={index}
         data-uuid={note.uuid}
         onMouseDown={handleMouseDown}
-        // onMouseEnter={(e) => {
-        // handleDragOver(e, note.uuid, note.isPinned, index);
-        // }}
         className="grid-item"
         style={{
           width: `${COLUMN_WIDTH}px`,
@@ -121,10 +115,8 @@ const NoteWrapper = memo(
           }}
         >
           <Note
+            dispatchNotes={dispatchNotes}
             note={note}
-            setNotes={setNotes}
-            setOrder={setOrder}
-            togglePin={togglePin}
             calculateLayout={calculateLayout}
             isLoadingImagesAddNote={isLoadingImages}
             setSelectedNotesIDs={setSelectedNotesIDs}
@@ -143,12 +135,11 @@ const NoteWrapper = memo(
 
 NoteWrapper.displayName = "NoteWrapper";
 
-const Home = memo(({ notes, setNotes, order, setOrder }) => {
+const Home = memo(({ notes, order, dispatchNotes }) => {
   const [isLayoutReady, setIsLayoutReady] = useState(false);
   const [othersHeight, setOthersHeight] = useState(null);
   const [isLoadingImages, setIsLoadingImages] = useState([]);
   const [selectedNotesIDs, setSelectedNotesIDs] = useState([]);
-  const firstUUIDRef = useRef(null);
   const selectedRef = useRef(false);
   const lastAddedNoteRef = useRef(null);
   const containerRef = useRef(null);
@@ -278,9 +269,6 @@ const Home = memo(({ notes, setNotes, order, setOrder }) => {
       return newNotes; // Return the updated map
     });
 
-    const firstNote = firstUUIDRef.current;
-    if (firstNote === note.uuid) return;
-    console.log("not first");
     setOrder((prev) => {
       const filteredOrder = prev.filter((uuid) => uuid !== note.uuid); // Remove the UUID
       return [note.uuid, ...filteredOrder]; // Add it to the start
@@ -427,43 +415,38 @@ const Home = memo(({ notes, setNotes, order, setOrder }) => {
     [calculateLayout]
   );
 
-  const handleDragOver = useCallback(
-    async (overUUID, overIsPinned, overIndex) => {
-      if (!isDragging.current) return;
-      const draggedUUID = draggedNoteRef.current.dataset.uuid;
-      const draggedIsPinned = draggedNoteRef.current.dataset.pinned === "true";
-      if (
-        !draggedUUID ||
-        draggedUUID === overUUID ||
-        draggedIsPinned !== overIsPinned
-      ) {
-        return;
-      }
+  const handleDragOver = async (overUUID, overIsPinned, overIndex) => {
+    if (!isDragging.current) return;
+    const draggedUUID = draggedNoteRef.current.dataset.uuid;
+    const draggedIsPinned = draggedNoteRef.current.dataset.pinned === "true";
+    if (
+      !draggedUUID ||
+      draggedUUID === overUUID ||
+      draggedIsPinned !== overIsPinned
+    ) {
+      return;
+    }
 
-      console.log("hi");
-      const now = Date.now();
-      if (now - lastSwapRef.current < 150) return;
+    console.log("hi");
+    const now = Date.now();
+    if (now - lastSwapRef.current < 150) return;
 
-      lastSwapRef.current = now;
-      setOrder((prevOrder) => {
-        const draggedIndex = parseInt(
-          draggedNoteRef.current.dataset.position,
-          10
-        );
+    lastSwapRef.current = now;
+    const draggedIndex = parseInt(draggedNoteRef.current.dataset.position, 10);
 
-        if (draggedIndex === -1 || overIndex === -1) return prevOrder;
-        endIndexRef.current = overIndex;
+    if (draggedIndex === -1 || overIndex === -1) return prevOrder;
+    endIndexRef.current = overIndex;
 
-        // Copy notes to avoid mutating state directly
-        const updatedOrder = [...prevOrder];
-        const [draggedNote] = updatedOrder.splice(draggedIndex, 1);
-        updatedOrder.splice(overIndex, 0, draggedNote);
+    // Copy notes to avoid mutating state directly
+    const updatedOrder = [...order];
+    const [draggedNote] = updatedOrder.splice(draggedIndex, 1);
+    updatedOrder.splice(overIndex, 0, draggedNote);
 
-        return updatedOrder;
-      });
-    },
-    []
-  );
+    dispatchNotes({
+      type: "DND",
+      updatedOrder,
+    });
+  };
 
   const handleMouseMove = (e) => {
     if (!isDragging.current) return;
@@ -549,9 +532,6 @@ const Home = memo(({ notes, setNotes, order, setOrder }) => {
           </p>
           {order.map((uuid, index) => {
             const note = notes.get(uuid);
-            if (index === 0) {
-              firstUUIDRef.current = uuid;
-            }
             return (
               !note.isArchived &&
               !note.isTrash && (
@@ -560,12 +540,9 @@ const Home = memo(({ notes, setNotes, order, setOrder }) => {
                   key={note.uuid}
                   note={note}
                   index={index}
+                  dispatchNotes={dispatchNotes}
                   isDragging={isDragging}
                   handleDragStart={handleDragStart}
-                  handleDragOver={handleDragOver}
-                  setNotes={setNotes}
-                  setOrder={setOrder}
-                  togglePin={togglePin}
                   isVisible={isLayoutReady}
                   setSelectedNotesIDs={setSelectedNotesIDs}
                   {...(isLoadingImages.includes(note.uuid)
@@ -580,8 +557,7 @@ const Home = memo(({ notes, setNotes, order, setOrder }) => {
         </div>
       </div>
       <AddNoteModal
-        setNotes={setNotes}
-        setOrder={setOrder}
+        dispatchNotes={dispatchNotes}
         lastAddedNoteRef={lastAddedNoteRef}
         setIsLoadingImages={setIsLoadingImages}
       />

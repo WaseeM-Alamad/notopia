@@ -93,7 +93,7 @@ export const createNoteAction = async (note) => {
   }
 };
 
-export const NoteUpdateAction = async (type, value, noteUUID) => {
+export const NoteUpdateAction = async (type, value, noteUUID, first) => {
   if (!session) {
     return new Response("Unauthorized", { status: 401 });
   }
@@ -106,11 +106,29 @@ export const NoteUpdateAction = async (type, value, noteUUID) => {
         { uuid: noteUUID },
         { $set: { [type]: value, isPinned: false } }
       );
-    } else if (type == "pinArchived") {
+      if (!first) {
+        const user = await User.findById(userID);
+        const { notesOrder } = user;
+        const order = notesOrder.filter((uuid) => uuid !== noteUUID);
+        const updatedOrder = [noteUUID, ...order];
+        user.notesOrder = updatedOrder;
+        await user.save();
+      }
+    } else if (type === "pinArchived") {
       await Note.updateOne(
         { uuid: noteUUID },
         { $set: { isPinned: value, isArchived: false } }
       );
+    } else if (type === "isPinned") {
+      await Note.updateOne({ uuid: noteUUID }, { $set: { [type]: value } });
+      if (!first) {
+        const user = await User.findById(userID);
+        const { notesOrder } = user;
+        const order = notesOrder.filter((uuid) => uuid !== noteUUID);
+        const updatedOrder = [noteUUID, ...order];
+        user.notesOrder = updatedOrder;
+        await user.save();
+      }
     } else {
       await Note.updateOne({ uuid: noteUUID }, { $set: { [type]: value } });
     }

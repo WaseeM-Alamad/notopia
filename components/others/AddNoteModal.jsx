@@ -12,8 +12,7 @@ import { useSession } from "next-auth/react";
 import { createClient } from "@supabase/supabase-js";
 
 const AddNoteModal = ({
-  setNotes,
-  setOrder,
+  dispatchNotes,
   lastAddedNoteRef,
   setIsLoadingImages,
 }) => {
@@ -193,12 +192,10 @@ const AddNoteModal = ({
           updatedAt: new Date(),
           images: note.images,
         };
-        setNotes((prev) => {
-          const newNotes = new Map(prev); // Create a shallow copy of the current map
-          newNotes.set(newNote.uuid, newNote); // Add the new note with its unique ID
-          return newNotes; // Return the updated map
+        dispatchNotes({
+          type: "ADD_NOTE",
+          newNote: newNote,
         });
-        setOrder((prevOrder) => [newUUID, ...prevOrder]);
         window.dispatchEvent(new Event("loadingStart"));
         if (newNote.images.length > 0) {
           setIsLoadingImages((prev) => [...prev, newNote.uuid]);
@@ -210,7 +207,7 @@ const AddNoteModal = ({
             prev.filter((id) => id !== newNote.uuid)
           );
         }
-          window.dispatchEvent(new Event("loadingEnd"));
+        window.dispatchEvent(new Event("loadingEnd"));
       }
     }
   };
