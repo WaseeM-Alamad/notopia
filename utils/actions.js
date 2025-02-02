@@ -129,6 +129,11 @@ export const NoteUpdateAction = async (type, value, noteUUID, first) => {
         user.notesOrder = updatedOrder;
         await user.save();
       }
+    } else if (type === "isTrash") {
+      await Note.updateOne(
+        { uuid: noteUUID },
+        { $set: { [type]: value, isPinned: false } }
+      );
     } else {
       await Note.updateOne({ uuid: noteUUID }, { $set: { [type]: value } });
     }
@@ -180,8 +185,11 @@ export const DeleteNoteAction = async (noteUUID) => {
   if (!session) {
     return new Response("Unauthorized", { status: 401 });
   }
-  const starter =
-    "https://fopkycgspstkfctmhyyq.supabase.co/storage/v1/object/public/notopia";
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_SUPABASE_SERVICE_ROLE_KEY
+  );
+
   try {
     await connectDB();
     const note = await Note.findOne({ uuid: noteUUID });
@@ -193,6 +201,26 @@ export const DeleteNoteAction = async (noteUUID) => {
     if (result.deletedCount === 0) {
       return { success: false, message: "Note not found" };
     }
+
+    if (note.images.length !== 0) {
+      const folderPath = `${userID}/${noteUUID}/`;
+      const bucketName = "notopia";
+      const { data: files, error: listError } = await supabase.storage
+        .from(bucketName)
+        .list(folderPath);
+
+      if (listError) {
+        throw listError;
+      }
+
+      if (files.length === 0) {
+        setMessage(`No files found in ${folderPath}`);
+      }
+
+      const filesToDelete = files.map((file) => `${folderPath}${file.name}`);
+      await supabase.storage.from(bucketName).remove(filesToDelete);
+    }
+
     return { success: true, message: "Note deleted successfully" };
   } catch (error) {
     console.log("Error deleting note.", error);

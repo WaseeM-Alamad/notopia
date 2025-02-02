@@ -12,6 +12,7 @@
     "@auth/mongodb-adapter": "^3.7.3",
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
+    "@floating-ui/react": "^0.27.3",
     "@mui/icons-material": "^6.1.7",
     "@mui/material": "^6.1.6",
     "@mui/system": "^6.1.7",

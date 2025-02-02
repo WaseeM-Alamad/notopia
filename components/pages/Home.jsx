@@ -32,6 +32,7 @@ const NoteWrapper = memo(
     handleDragStart,
     index,
     isDragging,
+    setTooltipAnchor
   }) => {
     // const { modalOpen, setModalOpen } = useAppContext();
     const [mounted, setMounted] = useState(false);
@@ -106,7 +107,6 @@ const NoteWrapper = memo(
           width: `${COLUMN_WIDTH}px`,
           marginBottom: `${GUTTER}px`,
           transition: `transform ${mounted ? "0.2s" : "0"} ease, opacity 0s`,
-          pointerEvents: isVisible ? "auto" : "none",
         }}
       >
         <motion.div
@@ -117,6 +117,7 @@ const NoteWrapper = memo(
           <Note
             dispatchNotes={dispatchNotes}
             note={note}
+            setTooltipAnchor={setTooltipAnchor}
             calculateLayout={calculateLayout}
             isLoadingImagesAddNote={isLoadingImages}
             setSelectedNotesIDs={setSelectedNotesIDs}
@@ -135,7 +136,7 @@ const NoteWrapper = memo(
 
 NoteWrapper.displayName = "NoteWrapper";
 
-const Home = memo(({ notes, order, dispatchNotes }) => {
+const Home = memo(({ notes, order, dispatchNotes, setTooltipAnchor }) => {
   const [isLayoutReady, setIsLayoutReady] = useState(false);
   const [othersHeight, setOthersHeight] = useState(null);
   const [isLoadingImages, setIsLoadingImages] = useState([]);
@@ -260,28 +261,6 @@ const Home = memo(({ notes, order, dispatchNotes }) => {
     };
   }, [calculateLayout, debouncedCalculateLayout, notes, order]);
 
-  const togglePin = useCallback(async (note, index) => {
-    const updatedNote = { ...note, isPinned: !note.isPinned };
-
-    setNotes((prev) => {
-      const newNotes = new Map(prev);
-      newNotes.set(note.uuid, updatedNote);
-      return newNotes; // Return the updated map
-    });
-
-    setOrder((prev) => {
-      const filteredOrder = prev.filter((uuid) => uuid !== note.uuid); // Remove the UUID
-      return [note.uuid, ...filteredOrder]; // Add it to the start
-    });
-
-    window.dispatchEvent(new Event("loadingStart"));
-    await updateOrderAction({
-      type: "shift to start",
-      uuid: note.uuid,
-    });
-    window.dispatchEvent(new Event("loadingEnd"));
-  }, []);
-
   useEffect(() => {
     if (notes.length > 0) {
       const timer = setTimeout(calculateLayout, 50);
@@ -319,15 +298,15 @@ const Home = memo(({ notes, order, dispatchNotes }) => {
       draggedNoteRef.current = targetElement;
       document.body.classList.add("dragging");
       const draggedElement = targetElement;
+      // console.log(draggedElement.children[0].children[0].children[1].children[0].children[1].style.opacity = "1")
       const draggedInitialIndex = parseInt(
         draggedNoteRef.current.dataset.position,
         10
       );
       draggedElement.style.opacity = "0";
+      document.querySelector(".notes-container").classList.add("dragging");
       draggedElement.style.transition = "none";
       draggedElement.style.pointerEvents = "none";
-      const draggedHeight = window.getComputedStyle(draggedElement).height;
-      const IntHeight = Number.parseInt(draggedHeight, 10);
 
       const rect = draggedElement.getBoundingClientRect();
       const offsetX = e.clientX - rect.left;
@@ -335,14 +314,11 @@ const Home = memo(({ notes, order, dispatchNotes }) => {
 
       const ghostElement =
         draggedElement.children[0].children[0].children[1].cloneNode(true);
-      if (ghostElement.children[1]) {
-        ghostElement.children[1].style.transition = "0.1s ease-in-out";
-        setTimeout(() => {
-          ghostElement.children[1].style.opacity = "0";
-        }, 1);
-      }
+      ghostElement.children[0].children[1].style.opacity = "1";
+      ghostElement.children[0].children[1].style.transition = "0.3s";
+      ghostElement.children[1].style.opacity = "0";
+
       ghostElement.style.position = "fixed";
-      // ghostElement.style.height = `${IntHeight + 25}px`;
       ghostElement.style.zIndex = "9999";
       ghostElement.style.opacity = "0.97";
       ghostElement.style.pointerEvents = "none";
@@ -381,15 +357,18 @@ const Home = memo(({ notes, order, dispatchNotes }) => {
                 });
             }
 
+            document
+              .querySelector(".notes-container")
+              .classList.remove("dragging");
             const rect = draggedElement.getBoundingClientRect();
             ghostElement.style.transition =
               " all 0.25s cubic-bezier(0.52, 0, 0.18, 1), height 0.1s ";
             ghostElement.style.boxShadow = "none";
             ghostElement.style.pointerEvents = "auto";
-            // ghostElement.style.height = `${IntHeight}px`;
             ghostElement.style.top = `${rect.top}px`;
             ghostElement.style.left = `${rect.left}px`;
             ghostElement.style.opacity = "1";
+            ghostElement.children[0].children[1].style.opacity = "0";
             isDragging.current = false;
 
             setTimeout(() => {
@@ -476,6 +455,7 @@ const Home = memo(({ notes, order, dispatchNotes }) => {
       <TopMenuHome
         selectedNotesIDs={selectedNotesIDs}
         setSelectedNotesIDs={setSelectedNotesIDs}
+        setTooltipAnchor={setTooltipAnchor}
       />
       <div className="starting-div">
         <div
@@ -542,6 +522,7 @@ const Home = memo(({ notes, order, dispatchNotes }) => {
                   index={index}
                   dispatchNotes={dispatchNotes}
                   isDragging={isDragging}
+                  setTooltipAnchor={setTooltipAnchor}
                   handleDragStart={handleDragStart}
                   isVisible={isLayoutReady}
                   setSelectedNotesIDs={setSelectedNotesIDs}
@@ -560,6 +541,7 @@ const Home = memo(({ notes, order, dispatchNotes }) => {
         dispatchNotes={dispatchNotes}
         lastAddedNoteRef={lastAddedNoteRef}
         setIsLoadingImages={setIsLoadingImages}
+        setTooltipAnchor={setTooltipAnchor}
       />
     </>
   );

@@ -19,11 +19,10 @@ const GUTTER = 15;
 const NoteWrapper = memo(
   ({
     note,
-    setNotes,
-    setOrder,
     isVisible,
     ref,
     setSelectedNotesIDs,
+    dispatchNotes,
     selectedNotes,
     index,
   }) => {
@@ -62,10 +61,10 @@ const NoteWrapper = memo(
       >
         <Note
           note={note}
-          setNotes={setNotes}
-          setOrder={setOrder}
           setSelectedNotesIDs={setSelectedNotesIDs}
           selectedNotes={selectedNotes}
+          dispatchNotes={dispatchNotes}
+          index={index}
           modalTrigger={modalTrigger}
           setModalTrigger={setModalTrigger}
         />
@@ -77,7 +76,7 @@ const NoteWrapper = memo(
 
 NoteWrapper.displayName = "NoteWrapper";
 
-const Home = memo(({ notes, setNotes, order, setOrder }) => {
+const Home = memo(({ notes, order, dispatchNotes }) => {
   const [isLayoutReady, setIsLayoutReady] = useState(false);
   const [selectedNotesIDs, setSelectedNotesIDs] = useState([]);
   const hasDispatched = useRef(false);
@@ -211,9 +210,8 @@ const Home = memo(({ notes, setNotes, order, setOrder }) => {
                 <NoteWrapper
                   key={note.uuid}
                   note={note}
-                  setNotes={setNotes}
-                  setOrder={setOrder}
                   isVisible={isLayoutReady}
+                  dispatchNotes={dispatchNotes}
                   index={index}
                   setSelectedNotesIDs={setSelectedNotesIDs}
                   selectedNotes={selectedRef}
@@ -224,8 +222,8 @@ const Home = memo(({ notes, setNotes, order, setOrder }) => {
       </div>
       <AddNoteModal
         trigger={false}
+        dispatchNotes={dispatchNotes}
         setTrigger={() => {}}
-        setNotes={setNotes}
         lastAddedNoteRef={null}
       />
     </>

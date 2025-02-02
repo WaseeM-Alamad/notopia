@@ -28,6 +28,7 @@ const Note = memo(
     selectedNotes,
     isDragging,
     modalTrigger,
+    setTooltipAnchor,
     setModalTrigger,
     index,
   }) => {
@@ -43,7 +44,6 @@ const Note = memo(
     const [opacityTrigger, setOpacityTrigger] = useState(true);
     const [isLoadingImages, setIsLoadingImages] = useState([]);
     const [selected, setSelected] = useState(false);
-    const [isHovered, setIsHovered] = useState(false);
     const isLoading = isLoadingImagesAddNote.includes(note.uuid);
     const noteRef = useRef(null);
     const inputsRef = useRef(null);
@@ -139,6 +139,7 @@ const Note = memo(
     }, [trigger2, modalTrigger]);
 
     const handlePinClick = async (e) => {
+      closeToolTip();
       if (selectedNotes.current) {
         setSelectedNotesIDs([]);
         window.dispatchEvent(new Event("topMenuClose"));
@@ -185,6 +186,7 @@ const Note = memo(
     }, []);
 
     const handleCheckClick = () => {
+      closeToolTip();
       setSelected((prev) => !prev);
 
       if (selected) {
@@ -208,6 +210,25 @@ const Note = memo(
       };
     }, []);
 
+    const handleMouseEnter = (e, text) => {
+      const target = e.currentTarget;
+      setTooltipAnchor({ anchor: target, text: text, display: true });
+    };
+
+    const handleMouseLeave = () => {
+      setTooltipAnchor((prev) => ({
+        ...prev,
+        display: false,
+      }));
+    };
+
+    const closeToolTip = () => {
+      setTooltipAnchor((prev) => ({
+        anchor: null,
+        text: prev.text,
+      }));
+    };
+
     return (
       <>
         <motion.div
@@ -228,68 +249,39 @@ const Note = memo(
                 note: note,
               });
             } else if (localIsTrash) {
-              const updatedNote = {
-                ...note,
-                isTrash: !note.isTrash,
-                isPinned: false,
-              };
-              setNotes((prev) => {
-                const newNotes = new Map(prev);
-                newNotes.set(note.uuid, updatedNote);
-                return newNotes; // Return the updated map
-              });
-              setOrder((prev) => {
-                const filteredOrder = prev.filter((uuid) => uuid !== note.uuid);
-                return [note.uuid, ...filteredOrder];
+              dispatchNotes({
+                type: "TRASH_NOTE",
+                note: note,
               });
             } else if (isNoteDeleted) {
-              setNotes((prev) => {
-                const newNotes = new Map(prev);
-                newNotes.delete(note.uuid);
-                return newNotes; // Return the updated map
-              });
-              setOrder((prev) => {
-                const filteredOrder = prev.filter((uuid) => uuid !== note.uuid);
-                return filteredOrder;
+              dispatchNotes({
+                type: "DELETE_NOTE",
+                note: note,
               });
             } else if (localArchivedPin) {
-              const updatedNote = {
-                ...note,
-                isPinned: true,
-                isArchived: false,
-              };
-              setNotes((prev) => {
-                const newNotes = new Map(prev);
-                newNotes.set(note.uuid, updatedNote);
-                return newNotes;
-              });
-
-              setOrder((prev) => {
-                const filteredOrder = prev.filter((uuid) => uuid !== note.uuid);
-                return [note.uuid, ...filteredOrder];
+              dispatchNotes({
+                type: "PIN_ARCHIVED_NOTE",
+                note: note,
               });
             }
-          }}
-          onMouseEnter={() => {
-            if (!isDragging) {
-              setIsHovered(true);
-            } else if (isDragging?.current) return;
-            else {
-              setIsHovered(true);
-            }
-          }}
-          onMouseLeave={() => {
-            if (colorMenuOpen || moreMenuOpen) return;
-            setIsHovered(false);
           }}
           className="note-wrapper"
           style={{ position: "relative" }}
         >
           <span
-            style={{ opacity: selected && "1" }}
+            style={{
+              opacity: (selected || colorMenuOpen || moreMenuOpen) && "1",
+            }}
             ref={checkRef}
             className="checkmark"
             onClick={handleCheckClick}
+            onMouseEnter={(e) =>
+              handleMouseEnter(
+                e,
+                `${selected ? "Deselect note" : "Select note"}`
+              )
+            }
+            onMouseLeave={handleMouseLeave}
           >
             <CheckMark
               color={selected ? "rgb(111, 111, 111)" : note.color}
@@ -319,12 +311,18 @@ const Note = memo(
               <div
                 style={{
                   opacity: colorMenuOpen ? "1" : undefined,
-                  opacity: selected && "1",
+                  opacity: (colorMenuOpen || moreMenuOpen) && "1",
                 }}
                 className="pin"
               >
                 {!note.isTrash && (
-                  <Button onClick={handlePinClick}>
+                  <Button
+                    onMouseEnter={(e) =>
+                      handleMouseEnter(e, `${note.isPinned ? "Unpin" : "Pin"}`)
+                    }
+                    onMouseLeave={handleMouseLeave}
+                    onClick={handlePinClick}
+                  >
                     <PinIcon
                       pinColor={note.color}
                       color={
@@ -377,24 +375,22 @@ const Note = memo(
                 )}
               </div>
             </div>
-            <AnimatePresence>
-              {isHovered && (
-                <NoteTools
-                  colorMenuOpen={colorMenuOpen}
-                  setColorMenuOpen={handleMenuIsOpenChange}
-                  moreMenuOpen={moreMenuOpen}
-                  setMoreMenuOpen={setMoreMenuOpen}
-                  images={note.images.length !== 0}
-                  note={note}
-                  setIsLoadingImages={setIsLoadingImages}
-                  userID={userID}
-                  setLocalIsArchived={setLocalIsArchived}
-                  setLocalIsTrash={setLocalIsTrash}
-                  setIsNoteDeleted={setIsNoteDeleted}
-                  index={index}
-                />
-              )}
-            </AnimatePresence>
+            <NoteTools
+              colorMenuOpen={colorMenuOpen}
+              setColorMenuOpen={handleMenuIsOpenChange}
+              setTooltipAnchor={setTooltipAnchor}
+              moreMenuOpen={moreMenuOpen}
+              setMoreMenuOpen={setMoreMenuOpen}
+              images={note.images.length !== 0}
+              note={note}
+              dispatchNotes={dispatchNotes}
+              setIsLoadingImages={setIsLoadingImages}
+              userID={userID}
+              setLocalIsArchived={setLocalIsArchived}
+              setLocalIsTrash={setLocalIsTrash}
+              setIsNoteDeleted={setIsNoteDeleted}
+              index={index}
+            />
           </div>
         </motion.div>
         {modalTrigger && (
@@ -405,8 +401,8 @@ const Note = memo(
             setTrigger2={handleTrigger2Change}
             notePos={notePos}
             note={note}
+            dispatchNotes={dispatchNotes}
             calculateLayout={calculateLayout}
-            togglePin={togglePin}
             index={index}
             isLoadingImages={isLoadingImages}
             setIsLoadingImages={setIsLoadingImages}

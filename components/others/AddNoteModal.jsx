@@ -15,6 +15,7 @@ const AddNoteModal = ({
   dispatchNotes,
   lastAddedNoteRef,
   setIsLoadingImages,
+  setTooltipAnchor,
 }) => {
   const { data: session } = useSession();
   const userID = session?.user?.id;
@@ -237,6 +238,7 @@ const AddNoteModal = ({
   };
 
   const handlePinClick = () => {
+    closeToolTip();
     setNote((prev) => ({ ...prev, isPinned: !prev.isPinned }));
   };
 
@@ -287,6 +289,25 @@ const AddNoteModal = ({
     }
   };
 
+  const handleMouseEnter = (e, text) => {
+    const target = e.currentTarget;
+    setTooltipAnchor({ anchor: target, text: text, display: true });
+  };
+
+  const handleMouseLeave = () => {
+    setTooltipAnchor((prev) => ({
+      ...prev,
+      display: false,
+    }));
+  };
+
+  const closeToolTip = () => {
+    setTooltipAnchor((prev) => ({
+      anchor: null,
+      text: prev.text,
+    }));
+  };
+
   return createPortal(
     <div
       ref={modalContainerRef}
@@ -297,9 +318,6 @@ const AddNoteModal = ({
       }}
       className="modal-container"
     >
-      <button onClick={() => console.log("first note", firstArrayNotePos)}>
-        first
-      </button>
       <button onClick={insert}>insertff</button>
       <div
         ref={modalRef}
@@ -330,6 +348,10 @@ const AddNoteModal = ({
               disabled={!trigger2}
               style={{ opacity: !trigger2 && "0" }}
               onClick={handlePinClick}
+              onMouseEnter={(e) =>
+                handleMouseEnter(e, `${note.isPinned ? "Unpin" : "Pin"}`)
+              }
+              onMouseLeave={handleMouseLeave}
             >
               <PinIcon
                 color={note.isPinned ? "#212121" : "transparent"}
@@ -403,8 +425,10 @@ const AddNoteModal = ({
         {trigger2 && (
           <ModalTools
             setNote={setNote}
+            note={note}
             selectedColor={selectedColor}
             setSelectedColor={setSelectedColor}
+            setTooltipAnchor={setTooltipAnchor}
             handleClose={handleClose}
           />
         )}

@@ -20,9 +20,8 @@ const NoteModal = ({
   setTrigger2,
   notePos,
   note,
-  setNotes,
+  dispatchNotes,
   calculateLayout,
-  togglePin,
   isLoadingImages,
   setIsLoadingImages,
   isLoading,
@@ -36,6 +35,7 @@ const NoteModal = ({
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [localImages, setLocalImages] = useState(note.images);
   const hash = window.location.hash.includes("archive") ? "archive" : "home";
+  const imagesChangedRef = useRef(false);
   const titleTextRef = useRef(note.title);
   const contentTextRef = useRef(note.content);
   const titleRef = useRef(null);
@@ -59,18 +59,22 @@ const NoteModal = ({
     ) {
       if (
         titleTextRef.current !== note.title ||
-        contentTextRef.current !== note.content ||
-        localImages !== note.images
+        contentTextRef.current !== note.content
       ) {
-        setNotes((prev) => {
-          const newNotes = new Map(prev);
-          newNotes.set(note.uuid, {
-            ...note,
-            content: contentTextRef.current,
-            title: titleTextRef.current,
-            images: localImages,
-          });
-          return newNotes;
+        dispatchNotes({
+          type: "UPDATE_TEXT",
+          note: note,
+          newTitle: titleTextRef.current,
+          newContent: contentTextRef.current,
+        });
+      }
+
+      if (imagesChangedRef.current) {
+        console.log("images changed");
+        dispatchNotes({
+          type: "UPDATE_IMAGES",
+          note: note,
+          newImages: localImages,
         });
       }
 
@@ -80,7 +84,10 @@ const NoteModal = ({
 
       setTimeout(() => {
         if (isPinned !== note.isPinned) {
-          togglePin(note, index);
+          dispatchNotes({
+            type: "PIN_NOTE",
+            note: note,
+          });
         }
         window.location.hash = hash;
         calculateLayout();
@@ -188,12 +195,6 @@ const NoteModal = ({
       const t = text === "\n" ? "" : text;
       titleTextRef.current = t;
 
-      // setNotes((prev) => {
-      //   const newNotes = new Map(prev);
-      //   newNotes.set(note.uuid, { ...note, title: t });
-      //   return newNotes;
-      // });
-
       updateTextDebounced({ title: t, content: note.content });
 
       if (text === "\n") {
@@ -208,11 +209,7 @@ const NoteModal = ({
       const text = e.target.innerText;
       const t = text === "\n" ? "" : text;
       contentTextRef.current = t;
-      // setNotes((prev) => {
-      //   const newNotes = new Map(prev);
-      //   newNotes.set(note.uuid, { ...note, content: t });
-      //   return newNotes;
-      // });
+
       updateTextDebounced({ title: note.title, content: t });
 
       if (text === "\n") {
@@ -262,7 +259,7 @@ const NoteModal = ({
       const filteredImages = prev.filter((img) => img.uuid !== imageID);
       return filteredImages;
     });
-
+    imagesChangedRef.current = true;
     const filePath = `${userID}/${note.uuid}/${imageID}`;
     window.dispatchEvent(new Event("loadingStart"));
     await NoteImageDeleteAction(filePath, note.uuid, imageID);
@@ -410,11 +407,12 @@ const NoteModal = ({
 
           {trigger2 && (
             <NoteModalTools
-              setNotes={setNotes}
               setLocalImages={setLocalImages}
               note={note}
+              dispatchNotes={dispatchNotes}
               selectedColor={selectedColor}
               setSelectedColor={setSelectedColor}
+              imagesChangedRef={imagesChangedRef}
               handleClose={handleClose}
               isAtBottom={isAtBottom}
               setIsLoadingImages={setIsLoadingImages}

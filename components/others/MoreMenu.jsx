@@ -1,4 +1,5 @@
 import { createNoteAction, NoteUpdateAction } from "@/utils/actions";
+import { Popper } from "@mui/material";
 import { AnimatePresence, motion } from "framer-motion";
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -7,13 +8,11 @@ import { v4 as generateUUID } from "uuid";
 const MoreMenu = ({
   isOpen,
   setIsOpen,
-  menuPosition,
-  buttonRef,
+  anchorEl,
   setLocalIsTrash,
   uuid,
   note,
-  setNotes,
-  setOrder,
+  dispatchNotes,
 }) => {
   const [isClient, setIsClient] = useState();
   const menuRef = useRef(null);
@@ -23,10 +22,7 @@ const MoreMenu = ({
 
   useEffect(() => {
     const handler = (e) => {
-      if (
-        !menuRef.current?.contains(e.target) &&
-        !buttonRef?.current?.contains(e.target)
-      )
+      if (!menuRef.current?.contains(e.target) && !anchorEl.contains(e.target))
         if (isOpen) {
           setIsOpen(false);
         }
@@ -47,16 +43,7 @@ const MoreMenu = ({
 
   const handleMakeCopy = () => {
     const newUUID = generateUUID();
-    setNotes((prev) => {
-      const newNotes = new Map(prev);
-      newNotes.set(newUUID, { ...note, isPinned: false, uuid: newUUID, isArchived: false });
-      return newNotes; // Return the updated map
-    });
-    setOrder((prev) => [newUUID, ...prev]);
-    setTimeout(() => {
-      window.dispatchEvent(new Event("closeModal"));
-    }, 1);
-    window.dispatchEvent(new Event("loadingStart"));
+
     const newNote = {
       uuid: newUUID,
       title: note.title,
@@ -70,15 +57,40 @@ const MoreMenu = ({
       updatedAt: new Date(),
       images: note.images,
     };
-    createNoteAction(newNote).then(()=> window.dispatchEvent(new Event("loadingEnd")));
-    
+
+    dispatchNotes({
+      type: "ADD_NOTE",
+      newNote: newNote,
+    });
+    setTimeout(() => {
+      window.dispatchEvent(new Event("closeModal"));
+    }, 1);
+    window.dispatchEvent(new Event("loadingStart"));
+
+    createNoteAction(newNote).then(() =>
+      window.dispatchEvent(new Event("loadingEnd"))
+    );
+
     setIsOpen(false);
   };
 
   if (!isClient) return;
   return createPortal(
     <>
-      <AnimatePresence>
+      <Popper
+        open={isOpen}
+        anchorEl={anchorEl}
+        style={{ zIndex: "999" }}
+        placement="bottom-start"
+        modifiers={[
+          {
+            name: "preventOverflow",
+            options: {
+              boundariesElement: "window",
+            },
+          },
+        ]}
+      >
         {isOpen && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -88,8 +100,6 @@ const MoreMenu = ({
               duration: 0.15,
             }}
             style={{
-              top: `${menuPosition.top + 35}px`,
-              left: `${menuPosition.left}px`,
               width: "fit-content",
               borderRadius: "0.4rem",
             }}
@@ -132,7 +142,7 @@ const MoreMenu = ({
             </div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </Popper>
     </>,
     document.getElementById("moreMenu")
   );

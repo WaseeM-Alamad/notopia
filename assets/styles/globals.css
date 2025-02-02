@@ -212,7 +212,6 @@ img {
 }
 
 .menu {
-  position: fixed;
   z-index: 110;
   height: fit-content;
   width: 220px;

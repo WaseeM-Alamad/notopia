@@ -4,7 +4,7 @@ import React, { forwardRef, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Edit } from "../icons/EditIcon";
 
-const ProfileModal = forwardRef(({ user, isOpen, menuPosition }, ref) => {
+const ProfileMenu = forwardRef(({ user, isOpen, menuPosition }, ref) => {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -32,6 +32,7 @@ const ProfileModal = forwardRef(({ user, isOpen, menuPosition }, ref) => {
               opacity: { duration: 0.2 },
             }}
             style={{
+              position: "fixed",
               top: `${menuPosition.top + 50}px`,
               left: `${menuPosition.left - 145}px`,
             }}
@@ -80,4 +81,4 @@ const ProfileModal = forwardRef(({ user, isOpen, menuPosition }, ref) => {
   );
 });
 
-export default ProfileModal;
+export default ProfileMenu;

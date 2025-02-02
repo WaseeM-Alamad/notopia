@@ -5,6 +5,7 @@ import {
   updateOrderAction,
 } from "@/utils/actions";
 import ColorSelectMenu from "./ColorSelectMenu";
+import "@/assets/styles/note.css";
 import PersonAdd from "../icons/PersonAdd";
 import ImageIcon from "../icons/ImageIcon";
 import ColorIcon from "../icons/ColorIcon";
@@ -17,14 +18,14 @@ import { createClient } from "@supabase/supabase-js";
 import MoreMenu from "./MoreMenu";
 import DeleteIcon from "../icons/DeleteIcon";
 import RestoreIcon from "../icons/RestoreIcon";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
+import DeleteModal from "./DeleteModal";
 
 const NoteTools = ({
   images,
-  setNotes,
-  setOrder,
   index,
   note,
+  dispatchNotes,
   colorMenuOpen,
   setColorMenuOpen,
   moreMenuOpen,
@@ -34,43 +35,45 @@ const NoteTools = ({
   setLocalIsArchived,
   setLocalIsTrash,
   setIsNoteDeleted,
+  setTooltipAnchor,
 }) => {
   const [selectedColor, setSelectedColor] = useState(note.color);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [colorAnchorEl, setColorAnchorEl] = useState(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
-  const colorButtonRef = useRef(null);
-  const colorMenuRef = useRef(null);
   const inputRef = useRef(null);
-  const moreRef = useRef(null);
 
   const handleColorClick = useCallback(async (newColor) => {
     if (newColor === selectedColor) return;
     setSelectedColor(newColor);
-    const updatedNote = { ...note, color: newColor };
-    setNotes((prev) => {
-      const newNotes = new Map(prev);
-      newNotes.set(note.uuid, updatedNote);
-      return newNotes; // Return the updated map
+
+    dispatchNotes({
+      type: "UPDATE_COLOR",
+      note: note,
+      newColor: newColor,
     });
+
     window.dispatchEvent(new Event("loadingStart"));
     await NoteUpdateAction("color", newColor, note.uuid);
     window.dispatchEvent(new Event("loadingEnd"));
   });
 
-  const [colorMenuPosition, setColorMenuPosition] = useState({
-    top: 0,
-    left: 0,
-  });
-
-  const [moreMenuPosition, setMoreMenuPosition] = useState({
-    top: 0,
-    left: 0,
-  });
-
-  const toggleMenu = () => {
+  const toggleMenu = (e) => {
+    closeToolTip();
+    setColorAnchorEl(e.currentTarget);
     setColorMenuOpen(!colorMenuOpen);
   };
 
+  const closeToolTip = () => {
+    setTooltipAnchor((prev) => ({
+      anchor: null,
+      text: prev.text,
+    }));
+  };
+
   const handleArchive = useCallback(async () => {
+    closeToolTip();
     setLocalIsArchived((prev) => !prev);
     const first = index === 0;
     window.dispatchEvent(new Event("loadingStart"));
@@ -106,15 +109,14 @@ const NoteTools = ({
     const file = event.target?.files[0];
     const imageURL = URL.createObjectURL(file);
     const newUUID = uuid();
-    const updatedNote = {
-      ...note,
-      images: [...note.images, { url: imageURL, uuid: newUUID }],
-    };
-    setNotes((prev) => {
-      const newNotes = new Map(prev);
-      newNotes.set(note.uuid, updatedNote);
-      return newNotes; // Return the updated map
+
+    dispatchNotes({
+      type: "ADD_IMAGE",
+      note: note,
+      newImageUUID: newUUID,
+      imageURL: imageURL,
     });
+
     inputRef.current.value = "";
     window.dispatchEvent(new Event("loadingStart"));
     const starter =
@@ -127,12 +129,9 @@ const NoteTools = ({
     window.dispatchEvent(new Event("loadingEnd"));
   };
 
-  const handleMoreClick = useCallback(() => {
-    const rect = moreRef.current?.getBoundingClientRect();
-    setMoreMenuPosition({
-      top: rect.top,
-      left: rect.left,
-    });
+  const handleMoreClick = useCallback((e) => {
+    closeToolTip();
+    setAnchorEl(e.currentTarget);
     setMoreMenuOpen((prev) => !prev);
   }, []);
 
@@ -154,6 +153,18 @@ const NoteTools = ({
     window.dispatchEvent(new Event("loadingEnd"));
   };
 
+  const handleMouseEnter = (e, text) => {
+    const target = e.currentTarget;
+    setTooltipAnchor({ anchor: target, text: text, display: true });
+  };
+
+  const handleMouseLeave = () => {
+    setTooltipAnchor((prev) => ({
+      ...prev,
+      display: false,
+    }));
+  };
+
   return (
     <span
       style={{
@@ -161,11 +172,7 @@ const NoteTools = ({
         transition: "all 0.3s ease",
       }}
     >
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.3, ease: "easeInOut" }}
+      <div
         style={{
           opacity: (colorMenuOpen || moreMenuOpen) && "1",
           backgroundColor: images && note.color,
@@ -177,16 +184,41 @@ const NoteTools = ({
           {!note.isTrash ? (
             <>
               {" "}
-              <Button>
+              <Button
+                onMouseEnter={(e) => handleMouseEnter(e, "Remind me")}
+                onMouseLeave={handleMouseLeave}
+              >
                 <Bell size={15} opacity={0.9} />
               </Button>
-              <Button>
+              <Button
+                onMouseEnter={(e) => handleMouseEnter(e, "Collaborator")}
+                onMouseLeave={handleMouseLeave}
+              >
                 <PersonAdd size={15} opacity={0.9} />
               </Button>
-              <Button onClick={handleArchive}>
+              <Button
+                onClick={handleArchive}
+                onMouseEnter={(e) =>
+                  handleMouseEnter(
+                    e,
+                    `${note.isArchived ? "Unarchive" : "Archive"}`
+                  )
+                }
+                onMouseLeave={handleMouseLeave}
+              >
                 <ArchiveIcon size={15} opacity={0.9} color="#212121" />
               </Button>
-              <Button onClick={() => inputRef.current.click()}>
+              <Button
+                onClick={() => {
+                  setTooltipAnchor((prev) => ({
+                    ...prev,
+                    display: false,
+                  }));
+                  inputRef.current.click();
+                }}
+                onMouseEnter={(e) => handleMouseEnter(e, "Add image")}
+                onMouseLeave={handleMouseLeave}
+              >
                 <input
                   ref={inputRef}
                   style={{ display: "none" }}
@@ -195,49 +227,68 @@ const NoteTools = ({
                 />
                 <ImageIcon size={15} opacity={0.9} />
               </Button>
-              <Button ref={colorButtonRef} onClick={toggleMenu}>
+              <Button
+                onClick={toggleMenu}
+                onMouseEnter={(e) => handleMouseEnter(e, "Background options")}
+                onMouseLeave={handleMouseLeave}
+              >
                 <ColorIcon size={15} opacity={0.9} />
               </Button>
               <AnimatePresence>
                 {colorMenuOpen && (
                   <ColorSelectMenu
                     handleColorClick={handleColorClick}
-                    menuPosition={colorMenuPosition}
+                    anchorEl={colorAnchorEl}
                     selectedColor={selectedColor}
+                    setTooltipAnchor={setTooltipAnchor}
                     isOpen={colorMenuOpen}
                     setIsOpen={setColorMenuOpen}
-                    buttonRef={colorButtonRef}
-                    colorMenuRef={colorMenuRef}
                   />
                 )}
               </AnimatePresence>
-              <Button onClick={handleMoreClick} ref={moreRef}>
+              <Button
+                onClick={handleMoreClick}
+                onMouseEnter={(e) => handleMouseEnter(e, "More")}
+                onMouseLeave={handleMouseLeave}
+              >
                 <MoreVert size={15} opacity={0.9} />
               </Button>
-              <MoreMenu
-                setIsOpen={setMoreMenuOpen}
-                buttonRef={moreRef}
-                menuPosition={moreMenuPosition}
-                isOpen={moreMenuOpen}
-                setLocalIsTrash={setLocalIsTrash}
-                uuid={note.uuid}
-                note={note}
-                setNotes={setNotes}
-                setOrder={setOrder}
-              />
+              <AnimatePresence>
+                {moreMenuOpen && (
+                  <MoreMenu
+                    setIsOpen={setMoreMenuOpen}
+                    dispatchNotes={dispatchNotes}
+                    anchorEl={anchorEl}
+                    setAnchorEl={setAnchorEl}
+                    isOpen={moreMenuOpen}
+                    setLocalIsTrash={setLocalIsTrash}
+                    uuid={note.uuid}
+                    note={note}
+                  />
+                )}
+              </AnimatePresence>
             </>
           ) : (
             <>
-              <Button onClick={handleDeleteNote} ref={moreRef}>
+              <Button onClick={() => setDeleteModalOpen(true)}>
                 <DeleteIcon size={18} opacity={0.9} />
               </Button>
-              <Button onClick={handleRestoreNote} ref={moreRef}>
+              <Button onClick={handleRestoreNote}>
                 <RestoreIcon size={18} opacity={0.9} />
               </Button>
+              <AnimatePresence>
+                {deleteModalOpen && (
+                  <DeleteModal
+                    isOpen={deleteModalOpen}
+                    setIsOpen={setDeleteModalOpen}
+                    handleDeleteNote={handleDeleteNote}
+                  />
+                )}
+              </AnimatePresence>
             </>
           )}
         </div>
-      </motion.div>
+      </div>
     </span>
   );
 };

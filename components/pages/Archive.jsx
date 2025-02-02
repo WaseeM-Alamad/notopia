@@ -17,7 +17,7 @@ const COLUMN_WIDTH = 240;
 const GUTTER = 15;
 
 const NoteWrapper = memo(
-  ({ note, setNotes, setOrder, isVisible, ref, setSelectedNotesIDs, selectedNotes, index }) => {
+  ({ note, isVisible, ref, setSelectedNotesIDs, selectedNotes, index, dispatchNotes, setTooltipAnchor }) => {
     const [mounted, setMounted] = useState(false);
     const [mountOpacity, setMountOpacity] = useState(false);
     const [modalTrigger, setModalTrigger] = useState(false);
@@ -53,8 +53,9 @@ const NoteWrapper = memo(
       >
         <Note
           note={note}
-          setNotes={setNotes}
-          setOrder={setOrder}
+          dispatchNotes={dispatchNotes}
+          index={index}
+          setTooltipAnchor={setTooltipAnchor}
           setSelectedNotesIDs={setSelectedNotesIDs}
           selectedNotes={selectedNotes}
           modalTrigger={modalTrigger}
@@ -68,7 +69,7 @@ const NoteWrapper = memo(
 
 NoteWrapper.displayName = "NoteWrapper";
 
-const Home = memo(({ notes, setNotes, order, setOrder }) => {
+const Home = memo(({ notes, order, dispatchNotes, setTooltipAnchor }) => {
   const [isLayoutReady, setIsLayoutReady] = useState(false);
   const [selectedNotesIDs, setSelectedNotesIDs] = useState([]);
   const hasDispatched = useRef(false);
@@ -197,15 +198,15 @@ const Home = memo(({ notes, setNotes, order, setOrder }) => {
         >
           {order.map((uuid, index) => {
             const note = notes.get(uuid);
-            if (note.isArchived)
+            if (note.isArchived && !note.isTrash)
               return (
                 <NoteWrapper
                   key={note.uuid}
                   note={note}
-                  setNotes={setNotes}
-                  setOrder={setOrder}
+                  dispatchNotes={dispatchNotes}
                   isVisible={isLayoutReady}
                   index={index}
+                  setTooltipAnchor={setTooltipAnchor}
                   setSelectedNotesIDs={setSelectedNotesIDs}
                   selectedNotes={selectedRef}
                 />
@@ -216,8 +217,9 @@ const Home = memo(({ notes, setNotes, order, setOrder }) => {
       <AddNoteModal
         trigger={false}
         setTrigger={() => {}}
-        setNotes={setNotes}
         lastAddedNoteRef={null}
+        dispatchNotes={dispatchNotes}
+        setTooltipAnchor={setTooltipAnchor}
       />
     </>
   );

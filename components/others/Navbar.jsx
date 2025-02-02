@@ -12,7 +12,7 @@ import CloudIcon from "../icons/CloudIcon";
 import { AnimatePresence, motion } from "framer-motion";
 import Button from "../Tools/Button";
 import Logo from "../icons/Logo";
-import ProfileModal from "./ProfileModal";
+import ProfileMenu from "./ProfileMenu";
 
 const Navbar = ({ user }) => {
   const [isLoading, setIsLoading] = useState(0);
@@ -140,7 +140,7 @@ const Navbar = ({ user }) => {
 
   return (
     <>
-      <ProfileModal
+      <ProfileMenu
         user={user}
         ref={menuRef}
         menuPosition={menuPosition}

@@ -8,7 +8,11 @@ import Button from "@/components/Tools/Button";
 import { AnimatePresence, motion } from "framer-motion";
 import React, { useEffect, useRef } from "react";
 
-const TopMenuHome = ({ selectedNotesIDs, setSelectedNotesIDs }) => {
+const TopMenuHome = ({
+  selectedNotesIDs,
+  setSelectedNotesIDs,
+  setTooltipAnchor,
+}) => {
   const topMenuRef = useRef(null);
 
   const handleClose = () => {
@@ -17,13 +21,33 @@ const TopMenuHome = ({ selectedNotesIDs, setSelectedNotesIDs }) => {
   };
 
   useEffect(() => {
+    if (
+      selectedNotesIDs.length > 0 &&
+      !document
+        .querySelector(".notes-container")
+        .classList.contains("selected-notes")
+    ) {
+      document
+        .querySelector(".notes-container")
+        .classList.add("selected-notes");
+    }
+
+    if (selectedNotesIDs.length === 0) {
+      document
+        .querySelector(".notes-container")
+        .classList.remove("selected-notes");
+    }
+
     const handler = (e) => {
       if (
         selectedNotesIDs.length > 0 &&
         !e.target.closest(".note") &&
         !e.target.closest("nav") &&
         !e.target.closest(".top-menu") &&
-        !e.target.closest("aside")
+        !e.target.closest("aside") &&
+        !document
+          .querySelector(".notes-container")
+          .classList.contains("dragging")
       ) {
         handleClose();
       }
@@ -33,6 +57,25 @@ const TopMenuHome = ({ selectedNotesIDs, setSelectedNotesIDs }) => {
 
     return () => document.removeEventListener("click", handler);
   }, [selectedNotesIDs]);
+
+  const handleMouseEnter = (e, text) => {
+    const target = e.currentTarget;
+    setTooltipAnchor({ anchor: target, text: text, display: true });
+  };
+
+  const handleMouseLeave = () => {
+    setTooltipAnchor((prev) => ({
+      ...prev,
+      display: false,
+    }));
+  };
+
+  const closeToolTip = () => {
+    setTooltipAnchor((prev) => ({
+      anchor: null,
+      text: prev.text,
+    }));
+  };
 
   return (
     <AnimatePresence>
@@ -53,6 +96,8 @@ const TopMenuHome = ({ selectedNotesIDs, setSelectedNotesIDs }) => {
         >
           <Button
             onClick={handleClose}
+            onMouseEnter={(e) => handleMouseEnter(e, "Clear selection")}
+            onMouseLeave={handleMouseLeave}
             style={{
               width: "52px",
               height: "52px",

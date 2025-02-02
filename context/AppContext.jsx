@@ -32,6 +32,7 @@ export function AppProvider({ children }) {
   
   
   const [user, setUser] = useState(null);
+  const [tooltipAnchor, setTooltipAnchor] = useState(null);
   const { data: session, status } = useSession();
 
   useEffect(() => {
@@ -46,6 +47,8 @@ export function AppProvider({ children }) {
         slotProps,
         user,
         session,
+        tooltipAnchor,
+        setTooltipAnchor,
         status,
       }}
     >

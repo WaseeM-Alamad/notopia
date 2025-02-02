@@ -19,6 +19,31 @@
   white-space: pre-wrap;
 }
 
+.notes-container.dragging .note-wrapper:hover .note-bottom {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.notes-container.selected-notes .note-wrapper:hover .note-bottom {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.notes-container.dragging .note-wrapper:hover .pin {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.notes-container.dragging .note-wrapper:hover .checkmark {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.notes-container.dragging .note-wrapper:hover {
+  box-shadow: none;
+  pointer-events: none;
+}
+
 .title {
   padding: 0.8rem 0.8rem 0 0.8rem;
   font-weight: 500;
@@ -121,4 +146,19 @@
   font-size: 1.475rem;
   line-height: 1.5rem;
   cursor: text;
+}
+
+.delete-modal-button {
+  border: none;
+  padding: 0.5rem 1.5rem;
+  border-radius: 0.3rem;
+  background-color: rgba(0, 0, 0, 0);
+  cursor: pointer;
+  user-select: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.delete-modal-button:hover {
+  background-color: rgba(0, 0, 0, 0.07);
 }

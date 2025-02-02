@@ -1,14 +1,8 @@
-import React, {
-  forwardRef,
-  memo,
-  useEffect,
-  useRef,
-  useState,
-  useCallback,
-} from "react";
+import React, { memo, useEffect, useRef, useState } from "react";
 import DoneRoundedIcon from "@mui/icons-material/DoneRounded";
 import { AnimatePresence, motion } from "framer-motion";
 import { createPortal } from "react-dom";
+import { Popper } from "@mui/material";
 
 const colors = [
   "#FFFFFF",
@@ -25,110 +19,67 @@ const colors = [
   "#dfdff0",
 ];
 
-const ColorSelectMenu = forwardRef(
-  (
-    { handleColorClick, selectedColor, isOpen, setIsOpen, buttonRef },
-    forwardedRef
-  ) => {
-    const localRef = useRef(null);
-    const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
-    const [isRendered, setIsRendered] = useState(false);
-    const [menuDisplay, setMenuDisplay] = useState(false);
-    const [hoveredColor, setHoveredColor] = useState(false);
+const ColorSelectMenu = ({
+  handleColorClick,
+  selectedColor,
+  isOpen,
+  setIsOpen,
+  anchorEl,
+  setTooltipAnchor,
+}) => {
+  const [hoveredColor, setHoveredColor] = useState(false);
+  const menuRef = useRef(null);
 
-    const setColorMenuRef = useCallback(
-      (node) => {
-        if (node) {
-          localRef.current = node;
-          if (typeof forwardedRef === "function") {
-            forwardedRef(node);
-          } else if (forwardedRef) {
-            forwardedRef.current = node;
-          }
-        }
-      },
-      [forwardedRef]
-    );
-
-    // Set initial position and mark as rendered
-    useEffect(() => {
-      setTimeout(() => {
-        setMenuDisplay(true);
-      }, 1);
-
-      if (isOpen && buttonRef.current) {
-        const buttonRect = buttonRef.current.getBoundingClientRect();
-        setMenuPosition({
-          top: buttonRect.bottom + window.scrollY,
-          left: buttonRect.left + window.scrollX - 108,
-        });
-        // Mark as rendered after initial position is set
-        setIsRendered(true);
-      } else {
-        setIsRendered(false);
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (!menuRef.current.contains(e.target) && !anchorEl.contains(e.target)) {
+        if (isOpen) setIsOpen(false);
       }
-    }, [isOpen, buttonRef]);
+    };
 
-    // After initial render, measure and update position if needed
-    useEffect(() => {
-      if (isRendered && localRef.current) {
-        const timeoutId = setTimeout(() => {
-          const menuRect = localRef.current.getBoundingClientRect();
-          const menuLeftPosition = menuRect.left + menuRect.width;
-          const windowWidth = window.innerWidth;
+    document.addEventListener("click", handleClickOutside);
 
-          if (menuLeftPosition + 10 > windowWidth) {
-            console.log("overflow ");
-            const overflow = menuLeftPosition - windowWidth;
-            setMenuPosition((prev) => ({
-              ...prev,
-              left: prev.left - overflow - 20,
-            }));
-          }
-          if (menuRect.bottom + menuRect.height > window.innerHeight) {
-            localRef.current.scrollIntoView({
-              behavior: "smooth",
-              block: "nearest",
-            });
-          }
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [setIsOpen]);
 
-          // Additional adjustments can be made here based on menuRect if needed
-        }, 0);
+  useEffect(() => {
+    const handleResize = () => {
+      setIsOpen(false);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
-        return () => clearTimeout(timeoutId);
-      }
-    }, [isRendered]);
+  const handleMouseEnter = (e, text) => {
+    const target = e.currentTarget;
+    setTooltipAnchor({ anchor: target, text: text, display: true });
+  };
 
-    useEffect(() => {
-      const handleClickOutside = (e) => {
-        if (
-          localRef.current &&
-          !localRef.current.contains(e.target) &&
-          buttonRef.current &&
-          !buttonRef.current.contains(e.target)
-        ) {
-          if (isOpen) setIsOpen(false);
-        }
-      };
+  const handleMouseLeave = () => {
+    setTooltipAnchor((prev) => ({
+      ...prev,
+      display: false,
+    }));
+  };
 
-      document.addEventListener("click", handleClickOutside);
-
-      return () => document.removeEventListener("click", handleClickOutside);
-    }, [setIsOpen, buttonRef]);
-
-    useEffect(() => {
-      const handleResize = () => {
-        console.log("resize");
-        setIsOpen(false);
-      };
-      window.addEventListener("resize", handleResize);
-      return () => window.removeEventListener("resize", handleResize);
-    }, []);
-
-    return createPortal(
+  return createPortal(
+    <Popper
+      open={isOpen}
+      anchorEl={anchorEl}
+      style={{ zIndex: "998" }}
+      placement="bottom"
+      modifiers={[
+        {
+          name: "preventOverflow",
+          options: {
+            boundariesElement: "window",
+          },
+        },
+      ]}
+    >
       <motion.div
-        className="not-draggable"
-        ref={setColorMenuRef}
+        ref={menuRef}
+        className="not-draggable color"
         initial={{ y: 5, opacity: 0 }}
         animate={{
           y: isOpen ? 0 : 5,
@@ -143,28 +94,56 @@ const ColorSelectMenu = forwardRef(
           display: "grid",
           gridTemplateColumns: "repeat(6, 1fr)",
           gridTemplateRows: "repeat(2, 1fr)",
-          top: `${menuPosition.top}px`,
-          left: `${menuPosition.left}px`,
-          position: "absolute",
           height: "fit-content",
           width: "fit-content",
           padding: "9px 12px",
           borderRadius: "10px",
           backgroundColor: "white",
           boxShadow:
-            "0 1px 2px rgba(60,64,67,0.3), 0 2px 6px rgba(60,64,67,0.15)",
+            "0 1px 2px 0 rgba(60,64,67,0.3),0 2px 6px 2px rgba(60,64,67,0.15)",
           gap: "0.4rem",
-          zIndex: 999,
+          zIndex: "999",
         }}
       >
         {colors.map((color, index) => (
           <button
             onClick={() => handleColorClick(color)}
-            onMouseEnter={() => setHoveredColor(color)}
-            onMouseLeave={() => setHoveredColor(null)}
+            onMouseEnter={(e) => {
+              const text =
+                color === "#FFFFFF"
+                  ? "Default"
+                  : color === "#f79b92"
+                  ? "Coral"
+                  : color === "#f09265"
+                  ? "Peach"
+                  : color === "#fcf3a2"
+                  ? "Sand"
+                  : color === "#d0f5b5"
+                  ? "Mint"
+                  : color === "#a2e0d1"
+                  ? "Seafoam"
+                  : color === "#b9d9eb"
+                  ? "Fog"
+                  : color === "#97c4db"
+                  ? "Storm"
+                  : color === "#cda9db"
+                  ? "Lavender"
+                  : color === "#ffcec2"
+                  ? "Blossom"
+                  : color === "#e6d8b8"
+                  ? "Clay"
+                  : "Wisteria";
+              handleMouseEnter(e, text);
+
+              setHoveredColor(color);
+            }}
+            onMouseLeave={() => {
+              setHoveredColor(null);
+              handleMouseLeave();
+            }}
             disabled={!isOpen}
             key={index}
-            className="not-draggable"
+            className="not-draggable color"
             style={{
               outline: `solid 0.1rem ${
                 hoveredColor === color && selectedColor !== color
@@ -229,10 +208,10 @@ const ColorSelectMenu = forwardRef(
             </AnimatePresence>
           </button>
         ))}
-      </motion.div>,
-      document.getElementById("colorMenuPortal")
-    );
-  }
-);
+      </motion.div>
+    </Popper>,
+    document.getElementById("colorMenuPortal")
+  );
+};
 
-export default memo(ColorSelectMenu);
+export default ColorSelectMenu;

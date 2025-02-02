@@ -15,14 +15,15 @@ import { useSession } from "next-auth/react";
 import { AnimatePresence } from "framer-motion";
 
 const NoteModalTools = ({
-  setNotes,
   setLocalImages,
   selectedColor,
   setSelectedColor,
+  dispatchNotes,
   note,
   handleClose,
   isAtBottom,
   setIsLoadingImages,
+  imagesChangedRef,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { data: session } = useSession();
@@ -34,19 +35,16 @@ const NoteModalTools = ({
   const handleColorClick = useCallback(async (color) => {
     if (color === selectedColor) return;
     setSelectedColor(color);
-    setNotes((prevNotes) =>
-      prevNotes.map((mapNote) =>
-        mapNote.uuid === note.uuid ? { ...mapNote, color: color } : mapNote
-      )
-    );
+    dispatchNotes({
+      type: "UPDATE_COLOR",
+      note: note,
+      newColor: color
+    })
     window.dispatchEvent(new Event("loadingStart"));
     await NoteUpdateAction("color", color, note.uuid);
     window.dispatchEvent(new Event("loadingEnd"));
   });
 
-  const toggleMenu = useCallback(() => {
-    setIsOpen(!isOpen);
-  });
 
   const UploadImageAction = async (image) => {
     const supabase = createClient(
@@ -73,6 +71,7 @@ const NoteModalTools = ({
   };
 
   const handleOnChange = async (event) => {
+    imagesChangedRef.current = true;
     const file = event.target?.files[0];
     const imageURL = URL.createObjectURL(file);
     const newUUID = uuid();
@@ -115,7 +114,7 @@ const NoteModalTools = ({
           />
           <ImageIcon size={15} opacity={0.8} />
         </Button>
-        <Button ref={colorButtonRef} onClick={toggleMenu}>
+        <Button ref={colorButtonRef} onClick={() => setIsOpen(!isOpen)}>
           <ColorIcon size={15} opacity={0.8} />
         </Button>
         <AnimatePresence>

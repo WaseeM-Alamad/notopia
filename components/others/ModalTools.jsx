@@ -13,40 +13,77 @@ import { AnimatePresence } from "framer-motion";
 
 const ModalTools = ({
   setNote,
+  note,
   selectedColor,
   setSelectedColor,
   handleClose,
+  setTooltipAnchor,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [colorMenuOpen, setColorMenuOpen] = useState(false);
+  const [colorAnchorEl, setColorAnchorEl] = useState();
   const colorButtonRef = useRef(null);
   const closeRef = useRef(null);
   const inputRef = useRef(null);
 
-  const handleColorClick = useCallback((color) => {
+  const handleColorClick = (color) => {
     if (color === selectedColor) return;
     setSelectedColor(color);
     setNote((prev) => ({ ...prev, color: color }));
-  });
+  };
 
-  const toggleMenu = useCallback(() => {
-    setIsOpen(!isOpen);
-  });
+  const toggleMenu = (e) => {
+    closeToolTip();
+    setColorAnchorEl(e.currentTarget);
+    setColorMenuOpen((prev) => !prev);
+  };
+
+  const handleMouseEnter = (e, text) => {
+    const target = e.currentTarget;
+    setTooltipAnchor({ anchor: target, text: text, display: true });
+  };
+
+  const handleMouseLeave = () => {
+    setTooltipAnchor((prev) => ({
+      ...prev,
+      display: false,
+    }));
+  };
+
+  const closeToolTip = () => {
+    setTooltipAnchor((prev) => ({
+      anchor: null,
+      text: prev.text,
+    }));
+  };
 
   return (
     <div>
       <div style={{ opacity: "1" }} className="modal-bottom">
         {/* <p className="date">{FormattedDate}</p> */}
         <div className="modal-bottom-icons">
-          <Button>
+          <Button
+            onMouseEnter={(e) => handleMouseEnter(e, "Remind me")}
+            onMouseLeave={handleMouseLeave}
+          >
             <Bell size={15} opacity={0.8} />
           </Button>
-          <Button>
+          <Button
+            onMouseEnter={(e) => handleMouseEnter(e, "Collaborator")}
+            onMouseLeave={handleMouseLeave}
+          >
             <PersonAdd size={15} opacity={0.8} />
           </Button>
-          <Button>
+          <Button
+            onMouseEnter={(e) => handleMouseEnter(e, "Archive")}
+            onMouseLeave={handleMouseLeave}
+          >
             <ArchiveIcon size={15} opacity={0.8} color="#212121" />
           </Button>
-          <Button onClick={() => inputRef.current.click()}>
+          <Button
+            onMouseEnter={(e) => handleMouseEnter(e, "Add image")}
+            onMouseLeave={handleMouseLeave}
+            onClick={() => inputRef.current.click()}
+          >
             <input
               ref={inputRef}
               style={{ display: "none" }}
@@ -73,17 +110,23 @@ const ModalTools = ({
             />
             <ImageIcon size={15} opacity={0.8} />
           </Button>
-          <Button ref={colorButtonRef} onClick={toggleMenu}>
+          <Button
+            onMouseEnter={(e) => handleMouseEnter(e, "Background options")}
+            onMouseLeave={handleMouseLeave}
+            ref={colorButtonRef}
+            onClick={toggleMenu}
+          >
             <ColorIcon size={15} opacity={0.8} />
           </Button>
           <AnimatePresence>
-            {isOpen && (
+            {colorMenuOpen && (
               <ColorSelectMenu
                 handleColorClick={handleColorClick}
+                anchorEl={colorAnchorEl}
+                setTooltipAnchor={setTooltipAnchor}
                 selectedColor={selectedColor}
-                isOpen={isOpen}
-                setIsOpen={setIsOpen}
-                buttonRef={colorButtonRef}
+                isOpen={colorMenuOpen}
+                setIsOpen={setColorMenuOpen}
               />
             )}
           </AnimatePresence>
