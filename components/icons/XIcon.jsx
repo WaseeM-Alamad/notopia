@@ -1,6 +1,6 @@
 import React from "react";
 
-const XIcon = () => {
+const XIcon = ({color = "#7a7a7a"}) => {
   return (
     <svg
       width="27"
@@ -19,14 +19,14 @@ const XIcon = () => {
         {" "}
         <path
           d="M18 6L6 18"
-          stroke="#7a7a7a"
+          stroke={color}
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
         ></path>{" "}
         <path
           d="M6 6L18 18"
-          stroke="#7a7a7a"
+          stroke={color}
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"

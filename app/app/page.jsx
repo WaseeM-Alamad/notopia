@@ -9,10 +9,11 @@ import Folders from "@/components/pages/Folders";
 import Home from "@/components/pages/Home";
 import Reminders from "@/components/pages/Reminders";
 import Trash from "@/components/pages/Trash";
+import Snackbar from "@/components/Tools/Snackbar";
 import Tooltip from "@/components/Tools/Tooltip";
 import { fetchNotes } from "@/utils/actions";
 import { motion } from "framer-motion";
-import React, { memo, useEffect, useReducer, useState } from "react";
+import React, { memo, useEffect, useReducer, useRef, useState } from "react";
 
 const initialStates = {
   notes: new Map(),
@@ -187,6 +188,28 @@ const page = () => {
   const [isClient, setIsClient] = useState(false);
   const [tooltipAnchor, setTooltipAnchor] = useState(null);
   const [notesState, dispatchNotes] = useReducer(notesReducer, initialStates);
+  const [snackbarState, setSnackbarState] = useState({
+    snackOpen: false,
+    showUndo: true,
+    message: "",
+  });
+  const undoFunction = useRef(null);
+
+  const openSnackFunction = (Rmessage, Rfunction) => {
+    setSnackbarState((prev) => ({
+      ...prev,
+      snackOpen: false,
+    }));
+
+    setTimeout(() => {
+      setSnackbarState({
+        message: Rmessage,
+        showUndo: true,
+        snackOpen: true,
+      });
+      undoFunction.current = Rfunction;
+    }, 80);
+  };
 
   useEffect(() => {
     setIsClient(true);
@@ -285,6 +308,7 @@ const page = () => {
           notes={notesState.notes}
           order={notesState.order}
           setTooltipAnchor={setTooltipAnchor}
+          openSnackFunction={openSnackFunction}
         />
       );
     else if (currentPage?.includes("folders")) return <Folders />;
@@ -305,6 +329,7 @@ const page = () => {
           notes={notesState.notes}
           order={notesState.order}
           setTooltipAnchor={setTooltipAnchor}
+          openSnackFunction={openSnackFunction}
         />
       );
   };
@@ -312,6 +337,12 @@ const page = () => {
   return (
     <>
       <Tooltip anchorEl={tooltipAnchor} />
+      <Snackbar
+        snackbarState={snackbarState}
+        setSnackbarState={setSnackbarState}
+        setTooltipAnchor={setTooltipAnchor}
+        undo={undoFunction.current}
+      />
       <Header />
       {renderPage()}
     </>

@@ -136,7 +136,7 @@ const NoteWrapper = memo(
 
 NoteWrapper.displayName = "NoteWrapper";
 
-const Home = memo(({ notes, order, dispatchNotes, setTooltipAnchor }) => {
+const Home = memo(({ notes, order, dispatchNotes, setTooltipAnchor, openSnackFunction }) => {
   const [isLayoutReady, setIsLayoutReady] = useState(false);
   const [othersHeight, setOthersHeight] = useState(null);
   const [isLoadingImages, setIsLoadingImages] = useState([]);
@@ -319,7 +319,7 @@ const Home = memo(({ notes, order, dispatchNotes, setTooltipAnchor }) => {
       ghostElement.children[1].style.opacity = "0";
 
       ghostElement.style.position = "fixed";
-      ghostElement.style.zIndex = "9999";
+      ghostElement.style.zIndex = "999";
       ghostElement.style.opacity = "0.97";
       ghostElement.style.pointerEvents = "none";
       ghostElement.style.transition = "none";
@@ -542,6 +542,7 @@ const Home = memo(({ notes, order, dispatchNotes, setTooltipAnchor }) => {
         lastAddedNoteRef={lastAddedNoteRef}
         setIsLoadingImages={setIsLoadingImages}
         setTooltipAnchor={setTooltipAnchor}
+        openSnackFunction={openSnackFunction}
       />
     </>
   );

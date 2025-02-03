@@ -27,6 +27,7 @@ const MainLayout = async ({ children }) => {
         <body suppressHydrationWarning>
           <AppProvider>
             <div id="tooltipPortal" />
+            <div id="snackbarPortal" />
             {session && (
               <>
                 <Navbar user={session?.user} />

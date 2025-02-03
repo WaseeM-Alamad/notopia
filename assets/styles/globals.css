@@ -135,7 +135,7 @@ body {
 }
 
 .btn:hover {
-  background-color: rgba(0, 0, 0, 0.08);
+  background-color: rgba(143, 143, 143, 0.1);
 }
 
 .btn-click:active {
@@ -276,7 +276,6 @@ img {
   animation: linearGradientMove 0.3s infinite linear;
 }
 
-
 @keyframes linearGradientMove {
   100% {
     background-position: 8px 0, -8px 100%, 0 -8px, 100% 8px; /* Match the spacing and thickness */
@@ -285,4 +284,21 @@ img {
 
 .relative {
   position: relative;
+}
+
+.undo-btn {
+  padding: 0.5rem 1.5rem;
+  font-weight: 600;
+  border-radius: 5px;
+  border: none;
+  background-color: greenyellow;
+  cursor: pointer;
+  background-color: rgba(0, 0, 0, 0);
+  user-select: none;
+  color: #3f95fc;
+  transition: all 0.1s ease;
+}
+
+.undo-btn:hover {
+  background-color: rgba(143, 143, 143, 0.1);
 }

@@ -36,7 +36,7 @@ const Tooltip = ({ anchorEl }) => {
     <Popper
       open={Boolean(display)}
       anchorEl={anchorEl?.anchor}
-      style={{ zIndex: "1000" }}
+      style={{ zIndex: "3000" }}
       placement="bottom"
       modifiers={[
         {

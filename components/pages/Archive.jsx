@@ -17,7 +17,16 @@ const COLUMN_WIDTH = 240;
 const GUTTER = 15;
 
 const NoteWrapper = memo(
-  ({ note, isVisible, ref, setSelectedNotesIDs, selectedNotes, index, dispatchNotes, setTooltipAnchor }) => {
+  ({
+    note,
+    isVisible,
+    ref,
+    setSelectedNotesIDs,
+    selectedNotes,
+    index,
+    dispatchNotes,
+    setTooltipAnchor,
+  }) => {
     const [mounted, setMounted] = useState(false);
     const [mountOpacity, setMountOpacity] = useState(false);
     const [modalTrigger, setModalTrigger] = useState(false);
@@ -29,15 +38,15 @@ const NoteWrapper = memo(
     }, []);
 
     useEffect(() => {
-          const handler = () => {
-            setMountOpacity(true);
-          };
-    
-          window.addEventListener("closeModal", handler);
-          return () => {
-            window.removeEventListener("closeModal", handler);
-          };
-        }, []);
+      const handler = () => {
+        setMountOpacity(true);
+      };
+
+      window.addEventListener("closeModal", handler);
+      return () => {
+        window.removeEventListener("closeModal", handler);
+      };
+    }, []);
 
     return (
       <motion.div
@@ -69,7 +78,7 @@ const NoteWrapper = memo(
 
 NoteWrapper.displayName = "NoteWrapper";
 
-const Home = memo(({ notes, order, dispatchNotes, setTooltipAnchor }) => {
+const Archive = memo(({ notes, order, dispatchNotes, setTooltipAnchor }) => {
   const [isLayoutReady, setIsLayoutReady] = useState(false);
   const [selectedNotesIDs, setSelectedNotesIDs] = useState([]);
   const hasDispatched = useRef(false);
@@ -173,14 +182,14 @@ const Home = memo(({ notes, order, dispatchNotes, setTooltipAnchor }) => {
   }, [selectedNotesIDs]);
 
   useEffect(() => {
-      if (!hasDispatched.current && !isFirstRender.current) {
-        window.dispatchEvent(new Event("closeModal"));
-        hasDispatched.current = true;
-      }
-      if (isFirstRender.current) {
-        isFirstRender.current = false;
-      }
-    }, [notes]); // Runs after notes are rendered
+    if (!hasDispatched.current && !isFirstRender.current) {
+      window.dispatchEvent(new Event("closeModal"));
+      hasDispatched.current = true;
+    }
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+    }
+  }, [notes]); // Runs after notes are rendered
 
   return (
     <>
@@ -225,6 +234,6 @@ const Home = memo(({ notes, order, dispatchNotes, setTooltipAnchor }) => {
   );
 });
 
-Home.displayName = "Home";
+Archive.displayName = "Archive";
 
-export default Home;
+export default Archive;

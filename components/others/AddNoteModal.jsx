@@ -16,6 +16,7 @@ const AddNoteModal = ({
   lastAddedNoteRef,
   setIsLoadingImages,
   setTooltipAnchor,
+  openSnackFunction,
 }) => {
   const { data: session } = useSession();
   const userID = session?.user?.id;
@@ -165,14 +166,16 @@ const AddNoteModal = ({
         try {
           setIsEmptyNote(false);
           setTimeout(() => {
-            const rect = lastAddedNoteRef.current.getBoundingClientRect();
-            setModalPosition({
-              top: rect.top,
-              left: rect.left,
-              width: rect.width,
-              height: rect.height,
-              borderRadius: "0.7rem",
-            });
+            if (!note.isArchived) {
+              const rect = lastAddedNoteRef.current.getBoundingClientRect();
+              setModalPosition({
+                top: rect.top,
+                left: rect.left,
+                width: rect.width,
+                height: rect.height,
+                borderRadius: "0.7rem",
+              });
+            }
           }, 20);
         } catch (error) {
           console.log("Couldn't fetch note position on add.");
@@ -271,7 +274,7 @@ const AddNoteModal = ({
   };
 
   const insert = async () => {
-    for (let i = 0; i < 130; i++) {
+    for (let i = 0; i < 50; i++) {
       const newNote = {
         uuid: uuid(),
         title: note.title,
@@ -318,7 +321,7 @@ const AddNoteModal = ({
       }}
       className="modal-container"
     >
-      <button onClick={insert}>insertff</button>
+      {/* <button onClick={insert}>insertff</button> */}
       <div
         ref={modalRef}
         style={{
@@ -430,6 +433,7 @@ const AddNoteModal = ({
             setSelectedColor={setSelectedColor}
             setTooltipAnchor={setTooltipAnchor}
             handleClose={handleClose}
+            openSnackFunction={openSnackFunction}
           />
         )}
       </div>
