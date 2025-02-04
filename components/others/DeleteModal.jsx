@@ -31,9 +31,9 @@ const DeleteModal = ({ isOpen, setIsOpen, handleDeleteNote }) => {
       }}
     >
       <motion.div
-        initial={{ top: "45.4%", opacity: 0 }}
+        initial={{ top: "45.9%", opacity: 0 }}
         animate={{ top: "45%", opacity: 1 }}
-        exit={{ top: "45.4%", opacity: 0 }}
+        exit={{ top: "45.9%", opacity: 0 }}
         transition={{
           top: { type: "spring", stiffness: 1000, damping: 50, mass: 1 },
           opacity: { duration: 0.1 },

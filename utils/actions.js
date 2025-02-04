@@ -100,7 +100,12 @@ export const NoteUpdateAction = async (type, value, noteUUID, first) => {
   try {
     await connectDB();
     if (type === "images") {
-      await Note.updateOne({ uuid: noteUUID }, { $push: { images: value } });
+      const updatedImages = await Note.findOneAndUpdate(
+        { uuid: noteUUID },
+        { $push: { images: value } },
+        { returnDocument: "after" }
+      );
+      return JSON.parse(JSON.stringify(updatedImages.images));
     } else if (type === "isArchived") {
       await Note.updateOne(
         { uuid: noteUUID },
@@ -251,6 +256,34 @@ export const updateOrderAction = async (data) => {
       user.notesOrder = updatedOrder;
     }
     await user.save();
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const undoAction = async (data) => {
+  if (!session) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
+  try {
+    await connectDB();
+    const user = await User.findById(userID);
+    const { notesOrder } = user;
+
+    if (data.type === "undoArchive") {
+      const { images, ...noteWithoutImages } = data.note;
+      await Note.updateOne(
+        { uuid: data.note.uuid },
+        { $set: { ...noteWithoutImages, isArchived: data.note.isArchived } }
+      );
+      const updatedOrder = [...notesOrder];
+      const [draggedNote] = updatedOrder.splice(data.initialIndex, 1);
+      updatedOrder.splice(data.endIndex, 0, draggedNote);
+
+      user.notesOrder = updatedOrder;
+      await user.save();
+    }
   } catch (error) {
     console.log(error);
   }

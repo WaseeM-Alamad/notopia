@@ -38,13 +38,12 @@ const NoteModalTools = ({
     dispatchNotes({
       type: "UPDATE_COLOR",
       note: note,
-      newColor: color
-    })
+      newColor: color,
+    });
     window.dispatchEvent(new Event("loadingStart"));
     await NoteUpdateAction("color", color, note.uuid);
     window.dispatchEvent(new Event("loadingEnd"));
   });
-
 
   const UploadImageAction = async (image) => {
     const supabase = createClient(
@@ -83,7 +82,7 @@ const NoteModalTools = ({
       "https://fopkycgspstkfctmhyyq.supabase.co/storage/v1/object/public/notopia";
     const path = `${starter}/${userID}/${note.uuid}/${newUUID}`;
     setIsLoadingImages((prev) => [...prev, newUUID]);
-    await NoteUpdateAction("images", { url: path, id: newUUID }, note.uuid);
+    await NoteUpdateAction("images", { url: path, uuid: newUUID }, note.uuid);
     await UploadImageAction({ file: file, id: newUUID }, note.uuid);
     setIsLoadingImages((prev) => prev.filter((id) => id !== newUUID));
     window.dispatchEvent(new Event("loadingEnd"));

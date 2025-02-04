@@ -130,12 +130,13 @@ body {
   width: 32px;
   border-radius: 50%;
   border: none;
+  opacity: 0.87;
   background-color: rgba(0, 0, 0, 0);
-  transition: all 0.1s ease;
+  transition: all 0.2s ease;
 }
 
 .btn:hover {
-  background-color: rgba(143, 143, 143, 0.1);
+  background-color: rgba(95,99,104,0.157);
 }
 
 .btn-click:active {
@@ -302,3 +303,34 @@ img {
 .undo-btn:hover {
   background-color: rgba(143, 143, 143, 0.1);
 }
+
+.ghost-note {
+  position: fixed !important;
+  z-index: 999 !important;
+  opacity: 0.97 !important;
+  pointer-events: none !important;
+  cursor: move !important;
+  border-radius: 0.8rem !important;
+  box-shadow: 2px 1px 25px -3px rgba(112, 112, 112, 0.8) !important;
+  transform: none !important;
+  transition: none !important;
+}
+
+.restore-ghost-note {
+  position: fixed !important;
+  z-index: 999 !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  cursor: move !important;
+  border-radius: 0.8rem !important;
+  box-shadow: none !important;
+  transform: none !important;
+  transition: all 0.25s cubic-bezier(0.52, 0, 0.18, 1), height 0.1s !important;
+}
+
+.dragged-note {
+  opacity: 0 !important;
+  transition: none !important;
+  pointer-events: none !important;
+}
+

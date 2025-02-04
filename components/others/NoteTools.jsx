@@ -2,6 +2,7 @@ import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import {
   DeleteNoteAction,
   NoteUpdateAction,
+  undoAction,
   updateOrderAction,
 } from "@/utils/actions";
 import ColorSelectMenu from "./ColorSelectMenu";
@@ -35,6 +36,7 @@ const NoteTools = ({
   setLocalIsArchived,
   setLocalIsTrash,
   setIsNoteDeleted,
+  openSnackFunction,
   setTooltipAnchor,
 }) => {
   const [selectedColor, setSelectedColor] = useState(note.color);
@@ -74,12 +76,38 @@ const NoteTools = ({
 
   const handleArchive = useCallback(async () => {
     closeToolTip();
-    setLocalIsArchived((prev) => !prev);
+    const initialIndex = index;
+    setTimeout(() => {
+      setLocalIsArchived((prev) => !prev);
+    }, 1);
+    const undoArchive = async () => {
+      dispatchNotes({
+        type: "UNDO_ARCHIVE",
+        note: note,
+        initialIndex: initialIndex,
+      });
+      setTimeout(() => {
+        window.dispatchEvent(new Event("closeModal"));
+      }, 0);
+      window.dispatchEvent(new Event("loadingStart"));
+      await undoAction({
+        type: "undoArchive",
+        note: note,
+        value: note.isArchived,
+        initialIndex: initialIndex,
+        endIndex: 0,
+      });
+      window.dispatchEvent(new Event("loadingEnd"));
+    };
+    openSnackFunction(
+      `${note.isArchived ? "Note unarchived" : "Note archived"}`,
+      undoArchive
+    );
     const first = index === 0;
     window.dispatchEvent(new Event("loadingStart"));
     await NoteUpdateAction("isArchived", !note.isArchived, note.uuid, first);
     window.dispatchEvent(new Event("loadingEnd"));
-  });
+  }, [index, note]);
 
   const UploadImageAction = async (image) => {
     const supabase = createClient(
@@ -123,7 +151,16 @@ const NoteTools = ({
       "https://fopkycgspstkfctmhyyq.supabase.co/storage/v1/object/public/notopia";
     const path = `${starter}/${userID}/${note.uuid}/${newUUID}`;
     setIsLoadingImages((prev) => [...prev, newUUID]);
-    await NoteUpdateAction("images", { url: path, uuid: newUUID }, note.uuid);
+    const updatedImages = await NoteUpdateAction(
+      "images",
+      { url: path, uuid: newUUID },
+      note.uuid
+    );
+    dispatchNotes({
+      type: "UPDATE_IMAGES",
+      note: note,
+      newImages: updatedImages,
+    });
     await UploadImageAction({ file: file, id: newUUID }, note.uuid);
     setIsLoadingImages((prev) => prev.filter((id) => id !== newUUID));
     window.dispatchEvent(new Event("loadingEnd"));

@@ -26,6 +26,7 @@ const NoteWrapper = memo(
     index,
     dispatchNotes,
     setTooltipAnchor,
+    openSnackFunction,
   }) => {
     const [mounted, setMounted] = useState(false);
     const [mountOpacity, setMountOpacity] = useState(false);
@@ -67,6 +68,7 @@ const NoteWrapper = memo(
           setTooltipAnchor={setTooltipAnchor}
           setSelectedNotesIDs={setSelectedNotesIDs}
           selectedNotes={selectedNotes}
+          openSnackFunction={openSnackFunction}
           modalTrigger={modalTrigger}
           setModalTrigger={setModalTrigger}
         />
@@ -78,7 +80,7 @@ const NoteWrapper = memo(
 
 NoteWrapper.displayName = "NoteWrapper";
 
-const Archive = memo(({ notes, order, dispatchNotes, setTooltipAnchor }) => {
+const Archive = memo(({ notes, order, dispatchNotes, setTooltipAnchor, openSnackFunction }) => {
   const [isLayoutReady, setIsLayoutReady] = useState(false);
   const [selectedNotesIDs, setSelectedNotesIDs] = useState([]);
   const hasDispatched = useRef(false);
@@ -217,6 +219,7 @@ const Archive = memo(({ notes, order, dispatchNotes, setTooltipAnchor }) => {
                   index={index}
                   setTooltipAnchor={setTooltipAnchor}
                   setSelectedNotesIDs={setSelectedNotesIDs}
+                  openSnackFunction={openSnackFunction}
                   selectedNotes={selectedRef}
                 />
               );

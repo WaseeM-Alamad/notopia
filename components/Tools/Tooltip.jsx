@@ -24,6 +24,7 @@ const Tooltip = ({ anchorEl }) => {
       setDisplay(false);
       isTooltipVisible.current = false;
     }
+
   }, [anchorEl]);
 
   useEffect(() => {
@@ -34,7 +35,7 @@ const Tooltip = ({ anchorEl }) => {
 
   return createPortal(
     <Popper
-      open={Boolean(display)}
+      open={true}
       anchorEl={anchorEl?.anchor}
       style={{ zIndex: "3000" }}
       placement="bottom"
@@ -49,7 +50,8 @@ const Tooltip = ({ anchorEl }) => {
     >
       <div
         style={{
-          opacity: display ? "0.9" : "0",
+          display: !display && "none",
+          opacity: '0.9',
           pointerEvents: "none",
           backgroundColor: "rgb(32,33,36)",
           color: "white",
@@ -62,7 +64,6 @@ const Tooltip = ({ anchorEl }) => {
           textOverflow: "ellipsis",
           borderRadius: "0.3rem",
           padding: "0.3rem 0.5rem",
-          transition: "opacity 0.1s ease-in-out",
         }}
       >
         <div>{anchorEl?.text}</div>

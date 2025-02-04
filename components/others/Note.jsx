@@ -29,6 +29,7 @@ const Note = memo(
     isDragging,
     modalTrigger,
     setTooltipAnchor,
+    openSnackFunction,
     setModalTrigger,
     index,
   }) => {
@@ -386,6 +387,7 @@ const Note = memo(
               dispatchNotes={dispatchNotes}
               setIsLoadingImages={setIsLoadingImages}
               userID={userID}
+              openSnackFunction={openSnackFunction}
               setLocalIsArchived={setLocalIsArchived}
               setLocalIsTrash={setLocalIsTrash}
               setIsNoteDeleted={setIsNoteDeleted}

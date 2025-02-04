@@ -13,7 +13,14 @@ import Snackbar from "@/components/Tools/Snackbar";
 import Tooltip from "@/components/Tools/Tooltip";
 import { fetchNotes } from "@/utils/actions";
 import { motion } from "framer-motion";
-import React, { memo, useEffect, useReducer, useRef, useState } from "react";
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 
 const initialStates = {
   notes: new Map(),
@@ -68,6 +75,25 @@ function notesReducer(state, action) {
         ...state,
         notes: updatedNotesArchive,
         order: [action.note.uuid, ...updatedOrderArchive],
+      };
+
+    case "UNDO_ARCHIVE":
+      const newUndoArchiveNote = {
+        ...action.note,
+        isArchived: action.note.isArchived,
+      };
+      const updatedNotesUndoArch = new Map(state.notes).set(
+        action.note.uuid,
+        newUndoArchiveNote
+      );
+      const updatedOrderUndoArch = [...state.order];
+      const [UndoArchiveNote] = updatedOrderUndoArch.splice(0, 1);
+      updatedOrderUndoArch.splice(action.initialIndex, 0, UndoArchiveNote);
+
+      return {
+        ...state,
+        notes: updatedNotesUndoArch,
+        order: updatedOrderUndoArch,
       };
 
     case "TRASH_NOTE":
@@ -195,7 +221,7 @@ const page = () => {
   });
   const undoFunction = useRef(null);
 
-  const openSnackFunction = (Rmessage, Rfunction) => {
+  const openSnackFunction = useCallback((Rmessage, Rfunction) => {
     setSnackbarState((prev) => ({
       ...prev,
       snackOpen: false,
@@ -209,13 +235,19 @@ const page = () => {
       });
       undoFunction.current = Rfunction;
     }, 80);
-  };
+  }, []);
 
   useEffect(() => {
     setIsClient(true);
     const handleHashChange = () => {
       const currentHash = window.location.hash;
-      setCurrentPage(currentHash);
+
+      // console.log("HASH CHANGE")
+      setTooltipAnchor(null);
+      setTimeout(() => {
+        setCurrentPage(currentHash);  
+      }, 0);
+      
     };
 
     handleHashChange();
@@ -319,6 +351,7 @@ const page = () => {
           notes={notesState.notes}
           order={notesState.order}
           setTooltipAnchor={setTooltipAnchor}
+          openSnackFunction={openSnackFunction}
         />
       );
     else if (currentPage?.includes("reminders")) return <Reminders />;
@@ -336,7 +369,7 @@ const page = () => {
 
   return (
     <>
-      <Tooltip anchorEl={tooltipAnchor} />
+      {tooltipAnchor?.display && <Tooltip anchorEl={tooltipAnchor} />}
       <Snackbar
         snackbarState={snackbarState}
         setSnackbarState={setSnackbarState}

@@ -305,7 +305,7 @@ const NoteModal = ({
             className="modal-inputs-container"
             onScroll={handleScroll}
           >
-            {note.images.length === 0 && (
+            {localImages.length === 0 && (
               <div className={trigger2 ? `modal-corner` : `corner`} />
             )}
             <div className="modal-pin">
