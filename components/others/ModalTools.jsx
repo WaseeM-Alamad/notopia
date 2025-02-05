@@ -79,10 +79,14 @@ const ModalTools = ({
               const undoArchive = () => {
                 setNote((prev) => ({ ...prev, isArchived: !prev.isArchived }));
               };
-              openSnackFunction(
-                `${note.isArchived ? "Note will be archived" : "Note will be unarchived"}`,
-                undoArchive
-              );
+              openSnackFunction({
+                snackMessage: `${
+                  note.isArchived
+                    ? "Note will be archived"
+                    : "Note will be unarchived"
+                }`,
+                snackOnUndo: undoArchive,
+              });
               setNote((prev) => ({ ...prev, isArchived: !prev.isArchived }));
             }}
             onMouseEnter={(e) => handleMouseEnter(e, "Archive")}

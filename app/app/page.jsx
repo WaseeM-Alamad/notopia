@@ -43,169 +43,194 @@ function notesReducer(state, action) {
         order: [action.newNote.uuid, ...state.order],
       };
 
-    case "PIN_NOTE":
-      const pinnedNote = { ...action.note, isPinned: !action.note.isPinned };
-      const updatedNotesPIN = new Map(state.notes).set(
-        action.note.uuid,
-        pinnedNote
-      );
-      const updatedOrderPIN = [...state.order].filter(
+    case "PIN_NOTE": {
+      const newNote = { ...action.note, isPinned: !action.note.isPinned };
+      const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
+      const updatedOrder = [...state.order].filter(
         (uuid) => uuid !== action.note.uuid
       );
       return {
         ...state,
-        notes: updatedNotesPIN,
-        order: [action.note.uuid, ...updatedOrderPIN],
+        notes: updatedNotes,
+        order: [action.note.uuid, ...updatedOrder],
       };
-
-    case "ARCHIVE_NOTE":
-      const archivedNote = {
+    }
+    case "ARCHIVE_NOTE": {
+      const newNote = {
         ...action.note,
         isArchived: !action.note.isArchived,
         isPinned: false,
       };
-      const updatedNotesArchive = new Map(state.notes).set(
-        action.note.uuid,
-        archivedNote
-      );
-      const updatedOrderArchive = [...state.order].filter(
+      const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
+      const updatedOrder = [...state.order].filter(
         (uuid) => uuid !== action.note.uuid
       );
       return {
         ...state,
-        notes: updatedNotesArchive,
-        order: [action.note.uuid, ...updatedOrderArchive],
+        notes: updatedNotes,
+        order: [action.note.uuid, ...updatedOrder],
       };
-
-    case "UNDO_ARCHIVE":
-      const newUndoArchiveNote = {
+    }
+    case "UNDO_ARCHIVE": {
+      const newNote = {
         ...action.note,
         isArchived: action.note.isArchived,
       };
-      const updatedNotesUndoArch = new Map(state.notes).set(
-        action.note.uuid,
-        newUndoArchiveNote
-      );
-      const updatedOrderUndoArch = [...state.order];
-      const [UndoArchiveNote] = updatedOrderUndoArch.splice(0, 1);
-      updatedOrderUndoArch.splice(action.initialIndex, 0, UndoArchiveNote);
+      const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
+      const updatedOrder = [...state.order];
+      const [targetedNote] = updatedOrder.splice(0, 1);
+      updatedOrder.splice(action.initialIndex, 0, targetedNote);
 
       return {
         ...state,
-        notes: updatedNotesUndoArch,
-        order: updatedOrderUndoArch,
+        notes: updatedNotes,
+        order: updatedOrder,
       };
-
-    case "TRASH_NOTE":
-      const trashNote = {
+    }
+    case "TRASH_NOTE": {
+      const newNote = {
         ...action.note,
         isTrash: !action.note.isTrash,
         isPinned: false,
       };
-      const updatedNotesTrash = new Map(state.notes).set(
-        action.note.uuid,
-        trashNote
-      );
-      const updatedOrderTrash = [...state.order].filter(
+      const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
+      const updatedOrder = [...state.order].filter(
         (uuid) => uuid !== action.note.uuid
       );
       return {
         ...state,
-        notes: updatedNotesTrash,
-        order: [action.note.uuid, ...updatedOrderTrash],
+        notes: updatedNotes,
+        order: [action.note.uuid, ...updatedOrder],
       };
-    case "DELETE_NOTE":
-      const updatedNotesDelete = new Map(state.notes);
-      updatedNotesDelete.delete(action.note.uuid);
-      const updatedOrderDelete = [...state.order].filter(
-        (uuid) => uuid !== action.note.uuid
-      );
-      return {
-        ...state,
-        notes: updatedNotesDelete,
-        order: updatedOrderDelete,
+    }
+    case "UNDO_TRASH": {
+      const newNote = {
+        ...action.note,
+        isTrash: action.note.isTrash,
       };
+      const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
+      const updatedOrder = [...state.order];
+      const [targetedNote] = updatedOrder.splice(0, 1);
+      updatedOrder.splice(action.initialIndex, 0, targetedNote);
 
-    case "PIN_ARCHIVED_NOTE":
-      const pinnedArchivedNote = {
+      return {
+        ...state,
+        notes: updatedNotes,
+        order: updatedOrder,
+      };
+    }
+    case "DELETE_NOTE": {
+      const newNote = new Map(state.notes);
+      newNote.delete(action.note.uuid);
+      const updatedOrder = [...state.order].filter(
+        (uuid) => uuid !== action.note.uuid
+      );
+      return {
+        ...state,
+        notes: newNote,
+        order: updatedOrder,
+      };
+    }
+    case "PIN_ARCHIVED_NOTE": {
+      const newNote = {
         ...action.note,
         isPinned: true,
         isArchived: false,
       };
-      const updatedNotesPinArch = new Map(state.notes).set(
-        action.note.uuid,
-        pinnedArchivedNote
-      );
-      const updatedOrderPinArch = [...state.order].filter(
+      const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
+      const updatedOrder = [...state.order].filter(
         (uuid) => uuid !== action.note.uuid
       );
       return {
         ...state,
-        notes: updatedNotesPinArch,
-        order: [action.note.uuid, ...updatedOrderPinArch],
+        notes: updatedNotes,
+        order: [action.note.uuid, ...updatedOrder],
+      };
+    }
+    case "UNDO_PIN_ARCHIVED": {
+      const newNote = {
+        ...action.note,
+        isPinned: false,
+        isArchived: true,
       };
 
-    case "UPDATE_COLOR":
-      const newColorNote = { ...action.note, color: action.newColor };
-      const updatedNotesColor = new Map(state.notes).set(
-        action.note.uuid,
-        newColorNote
-      );
+      const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
+
+      const updatedOrder = [...state.order];
+      const [targetedNote] = updatedOrder.splice(0, 1);
+      updatedOrder.splice(action.initialIndex, 0, targetedNote);
 
       return {
         ...state,
-        notes: updatedNotesColor,
+        notes: updatedNotes,
+        order: updatedOrder,
       };
+    }
+    case "UPDATE_COLOR": {
+      const newNote = { ...action.note, color: action.newColor };
+      const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
 
-    case "ADD_IMAGE":
-      const noteImage = {
+      return {
+        ...state,
+        notes: updatedNotes,
+      };
+    }
+    case "ADD_IMAGE": {
+      const newNote = {
         ...action.note,
         images: [
           ...action.note.images,
           { url: action.imageURL, uuid: action.newImageUUID },
         ],
       };
-      const updatedNotesImage = new Map(state.notes).set(
-        action.note.uuid,
-        noteImage
-      );
+      const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
 
       return {
         ...state,
-        notes: updatedNotesImage,
+        notes: updatedNotes,
       };
-
-    case "UPDATE_TEXT":
-      const TextNote = {
+    }
+    case "UPDATE_TEXT": {
+      const newNote = {
         ...action.note,
         title: action.newTitle,
         content: action.newContent,
       };
-      const updatedNotesTextImg = new Map(state.notes).set(
-        action.note.uuid,
-        TextNote
-      );
+      const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
       return {
         ...state,
-        notes: updatedNotesTextImg,
+        notes: updatedNotes,
       };
-
-    case "UPDATE_IMAGES":
-      const ImagesNote = { ...action.note, images: action.newImages };
-      const updatedNotesImages = new Map(state.notes).set(
-        action.note.uuid,
-        ImagesNote
-      );
+    }
+    case "UPDATE_IMAGES": {
+      const newNote = { ...action.note, images: action.newImages };
+      const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
       return {
         ...state,
-        notes: updatedNotesImages,
+        notes: updatedNotes,
       };
+    }
 
-    case "DND":
+    case "UNDO_COPY": {
+      const updatedNotes = new Map(state.notes);
+      updatedNotes.delete(action.noteUUID);
+      const updatedOrder = [...state.order].filter(
+        (uuid) => uuid !== action.noteUUID
+      );
+
+      return {
+        ...state,
+        notes: updatedNotes,
+        order: updatedOrder,
+      };
+    }
+
+    case "DND": {
       return {
         ...state,
         order: action.updatedOrder,
       };
+    }
   }
 }
 
@@ -219,23 +244,51 @@ const page = () => {
     showUndo: true,
     message: "",
   });
-  const undoFunction = useRef(null);
+  const [unloadWarn, setUnloadWarn] = useState(false);
+  const undoFunction = useRef(() => {});
+  const onCloseFunction = useRef(() => {});
 
-  const openSnackFunction = useCallback((Rmessage, Rfunction) => {
+  const openSnackFunction = useCallback((data) => {
     setSnackbarState((prev) => ({
       ...prev,
       snackOpen: false,
     }));
+    onCloseFunction.current();
 
     setTimeout(() => {
       setSnackbarState({
-        message: Rmessage,
+        message: data.snackMessage,
         showUndo: true,
         snackOpen: true,
       });
-      undoFunction.current = Rfunction;
+      if (data.snackOnUndo !== undefined) {
+        undoFunction.current = data.snackOnUndo;
+      }
+      if (data.snackOnClose !== undefined) {
+        onCloseFunction.current = data.snackOnClose;
+      }
+      if (data.unloadWarn) {
+        setUnloadWarn(true);
+      }
     }, 80);
   }, []);
+
+  useEffect(() => {
+    const handleBeforeUnload = (event) => {
+      if (unloadWarn) {
+        const message =
+          "Your request is still in progress. Are you sure you want to leave?";
+        event.returnValue = message;
+        return message;
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [unloadWarn]);
 
   useEffect(() => {
     setIsClient(true);
@@ -245,9 +298,8 @@ const page = () => {
       // console.log("HASH CHANGE")
       setTooltipAnchor(null);
       setTimeout(() => {
-        setCurrentPage(currentHash);  
+        setCurrentPage(currentHash);
       }, 0);
-      
     };
 
     handleHashChange();
@@ -331,6 +383,8 @@ const page = () => {
           dispatchNotes={dispatchNotes}
           notes={notesState.notes}
           order={notesState.order}
+          setTooltipAnchor={setTooltipAnchor}
+          openSnackFunction={openSnackFunction}
         />
       );
     else if (currentPage?.includes("home"))
@@ -374,7 +428,10 @@ const page = () => {
         snackbarState={snackbarState}
         setSnackbarState={setSnackbarState}
         setTooltipAnchor={setTooltipAnchor}
-        undo={undoFunction.current}
+        undo={undoFunction}
+        unloadWarn={unloadWarn}
+        setUnloadWarn={setUnloadWarn}
+        onClose={onCloseFunction}
       />
       <Header />
       {renderPage()}

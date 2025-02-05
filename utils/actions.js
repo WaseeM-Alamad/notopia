@@ -4,6 +4,7 @@ import Note from "@/models/Note";
 import User from "@/models/User";
 import { getServerSession } from "next-auth";
 import { authOptions } from "./authOptions";
+import { v4 as uuid } from "uuid";
 import { createClient } from "@supabase/supabase-js";
 
 const session = await getServerSession(authOptions);
@@ -65,9 +66,6 @@ export const createNoteAction = async (note) => {
     uuid: image.uuid,
   }));
   try {
-    if (!session) {
-      return new Response("Unauthorized", { status: 401 });
-    }
     await connectDB();
     const user = await User.findById(userID);
     const noteData = {
@@ -124,6 +122,12 @@ export const NoteUpdateAction = async (type, value, noteUUID, first) => {
         { uuid: noteUUID },
         { $set: { isPinned: value, isArchived: false } }
       );
+      const user = await User.findById(userID);
+      const { notesOrder } = user;
+      const order = notesOrder.filter((uuid) => uuid !== noteUUID);
+      const updatedOrder = [noteUUID, ...order];
+      user.notesOrder = updatedOrder;
+      await user.save();
     } else if (type === "isPinned") {
       await Note.updateOne({ uuid: noteUUID }, { $set: { [type]: value } });
       if (!first) {
@@ -139,6 +143,12 @@ export const NoteUpdateAction = async (type, value, noteUUID, first) => {
         { uuid: noteUUID },
         { $set: { [type]: value, isPinned: false } }
       );
+      const user = await User.findById(userID);
+      const { notesOrder } = user;
+      const order = notesOrder.filter((uuid) => uuid !== noteUUID);
+      const updatedOrder = [noteUUID, ...order];
+      user.notesOrder = updatedOrder;
+      await user.save();
     } else {
       await Note.updateOne({ uuid: noteUUID }, { $set: { [type]: value } });
     }
@@ -218,10 +228,6 @@ export const DeleteNoteAction = async (noteUUID) => {
         throw listError;
       }
 
-      if (files.length === 0) {
-        setMessage(`No files found in ${folderPath}`);
-      }
-
       const filesToDelete = files.map((file) => `${folderPath}${file.name}`);
       await supabase.storage.from(bucketName).remove(filesToDelete);
     }
@@ -271,20 +277,129 @@ export const undoAction = async (data) => {
     const user = await User.findById(userID);
     const { notesOrder } = user;
 
-    if (data.type === "undoArchive") {
-      const { images, ...noteWithoutImages } = data.note;
+    if (data.type === "UNDO_ARCHIVE") {
       await Note.updateOne(
-        { uuid: data.note.uuid },
-        { $set: { ...noteWithoutImages, isArchived: data.note.isArchived } }
+        { uuid: data.noteUUID },
+        { $set: { isArchived: data.value, isPinned: data.pin } }
       );
       const updatedOrder = [...notesOrder];
-      const [draggedNote] = updatedOrder.splice(data.initialIndex, 1);
-      updatedOrder.splice(data.endIndex, 0, draggedNote);
+      const [targetedNote] = updatedOrder.splice(data.endIndex, 1);
+      updatedOrder.splice(data.initialIndex, 0, targetedNote);
 
       user.notesOrder = updatedOrder;
       await user.save();
+    } else if (data.type === "UNDO_TRASH") {
+      await Note.updateOne(
+        { uuid: data.noteUUID },
+        { $set: { isTrash: data.value } }
+      );
+      const updatedOrder = [...notesOrder];
+      const [targetedNote] = updatedOrder.splice(data.endIndex, 1);
+      updatedOrder.splice(data.initialIndex, 0, targetedNote);
+
+      user.notesOrder = updatedOrder;
+      await user.save();
+    } else if (data.type === "UNDO_PIN_ARCHIVED") {
+      await Note.updateOne(
+        { uuid: data.noteUUID },
+        { $set: { isPinned: false, isArchived: true } }
+      );
+      const updatedOrder = [...notesOrder];
+      const [targetedNote] = updatedOrder.splice(data.endIndex, 1);
+      updatedOrder.splice(data.initialIndex, 0, targetedNote);
+
+      user.notesOrder = updatedOrder;
+      await user.save();
+    } else if (data.type === "UNDO_COPY") {
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.NEXT_SUPABASE_SERVICE_ROLE_KEY
+      );
+
+      const note = await Note.findOne({ uuid: data.noteUUID });
+      await User.updateOne(
+        { _id: userID },
+        { $pull: { notes: note._id, notesOrder: data.noteUUID } }
+      );
+      const result = await Note.deleteOne({ uuid: data.noteUUID });
+      if (result.deletedCount === 0) {
+        return { success: false, message: "Note not found" };
+      }
+
+      if (data.isImages) {
+        const folderPath = `${userID}/${data.noteUUID}/`;
+        const bucketName = "notopia";
+        const { data: files, error: listError } = await supabase.storage
+          .from(bucketName)
+          .list(folderPath);
+
+        if (listError) {
+          throw listError;
+        }
+
+        const filesToDelete = files.map((file) => `${folderPath}${file.name}`);
+        await supabase.storage.from(bucketName).remove(filesToDelete);
+      }
     }
   } catch (error) {
     console.log(error);
+  }
+};
+
+export const copyNoteAction = async (copiedNote, originalUUID) => {
+  if (!session) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+  const starter =
+    "https://fopkycgspstkfctmhyyq.supabase.co/storage/v1/object/public/notopia";
+  try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_SUPABASE_SERVICE_ROLE_KEY
+    );
+    await connectDB();
+    const user = await User.findById(userID);
+    const sourceFolder = `${userID}/${originalUUID}`;
+    const destinationFolder = `${userID}/${copiedNote.uuid}`;
+    let copiedImages = [];
+
+    if (copiedNote.images.length !== 0) {
+      for (let i = 0; i < copiedNote.images.length; i++) {
+        const newUUID = uuid();
+        const { error: copyError } = await supabase.storage
+          .from("notopia")
+          .copy(
+            `${sourceFolder}/${copiedNote.images[i].uuid}`,
+            `${destinationFolder}/${newUUID}`
+          );
+        if (copyError) throw copyError;
+        const newImage = {
+          url: `${starter}/${userID}/${copiedNote.uuid}/${newUUID}`,
+          uuid: newUUID,
+        };
+        copiedImages.push(newImage);
+      }
+    }
+
+    const noteData = {
+      ...copiedNote,
+      images: copiedImages,
+      creator: userID,
+    };
+    const newNote = new Note(noteData);
+    await newNote.save();
+    user.notes.push(newNote._id);
+    user.notesOrder.unshift(newNote.uuid);
+
+    await user.save();
+
+    return {
+      success: true,
+      message: "Note copied successfully!",
+      status: 201,
+    };
+  } catch (error) {
+    console.log("Error creating note:", error);
+    return new Response("Failed to add note", { status: 500 });
   }
 };

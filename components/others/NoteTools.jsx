@@ -35,6 +35,7 @@ const NoteTools = ({
   userID,
   setLocalIsArchived,
   setLocalIsTrash,
+  setTriggerUndoCopy,
   setIsNoteDeleted,
   openSnackFunction,
   setTooltipAnchor,
@@ -77,9 +78,7 @@ const NoteTools = ({
   const handleArchive = useCallback(async () => {
     closeToolTip();
     const initialIndex = index;
-    setTimeout(() => {
       setLocalIsArchived((prev) => !prev);
-    }, 1);
     const undoArchive = async () => {
       dispatchNotes({
         type: "UNDO_ARCHIVE",
@@ -91,18 +90,25 @@ const NoteTools = ({
       }, 0);
       window.dispatchEvent(new Event("loadingStart"));
       await undoAction({
-        type: "undoArchive",
-        note: note,
+        type: "UNDO_ARCHIVE",
+        noteUUID: note.uuid,
         value: note.isArchived,
+        pin: note.isPinned,
         initialIndex: initialIndex,
         endIndex: 0,
       });
       window.dispatchEvent(new Event("loadingEnd"));
     };
-    openSnackFunction(
-      `${note.isArchived ? "Note unarchived" : "Note archived"}`,
-      undoArchive
-    );
+    openSnackFunction({
+      snackMessage: `${
+        note.isArchived
+          ? "Note unarchived"
+          : note.isPinned
+          ? "Note unpinned and archived"
+          : "Note Archived"
+      }`,
+      snackOnUndo: undoArchive,
+    });
     const first = index === 0;
     window.dispatchEvent(new Event("loadingStart"));
     await NoteUpdateAction("isArchived", !note.isArchived, note.uuid, first);
@@ -181,12 +187,36 @@ const NoteTools = ({
 
   const handleRestoreNote = async () => {
     setLocalIsTrash(true);
+
+    const initialIndex = index;
+    const undoTrash = async () => {
+      dispatchNotes({
+        type: "UNDO_TRASH",
+        note: note,
+        initialIndex: initialIndex,
+      });
+      setTimeout(() => {
+        window.dispatchEvent(new Event("closeModal"));
+      }, 0);
+
+      window.dispatchEvent(new Event("loadingStart"));
+      await undoAction({
+        type: "UNDO_TRASH",
+        noteUUID: note.uuid,
+        value: true,
+        initialIndex: initialIndex,
+        endIndex: 0,
+      });
+      window.dispatchEvent(new Event("loadingEnd"));
+    };
+
+    openSnackFunction({
+      snackMessage: "Note restored",
+      snackOnUndo: undoTrash,
+    });
+
     window.dispatchEvent(new Event("loadingStart"));
     await NoteUpdateAction("isTrash", false, note.uuid);
-    await updateOrderAction({
-      uuid: note.uuid,
-      type: "shift to start",
-    });
     window.dispatchEvent(new Event("loadingEnd"));
   };
 
@@ -299,6 +329,9 @@ const NoteTools = ({
                     setAnchorEl={setAnchorEl}
                     isOpen={moreMenuOpen}
                     setLocalIsTrash={setLocalIsTrash}
+                    setTriggerUndoCopy={setTriggerUndoCopy}
+                    openSnackFunction={openSnackFunction}
+                    index={index}
                     uuid={note.uuid}
                     note={note}
                   />

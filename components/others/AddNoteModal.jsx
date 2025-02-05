@@ -390,7 +390,11 @@ const AddNoteModal = ({
             onPaste={handlePaste}
             ref={titleRef}
             className={`${
-              trigger2 ? "modal-title-input" : note.isArchived ? "modal-title-input":  "modal-closed-title-input"
+              trigger2
+                ? "modal-title-input"
+                : note.isArchived
+                ? "modal-title-input"
+                : "modal-closed-title-input"
             } modal-editable-title`}
             role="textbox"
             tabIndex="0"
@@ -416,7 +420,11 @@ const AddNoteModal = ({
             onPaste={handlePaste}
             ref={contentRef}
             className={`${
-              trigger2 ? "modal-content-input" : note.isArchived ? "modal-content-input":  "modal-closed-content-input"
+              trigger2
+                ? "modal-content-input"
+                : note.isArchived
+                ? "modal-content-input"
+                : "modal-closed-content-input"
             } modal-editable-content`}
             role="textbox"
             tabIndex="0"

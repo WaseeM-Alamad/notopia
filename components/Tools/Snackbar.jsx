@@ -7,8 +7,11 @@ import XIcon from "../icons/XIcon";
 const Snackbar = ({
   snackbarState,
   setSnackbarState,
-  undo = () => {},
+  undo,
+  unloadWarn,
+  setUnloadWarn,
   setTooltipAnchor,
+  onClose,
 }) => {
   const [isMounted, setIsMounted] = useState(false);
   const timeoutRef = useRef(null);
@@ -20,11 +23,19 @@ const Snackbar = ({
             ...prev,
             snackOpen: false,
           }));
+          if (snackbarState.showUndo) {
+            onClose.current();
+          }
         },
         snackbarState.showUndo ? 6000 : 4000
       );
     } else {
+      if (unloadWarn) {
+        setUnloadWarn(false);
+      }
       clearTimeout(timeoutRef.current);
+      undo.current = () => {};
+      onClose.current = () => {};
     }
   }, [snackbarState.snackOpen]);
 
@@ -86,7 +97,7 @@ const Snackbar = ({
           padding: "0.925rem 0.925rem 0.925rem 1.25rem",
           alignItems: "center",
           zIndex: "2000",
-          width: "350px",
+          width: "25.875rem",
         }}
       >
         <div style={{ cursor: "default" }}>{snackbarState.message}</div>
@@ -95,11 +106,7 @@ const Snackbar = ({
             <button
               className="undo-btn"
               onClick={() => {
-                undo();
-                setSnackbarState((prev) => ({
-                  ...prev,
-                  snackOpen: false,
-                }));
+                undo.current();
                 openActionUndone();
               }}
             >
@@ -118,6 +125,9 @@ const Snackbar = ({
                 anchor: null,
                 text: prev.text,
               }));
+              if (snackbarState.showUndo) {
+                onClose.current();
+              }
             }}
           >
             <XIcon color="white" />

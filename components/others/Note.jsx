@@ -11,7 +11,11 @@ import "@/assets/styles/LinearLoader.css";
 import NoteTools from "./NoteTools";
 import NoteModal from "./NoteModal";
 import PinIcon from "../icons/PinIcon";
-import { NoteUpdateAction, updateOrderAction } from "@/utils/actions";
+import {
+  NoteUpdateAction,
+  undoAction,
+  updateOrderAction,
+} from "@/utils/actions";
 import Button from "../Tools/Button";
 import NoteImagesLayout from "../Tools/NoteImagesLayout";
 import { useSession } from "next-auth/react";
@@ -162,12 +166,35 @@ const Note = memo(
       } else {
         setLocalArchivedPin((prev) => !prev);
         window.dispatchEvent(new Event("loadingStart"));
+        const initialIndex = index;
+
+        const undoPinArchived = async () => {
+          dispatchNotes({
+            type: "UNDO_PIN_ARCHIVED",
+            note: note,
+            initialIndex: initialIndex,
+          });
+          setTimeout(() => {
+            window.dispatchEvent(new Event("closeModal"));
+          }, 0);
+
+          window.dispatchEvent(new Event("loadingStart"));
+          await undoAction({
+            type: "UNDO_PIN_ARCHIVED",
+            noteUUID: note.uuid,
+            initialIndex: initialIndex,
+            endIndex: 0,
+          });
+          window.dispatchEvent(new Event("loadingEnd"));
+        };
+
+        openSnackFunction({
+          snackMessage: "Note unarchived and pinned",
+          snackOnUndo: undoPinArchived,
+        });
+
         try {
           await NoteUpdateAction("pinArchived", true, note.uuid);
-          await updateOrderAction({
-            uuid: note.uuid,
-            type: "shift to start",
-          });
         } finally {
           window.dispatchEvent(new Event("loadingEnd"));
         }

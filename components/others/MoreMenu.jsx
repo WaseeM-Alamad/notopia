@@ -1,4 +1,4 @@
-import { createNoteAction, NoteUpdateAction } from "@/utils/actions";
+import { copyNoteAction, NoteUpdateAction, undoAction } from "@/utils/actions";
 import { Popper } from "@mui/material";
 import { AnimatePresence, motion } from "framer-motion";
 import React, { useEffect, useRef, useState } from "react";
@@ -12,7 +12,9 @@ const MoreMenu = ({
   setLocalIsTrash,
   uuid,
   note,
+  index,
   dispatchNotes,
+  openSnackFunction,
 }) => {
   const [isClient, setIsClient] = useState();
   const menuRef = useRef(null);
@@ -34,11 +36,36 @@ const MoreMenu = ({
   }, [isOpen]);
 
   const handleDelete = async () => {
+    const initialIndex = index;
+    const undoTrash = async () => {
+      dispatchNotes({
+        type: "UNDO_TRASH",
+        note: note,
+        initialIndex: initialIndex,
+      });
+      setTimeout(() => {
+        window.dispatchEvent(new Event("closeModal"));
+      }, 0);
+    };
+
+    const onClose = async () => {
+      window.dispatchEvent(new Event("loadingStart"));
+      await NoteUpdateAction("isTrash", true, uuid);
+      window.dispatchEvent(new Event("loadingEnd"));
+    };
+
+    if (!note.isTrash) {
+      openSnackFunction({
+        snackMessage: `${
+          note.isPinned ? "Note unpinned and trashed" : "Note trashed"
+        }`,
+        snackOnUndo: undoTrash,
+        snackOnClose: onClose,
+        unloadWarn: true,
+      });
+    }
     setLocalIsTrash(true);
     setIsOpen(false);
-    window.dispatchEvent(new Event("loadingStart"));
-    await NoteUpdateAction("isTrash", true, uuid);
-    window.dispatchEvent(new Event("loadingEnd"));
   };
 
   const handleMakeCopy = () => {
@@ -62,12 +89,39 @@ const MoreMenu = ({
       type: "ADD_NOTE",
       newNote: newNote,
     });
+
+    setTimeout(() => {
+      const element = document.querySelector('[data-position="0"]');
+
+      const undoCopy = async () => {
+        element.style.transition = "opacity 0.17s ease";
+        element.style.opacity = "0";
+        setTimeout(async () => {
+          dispatchNotes({
+            type: "UNDO_COPY",
+            noteUUID: newNote.uuid,
+          });
+          window.dispatchEvent(new Event("loadingStart"));
+          await undoAction({
+            type: "UNDO_COPY",
+            noteUUID: newNote.uuid,
+            isImages: note.images.length,
+          });
+          window.dispatchEvent(new Event("loadingEnd"));
+        }, 170);
+      };
+      openSnackFunction({
+        snackMessage: "Note created",
+        snackOnUndo: undoCopy,
+      });
+    }, 5);
+
     setTimeout(() => {
       window.dispatchEvent(new Event("closeModal"));
     }, 1);
     window.dispatchEvent(new Event("loadingStart"));
 
-    createNoteAction(newNote).then(() =>
+    copyNoteAction(newNote, note.uuid).then(() =>
       window.dispatchEvent(new Event("loadingEnd"))
     );
 
