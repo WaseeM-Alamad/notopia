@@ -10,6 +10,7 @@ const NoteImagesLayout = ({
   modalOpen,
   deleteSource,
   noteImageDelete,
+  AddNoteImageDelete,
 }) => {
   const containerRef = useRef(null);
   const [layout, setLayout] = useState([]);
@@ -130,9 +131,11 @@ const NoteImagesLayout = ({
     display: "block",
   };
 
-  const handleImageDeletion = useCallback((imageID) => {
+  const handleImageDeletion = useCallback((imageID, url) => {
     if (deleteSource === "note") {
-      noteImageDelete(imageID);
+      noteImageDelete(imageID, url);
+    } else if (deleteSource === "AddModal") {
+      AddNoteImageDelete(imageID, url);
     }
   }, []);
 
@@ -166,7 +169,7 @@ const NoteImagesLayout = ({
                 )}
                 {modalOpen && (
                   <div
-                    onClick={() => handleImageDeletion(item.id)}
+                    onClick={() => handleImageDeletion(item.id, item.src)}
                     className="img-delete"
                   >
                     <ImageTrashIcon size={18} />

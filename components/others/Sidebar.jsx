@@ -51,6 +51,7 @@ const Sidebar = memo(() => {
   };
 
   const handleIconClick = (hash, ref) => {
+    window.dispatchEvent(new Event("sectionChange"));
     window.location.hash = hash;
     const rect = ref.current?.getBoundingClientRect();
     const containerRect = ref.current?.parentElement?.getBoundingClientRect(); // parent is .sidebar-icons-container

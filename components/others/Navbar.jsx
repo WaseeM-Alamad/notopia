@@ -30,7 +30,11 @@ const Navbar = ({ user }) => {
   const menuRef = useRef(null);
 
   useEffect(() => {
-    const startLoading = () => setIsLoading((prev) => prev + 1);
+    const startLoading = () => {
+      setIsLoading((prev) => prev + 1);
+      clearTimeout(timeoutRef.current);
+      setUpToDateTrigger(true);
+    };
     const stopLoading = () => {
       setTimeout(() => {
         setIsLoading((prev) => {
@@ -49,6 +53,8 @@ const Navbar = ({ user }) => {
     };
   }, []);
 
+  const timeoutRef = useRef(null);
+
   useEffect(() => {
     if (firstRun.current) {
       firstRun.current = false;
@@ -56,7 +62,7 @@ const Navbar = ({ user }) => {
     }
     if (!isLoading) {
       setUpToDateTrigger(false);
-      setTimeout(() => {
+      timeoutRef.current = setTimeout(() => {
         setUpToDateTrigger(true);
       }, 1100);
     }

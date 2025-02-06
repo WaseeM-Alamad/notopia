@@ -113,9 +113,16 @@ const NoteWrapper = memo(
       >
         {/* <button onClick={()=> console.log(note)}>note</button> */}
         <motion.div
-          style={{
-            opacity: isVisible ? (mountOpacity ? 1 : 0) : 0,
+          initial={{ y: 11, opacity: 0 }}
+          animate={{ y: 0, opacity: isVisible ? (mountOpacity ? 1 : 0) : 0 }}
+          exit={{ y: 11, opacity: 0 }}
+          transition={{
+            y: { type: "spring", stiffness: 1000, damping: 50, mass: 1 },
+            opacity: { duration: 0.2 },
           }}
+          // style={{
+          // opacity: isVisible ? (mountOpacity ? 1 : 0) : 0,
+          // }}
         >
           <Note
             dispatchNotes={dispatchNotes}

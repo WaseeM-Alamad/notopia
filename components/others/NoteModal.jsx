@@ -25,6 +25,9 @@ const NoteModal = ({
   isLoadingImages,
   setIsLoadingImages,
   isLoading,
+  openSnackFunction,
+  setTooltipAnchor,
+  handleArchive,
   userID,
 }) => {
   const modalRef = useRef(null);
@@ -41,6 +44,7 @@ const NoteModal = ({
   const titleRef = useRef(null);
   const contentRef = useRef(null);
   const containerRef = useRef(null);
+  const archiveRef = useRef(false);
   const isFirstRun = useRef(true);
   const FormattedEditedDate = getNoteFormattedDate(note.updatedAt);
 
@@ -51,12 +55,15 @@ const NoteModal = ({
     window.location.hash = `${hash}/NOTE/${note.uuid}`; // Set the hash
   }, []);
 
-  const handleClose = (e, closeRef) => {
+  const handleClose = (e, idk = true) => {
     if (
+      e.currentTarget.classList.contains("close") ||
       containerRef.current === e.target ||
-      closeRef?.current === e.target ||
       e.key === "Escape"
     ) {
+
+      openSnackFunction({close: true});
+
       if (
         titleTextRef.current !== note.title ||
         contentTextRef.current !== note.content
@@ -83,11 +90,17 @@ const NoteModal = ({
       }, 10);
 
       setTimeout(() => {
-        if (isPinned !== note.isPinned) {
-          dispatchNotes({
-            type: "PIN_NOTE",
-            note: note,
-          });
+        if (idk) {
+          if (isPinned !== note.isPinned) {
+            dispatchNotes({
+              type: "PIN_NOTE",
+              note: note,
+            });
+          }
+        }
+        if (archiveRef.current) {
+          handleArchive();
+          archiveRef.current = false;
         }
         window.location.hash = hash;
         calculateLayout();
@@ -254,16 +267,43 @@ const NoteModal = ({
     }
   };
 
-  const noteImageDelete = useCallback(async (imageID) => {
+  const noteImageDelete = useCallback(async (imageUUID, imageURL) => {
+    const imageObject = { url: imageURL, uuid: imageUUID };
+    let imageIndex;
+
     setLocalImages((prev) => {
-      const filteredImages = prev.filter((img) => img.uuid !== imageID);
+      const filteredImages = prev.reduce((acc, image, index) => {
+        if (image.uuid === imageUUID) {
+          imageIndex = index;
+          return acc;
+        }
+        acc.push(image);
+        return acc;
+      }, []);
       return filteredImages;
     });
-    imagesChangedRef.current = true;
-    const filePath = `${userID}/${note.uuid}/${imageID}`;
-    window.dispatchEvent(new Event("loadingStart"));
-    await NoteImageDeleteAction(filePath, note.uuid, imageID);
-    window.dispatchEvent(new Event("loadingEnd"));
+
+    const undo = async () => {
+      setLocalImages((prev) => {
+        const updatedImages = [...prev];
+        updatedImages.splice(imageIndex, 0, imageObject);
+        return updatedImages;
+      });
+    };
+
+    const onClose = async () => {
+      imagesChangedRef.current = true;
+      const filePath = `${userID}/${note.uuid}/${imageUUID}`;
+      window.dispatchEvent(new Event("loadingStart"));
+      await NoteImageDeleteAction(filePath, note.uuid, imageUUID);
+      window.dispatchEvent(new Event("loadingEnd"));
+    };
+
+    openSnackFunction({
+      snackMessage: "Image deleted",
+      snackOnUndo: undo,
+      snackOnClose: onClose,
+    });
   }, []);
 
   if (!isClient || !trigger) {
@@ -295,8 +335,6 @@ const NoteModal = ({
             backgroundColor: note.color,
             border: "solid 1px",
             borderColor: note.color === "#FFFFFF" ? "#e0e0e0" : "transparent",
-            transition:
-              "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), width 0.25s cubic-bezier(0.25, 0.8, 0.25, 1), background-color 0.25s linear",
           }}
           className="modal"
         >
@@ -415,6 +453,9 @@ const NoteModal = ({
               imagesChangedRef={imagesChangedRef}
               handleClose={handleClose}
               isAtBottom={isAtBottom}
+              archiveRef={archiveRef}
+              setTooltipAnchor={setTooltipAnchor}
+              setIsPinned={setIsPinned}
               setIsLoadingImages={setIsLoadingImages}
             />
           )}

@@ -232,6 +232,7 @@ const Home = memo(
           dispatchNotes={dispatchNotes}
           setTrigger={() => {}}
           lastAddedNoteRef={null}
+          openSnackFunction={openSnackFunction}
         />
       </>
     );

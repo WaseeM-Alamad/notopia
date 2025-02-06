@@ -34,6 +34,7 @@ const NoteTools = ({
   setIsLoadingImages,
   userID,
   setLocalIsArchived,
+  handleArchive,
   setLocalIsTrash,
   setTriggerUndoCopy,
   setIsNoteDeleted,
@@ -74,46 +75,6 @@ const NoteTools = ({
       text: prev.text,
     }));
   };
-
-  const handleArchive = useCallback(async () => {
-    closeToolTip();
-    const initialIndex = index;
-      setLocalIsArchived((prev) => !prev);
-    const undoArchive = async () => {
-      dispatchNotes({
-        type: "UNDO_ARCHIVE",
-        note: note,
-        initialIndex: initialIndex,
-      });
-      setTimeout(() => {
-        window.dispatchEvent(new Event("closeModal"));
-      }, 0);
-      window.dispatchEvent(new Event("loadingStart"));
-      await undoAction({
-        type: "UNDO_ARCHIVE",
-        noteUUID: note.uuid,
-        value: note.isArchived,
-        pin: note.isPinned,
-        initialIndex: initialIndex,
-        endIndex: 0,
-      });
-      window.dispatchEvent(new Event("loadingEnd"));
-    };
-    openSnackFunction({
-      snackMessage: `${
-        note.isArchived
-          ? "Note unarchived"
-          : note.isPinned
-          ? "Note unpinned and archived"
-          : "Note Archived"
-      }`,
-      snackOnUndo: undoArchive,
-    });
-    const first = index === 0;
-    window.dispatchEvent(new Event("loadingStart"));
-    await NoteUpdateAction("isArchived", !note.isArchived, note.uuid, first);
-    window.dispatchEvent(new Event("loadingEnd"));
-  }, [index, note]);
 
   const UploadImageAction = async (image) => {
     const supabase = createClient(
@@ -162,12 +123,12 @@ const NoteTools = ({
       { url: path, uuid: newUUID },
       note.uuid
     );
-    dispatchNotes({
-      type: "UPDATE_IMAGES",
-      note: note,
-      newImages: updatedImages,
-    });
     await UploadImageAction({ file: file, id: newUUID }, note.uuid);
+    // dispatchNotes({
+    //   type: "UPDATE_IMAGES",
+    //   note: note,
+    //   newImages: updatedImages,
+    // });
     setIsLoadingImages((prev) => prev.filter((id) => id !== newUUID));
     window.dispatchEvent(new Event("loadingEnd"));
   };
@@ -264,7 +225,10 @@ const NoteTools = ({
                 <PersonAdd size={15} opacity={0.9} />
               </Button>
               <Button
-                onClick={handleArchive}
+                onClick={() => {
+                  closeToolTip();
+                  handleArchive();
+                }}
                 onMouseEnter={(e) =>
                   handleMouseEnter(
                     e,

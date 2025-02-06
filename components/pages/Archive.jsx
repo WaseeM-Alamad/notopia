@@ -232,6 +232,7 @@ const Archive = memo(({ notes, order, dispatchNotes, setTooltipAnchor, openSnack
         lastAddedNoteRef={null}
         dispatchNotes={dispatchNotes}
         setTooltipAnchor={setTooltipAnchor}
+        openSnackFunction={openSnackFunction}
       />
     </>
   );

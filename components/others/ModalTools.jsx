@@ -116,7 +116,7 @@ const ModalTools = ({
                     ],
                     imageFiles: [
                       ...prevNote.imageFiles,
-                      { file: file, id: newUUID },
+                      { file: file, uuid: newUUID },
                     ],
                   };
                 });

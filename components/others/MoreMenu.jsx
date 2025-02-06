@@ -94,7 +94,7 @@ const MoreMenu = ({
       const element = document.querySelector('[data-position="0"]');
 
       const undoCopy = async () => {
-        element.style.transition = "opacity 0.17s ease";
+        element.style.transition = "opacity 0.19s ease";
         element.style.opacity = "0";
         setTimeout(async () => {
           dispatchNotes({
@@ -108,7 +108,7 @@ const MoreMenu = ({
             isImages: note.images.length,
           });
           window.dispatchEvent(new Event("loadingEnd"));
-        }, 170);
+        }, 190);
       };
       openSnackFunction({
         snackMessage: "Note created",

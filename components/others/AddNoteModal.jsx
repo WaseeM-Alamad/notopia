@@ -127,6 +127,7 @@ const AddNoteModal = ({
       if (nav) nav.style.marginLeft = `${-scrollbarWidth}px`;
       if (nav) nav.style.paddingLeft = `${scrollbarWidth}px`;
     } else {
+      openSnackFunction({ close: true });
       const scrollbarWidth =
         window.innerWidth - document.documentElement.clientWidth;
       document.body.style.overflow = "auto";
@@ -208,7 +209,7 @@ const AddNoteModal = ({
         await UploadImagesAction(note.imageFiles, newNote.uuid);
         if (newNote.images.length > 0) {
           setIsLoadingImages((prev) =>
-            prev.filter((id) => id !== newNote.uuid)
+            prev.filter((uuid) => uuid !== newNote.uuid)
           );
         }
         window.dispatchEvent(new Event("loadingEnd"));
@@ -256,7 +257,7 @@ const AddNoteModal = ({
       const bucketName = "notopia";
 
       for (const image of images) {
-        const filePath = `${userID}/${noteUUID}/${image.id}`;
+        const filePath = `${userID}/${noteUUID}/${image.uuid}`;
         const { data, error } = await supabase.storage
           .from(bucketName)
           .upload(filePath, image.file, {
@@ -311,6 +312,55 @@ const AddNoteModal = ({
     }));
   };
 
+  const AddNoteImageDelete = (imageUUID, imageURL) => {
+    const imageObject = { url: imageURL, uuid: imageUUID };
+    let imageFileObject;
+    let imageIndex;
+
+    setNote((restOfNote) => {
+      const filteredImages = restOfNote.images.reduce((acc, image, index) => {
+        if (image.uuid === imageUUID) {
+          imageIndex = index;
+          return acc;
+        }
+
+        acc.push(image);
+        return acc;
+      }, []);
+      return { ...restOfNote, images: filteredImages };
+    });
+
+    setNote((restOfNote) => {
+      const filteredImageFiles = restOfNote.imageFiles.reduce(
+        (acc, imageFile, index) => {
+          if (imageFile.uuid === imageUUID) {
+            imageFileObject = { file: imageFile.file, uuid: imageUUID };
+            return acc;
+          }
+          acc.push(imageFile);
+          return acc;
+        },
+        []
+      );
+      return { ...restOfNote, imageFiles: filteredImageFiles };
+    });
+
+    const undo = () => {
+      setNote((restOfNote) => {
+        const updatedImages = [...restOfNote.images];
+        updatedImages.splice(imageIndex, 0, imageObject);
+
+        return {
+          ...restOfNote,
+          images: updatedImages,
+          imageFiles: [...restOfNote.imageFiles, imageFileObject],
+        };
+      });
+    };
+
+    openSnackFunction({ snackMessage: "Image deleted", snackOnUndo: undo });
+  };
+
   return createPortal(
     <div
       ref={modalContainerRef}
@@ -336,7 +386,7 @@ const AddNoteModal = ({
           borderRadius: modalPosition.borderRadius,
           backgroundColor: selectedColor,
           transition:
-            "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), width 0.1s ease, height 0.1s ease, background-color 0.25s linear, border-radius 0.1s, margin-left 0s",
+            "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), width 0.1s ease, height 0.1s ease, background-color 0.25s linear, border-radius 0.1s, margin-left 0s, max-height 0s",
         }}
         className="modal"
       >
@@ -369,7 +419,13 @@ const AddNoteModal = ({
               opacity: !trigger2 && note.images.length > 0 ? "0.6" : "1",
             }}
           >
-            <NoteImagesLayout width={width} images={note.images} />
+            <NoteImagesLayout
+              width={width}
+              images={note.images}
+              deleteSource="AddModal"
+              AddNoteImageDelete={AddNoteImageDelete}
+              modalOpen={trigger2}
+            />
             {!trigger2 && note.images.length > 0 && (
               <div className="linear-loader" />
             )}

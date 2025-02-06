@@ -23,9 +23,13 @@ const NoteModalTools = ({
   handleClose,
   isAtBottom,
   setIsLoadingImages,
+  setTooltipAnchor,
+  archiveRef,
+  setIsPinned,
   imagesChangedRef,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [colorMenuOpen, setColorMenuOpen] = useState(false);
+  const [colorAnchorEl, setColorAnchorEl] = useState(null);
   const { data: session } = useSession();
   const userID = session?.user?.id;
   const colorButtonRef = useRef(null);
@@ -88,6 +92,38 @@ const NoteModalTools = ({
     window.dispatchEvent(new Event("loadingEnd"));
   };
 
+  const handleMouseEnter = (e, text) => {
+    const target = e.currentTarget;
+    setTooltipAnchor({ anchor: target, text: text, display: true });
+  };
+
+  const handleMouseLeave = () => {
+    setTooltipAnchor((prev) => ({
+      ...prev,
+      display: false,
+    }));
+  };
+
+  const closeToolTip = () => {
+    setTooltipAnchor((prev) => ({
+      anchor: null,
+      text: prev.text,
+    }));
+  };
+
+  const toggleColorMenu = (e) => {
+    closeToolTip();
+    setColorAnchorEl(e.currentTarget);
+    setColorMenuOpen(!colorMenuOpen);
+  };
+
+  const handleModalArchive = (e) => {
+    closeToolTip();
+    setIsPinned((prev) => !prev);
+    archiveRef.current = true;
+    handleClose(e, false);
+  };
+
   return (
     <div
       style={{ opacity: "1" }}
@@ -101,10 +137,22 @@ const NoteModalTools = ({
         <Button>
           <PersonAdd size={15} opacity={0.8} />
         </Button>
-        <Button>
+        <Button
+          className="close"
+          onClick={handleModalArchive}
+          onMouseEnter={(e) => handleMouseEnter(e, "Archive")}
+          onMouseLeave={handleMouseLeave}
+        >
           <ArchiveIcon size={15} opacity={0.8} color="#212121" />
         </Button>
-        <Button onClick={() => inputRef.current.click()}>
+        <Button
+          onClick={() => {
+            closeToolTip();
+            inputRef.current.click();
+          }}
+          onMouseEnter={(e) => handleMouseEnter(e, "Add image")}
+          onMouseLeave={handleMouseLeave}
+        >
           <input
             ref={inputRef}
             style={{ display: "none" }}
@@ -113,17 +161,22 @@ const NoteModalTools = ({
           />
           <ImageIcon size={15} opacity={0.8} />
         </Button>
-        <Button ref={colorButtonRef} onClick={() => setIsOpen(!isOpen)}>
+        <Button
+          onClick={toggleColorMenu}
+          onMouseEnter={(e) => handleMouseEnter(e, "Background options")}
+          onMouseLeave={handleMouseLeave}
+        >
           <ColorIcon size={15} opacity={0.8} />
         </Button>
         <AnimatePresence>
-          {isOpen && (
+          {colorMenuOpen && (
             <ColorSelectMenu
               handleColorClick={handleColorClick}
+              anchorEl={colorAnchorEl}
               selectedColor={selectedColor}
-              isOpen={isOpen}
-              setIsOpen={setIsOpen}
-              buttonRef={colorButtonRef}
+              setTooltipAnchor={setTooltipAnchor}
+              isOpen={colorMenuOpen}
+              setIsOpen={setColorMenuOpen}
             />
           )}
         </AnimatePresence>
@@ -137,11 +190,7 @@ const NoteModalTools = ({
           <BackIcon size={15} opacity={0.8} direction="1" />
         </Button>
       </div>
-      <button
-        ref={closeRef}
-        onClick={(e) => handleClose(e, closeRef)}
-        className="close-btn"
-      >
+      <button ref={closeRef} onClick={handleClose} className="close close-btn">
         Close
       </button>
     </div>

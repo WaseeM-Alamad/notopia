@@ -11,16 +11,12 @@ import "@/assets/styles/LinearLoader.css";
 import NoteTools from "./NoteTools";
 import NoteModal from "./NoteModal";
 import PinIcon from "../icons/PinIcon";
-import {
-  NoteUpdateAction,
-  undoAction,
-  updateOrderAction,
-} from "@/utils/actions";
+import { NoteUpdateAction, undoAction } from "@/utils/actions";
 import Button from "../Tools/Button";
 import NoteImagesLayout from "../Tools/NoteImagesLayout";
 import { useSession } from "next-auth/react";
 import CheckMark from "../icons/CheckMark";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 
 const Note = memo(
   ({
@@ -257,6 +253,45 @@ const Note = memo(
       }));
     };
 
+    const handleArchive = useCallback(async () => {
+      const initialIndex = index;
+      setLocalIsArchived((prev) => !prev);
+      const undoArchive = async () => {
+        dispatchNotes({
+          type: "UNDO_ARCHIVE",
+          note: note,
+          initialIndex: initialIndex,
+        });
+        setTimeout(() => {
+          window.dispatchEvent(new Event("closeModal"));
+        }, 0);
+        window.dispatchEvent(new Event("loadingStart"));
+        await undoAction({
+          type: "UNDO_ARCHIVE",
+          noteUUID: note.uuid,
+          value: note.isArchived,
+          pin: note.isPinned,
+          initialIndex: initialIndex,
+          endIndex: 0,
+        });
+        window.dispatchEvent(new Event("loadingEnd"));
+      };
+      openSnackFunction({
+        snackMessage: `${
+          note.isArchived
+            ? "Note unarchived"
+            : note.isPinned
+            ? "Note unpinned and archived"
+            : "Note Archived"
+        }`,
+        snackOnUndo: undoArchive,
+      });
+      const first = index === 0;
+      window.dispatchEvent(new Event("loadingStart"));
+      await NoteUpdateAction("isArchived", !note.isArchived, note.uuid, first);
+      window.dispatchEvent(new Event("loadingEnd"));
+    }, [index, note]);
+
     return (
       <>
         <motion.div
@@ -269,7 +304,7 @@ const Note = memo(
                 ? 0
                 : 1,
           }}
-          transition={{ duration: 0.16 }}
+          transition={{ duration: 0.2 }}
           onAnimationComplete={() => {
             if (localIsArchived) {
               dispatchNotes({
@@ -417,6 +452,7 @@ const Note = memo(
               openSnackFunction={openSnackFunction}
               setLocalIsArchived={setLocalIsArchived}
               setLocalIsTrash={setLocalIsTrash}
+              handleArchive={handleArchive}
               setIsNoteDeleted={setIsNoteDeleted}
               index={index}
             />
@@ -435,6 +471,9 @@ const Note = memo(
             index={index}
             isLoadingImages={isLoadingImages}
             setIsLoadingImages={setIsLoadingImages}
+            openSnackFunction={openSnackFunction}
+            setTooltipAnchor={setTooltipAnchor}
+            handleArchive={handleArchive}
             isLoading={isLoading}
             userID={userID}
           />

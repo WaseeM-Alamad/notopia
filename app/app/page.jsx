@@ -249,28 +249,46 @@ const page = () => {
   const onCloseFunction = useRef(() => {});
 
   const openSnackFunction = useCallback((data) => {
-    setSnackbarState((prev) => ({
-      ...prev,
-      snackOpen: false,
-    }));
-    onCloseFunction.current();
+    if (data.close) {
+      setSnackbarState((prev) => ({
+        ...prev,
+        snackOpen: false,
+      }));
+      onCloseFunction.current();
+    } else {
+      setSnackbarState((prev) => ({
+        ...prev,
+        snackOpen: false,
+      }));
+      onCloseFunction.current();
 
-    setTimeout(() => {
-      setSnackbarState({
-        message: data.snackMessage,
-        showUndo: true,
-        snackOpen: true,
-      });
-      if (data.snackOnUndo !== undefined) {
-        undoFunction.current = data.snackOnUndo;
-      }
-      if (data.snackOnClose !== undefined) {
-        onCloseFunction.current = data.snackOnClose;
-      }
-      if (data.unloadWarn) {
-        setUnloadWarn(true);
-      }
-    }, 80);
+      setTimeout(() => {
+        setSnackbarState({
+          message: data.snackMessage,
+          showUndo: true,
+          snackOpen: true,
+        });
+        if (data.snackOnUndo !== undefined) {
+          undoFunction.current = data.snackOnUndo;
+        }
+        if (data.snackOnClose !== undefined) {
+          onCloseFunction.current = data.snackOnClose;
+        }
+        if (data.unloadWarn) {
+          setUnloadWarn(true);
+        }
+      }, 80);
+    }
+  }, []);
+
+  useEffect(() => {
+    const handler = () => {
+      openSnackFunction({ close: true });
+    };
+
+    window.addEventListener("sectionChange", handler);
+
+    return () => window.removeEventListener("sectionChange", handler);
   }, []);
 
   useEffect(() => {
@@ -337,19 +355,18 @@ const page = () => {
 
   const Header = memo(() => (
     <div className="starting-div-header">
-      {isClient && (
         <div className="page-header">
-          {/* {window.location.hash.includes("archive") ? (
+          {window?.location?.hash?.includes("archive") ? (
             <ArchiveIcon size={22} color="#212121" />
-          ) : window.location.hash.includes("trash") ? (
+          ) : window?.location?.hash?.includes("trash") ? (
             <TrashIcon size={22} color="#212121" />
           ) : (
             <NotesIcon size={34} />
-          )} */}
+          )}
           <h1 className="page-header-title">
-            {window.location.hash.includes("archive") ? (
+            {window?.location?.hash?.includes("archive") ? (
               <span>Archive</span>
-            ) : window.location.hash.includes("trash") ? (
+            ) : window?.location?.hash?.includes("trash") ? (
               <span>Trash</span>
             ) : (
               <span>All Notes</span>
@@ -370,7 +387,6 @@ const page = () => {
             </div>
           </div>
         </div>
-      )}
     </div>
   ));
 
