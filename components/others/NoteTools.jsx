@@ -193,8 +193,13 @@ const NoteTools = ({
     }));
   };
 
+  const containerClick = useCallback((e) => {
+      e.stopPropagation();
+    }, []);
+
   return (
     <span
+    onClick={containerClick}
       style={{
         opacity: images ? "0.8" : "1",
         transition: "all 0.3s ease",

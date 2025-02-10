@@ -34,6 +34,7 @@ const NoteWrapper = memo(
     index,
     isDragging,
     setTooltipAnchor,
+    handleNoteClick,
   }) => {
     // const { modalOpen, setModalOpen } = useAppContext();
     const [mounted, setMounted] = useState(false);
@@ -102,6 +103,7 @@ const NoteWrapper = memo(
         data-pinned={note.isPinned}
         data-position={index}
         onMouseDown={handleMouseDown}
+        onClick={(e)=> handleNoteClick(e, note, index)}
         className="grid-item"
         style={{
           width: `${COLUMN_WIDTH}px`,
@@ -148,7 +150,7 @@ const NoteWrapper = memo(
 NoteWrapper.displayName = "NoteWrapper";
 
 const Home = memo(
-  ({ notes, order, dispatchNotes, setTooltipAnchor, openSnackFunction }) => {
+  ({ notes, order, dispatchNotes, setTooltipAnchor, openSnackFunction, handleNoteClick }) => {
     const [isLayoutReady, setIsLayoutReady] = useState(false);
     const [othersHeight, setOthersHeight] = useState(null);
     const [isLoadingImages, setIsLoadingImages] = useState([]);
@@ -538,6 +540,7 @@ const Home = memo(
                     isVisible={isLayoutReady}
                     openSnackFunction={openSnackFunction}
                     setSelectedNotesIDs={setSelectedNotesIDs}
+                    handleNoteClick={handleNoteClick}
                     {...(isLoadingImages.includes(note.uuid)
                       ? { isLoadingImages }
                       : {})}

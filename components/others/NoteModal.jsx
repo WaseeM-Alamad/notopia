@@ -331,7 +331,6 @@ const NoteModal = ({
             height: trigger2 ? "" : `${notePos.height}px`,
             minHeight: trigger2 ? "185px" : "",
             transform: trigger2 && "translate(-50%, -30%)",
-            borderRadius: "0.7rem",
             backgroundColor: note.color,
             border: "solid 1px",
             borderColor: note.color === "#FFFFFF" ? "#e0e0e0" : "transparent",

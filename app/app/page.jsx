@@ -4,6 +4,7 @@ import LabelIcon from "@/components/icons/LabelIcon";
 import NotesIcon from "@/components/icons/NotesIcon";
 import SortByIcon from "@/components/icons/SortByIcon";
 import TrashIcon from "@/components/icons/TrashIcon";
+import Modal from "@/components/others/Modal";
 import Archive from "@/components/pages/Archive";
 import Folders from "@/components/pages/Folders";
 import Home from "@/components/pages/Home";
@@ -44,7 +45,10 @@ function notesReducer(state, action) {
       };
 
     case "PIN_NOTE": {
-      const newNote = { ...action.note, isPinned: !action.note.isPinned };
+      const newNote = {
+        ...state.notes.get(action.note.uuid),
+        isPinned: !action.note.isPinned,
+      };
       const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
       const updatedOrder = [...state.order].filter(
         (uuid) => uuid !== action.note.uuid
@@ -57,7 +61,7 @@ function notesReducer(state, action) {
     }
     case "ARCHIVE_NOTE": {
       const newNote = {
-        ...action.note,
+        ...state.notes.get(action.note.uuid),
         isArchived: !action.note.isArchived,
         isPinned: false,
       };
@@ -73,8 +77,9 @@ function notesReducer(state, action) {
     }
     case "UNDO_ARCHIVE": {
       const newNote = {
-        ...action.note,
+        ...state.notes.get(action.note.uuid),
         isArchived: action.note.isArchived,
+        isPinned: action.note.isPinned,
       };
       const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
       const updatedOrder = [...state.order];
@@ -89,7 +94,7 @@ function notesReducer(state, action) {
     }
     case "TRASH_NOTE": {
       const newNote = {
-        ...action.note,
+        ...state.notes.get(action.note.uuid),
         isTrash: !action.note.isTrash,
         isPinned: false,
       };
@@ -105,7 +110,7 @@ function notesReducer(state, action) {
     }
     case "UNDO_TRASH": {
       const newNote = {
-        ...action.note,
+        ...state.notes.get(action.note.uuid),
         isTrash: action.note.isTrash,
       };
       const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
@@ -120,20 +125,20 @@ function notesReducer(state, action) {
       };
     }
     case "DELETE_NOTE": {
-      const newNote = new Map(state.notes);
-      newNote.delete(action.note.uuid);
+      const newNotes = new Map(state.notes);
+      newNotes.delete(action.note.uuid);
       const updatedOrder = [...state.order].filter(
         (uuid) => uuid !== action.note.uuid
       );
       return {
         ...state,
-        notes: newNote,
+        notes: newNotes,
         order: updatedOrder,
       };
     }
     case "PIN_ARCHIVED_NOTE": {
       const newNote = {
-        ...action.note,
+        ...state.notes.get(action.note.uuid),
         isPinned: true,
         isArchived: false,
       };
@@ -149,7 +154,7 @@ function notesReducer(state, action) {
     }
     case "UNDO_PIN_ARCHIVED": {
       const newNote = {
-        ...action.note,
+        ...state.notes.get(action.note.uuid),
         isPinned: false,
         isArchived: true,
       };
@@ -167,7 +172,10 @@ function notesReducer(state, action) {
       };
     }
     case "UPDATE_COLOR": {
-      const newNote = { ...action.note, color: action.newColor };
+      const newNote = {
+        ...state.notes.get(action.note.uuid),
+        color: action.newColor,
+      };
       const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
 
       return {
@@ -177,7 +185,7 @@ function notesReducer(state, action) {
     }
     case "ADD_IMAGE": {
       const newNote = {
-        ...action.note,
+        ...state.notes.get(action.note.uuid),
         images: [
           ...action.note.images,
           { url: action.imageURL, uuid: action.newImageUUID },
@@ -192,7 +200,7 @@ function notesReducer(state, action) {
     }
     case "UPDATE_TEXT": {
       const newNote = {
-        ...action.note,
+        ...state.notes.get(action.note.uuid),
         title: action.newTitle,
         content: action.newContent,
       };
@@ -203,7 +211,10 @@ function notesReducer(state, action) {
       };
     }
     case "UPDATE_IMAGES": {
-      const newNote = { ...action.note, images: action.newImages };
+      const newNote = {
+        ...state.notes.get(action.note.uuid),
+        images: action.newImages,
+      };
       const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
       return {
         ...state,
@@ -239,6 +250,9 @@ const page = () => {
   const [isClient, setIsClient] = useState(false);
   const [tooltipAnchor, setTooltipAnchor] = useState(null);
   const [notesState, dispatchNotes] = useReducer(notesReducer, initialStates);
+  const [modalStyle, setModalStyle] = useState(null);
+  const [selectedNote, setSelectedNote] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [snackbarState, setSnackbarState] = useState({
     snackOpen: false,
     showUndo: true,
@@ -247,6 +261,7 @@ const page = () => {
   const [unloadWarn, setUnloadWarn] = useState(false);
   const undoFunction = useRef(() => {});
   const onCloseFunction = useRef(() => {});
+  const closeRef = useRef(null);
 
   const openSnackFunction = useCallback((data) => {
     if (data.close) {
@@ -353,40 +368,66 @@ const page = () => {
     return () => window.removeEventListener("refresh", getNotes);
   }, []);
 
+  const handleNoteClick = useCallback((e, note, index) => {
+    if (
+      e.target.closest("button") ||
+      !e.currentTarget.classList.contains("grid-item")
+    )
+      return;
+    const element = e.currentTarget;
+    setSelectedNote(note);
+    setTimeout(() => {
+      setIsModalOpen(true);
+    }, 10);
+    setTimeout(() => {
+      element.style.opacity = "0";
+    }, 20);
+
+    const rect = element.getBoundingClientRect();
+    setModalStyle({
+      index: index,
+      element: element,
+      top: `${rect.top}px`,
+      left: `${rect.left}px`,
+      width: `${rect.width}`,
+      height: `${rect.height}`,
+    });
+  }, []);
+
   const Header = memo(() => (
     <div className="starting-div-header">
-        <div className="page-header">
+      <div className="page-header">
+        {window?.location?.hash?.includes("archive") ? (
+          <ArchiveIcon size={22} color="#212121" />
+        ) : window?.location?.hash?.includes("trash") ? (
+          <TrashIcon size={22} color="#212121" />
+        ) : (
+          <NotesIcon size={34} />
+        )}
+        <h1 className="page-header-title">
           {window?.location?.hash?.includes("archive") ? (
-            <ArchiveIcon size={22} color="#212121" />
+            <span>Archive</span>
           ) : window?.location?.hash?.includes("trash") ? (
-            <TrashIcon size={22} color="#212121" />
+            <span>Trash</span>
           ) : (
-            <NotesIcon size={34} />
+            <span>All Notes</span>
           )}
-          <h1 className="page-header-title">
-            {window?.location?.hash?.includes("archive") ? (
-              <span>Archive</span>
-            ) : window?.location?.hash?.includes("trash") ? (
-              <span>Trash</span>
-            ) : (
-              <span>All Notes</span>
-            )}
-          </h1>
-          <div
-          // animate={{ width: "100%" }}
-          // className="page-header-divider"
-          />
-          <div className="divider-tools-container">
-            <div className="divider-tool">
-              <SortByIcon />
-              <span className="divider-tool-text">Sort by</span>
-            </div>
-            <div className="divider-tool">
-              <LabelIcon />
-              <span className="divider-tool-text">Labels</span>
-            </div>
+        </h1>
+        <div
+        // animate={{ width: "100%" }}
+        // className="page-header-divider"
+        />
+        <div className="divider-tools-container">
+          <div className="divider-tool">
+            <SortByIcon />
+            <span className="divider-tool-text">Sort by</span>
+          </div>
+          <div className="divider-tool">
+            <LabelIcon />
+            <span className="divider-tool-text">Labels</span>
           </div>
         </div>
+      </div>
     </div>
   ));
 
@@ -411,6 +452,7 @@ const page = () => {
           order={notesState.order}
           setTooltipAnchor={setTooltipAnchor}
           openSnackFunction={openSnackFunction}
+          handleNoteClick={handleNoteClick}
         />
       );
     else if (currentPage?.includes("folders")) return <Folders />;
@@ -433,12 +475,50 @@ const page = () => {
           order={notesState.order}
           setTooltipAnchor={setTooltipAnchor}
           openSnackFunction={openSnackFunction}
+          handleNoteClick={handleNoteClick}
         />
       );
   };
 
   return (
     <>
+      <motion.div
+        animate={{
+          opacity: isModalOpen ? 1 : 0,
+          display: isModalOpen ? "block" : "none",
+          backgroundColor: isModalOpen ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.0)",
+        }}
+        onClick={() => {
+          closeRef.current();
+
+          setTimeout(() => {
+            const rect = modalStyle.element.getBoundingClientRect();
+            setModalStyle((prev) => ({
+              ...prev,
+              top: `${rect.top}px`,
+              left: `${rect.left}px`,
+              width: `${rect.width}`,
+              height: `${rect.height}`,
+            }));
+            setIsModalOpen(false);
+          }, 10);
+        }}
+        transition={{ duration: 0.2 }}
+        className="modal-container"
+      />
+
+      <Modal
+        note={selectedNote}
+        dispatchNotes={dispatchNotes}
+        initialStyle={modalStyle}
+        onClose={() => setSelectedNote(null)}
+        setTooltipAnchor={setTooltipAnchor}
+        closeRef={closeRef}
+        isOpen={isModalOpen}
+        setIsOpen={setIsModalOpen}
+        openSnackFunction={openSnackFunction}
+        setModalStyle={setModalStyle}
+      />
       {tooltipAnchor?.display && <Tooltip anchorEl={tooltipAnchor} />}
       <Snackbar
         snackbarState={snackbarState}

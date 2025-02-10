@@ -334,3 +334,7 @@ img {
   pointer-events: none !important;
 }
 
+.mama {
+  opacity: 0 !important;
+  transition: opacity 0.2s !important;
+}

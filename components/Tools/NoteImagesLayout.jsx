@@ -3,8 +3,7 @@ import ImageTrashIcon from "../icons/ImageTrashIcon";
 import "@/assets/styles/LinearLoader.css";
 
 const NoteImagesLayout = ({
-  width,
-  images,
+  images = [],
   calculateMasonryLayout,
   isLoadingImages = [],
   modalOpen,
@@ -110,7 +109,7 @@ const NoteImagesLayout = ({
 
   useEffect(() => {
     calculateLayout();
-  }, [loadedImages, width]);
+  }, [loadedImages]);
 
   const containerStyle = {
     display: "flex",

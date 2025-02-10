@@ -85,7 +85,7 @@ const Note = memo(
 
     const handleNoteClick = (e) => {
       if (!selectedNotes.current) {
-        openNote(e);
+        // openNote(e);
       } else {
         // if (!inputsRef.current?.contains(e.target))
         handleCheckClick();
@@ -209,7 +209,8 @@ const Note = memo(
       setTrigger2(value);
     }, []);
 
-    const handleCheckClick = () => {
+    const handleCheckClick = (e) => {
+      e.stopPropagation()
       closeToolTip();
       setSelected((prev) => !prev);
 

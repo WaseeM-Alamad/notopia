@@ -1,7 +1,7 @@
 import { copyNoteAction, NoteUpdateAction, undoAction } from "@/utils/actions";
 import { Popper } from "@mui/material";
 import { AnimatePresence, motion } from "framer-motion";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { v4 as generateUUID } from "uuid";
 
@@ -35,7 +35,7 @@ const MoreMenu = ({
     return () => document.removeEventListener("click", handler);
   }, [isOpen]);
 
-  const handleDelete = async () => {
+  const handleDelete = async (e) => {
     const initialIndex = index;
     const undoTrash = async () => {
       dispatchNotes({
@@ -68,7 +68,7 @@ const MoreMenu = ({
     setIsOpen(false);
   };
 
-  const handleMakeCopy = () => {
+  const handleMakeCopy = (e) => {
     const newUUID = generateUUID();
 
     const newNote = {
@@ -128,6 +128,10 @@ const MoreMenu = ({
     setIsOpen(false);
   };
 
+  const containerClick = useCallback((e) => {
+    e.stopPropagation();
+  }, []);
+
   if (!isClient) return;
   return createPortal(
     <>
@@ -147,6 +151,7 @@ const MoreMenu = ({
       >
         {isOpen && (
           <motion.div
+            onClick={containerClick}
             initial={{ opacity: 0 }}
             animate={{ opacity: isOpen ? 1 : 0 }}
             exit={{ opacity: 0 }}

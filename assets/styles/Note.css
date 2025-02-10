@@ -134,6 +134,7 @@
 
 .empty-note::before {
   display: flex;
+  position: absolute;
   content: attr(aria-label);
   color: rgba(0, 0, 0, 0.55);
   margin-left: 1.5rem;
