@@ -103,7 +103,7 @@ const NoteWrapper = memo(
         data-pinned={note.isPinned}
         data-position={index}
         onMouseDown={handleMouseDown}
-        onClick={(e)=> handleNoteClick(e, note, index)}
+        onClick={(e) => handleNoteClick(e, note, index)}
         className="grid-item"
         style={{
           width: `${COLUMN_WIDTH}px`,
@@ -150,7 +150,14 @@ const NoteWrapper = memo(
 NoteWrapper.displayName = "NoteWrapper";
 
 const Home = memo(
-  ({ notes, order, dispatchNotes, setTooltipAnchor, openSnackFunction, handleNoteClick }) => {
+  ({
+    notes,
+    order,
+    dispatchNotes,
+    setTooltipAnchor,
+    openSnackFunction,
+    handleNoteClick,
+  }) => {
     const [isLayoutReady, setIsLayoutReady] = useState(false);
     const [othersHeight, setOthersHeight] = useState(null);
     const [isLoadingImages, setIsLoadingImages] = useState([]);
@@ -462,6 +469,16 @@ const Home = memo(
 
       handleDragOver(overNoteIsPinned, overIndex);
     };
+
+    useEffect(() => {
+      const handler = () => {
+        calculateLayout();
+      };
+
+      window.addEventListener("calculateLayout", handler);
+
+      return () => window.removeEventListener("calculateLayout", handler);
+    }, []);
 
     return (
       <>

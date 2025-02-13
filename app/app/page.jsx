@@ -13,7 +13,7 @@ import Trash from "@/components/pages/Trash";
 import Snackbar from "@/components/Tools/Snackbar";
 import Tooltip from "@/components/Tools/Tooltip";
 import { fetchNotes } from "@/utils/actions";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import React, {
   memo,
   useCallback,
@@ -112,6 +112,7 @@ function notesReducer(state, action) {
       const newNote = {
         ...state.notes.get(action.note.uuid),
         isTrash: action.note.isTrash,
+        isPinned: action.note.isPinned,
       };
       const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
       const updatedOrder = [...state.order];
@@ -236,6 +237,40 @@ function notesReducer(state, action) {
       };
     }
 
+    case "ADD_LABEL": {
+      const newNote = {
+        ...state.notes.get(action.note.uuid),
+        labels: [
+          ...action.note.labels,
+          { uuid: action.labelUUID, label: action.labelName },
+        ],
+      };
+      const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
+      return {
+        ...state,
+        notes: updatedNotes,
+      };
+    }
+
+    case "REMOVE_LABEL": {
+      const targetedNote = {
+        ...state.notes.get(action.note.uuid),
+      };
+
+      const newNote = {
+        ...targetedNote,
+        labels: targetedNote.labels.filter(
+          (noteLabel) => noteLabel.uuid !== action.labelUUID
+        ),
+      };
+
+      const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
+      return {
+        ...state,
+        notes: updatedNotes,
+      };
+    }
+
     case "DND": {
       return {
         ...state,
@@ -295,6 +330,14 @@ const page = () => {
       }, 80);
     }
   }, []);
+
+  const closeSnackbar = () => {
+    setSnackbarState((prev) => ({
+      ...prev,
+      snackOpen: false,
+    }));
+    onCloseFunction.current();
+  };
 
   useEffect(() => {
     const handler = () => {
@@ -375,28 +418,29 @@ const page = () => {
     )
       return;
     const element = e.currentTarget;
-    setSelectedNote(note);
-    setTimeout(() => {
-      setIsModalOpen(true);
-    }, 10);
-    setTimeout(() => {
-      element.style.opacity = "0";
-    }, 20);
 
-    const rect = element.getBoundingClientRect();
-    setModalStyle({
-      index: index,
-      element: element,
-      top: `${rect.top}px`,
-      left: `${rect.left}px`,
-      width: `${rect.width}`,
-      height: `${rect.height}`,
+    requestAnimationFrame(() => {
+      const rect = element.getBoundingClientRect();
+      setModalStyle({
+        index: index,
+        element: element,
+        top: `${rect.top}px`,
+        left: `${rect.left}px`,
+        width: `${rect.width}`,
+        height: `${rect.height}`,
+      });
+
+      setTimeout(() => {
+        setSelectedNote(note);
+        setIsModalOpen(true);
+        element.style.opacity = "0";
+      }, 20);
     });
   }, []);
 
   const Header = memo(() => (
     <div className="starting-div-header">
-      <div className="page-header">
+      {/* <div className="page-header">
         {window?.location?.hash?.includes("archive") ? (
           <ArchiveIcon size={22} color="#212121" />
         ) : window?.location?.hash?.includes("trash") ? (
@@ -427,7 +471,7 @@ const page = () => {
             <span className="divider-tool-text">Labels</span>
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   ));
 
@@ -482,30 +526,51 @@ const page = () => {
 
   return (
     <>
-      <motion.div
-        animate={{
-          opacity: isModalOpen ? 1 : 0,
-          display: isModalOpen ? "block" : "none",
-          backgroundColor: isModalOpen ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.0)",
-        }}
-        onClick={() => {
-          closeRef.current();
+      <AnimatePresence>
+        {isModalOpen && (
+          <motion.div
+            initial={{
+              opacity: 0,
+              display: "none",
+              backgroundColor: "rgba(0,0,0,0.0)",
+            }}
+            animate={{
+              opacity: 1,
+              display: "block",
+              backgroundColor: "rgba(0,0,0,0.5)",
+            }}
+            exit={{
+              opacity: 0,
+              display: "none",
+              backgroundColor: "rgba(0,0,0,0.0)",
+            }}
+            transition={{
+              all: {
+                type: "spring",
+                stiffness: 1000,
+                damping: 50,
+                mass: 1,
+              },
+            }}
+            onClick={() => {
+              // closeRef.current();
 
-          setTimeout(() => {
-            const rect = modalStyle.element.getBoundingClientRect();
-            setModalStyle((prev) => ({
-              ...prev,
-              top: `${rect.top}px`,
-              left: `${rect.left}px`,
-              width: `${rect.width}`,
-              height: `${rect.height}`,
-            }));
-            setIsModalOpen(false);
-          }, 10);
-        }}
-        transition={{ duration: 0.2 }}
-        className="modal-container"
-      />
+              // setTimeout(() => {
+              // const rect = modalStyle.element.getBoundingClientRect();
+              // setModalStyle((prev) => ({
+              //   ...prev,
+              //   top: `${rect.top}px`,
+              //   left: `${rect.left}px`,
+              //   width: `${rect.width}`,
+              //   height: `${rect.height}`,
+              // }));
+              setIsModalOpen(false);
+              // }, 10);
+            }}
+            className="modal-container no-transition"
+          />
+        )}
+      </AnimatePresence>
 
       <Modal
         note={selectedNote}
@@ -517,6 +582,7 @@ const page = () => {
         isOpen={isModalOpen}
         setIsOpen={setIsModalOpen}
         openSnackFunction={openSnackFunction}
+        closeSnackbar={closeSnackbar}
         setModalStyle={setModalStyle}
       />
       {tooltipAnchor?.display && <Tooltip anchorEl={tooltipAnchor} />}

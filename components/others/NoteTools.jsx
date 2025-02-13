@@ -101,6 +101,7 @@ const NoteTools = ({
   };
 
   const handleOnChange = async (event) => {
+    console.log("img", event.target)
     const file = event.target?.files[0];
     const imageURL = URL.createObjectURL(file);
     const newUUID = uuid();
@@ -118,6 +119,7 @@ const NoteTools = ({
       "https://fopkycgspstkfctmhyyq.supabase.co/storage/v1/object/public/notopia";
     const path = `${starter}/${userID}/${note.uuid}/${newUUID}`;
     setIsLoadingImages((prev) => [...prev, newUUID]);
+
     const updatedImages = await NoteUpdateAction(
       "images",
       { url: path, uuid: newUUID },

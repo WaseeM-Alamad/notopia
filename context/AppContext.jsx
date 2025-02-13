@@ -1,55 +1,49 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import React, { createContext, useState, useContext, useEffect, useRef } from "react";
+import React, {
+  createContext,
+  useState,
+  useContext,
+  useEffect,
+  useRef,
+} from "react";
+import { fetchLabelsAction, createLabelAction } from "@/utils/actions";
 
 const AppContext = createContext();
 
 export function AppProvider({ children }) {
-  const slotProps = {
-    popper: {
-      modifiers: [
-        {
-          name: "offset",
-          options: {
-            offset: [0, -11],
-          },
-        },
-      ],
-    },
-    tooltip: {
-      sx: {
-        height: "fit-content",
-        margin: "0",
-        backgroundColor: "rgba(0, 0, 0, 0.7)",
-        fontWeight: "400",
-        fontSize: "0.76rem",
-        padding: "5px 8px 5px 8px",
-      },
-    },
+  const labelsRef = useRef(new Map());
+
+  const getLabels = async () => {
+    const fetchedLables = await fetchLabelsAction();
+    if (!fetchedLables.success) return;
+    labelsRef.current = new Map(
+      fetchedLables.data.map((mapLabel) => [mapLabel.uuid, mapLabel.label])
+    );
   };
 
-  
-  
-  const [user, setUser] = useState(null);
-  const [tooltipAnchor, setTooltipAnchor] = useState(null);
-  const { data: session, status } = useSession();
-
   useEffect(() => {
-    if (session) {
-      setUser(session.user);
-    }
-  }, [session]);
+    getLabels();
+  }, []);
+
+  const createLabel = async (uuid, label) => {
+    labelsRef.current.set(uuid, label);
+    window.dispatchEvent(new Event("loadingStart"));
+    await createLabelAction(uuid, label);
+    window.dispatchEvent(new Event("loadingEnd"));
+  };
+
+  const removeLabel = (uuid) => {
+    labelsRef.current.delete(uuid);
+  };
 
   return (
     <AppContext.Provider
       value={{
-        slotProps,
-        user,
-        session,
-        tooltipAnchor,
-        setTooltipAnchor,
-        status,
+        createLabel,
+        removeLabel,
+        labelsRef,
       }}
     >
       {children}

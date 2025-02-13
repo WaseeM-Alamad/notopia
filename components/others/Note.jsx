@@ -11,12 +11,17 @@ import "@/assets/styles/LinearLoader.css";
 import NoteTools from "./NoteTools";
 import NoteModal from "./NoteModal";
 import PinIcon from "../icons/PinIcon";
-import { NoteUpdateAction, undoAction } from "@/utils/actions";
+import {
+  NoteUpdateAction,
+  removeLabelAction,
+  undoAction,
+} from "@/utils/actions";
 import Button from "../Tools/Button";
 import NoteImagesLayout from "../Tools/NoteImagesLayout";
 import { useSession } from "next-auth/react";
 import CheckMark from "../icons/CheckMark";
 import { motion } from "framer-motion";
+import { useAppContext } from "@/context/AppContext";
 
 const Note = memo(
   ({
@@ -33,6 +38,7 @@ const Note = memo(
     setModalTrigger,
     index,
   }) => {
+    const { addLabel, labelsRef } = useAppContext();
     const { data: session } = useSession();
     const userID = session?.user?.id;
     const [localIsArchived, setLocalIsArchived] = useState(false);
@@ -210,7 +216,7 @@ const Note = memo(
     }, []);
 
     const handleCheckClick = (e) => {
-      e.stopPropagation()
+      e.stopPropagation();
       closeToolTip();
       setSelected((prev) => !prev);
 
@@ -293,6 +299,20 @@ const Note = memo(
       window.dispatchEvent(new Event("loadingEnd"));
     }, [index, note]);
 
+    const removeLabel = async (noteLabel) => {
+      dispatchNotes({
+        type: "REMOVE_LABEL",
+        note: note,
+        labelUUID: noteLabel.uuid,
+      });
+      window.dispatchEvent(new Event("loadingStart"));
+      await removeLabelAction({
+        noteUUID: note.uuid,
+        labelUUID: noteLabel.uuid,
+      });
+      window.dispatchEvent(new Event("loadingEnd"));
+    };
+
     return (
       <>
         <motion.div
@@ -356,7 +376,10 @@ const Note = memo(
             style={{
               ...noteStyle,
               paddingBottom:
-                note.images.length === 0 || note.title || note.content
+                note.images.length === 0 ||
+                note.labels.length !== 0 ||
+                note.title ||
+                note.content
                   ? "45px"
                   : "0px  ",
               borderColor: selected
@@ -422,6 +445,7 @@ const Note = memo(
               </div>
 
               {note.images.length === 0 &&
+                note.labels.length === 0 &&
                 !note.title.trim() &&
                 !note.content.trim() && (
                   <div className="empty-note" aria-label="Empty note" />
@@ -438,6 +462,37 @@ const Note = memo(
                   </div>
                 )}
               </div>
+              {note.labels.length !== 0 && (
+                <>
+                  <div className="note-labels-container">
+                    {note.labels.map((noteLabel, index) => {
+                      if (index + 1 >= 3 && note.labels.length > 3) return;
+                      return (
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          key={noteLabel.uuid}
+                          className="label-wrapper"
+                        >
+                          <label className="note-label">
+                            {noteLabel.label}
+                          </label>
+                          <div
+                            onClick={() => removeLabel(noteLabel)}
+                            className="remove-label"
+                          />
+                        </div>
+                      );
+                    })}
+                    {note.labels.length > 3 && (
+                      <div className="more-labels">
+                        <label className="more-labels-label">
+                          +{note.labels.length - 2}
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
             <NoteTools
               colorMenuOpen={colorMenuOpen}

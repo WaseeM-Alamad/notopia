@@ -31,11 +31,11 @@ const DeleteModal = ({ isOpen, setIsOpen, handleDeleteNote }) => {
       }}
     >
       <motion.div
-        initial={{ top: "45.9%", opacity: 0 }}
-        animate={{ top: "45%", opacity: 1 }}
-        exit={{ top: "45.9%", opacity: 0 }}
+        initial={{ transform: "translate(-50%, -45%) scale(0.95)", opacity: 0 }}
+        animate={{ transform: "translate(-50%, -45%) scale(1)", opacity: 1 }}
+        exit={{ transform: "translate(-50%, -45%) scale(0.95)", opacity: 0 }}
         transition={{
-          top: { type: "spring", stiffness: 1000, damping: 50, mass: 1 },
+          transform: { type: "spring", stiffness: 1000, damping: 50, mass: 1 },
           opacity: { duration: 0.1 },
         }}
         style={{
@@ -44,7 +44,7 @@ const DeleteModal = ({ isOpen, setIsOpen, handleDeleteNote }) => {
           position: "fixed",
           top: "45%",
           left: "50%",
-          transform: "translate(-50%, -45%)",
+          // transform: "translate(-50%, -45%)",
           backgroundColor: "white",
           borderRadius: "0.7rem",
           padding: "1.4rem 1rem 0.7rem 1.2rem",

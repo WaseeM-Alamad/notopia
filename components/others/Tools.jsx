@@ -22,7 +22,7 @@ const NoteModalTools = ({
   dispatchNotes,
   note,
   handleClose,
-  setIsLoadingImages,
+  // setIsLoadingImages,
   setTooltipAnchor,
   archiveRef,
   imagesChangedRef,
@@ -85,10 +85,10 @@ const NoteModalTools = ({
     const starter =
       "https://fopkycgspstkfctmhyyq.supabase.co/storage/v1/object/public/notopia";
     const path = `${starter}/${userID}/${note.uuid}/${newUUID}`;
-    setIsLoadingImages((prev) => [...prev, newUUID]);
+    // setIsLoadingImages((prev) => [...prev, newUUID]);
     await NoteUpdateAction("images", { url: path, uuid: newUUID }, note.uuid);
     await UploadImageAction({ file: file, id: newUUID }, note.uuid);
-    setIsLoadingImages((prev) => prev.filter((id) => id !== newUUID));
+    // setIsLoadingImages((prev) => prev.filter((id) => id !== newUUID));
     window.dispatchEvent(new Event("loadingEnd"));
   };
 
@@ -180,7 +180,6 @@ const NoteModalTools = ({
         <Button>
           <MoreVert size={15} opacity={0.8} />
         </Button>
-        {trigger && (
           <>
             <Button>
               <BackIcon size={15} opacity={0.8} />
@@ -189,9 +188,7 @@ const NoteModalTools = ({
               <BackIcon size={15} opacity={0.8} direction="1" />
             </Button>
           </>
-        )}
       </div>
-      {trigger && (
         <button
           ref={closeRef}
           onClick={handleClose}
@@ -199,7 +196,6 @@ const NoteModalTools = ({
         >
           Close
         </button>
-      )}
     </div>
   );
 };

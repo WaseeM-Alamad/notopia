@@ -21,32 +21,32 @@ export const fetchNotes = async () => {
     const user = await User.findById(userID);
     const order = user.notesOrder;
     // Manually serialize the MongoDB-specific fields
-    const serializedNotes = notes.map((note) => ({
-      _id: note._id.toString(), // Convert ObjectId to string
-      uuid: note.uuid,
-      title: note.title,
-      content: note.content,
-      color: note.color,
-      labels: note.labels,
-      isPinned: note.isPinned,
-      isArchived: note.isArchived,
-      isTrash: note.isTrash,
-      images: Array.isArray(note.images)
-        ? note.images.map((image) => ({
-            url: image.url,
-            uuid: image.uuid,
-          }))
-        : [],
-      position: note.position,
-      createdAt: note.createdAt.toISOString(), // If it's a Date, convert to string
-      updatedAt: note.updatedAt.toISOString(),
-      __v: note.__v,
-    }));
+    // const serializedNotes = notes.map((note) => ({
+    //   _id: note._id.toString(), // Convert ObjectId to string
+    //   uuid: note.uuid,
+    //   title: note.title,
+    //   content: note.content,
+    //   color: note.color,
+    //   labels: note.labels,
+    //   isPinned: note.isPinned,
+    //   isArchived: note.isArchived,
+    //   isTrash: note.isTrash,
+    //   images: Array.isArray(note.images)
+    //     ? note.images.map((image) => ({
+    //         url: image.url,
+    //         uuid: image.uuid,
+    //       }))
+    //     : [],
+    //   position: note.position,
+    //   createdAt: note.createdAt.toISOString(), // If it's a Date, convert to string
+    //   updatedAt: note.updatedAt.toISOString(),
+    //   __v: note.__v,
+    // }));
 
     return {
       success: true,
       status: 200,
-      data: serializedNotes,
+      data: JSON.parse(JSON.stringify(notes)),
       order: order,
     };
   } catch (error) {
@@ -401,5 +401,84 @@ export const copyNoteAction = async (copiedNote, originalUUID) => {
   } catch (error) {
     console.log("Error creating note:", error);
     return new Response("Failed to add note", { status: 500 });
+  }
+};
+
+export const fetchLabelsAction = async () => {
+  if (!session) {
+    return { success: false, message: "Unauthorized", status: 401 };
+  }
+  try {
+    await connectDB();
+
+    const user = await User.findById(userID);
+    const labels = user?.labels;
+
+    return {
+      success: true,
+      message: "Fetched labels successfully!",
+      status: 201,
+      data: JSON.parse(JSON.stringify(labels)),
+    };
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const createLabelAction = async (newUUID, newLabel) => {
+  if (!session) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+  try {
+    await connectDB();
+
+    const user = await User.findById(userID);
+    user.labels.push({ uuid: newUUID, label: newLabel });
+
+    await user.save();
+
+    return {
+      success: true,
+      message: "Label added successfully!",
+      status: 201,
+    };
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const addLabelAction = async (data) => {
+  if (!session) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+  try {
+    await connectDB();
+
+    const addedLabel = { uuid: data.labelUUID, label: data.labelName };
+
+    await Note.updateOne(
+      { uuid: data.noteUUID },
+      { $push: { labels: addedLabel } }
+    );
+  } catch (error) {
+    console.log(error);
+    return { message: "Failed to add label", status: 500 };
+  }
+};
+
+export const removeLabelAction = async (data) => {
+  if (!session) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+  try {
+    await connectDB();
+
+    await Note.updateOne(
+      { uuid: data.noteUUID },
+      { $pull: { labels: { uuid: data.labelUUID } } }
+    );
+  } catch (error) {
+    console.log(error);
+    return { message: "Failed to remove label", status: 500 };
   }
 };

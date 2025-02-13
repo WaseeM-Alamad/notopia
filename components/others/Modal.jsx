@@ -6,12 +6,14 @@ import PinIcon from "../icons/PinIcon";
 import { getNoteFormattedDate } from "@/utils/noteDateFormatter";
 import { debounce } from "lodash";
 import {
+  NoteImageDeleteAction,
   NoteTextUpdateAction,
   NoteUpdateAction,
   undoAction,
 } from "@/utils/actions";
 import Tools from "./Tools";
 import NoteImagesLayout from "../Tools/NoteImagesLayout";
+import { useSession } from "next-auth/react";
 
 const Modal = ({
   note,
@@ -23,6 +25,7 @@ const Modal = ({
   setTooltipAnchor,
   dispatchNotes,
   openSnackFunction,
+  closeSnackbar,
   setModalStyle,
 }) => {
   const [isMounted, setIsMounted] = useState(false);
@@ -34,6 +37,9 @@ const Modal = ({
   const FormattedEditedDate = trigger
     ? getNoteFormattedDate(note?.updatedAt)
     : null;
+
+  const { data: session } = useSession();
+  const userID = session?.user?.id;
   const titleTextRef = useRef(null);
   const contentTextRef = useRef(null);
   const titleRef = useRef(null);
@@ -41,10 +47,15 @@ const Modal = ({
   const modalRef = useRef(null);
   const modalHeightRef = useRef(null);
   const archiveRef = useRef(false);
+  const isFirstRenderRef = useRef(true);
+  const imagesChangedRef = useRef(false);
 
   useEffect(() => {
+    if (isFirstRenderRef.current) {
+      isFirstRenderRef.current = false;
+      return;
+    }
     if (isOpen) {
-      // initialStyle.element.style.transition = "opacity 0.2s";
       initialStyle.element.classList.add("opacity");
       setSelectedColor(note?.color);
       setLocalImages(note?.images);
@@ -65,33 +76,25 @@ const Modal = ({
         setDisplay(true);
       }, 0);
     } else {
-      if (archiveRef.current) {
-        handleClose();
+      modalHeightRef.current =
+        modalRef?.current?.getBoundingClientRect()?.height;
+      handleClose();
 
-        setTimeout(() => {
-          setModalStyle((prev) => {
-            const rect = prev.element.getBoundingClientRect();
-
-            return {
-              ...prev,
-              top: `${rect.top}px`,
-              left: `${rect.left}px`,
-              width: `${rect.width}px`,
-              height: `${rect.height}px`,
-            };
-          });
-          setTrigger(false);
-        }, 10);
-      } else {
-        modalHeightRef.current =
-          modalRef?.current?.getBoundingClientRect()?.height;
+      setTimeout(() => {
+        setModalStyle((prev) => {
+          const rect = prev.element.getBoundingClientRect();
+          return {
+            ...prev,
+            height: rect.height,
+          };
+        });
         setTrigger(false);
-      }
+      }, 10);
     }
 
     const handler = (e) => {
       if (e.propertyName === "top" && !isOpen) {
-        console.log("finish");
+        // console.log("finish");
         initialStyle.element.classList.remove("opacity");
 
         if (initialStyle?.element) {
@@ -99,13 +102,11 @@ const Modal = ({
         }
 
         if (archiveRef.current) {
-          setTimeout(() => {
-            handleArchive();
-          }, 10);
+          handleArchive();
         }
 
         setDisplay(false);
-        setSelectedColor(null);
+        // setSelectedColor(null);
 
         if (modalIsPinned !== note?.isPinned) {
           dispatchNotes({
@@ -120,6 +121,9 @@ const Modal = ({
         // titleRef.current = null;
         // contentRef.current = null;
         onClose();
+        imagesChangedRef.current = false;
+
+        // window.dispatchEvent(new Event("calculateLayout"));
 
         modalRef.current.removeEventListener("transitionend", handler);
       }
@@ -139,12 +143,22 @@ const Modal = ({
       titleTextRef.current !== note?.title ||
       contentTextRef.current !== note?.content
     ) {
+      console.log("compare text");
       dispatchNotes({
         type: "UPDATE_TEXT",
         note: note,
         newTitle: titleTextRef.current,
         newContent: contentTextRef.current,
       });
+    }
+    if (imagesChangedRef.current) {
+      console.log("images changed");
+      dispatchNotes({
+        type: "UPDATE_IMAGES",
+        note: note,
+        newImages: localImages,
+      });
+      closeSnackbar();
     }
   };
 
@@ -225,72 +239,98 @@ const Modal = ({
   }, [trigger]);
 
   const handleArchive = async () => {
-    
-    initialStyle.element.style.opacity = "0";
-
-    const undoArchive = async () => {
-      const initialIndex = initialStyle.index;
-      dispatchNotes({
-        type: "UNDO_ARCHIVE",
-        note: note,
-        initialIndex: initialIndex,
-      });
-      setTimeout(() => {
-        window.dispatchEvent(new Event("closeModal"));
-      }, 0);
-      window.dispatchEvent(new Event("loadingStart"));
-      await undoAction({
-        type: "UNDO_ARCHIVE",
-        noteUUID: note.uuid,
-        value: note.isArchived,
-        pin: note.isPinned,
-        initialIndex: initialIndex,
-        endIndex: 0,
-      });
-      window.dispatchEvent(new Event("loadingEnd"));
-    };
-
-    const opacityEnd = async (e) => {
-      if (e.propertyName === "opacity") {
-        console.log("mama");
+    setTimeout(async () => {
+      const undoArchive = async () => {
+        const initialIndex = initialStyle.index;
         dispatchNotes({
-          type: "ARCHIVE_NOTE",
+          type: "UNDO_ARCHIVE",
           note: note,
+          initialIndex: initialIndex,
         });
-
-        openSnackFunction({
-          snackMessage: `${
-            note.isArchived
-              ? "Note unarchived"
-              : note.isPinned
-              ? "Note unpinned and archived"
-              : "Note Archived"
-          }`,
-          snackOnUndo: undoArchive,
-        });
-        const first = initialStyle.index === 0;
+        setTimeout(() => {
+          window.dispatchEvent(new Event("closeModal"));
+        }, 0);
         window.dispatchEvent(new Event("loadingStart"));
-        await NoteUpdateAction(
-          "isArchived",
-          !note.isArchived,
-          note.uuid,
-          first
-        );
+        await undoAction({
+          type: "UNDO_ARCHIVE",
+          noteUUID: note.uuid,
+          value: note.isArchived,
+          pin: note.isPinned,
+          initialIndex: initialIndex,
+          endIndex: 0,
+        });
         window.dispatchEvent(new Event("loadingEnd"));
+      };
 
-        initialStyle.element.removeEventListener("transitionend", opacityEnd);
-      }
-    };
+      dispatchNotes({
+        type: "ARCHIVE_NOTE",
+        note: note,
+      });
 
-    initialStyle.element.addEventListener("transitionend", opacityEnd);
+      openSnackFunction({
+        snackMessage: `${
+          note.isArchived
+            ? "Note unarchived"
+            : note.isPinned
+            ? "Note unpinned and archived"
+            : "Note Archived"
+        }`,
+        snackOnUndo: undoArchive,
+      });
+      const first = initialStyle.index === 0;
+      window.dispatchEvent(new Event("loadingStart"));
+      await NoteUpdateAction("isArchived", !note.isArchived, note.uuid, first);
+      window.dispatchEvent(new Event("loadingEnd"));
 
-    archiveRef.current = false;
+      archiveRef.current = false;
+    }, 10);
   };
 
-  const getModalHeight = () => {
-    const rect = modalRef?.current?.getBoundingClientRect();
-    console.log(rect?.height);
-  };
+  const noteImageDelete = useCallback(
+    async (imageUUID, imageURL) => {
+      const imageObject = { url: imageURL, uuid: imageUUID };
+      let imageIndex;
+
+      setLocalImages((prev) => {
+        const filteredImages = prev.reduce((acc, image, index) => {
+          if (image.uuid === imageUUID) {
+            imageIndex = index;
+            return acc;
+          }
+          acc.push(image);
+          return acc;
+        }, []);
+        return filteredImages;
+      });
+
+      imagesChangedRef.current = true;
+
+      const undo = async () => {
+        setLocalImages((prev) => {
+          const updatedImages = [...prev];
+          updatedImages.splice(imageIndex, 0, imageObject);
+          return updatedImages;
+        });
+        imagesChangedRef.current = false;
+      };
+
+      const onClose = async () => {
+        // imagesChangedRef.current = true;
+        const filePath = `${userID}/${note.uuid}/${imageUUID}`;
+        window.dispatchEvent(new Event("loadingStart"));
+        await NoteImageDeleteAction(filePath, note.uuid, imageUUID);
+        window.dispatchEvent(new Event("loadingEnd"));
+      };
+
+      openSnackFunction({
+        snackMessage: "Image deleted",
+        snackOnUndo: undo,
+        snackOnClose: onClose,
+        unloadWarn: true,
+      });
+    },
+    [note?.uuid]
+  );
 
   useEffect(() => {
     setIsMounted(true);
@@ -308,21 +348,15 @@ const Modal = ({
           top: !trigger ? initialStyle?.top : "30%",
           left: !trigger ? initialStyle?.left : "50%",
           width: "600px",
-          // height: !trigger ? initialStyle?.height : "",
-          // minHeight: "185px",
           transform: trigger
             ? "translate(-50%, -30%) "
-            : `scale(0.4, ${
-                initialStyle?.element?.getBoundingClientRect()?.height /
-                modalHeightRef?.current
-              })`,
+            : `scale(0.4, ${initialStyle?.height / modalHeightRef?.current})`,
           transformOrigin: "top left",
           backgroundColor: selectedColor,
           border: "solid 1px",
           borderColor: note?.color === "#FFFFFF" ? "#e0e0e0" : "transparent",
         }}
       >
-        {/* <button style={{position: "absolute", zIndex: "100000000000"}} onClick={getModalHeight}>gg</button> */}
         <div
           style={{
             overflowY: trigger ? "auto" : "hidden",
@@ -354,11 +388,10 @@ const Modal = ({
             }}
           >
             <NoteImagesLayout
-              // width={width}
               images={localImages}
               // isLoadingImages={isLoadingImages}
               deleteSource="note"
-              // noteImageDelete={noteImageDelete}
+              noteImageDelete={noteImageDelete}
               modalOpen={trigger}
             />
             {/* {isLoading && <div className="linear-loader" />} */}
@@ -435,6 +468,8 @@ const Modal = ({
           dispatchNotes={dispatchNotes}
           setIsOpen={setIsOpen}
           setModalStyle={setModalStyle}
+          imagesChangedRef={imagesChangedRef}
+          setLocalImages={setLocalImages}
         />
       </div>
     </>,

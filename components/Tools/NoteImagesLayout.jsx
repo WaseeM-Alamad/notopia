@@ -3,7 +3,7 @@ import ImageTrashIcon from "../icons/ImageTrashIcon";
 import "@/assets/styles/LinearLoader.css";
 
 const NoteImagesLayout = ({
-  images = [],
+  images,
   calculateMasonryLayout,
   isLoadingImages = [],
   modalOpen,
@@ -55,6 +55,7 @@ const NoteImagesLayout = ({
 
   const calculateLayout = () => {
     if (!containerRef.current || loadedImages.length === 0) return;
+    console.log("hi")
     const containerWidth = containerRef.current.offsetWidth;
     const maxRows = 4;
     const maxImagesPerRow = 3;
@@ -130,13 +131,13 @@ const NoteImagesLayout = ({
     display: "block",
   };
 
-  const handleImageDeletion = useCallback((imageID, url) => {
+  const handleImageDeletion = (imageID, url) => {
     if (deleteSource === "note") {
       noteImageDelete(imageID, url);
     } else if (deleteSource === "AddModal") {
       AddNoteImageDelete(imageID, url);
     }
-  }, []);
+  };
 
   if (images?.length === 0 || !images) return;
 
