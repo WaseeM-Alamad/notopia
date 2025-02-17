@@ -320,9 +320,9 @@ const NoteTools = ({
               <AnimatePresence>
                 {deleteModalOpen && (
                   <DeleteModal
-                    isOpen={deleteModalOpen}
                     setIsOpen={setDeleteModalOpen}
-                    handleDeleteNote={handleDeleteNote}
+                    handleDelete={handleDeleteNote}
+                    message={"Delete note forever?"}
                   />
                 )}
               </AnimatePresence>

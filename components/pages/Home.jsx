@@ -38,7 +38,7 @@ const NoteWrapper = memo(
   }) => {
     // const { modalOpen, setModalOpen } = useAppContext();
     const [mounted, setMounted] = useState(false);
-    const [mountOpacity, setMountOpacity] = useState(false);
+    const [mountOpacity, setMountOpacity] = useState(true);
     const [modalTrigger, setModalTrigger] = useState(false);
     const noteRef = useRef(null);
     const timeoutRef = useRef(null);
@@ -196,6 +196,7 @@ const Home = memo(
         const contentWidth = columns * (COLUMN_WIDTH + GUTTER) - GUTTER;
 
         container.style.width = `${contentWidth}px`;
+        container.style.maxWidth = "100%";
         container.style.position = "relative";
         container.style.left = "50%";
         container.style.transform = "translateX(-50%)";

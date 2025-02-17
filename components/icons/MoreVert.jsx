@@ -1,12 +1,18 @@
 import React, { memo } from "react";
 
-const MoreVert = ({ size, opacity, color = "#212121" }) => {
+const MoreVert = ({
+  size = "20",
+  opacity = "0.9",
+  color = "#212121",
+  style = {},
+}) => {
   return (
     <svg
+      style={style}
       opacity={opacity}
       xmlns="http://www.w3.org/2000/svg"
       width={size}
-      height={size-2}
+      height={size - 2}
       viewBox="0 0 5 20"
       fill="none"
     >
@@ -19,4 +25,4 @@ const MoreVert = ({ size, opacity, color = "#212121" }) => {
   );
 };
 
-export default memo (MoreVert);
+export default memo(MoreVert);

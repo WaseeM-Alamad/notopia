@@ -8,7 +8,7 @@ import React, {
   useEffect,
   useRef,
 } from "react";
-import { fetchLabelsAction, createLabelAction } from "@/utils/actions";
+import { fetchLabelsAction, createLabelAction, updateLabelColorAction } from "@/utils/actions";
 
 const AppContext = createContext();
 
@@ -19,7 +19,7 @@ export function AppProvider({ children }) {
     const fetchedLables = await fetchLabelsAction();
     if (!fetchedLables.success) return;
     labelsRef.current = new Map(
-      fetchedLables.data.map((mapLabel) => [mapLabel.uuid, mapLabel.label])
+      fetchedLables.data.map((mapLabel) => [mapLabel.uuid, mapLabel])
     );
   };
 
@@ -27,10 +27,24 @@ export function AppProvider({ children }) {
     getLabels();
   }, []);
 
-  const createLabel = async (uuid, label) => {
-    labelsRef.current.set(uuid, label);
+  const createLabel = async (uuid, label, createdAt) => {
+    labelsRef.current.set(uuid, {
+      uuid: uuid,
+      label: label,
+      createdAt: createdAt,
+      color: "rgba(255, 255, 255, 1)",
+    });
     window.dispatchEvent(new Event("loadingStart"));
     await createLabelAction(uuid, label);
+    window.dispatchEvent(new Event("loadingEnd"));
+  };
+
+  const updateLabelColor = async (uuid, newColor) => {
+    const newLabel = { ...labelsRef.current.get(uuid), color: newColor };
+    const labels = new Map(labelsRef.current).set(uuid, newLabel);
+    labelsRef.current = labels;
+    window.dispatchEvent(new Event("loadingStart"));
+    await updateLabelColorAction({uuid: uuid, color: newColor});
     window.dispatchEvent(new Event("loadingEnd"));
   };
 
@@ -43,6 +57,7 @@ export function AppProvider({ children }) {
       value={{
         createLabel,
         removeLabel,
+        updateLabelColor,
         labelsRef,
       }}
     >

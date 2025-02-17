@@ -4,6 +4,7 @@ import {
   copyNoteAction,
   NoteUpdateAction,
   undoAction,
+  removeLabelAction,
 } from "@/utils/actions";
 import { Popper } from "@mui/material";
 import { AnimatePresence, motion } from "framer-motion";
@@ -29,10 +30,12 @@ const MoreMenu = ({
   const [labelSearch, setLabelSearch] = useState("");
   const [noteLabels, setNoteLabels] = useState(new Map());
   const allLabelsMatchSearch = [...labelsRef.current].every(
-    ([uuid, label]) => label.toLowerCase() !== labelSearch.toLowerCase()
+    ([uuid, labelData]) =>
+      labelData.label.toLowerCase() !== labelSearch.toLowerCase()
   );
 
   const menuRef = useRef(null);
+  const labelinputRef = useRef(null);
   const isFirstRunRef = useRef(true);
 
   useEffect(() => {
@@ -64,7 +67,7 @@ const MoreMenu = ({
     );
 
     setNoteLabels(labelsMap);
-  }, [labelsOpen]);
+  }, [labelsOpen, note.labels]);
 
   const handleDelete = async (e) => {
     const initialIndex = index;
@@ -159,26 +162,64 @@ const MoreMenu = ({
     setIsOpen(false);
   };
 
-  const handleAddLabel = () => {
+  const handleInputKeyDown = (e) => {
+    let temp;
+    if (e.key === "Enter") {
+      e.preventDefault();
+
+      if (
+        ![...labelsRef.current].every(([uuid, labelData]) => {
+          const label = labelData.label;
+          temp = { uuid, label };
+          return labelData.label.toLowerCase() !== labelSearch.toLowerCase();
+        })
+      ) {
+        addLabel(temp.uuid, temp.label);
+      } else {
+        handleCreateLabel();
+      }
+    }
+  };
+
+  const handleCreateLabel = () => {
     const newUUID = generateUUID();
-    const name = labelSearch;
-    createLabel(newUUID, name);
+    const label = labelSearch;
+    const createdAt = new Date();
+    createLabel(newUUID, label, createdAt);
+    labelinputRef.current.value = "";
+    setLabelSearch("");
+    addLabel(newUUID, label);
   };
 
   const addLabel = async (uuid, label) => {
-    dispatchNotes({
-      type: "ADD_LABEL",
-      note: note,
-      labelUUID: uuid,
-      labelName: label,
-    });
-    window.dispatchEvent(new Event("loadingStart"));
-    await addLabelAction({
-      noteUUID: note.uuid,
-      labelUUID: uuid,
-      labelName: label,
-    });
-    window.dispatchEvent(new Event("loadingEnd"));
+    if (noteLabels.has(uuid)) {
+      dispatchNotes({
+        type: "REMOVE_LABEL",
+        note: note,
+        labelUUID: uuid,
+      });
+
+      window.dispatchEvent(new Event("loadingStart"));
+      await removeLabelAction({
+        noteUUID: note.uuid,
+        labelUUID: uuid,
+      });
+      window.dispatchEvent(new Event("loadingEnd"));
+    } else {
+      dispatchNotes({
+        type: "ADD_LABEL",
+        note: note,
+        labelUUID: uuid,
+        labelName: label,
+      });
+      window.dispatchEvent(new Event("loadingStart"));
+      await addLabelAction({
+        noteUUID: note.uuid,
+        labelUUID: uuid,
+        labelName: label,
+      });
+      window.dispatchEvent(new Event("loadingEnd"));
+    }
   };
 
   const handleLabelInputChange = (e) => {
@@ -213,7 +254,7 @@ const MoreMenu = ({
             animate={{ opacity: isOpen ? 1 : 0 }}
             exit={{ opacity: 0 }}
             transition={{
-              duration: 0.15,
+              duration: 0.05,
             }}
             style={{
               width: "fit-content",
@@ -264,12 +305,12 @@ const MoreMenu = ({
               </div>
             ) : (
               <motion.div
-                initial={{ y: 2, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{
-                  y: { type: "spring", stiffness: 1000, damping: 50, mass: 1 },
-                  opacity: { duration: 0.2 },
-                }}
+                // initial={{ y: 2, opacity: 0 }}
+                // animate={{ y: 0, opacity: 1 }}
+                // transition={{
+                //   y: { type: "spring", stiffness: 1000, damping: 50, mass: 1 },
+                //   opacity: { duration: 0.2 },
+                // }}
                 style={{ width: "14.0625rem" }}
               >
                 <div
@@ -292,6 +333,8 @@ const MoreMenu = ({
                 >
                   <div className="search-icon" />
                   <input
+                    ref={labelinputRef}
+                    onKeyDown={handleInputKeyDown}
                     onChange={handleLabelInputChange}
                     className="label-input"
                     type="text"
@@ -306,15 +349,17 @@ const MoreMenu = ({
                   {/* style={{paddingBottom: "0.55rem"}} */}
                   {[...labelsRef.current]
                     .reverse()
-                    .map(([uuid, label], index) => {
+                    .map(([uuid, labelData], index) => {
                       if (
-                        !label.toLowerCase().includes(labelSearch.toLowerCase())
+                        !labelData.label
+                          .toLowerCase()
+                          .includes(labelSearch.toLowerCase())
                       )
                         return;
                       return (
                         <div
                           key={index}
-                          onClick={() => addLabel(uuid, label)}
+                          onClick={() => addLabel(uuid, labelData.label)}
                           className="label-item"
                           style={{
                             wordBreak: "break-all",
@@ -324,19 +369,19 @@ const MoreMenu = ({
                             className="label-checkmark"
                             style={{
                               backgroundImage:
-                              noteLabels.has(uuid) &&
+                                noteLabels.has(uuid) &&
                                 "url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjMDAwIj48cGF0aCBkPSJNMTkgM0g1Yy0xLjEgMC0yIC45LTIgMnYxNGMwIDEuMS45IDIgMiAyaDE0YzEuMSAwIDItLjkgMi0yVjVjMC0xLjEtLjktMi0yLTJ6bTAgMTZINVY1aDE0djE0eiIvPgogIDxwYXRoIGQ9Ik0xOCA5bC0xLjQtMS40LTYuNiA2LjYtMi42LTIuNkw2IDEzbDQgNHoiLz4KPC9zdmc+Cg==)",
                             }}
                           />
                           <div style={{ width: "100%", paddingLeft: "0.5rem" }}>
-                            {label}
+                            {labelData.label}
                           </div>
                         </div>
                       );
                     })}
                 </div>
                 {labelSearch && allLabelsMatchSearch && (
-                  <div onClick={handleAddLabel} className="create-label">
+                  <div onClick={handleCreateLabel} className="create-label">
                     <div
                       className="create-icon"
                       // style={{ position: "absolute", bottom: "1px" }}

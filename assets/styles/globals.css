@@ -10,6 +10,7 @@ html {
 
 body {
   scrollbar-gutter: stable;
+  overflow-x: hidden !important;
 }
 
 ::-webkit-scrollbar {
@@ -521,4 +522,70 @@ img {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.new-label {
+  display: flex;
+  width: 240px;
+  /* padding: 1.1rem; */
+  /* box-siz++ing: border-box; */
+  border-radius: 1.5rem;
+  min-height: 124px;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.dashed-border {
+  animation: dash 0.8s linear infinite;
+  animation-play-state: paused;
+}
+
+.new-label:hover {
+  transform: scale(1.05) !important;
+}
+
+.new-label:hover .dashed-border {
+  animation-play-state: running !important;
+}
+
+.label {
+  padding: 1.1rem;
+  box-sizing: border-box;
+  width: 240px;
+  min-height: 124px;
+  border-radius: 0.7rem;
+  word-break: break-all;
+  cursor: pointer;
+}
+
+.label:hover {
+  -webkit-box-shadow: 2px 3px 4px 0px rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: 2px 3px 4px 0px rgba(0, 0, 0, 0.1);
+  box-shadow: 2px 3px 4px 0px rgba(0, 0, 0, 0.1);
+}
+
+.label-more-icon {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.label-date {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.label:hover .label-more-icon {
+  opacity: 1;
+}
+
+.label:hover .label-date {
+  opacity: 1;
+}
+
+.label-title-input {
+  /* padding-left: 0.1rem; */
+  font-weight: 600;
+  font-size: 1rem;
+  border: none;
 }

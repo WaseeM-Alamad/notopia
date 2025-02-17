@@ -155,8 +155,13 @@ const AddNoteModal = ({
       console.log("handle close");
       setTrigger2(false);
       setTimeout(() => {
+        lastAddedNoteRef.current.style.opacity = "0"  
+      }, 10);
+      
+      setTimeout(() => {
         window.dispatchEvent(new Event("closeModal"));
         setTrigger(false);
+        lastAddedNoteRef.current.style.opacity = "1"
       }, 260);
 
       if (

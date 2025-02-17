@@ -271,6 +271,21 @@ function notesReducer(state, action) {
       };
     }
 
+    case "REMOVE_LABEL_FROM_NOTES": {
+      const updatedNotes = new Map(state.notes);
+      state.order.map((noteUUID) => {
+        const note = state.notes.get(noteUUID);
+        note.labels = note.labels.filter(
+          (labelData) => labelData.uuid !== action.labelUUID
+        );
+        updatedNotes.set(noteUUID, note);
+      });
+      return {
+        ...state,
+        notes: updatedNotes,
+      };
+    }
+
     case "DND": {
       return {
         ...state,
@@ -499,7 +514,13 @@ const page = () => {
           handleNoteClick={handleNoteClick}
         />
       );
-    else if (currentPage?.includes("folders")) return <Folders />;
+    else if (currentPage?.includes("folders"))
+      return (
+        <Folders
+          setTooltipAnchor={setTooltipAnchor}
+          dispatchNotes={dispatchNotes}
+        />
+      );
     else if (currentPage?.includes("archive"))
       return (
         <Archive

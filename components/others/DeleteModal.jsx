@@ -4,7 +4,7 @@ import "@/assets/styles/note.css";
 import "@/assets/styles/modal.css";
 import { motion } from "framer-motion";
 
-const DeleteModal = ({ isOpen, setIsOpen, handleDeleteNote }) => {
+const DeleteModal = ({ setIsOpen, handleDelete, message }) => {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -56,9 +56,10 @@ const DeleteModal = ({ isOpen, setIsOpen, handleDeleteNote }) => {
             paddingBottom: "2rem",
             color: "rgb(60,64,67)",
             userSelect: "none",
+            fontSize: "0.9rem"
           }}
         >
-          Delete note forever?
+          {message}
         </span>
         <div
           style={{
@@ -81,7 +82,7 @@ const DeleteModal = ({ isOpen, setIsOpen, handleDeleteNote }) => {
             className="delete-modal-button"
             style={{ color: "rgb(255, 93, 93)" }}
             onClick={() => {
-              handleDeleteNote();
+              handleDelete();
               setIsOpen(false);
             }}
           >

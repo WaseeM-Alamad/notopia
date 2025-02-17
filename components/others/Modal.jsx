@@ -374,9 +374,14 @@ const Modal = ({
               style={{ opacity: !trigger && "0" }}
             >
               <PinIcon
-                color={modalIsPinned ? "#212121" : "transparent"}
+                color={
+                  modalIsPinned ? "#212121" : "transparent"
+                }
                 opacity={0.8}
-                rotation={modalIsPinned ? "0deg" : "40deg"}
+                rotation={
+                  modalIsPinned ? "-45deg" : "-5deg"
+                }
+                images={localImages.length !== 0}
               />
             </Button>
           </div>

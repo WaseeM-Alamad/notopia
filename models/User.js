@@ -1,15 +1,21 @@
 import { Schema, model, models } from "mongoose";
 
-const LabelSchema = new Schema({
-  _id: false,
-  uuid: { type: String, required: true },
-  label: {
-    type: String,
-    required: true,
-    maxlength: [50],
-    unique: [true, "Label already exists!"],
+const LabelSchema = new Schema(
+  {
+    _id: false,
+    uuid: { type: String, required: true },
+    label: {
+      type: String,
+      required: true,
+      maxlength: [50],
+      unique: [true, "Label already exists!"],
+    },
+    color: { type: "String", default: "rgba(255, 255, 255, 1)" },
   },
-});
+  {
+    timestamps: true,
+  }
+);
 
 const UserSchema = new Schema({
   email: {

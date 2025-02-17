@@ -384,7 +384,7 @@ const Note = memo(
                   : "0px  ",
               borderColor: selected
                 ? "#212121"
-                : note.color === "#FFFFFF"
+                : note.color === "rgba(255, 255, 255, 1)"
                 ? "#e0e0e0"
                 : "transparent",
               outline: `solid 1px ${selected ? "#212121" : "transparent"} `,
@@ -419,7 +419,7 @@ const Note = memo(
                       }
                       opacity={0.8}
                       rotation={
-                        note.isPinned || localArchivedPin ? "0deg" : "40deg"
+                        note.isPinned || localArchivedPin ? "-45deg" : "-5deg"
                       }
                       images={note.images.length !== 0}
                     />
@@ -465,24 +465,26 @@ const Note = memo(
               {note.labels.length !== 0 && (
                 <>
                   <div className="note-labels-container">
-                    {note.labels.map((noteLabel, index) => {
-                      if (index + 1 >= 3 && note.labels.length > 3) return;
-                      return (
-                        <div
-                          onClick={(e) => e.stopPropagation()}
-                          key={noteLabel.uuid}
-                          className="label-wrapper"
-                        >
-                          <label className="note-label">
-                            {noteLabel.label}
-                          </label>
+                    {note.labels
+                      .sort((a, b) => a.label.localeCompare(b.label))
+                      .map((noteLabel, index) => {
+                        if (index + 1 >= 3 && note.labels.length > 3) return;
+                        return (
                           <div
-                            onClick={() => removeLabel(noteLabel)}
-                            className="remove-label"
-                          />
-                        </div>
-                      );
-                    })}
+                            onClick={(e) => e.stopPropagation()}
+                            key={noteLabel.uuid}
+                            className="label-wrapper"
+                          >
+                            <label className="note-label">
+                              {noteLabel.label}
+                            </label>
+                            <div
+                              onClick={() => removeLabel(noteLabel)}
+                              className="remove-label"
+                            />
+                          </div>
+                        );
+                      })}
                     {note.labels.length > 3 && (
                       <div className="more-labels">
                         <label className="more-labels-label">

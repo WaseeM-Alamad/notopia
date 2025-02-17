@@ -14,7 +14,7 @@ export const metadata = {
 const MainLayout = async ({ children }) => {
   const session = await getServerSession(authOptions);
   return (
-    <AuthProvider>
+    
       <html lang="en">
         <head>
           <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -25,6 +25,7 @@ const MainLayout = async ({ children }) => {
           />
         </head>
         <body suppressHydrationWarning>
+        <AuthProvider>
           <AppProvider>
             <div id="tooltipPortal" />
             <div id="snackbarPortal" />
@@ -36,15 +37,17 @@ const MainLayout = async ({ children }) => {
             )}
 
             {children}
-          </AppProvider>
+          
           <div id="profileMenu" />
           <div id="colorMenuPortal" />
           <div id="modal-portal" />
           <div id="moreMenu" />
           <div id="deleteModal" />
+          </AppProvider>
+          </AuthProvider>
         </body>
       </html>
-    </AuthProvider>
+    
   );
 };
 
