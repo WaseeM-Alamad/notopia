@@ -7,7 +7,7 @@ import NewLabel from "../others/NewLabel";
 import Label from "../others/Label";
 
 const COLUMN_WIDTH = 240;
-const GUTTER = 25;
+const GUTTER = 15;
 
 const Labels = memo(({ setTooltipAnchor, dispatchNotes }) => {
   const { createLabel, labelsRef } = useAppContext();

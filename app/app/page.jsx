@@ -240,10 +240,7 @@ function notesReducer(state, action) {
     case "ADD_LABEL": {
       const newNote = {
         ...state.notes.get(action.note.uuid),
-        labels: [
-          ...action.note.labels,
-          { uuid: action.labelUUID, label: action.labelName },
-        ],
+        labels: [...action.note.labels, action.labelUUID],
       };
       const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
       return {
@@ -260,7 +257,7 @@ function notesReducer(state, action) {
       const newNote = {
         ...targetedNote,
         labels: targetedNote.labels.filter(
-          (noteLabel) => noteLabel.uuid !== action.labelUUID
+          (noteLabelUUID) => noteLabelUUID !== action.labelUUID
         ),
       };
 
@@ -276,7 +273,7 @@ function notesReducer(state, action) {
       state.order.map((noteUUID) => {
         const note = state.notes.get(noteUUID);
         note.labels = note.labels.filter(
-          (labelData) => labelData.uuid !== action.labelUUID
+          (noteLabelUUID) => noteLabelUUID !== action.labelUUID
         );
         updatedNotes.set(noteUUID, note);
       });

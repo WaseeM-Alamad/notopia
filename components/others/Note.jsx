@@ -38,7 +38,7 @@ const Note = memo(
     setModalTrigger,
     index,
   }) => {
-    const { addLabel, labelsRef } = useAppContext();
+    const { labelsRef } = useAppContext();
     const { data: session } = useSession();
     const userID = session?.user?.id;
     const [localIsArchived, setLocalIsArchived] = useState(false);
@@ -299,16 +299,16 @@ const Note = memo(
       window.dispatchEvent(new Event("loadingEnd"));
     }, [index, note]);
 
-    const removeLabel = async (noteLabel) => {
+    const removeLabel = async (labelUUID) => {
       dispatchNotes({
         type: "REMOVE_LABEL",
         note: note,
-        labelUUID: noteLabel.uuid,
+        labelUUID: labelUUID,
       });
       window.dispatchEvent(new Event("loadingStart"));
       await removeLabelAction({
         noteUUID: note.uuid,
-        labelUUID: noteLabel.uuid,
+        labelUUID: labelUUID,
       });
       window.dispatchEvent(new Event("loadingEnd"));
     };
@@ -466,20 +466,24 @@ const Note = memo(
                 <>
                   <div className="note-labels-container">
                     {note.labels
-                      .sort((a, b) => a.label.localeCompare(b.label))
-                      .map((noteLabel, index) => {
+                      .sort((a, b) => {
+                        const labelsMap = labelsRef.current;
+                        const labelA = labelsMap.get(a)?.label || "";
+                        const labelB = labelsMap.get(b)?.label || "";
+                        return labelA.localeCompare(labelB);
+                      })
+                      .map((labelUUID, index) => {
                         if (index + 1 >= 3 && note.labels.length > 3) return;
+                        const label = labelsRef.current.get(labelUUID)?.label;
                         return (
                           <div
                             onClick={(e) => e.stopPropagation()}
-                            key={noteLabel.uuid}
+                            key={labelUUID}
                             className="label-wrapper"
                           >
-                            <label className="note-label">
-                              {noteLabel.label}
-                            </label>
+                            <label className="note-label">{label}</label>
                             <div
-                              onClick={() => removeLabel(noteLabel)}
+                              onClick={() => removeLabel(labelUUID)}
                               className="remove-label"
                             />
                           </div>

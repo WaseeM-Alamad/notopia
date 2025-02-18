@@ -155,7 +155,7 @@ const Navbar = ({ user }) => {
       {pathName !== "/" && (
         <nav
           style={{
-            boxShadow: isScrolled ? "0 3px 10px rgba(0, 0, 0, 0.2)" : "",
+            boxShadow: isScrolled && "0 3px 10px rgba(0, 0, 0, 0.3)",
           }}
         >
           {/* <div className="logo"> */}

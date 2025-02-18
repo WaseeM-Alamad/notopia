@@ -3,12 +3,11 @@
 import { useSession } from "next-auth/react";
 import React, {
   createContext,
-  useState,
   useContext,
   useEffect,
   useRef,
 } from "react";
-import { fetchLabelsAction, createLabelAction, updateLabelColorAction } from "@/utils/actions";
+import { fetchLabelsAction, createLabelAction, updateLabelColorAction, updateLabelAction } from "@/utils/actions";
 
 const AppContext = createContext();
 
@@ -48,6 +47,15 @@ export function AppProvider({ children }) {
     window.dispatchEvent(new Event("loadingEnd"));
   };
 
+  const updateLabel = async (uuid, updatedLabel) => {
+    const newLabel = { ...labelsRef.current.get(uuid), label: updatedLabel };
+    const labels = new Map(labelsRef.current).set(uuid, newLabel);
+    labelsRef.current = labels;
+    window.dispatchEvent(new Event("loadingStart"));
+    await updateLabelAction({uuid: uuid, label: updatedLabel});
+    window.dispatchEvent(new Event("loadingEnd"));
+  };
+
   const removeLabel = (uuid) => {
     labelsRef.current.delete(uuid);
   };
@@ -59,6 +67,7 @@ export function AppProvider({ children }) {
         removeLabel,
         updateLabelColor,
         labelsRef,
+        updateLabel,
       }}
     >
       {children}

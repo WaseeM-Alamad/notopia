@@ -63,9 +63,8 @@ const MoreMenu = ({
     if (!labelsOpen) return;
 
     const labelsMap = new Map(
-      note.labels.map((noteLabel) => [noteLabel.uuid, noteLabel.label])
+      note.labels.map((noteLabel) => [noteLabel, true])
     );
-
     setNoteLabels(labelsMap);
   }, [labelsOpen, note.labels]);
 
@@ -210,13 +209,11 @@ const MoreMenu = ({
         type: "ADD_LABEL",
         note: note,
         labelUUID: uuid,
-        labelName: label,
       });
       window.dispatchEvent(new Event("loadingStart"));
       await addLabelAction({
         noteUUID: note.uuid,
         labelUUID: uuid,
-        labelName: label,
       });
       window.dispatchEvent(new Event("loadingEnd"));
     }

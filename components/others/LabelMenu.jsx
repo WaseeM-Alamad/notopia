@@ -20,6 +20,8 @@ const LabelMenu = ({
   labelData,
   triggerReRender,
   dispatchNotes,
+  labelTitleRef,
+  setCursorAtEnd,
 }) => {
   const { updateLabelColor, removeLabel } = useAppContext();
   const menuRef = useRef(null);
@@ -52,11 +54,11 @@ const LabelMenu = ({
   const handleDeleteLabel = () => {
     dispatchNotes({
       type: "REMOVE_LABEL_FROM_NOTES",
-      labelUUID: labelData.uuid
-    })
+      labelUUID: labelData.uuid,
+    });
     removeLabel(labelData.uuid);
     window.dispatchEvent(new Event("loadingStart"));
-    deleteLabelAction({labelUUID: labelData.uuid}).then(() => {
+    deleteLabelAction({ labelUUID: labelData.uuid }).then(() => {
       window.dispatchEvent(new Event("loadingEnd"));
     });
 
@@ -146,6 +148,11 @@ const LabelMenu = ({
                   color: "#3c4043",
                 }}
                 className="menu-btn not-draggable"
+                onClick={() => {
+                  labelTitleRef.current.style.pointerEvents = "auto";
+                  setCursorAtEnd(labelTitleRef);
+                  setIsOpen(false);
+                }}
               >
                 Rename label
               </div>

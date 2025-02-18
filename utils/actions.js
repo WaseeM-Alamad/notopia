@@ -454,11 +454,9 @@ export const addLabelAction = async (data) => {
   try {
     await connectDB();
 
-    const addedLabel = { uuid: data.labelUUID, label: data.labelName };
-
     await Note.updateOne(
       { uuid: data.noteUUID },
-      { $push: { labels: addedLabel } }
+      { $push: { labels: data.labelUUID } }
     );
   } catch (error) {
     console.log(error);
@@ -475,7 +473,7 @@ export const removeLabelAction = async (data) => {
 
     await Note.updateOne(
       { uuid: data.noteUUID },
-      { $pull: { labels: { uuid: data.labelUUID } } }
+      { $pull: { labels: data.labelUUID  } }
     );
   } catch (error) {
     console.log(error);
@@ -506,6 +504,29 @@ export const updateLabelColorAction = async (data) => {
   }
 };
 
+export const updateLabelAction = async (data) => {
+  if (!session) {
+    return { success: false, message: "Unauthorized", status: 401 };
+  }
+  try {
+    await connectDB();
+
+    await User.findOneAndUpdate(
+      { _id: userID, "labels.uuid": data.uuid },
+      { $set: { "labels.$.label": data.label.trim() } }
+    );
+
+    return {
+      success: true,
+      message: "Label updated successfully!",
+      status: 201,
+    };
+  } catch (error) {
+    console.log(error);
+    return { message: "Failed to update label", status: 500 };
+  }
+}
+
 export const deleteLabelAction = async (data) => {
   if (!session) {
     return { success: false, message: "Unauthorized", status: 401 };
@@ -520,8 +541,8 @@ export const deleteLabelAction = async (data) => {
     );
 
     await Note.updateMany(
-      { "labels.uuid": data.labelUUID},
-      { $pull: { labels: {uuid: data.labelUUID}} }
+      { "labels": data.labelUUID},
+      { $pull: { labels:  data.labelUUID} }
     );
 
     return {
