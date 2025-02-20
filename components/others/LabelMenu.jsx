@@ -22,9 +22,13 @@ const LabelMenu = ({
   dispatchNotes,
   labelTitleRef,
   setCursorAtEnd,
+  imageRef,
+  setIsImageLoading,
 }) => {
-  const { updateLabelColor, removeLabel } = useAppContext();
+  const { updateLabelColor, updateLabelImage, deleteLabelImage, removeLabel } =
+    useAppContext();
   const menuRef = useRef(null);
+  const inputRef = useRef(null);
   const [isMounted, setIsMounted] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
@@ -71,6 +75,51 @@ const LabelMenu = ({
     };
 
     labelRef.current.addEventListener("transitionend", handler);
+  };
+
+  const UploadImageAction = async (imageFile) => {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    );
+
+    try {
+      const bucketName = "notopia";
+
+      const filePath = `${userID}/labels/${labelData.uuid}`;
+      const { data, error } = await supabase.storage
+        .from(bucketName)
+        .upload(filePath, imageFile, {
+          cacheControl: "0",
+        });
+
+      if (error) {
+        console.error("Error uploading file:", error);
+      }
+    } catch (error) {
+      console.log("couldn't upload images", error);
+    }
+  };
+
+  const handleOnChange = async (event) => {
+    const imageFile = event.target?.files[0];
+
+    console.log(imageFile);
+
+    inputRef.current.value = "";
+    setIsImageLoading(true);
+    updateLabelImage(labelData.uuid, imageFile).then(() => {
+      setIsImageLoading(false);
+    });
+    if (imageRef.current) {
+      imageRef.current.src = labelData.image + `?v=${new Date().getTime()}`;
+    }
+    triggerReRender((prev) => !prev);
+    setIsOpen(false);
+  };
+
+  const handleRenameLabel = () => {
+    labelTitleRef.current.focus();
   };
 
   const containerClick = useCallback((e) => {
@@ -148,11 +197,41 @@ const LabelMenu = ({
                   color: "#3c4043",
                 }}
                 className="menu-btn not-draggable"
-                onClick={() => {
-                  labelTitleRef.current.style.pointerEvents = "auto";
-                  setCursorAtEnd(labelTitleRef);
-                  setIsOpen(false);
+                onClick={() => inputRef.current.click()}
+              >
+                {labelData.image ? "Change image" : "Add image"}
+                <input
+                  ref={inputRef}
+                  style={{ display: "none" }}
+                  type="file"
+                  onChange={handleOnChange}
+                />
+              </div>
+              {labelData.image && (
+                <div
+                  style={{
+                    padding: "0.6rem 2rem 0.6rem 1rem",
+                    fontSize: "0.9rem",
+                    color: "#3c4043",
+                  }}
+                  className="menu-btn not-draggable"
+                  onClick={() => {
+                    deleteLabelImage(labelData.uuid);
+                    triggerReRender((prev) => !prev);
+                    setIsOpen(false);
+                  }}
+                >
+                  Remove image
+                </div>
+              )}
+              <div
+                style={{
+                  padding: "0.6rem 2rem 0.6rem 1rem",
+                  fontSize: "0.9rem",
+                  color: "#3c4043",
                 }}
+                className="menu-btn not-draggable"
+                onClick={handleRenameLabel}
               >
                 Rename label
               </div>

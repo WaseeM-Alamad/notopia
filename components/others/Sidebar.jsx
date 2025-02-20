@@ -13,7 +13,7 @@ const Sidebar = memo(() => {
   const [mounted, setMounted] = useState(false);
   const addButtonRef = useRef(null);
   const homeRef = useRef(null);
-  const foldersRef = useRef(null);
+  const labelsRef = useRef(null);
   const remindersRef = useRef(null);
   const archiveRef = useRef(null);
   const trashRef = useRef(null);
@@ -30,7 +30,7 @@ const Sidebar = memo(() => {
 
   const navItems = [
     { hash: "home", Icon: HomeIcon, ref: homeRef },
-    { hash: "folders", Icon: FolderIcon, ref: foldersRef },
+    { hash: "labels", Icon: FolderIcon, ref: labelsRef },
     { hash: "reminders", Icon: BellIcon, ref: remindersRef },
     { hash: "archive", Icon: SideArchiveIcon, ref: archiveRef },
     { hash: "trash", Icon: TrashIcon, ref: trashRef },
@@ -44,10 +44,17 @@ const Sidebar = memo(() => {
   const currentYear = useMemo(() => new Date().getFullYear(), []);
 
   const handleAddNote = () => {
-    window.dispatchEvent(new Event("openModal"));
     addButtonRef.current.classList.remove("animate");
     void addButtonRef.current.offsetWidth;
     addButtonRef.current.classList.add("animate");
+    const currentHash = window.location.hash;
+    if (currentHash.includes("labels")) {
+      window.dispatchEvent(new Event("addLabel"));
+      return;
+    } else if (currentHash === "" || currentHash.includes("home")) {
+      window.dispatchEvent(new Event("openModal"));
+      return;
+    }
   };
 
   const handleIconClick = (hash, ref) => {
@@ -75,8 +82,8 @@ const Sidebar = memo(() => {
       switch (hash) {
         case "home":
           return { top: 0, left: 0, section: "home" };
-        case "folders":
-          return { top: 62.390625, left: 0, section: "folders" };
+        case "labels":
+          return { top: 62.390625, left: 0, section: "labels" };
         case "reminders":
           return { top: 124.78125, left: 0, section: "reminders" };
         case "archive":

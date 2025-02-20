@@ -10,7 +10,8 @@ const LabelSchema = new Schema(
       maxlength: [50],
       unique: [true, "Label already exists!"],
     },
-    color: { type: "String", default: "rgba(255, 255, 255, 1)" },
+    color: { type: String, default: "rgba(255, 255, 255, 1)" },
+    image: {type: String }
   },
   {
     timestamps: true,

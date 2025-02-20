@@ -6,7 +6,7 @@ import SortByIcon from "@/components/icons/SortByIcon";
 import TrashIcon from "@/components/icons/TrashIcon";
 import Modal from "@/components/others/Modal";
 import Archive from "@/components/pages/Archive";
-import Folders from "@/components/pages/Folders";
+import Labels from "@/components/pages/Labels";
 import Home from "@/components/pages/Home";
 import Reminders from "@/components/pages/Reminders";
 import Trash from "@/components/pages/Trash";
@@ -511,9 +511,9 @@ const page = () => {
           handleNoteClick={handleNoteClick}
         />
       );
-    else if (currentPage?.includes("folders"))
+    else if (currentPage?.includes("labels"))
       return (
-        <Folders
+        <Labels
           setTooltipAnchor={setTooltipAnchor}
           dispatchNotes={dispatchNotes}
         />

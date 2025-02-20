@@ -9,7 +9,6 @@ import React, {
 import "@/assets/styles/note.css";
 import "@/assets/styles/LinearLoader.css";
 import NoteTools from "./NoteTools";
-import NoteModal from "./NoteModal";
 import PinIcon from "../icons/PinIcon";
 import {
   NoteUpdateAction,
@@ -32,10 +31,8 @@ const Note = memo(
     setSelectedNotesIDs,
     selectedNotes,
     isDragging,
-    modalTrigger,
     setTooltipAnchor,
     openSnackFunction,
-    setModalTrigger,
     index,
   }) => {
     const { labelsRef } = useAppContext();
@@ -47,8 +44,6 @@ const Note = memo(
     const [isNoteDeleted, setIsNoteDeleted] = useState(false);
     const [colorMenuOpen, setColorMenuOpen] = useState(false);
     const [moreMenuOpen, setMoreMenuOpen] = useState(false);
-    const [trigger2, setTrigger2] = useState(false);
-    const [opacityTrigger, setOpacityTrigger] = useState(true);
     const [isLoadingImages, setIsLoadingImages] = useState([]);
     const [selected, setSelected] = useState(false);
     const isLoading = isLoadingImagesAddNote.includes(note.uuid);
@@ -69,16 +64,14 @@ const Note = memo(
 
     const noteStyle = useMemo(
       () => ({
-        opacity: opacityTrigger ? "1" : "0",
         backgroundColor: note.color,
         border: "solid 1px transparent",
       }),
-      [note.color, opacityTrigger]
+      [note.color]
     );
 
     // const noteStyle = useMemo(
     //   () => ({
-    //     opacity: opacityTrigger ? "1" : "0",
     //     // backgroundColor: note.color,
     //     background: "url(https://www.gstatic.com/keep/backgrounds/recipe_light_0609.svg)",
     //     backgroundPositionX: "right",
@@ -86,7 +79,7 @@ const Note = memo(
     //     backgroundSize: "cover",
     //     border: "solid 1px transparent",
     //   }),
-    //   [note.color, opacityTrigger]
+    //   [note.color]
     // );
 
     const handleNoteClick = (e) => {
@@ -94,56 +87,9 @@ const Note = memo(
         // openNote(e);
       } else {
         // if (!inputsRef.current?.contains(e.target))
-        handleCheckClick();
+        handleCheckClick(e);
       }
     };
-
-    const openNote = useCallback((e) => {
-      if (
-        (noteRef.current && noteRef.current === e.target) ||
-        inputsRef.current.contains(e.target) ||
-        imagesRef.current.contains(e.target) ||
-        noteStuffRef.current.contains(e.target)
-      ) {
-        // console.log("open note")
-        const rect = noteRef.current.getBoundingClientRect();
-        setNotePos({
-          top: rect.top,
-          left: rect.left,
-          width: rect.width,
-          height: rect.height,
-          source:
-            e.target === contentRef.current
-              ? "note"
-              : e.target === titleRef.current
-              ? "title"
-              : "note",
-        });
-        setModalTrigger(true);
-      }
-    }, []);
-
-    useEffect(() => {
-      if (window.location.hash.includes(note.uuid)) {
-        noteRef.current.click();
-      }
-
-      if (trigger2) {
-        setOpacityTrigger(false);
-      } else {
-        const rect = noteRef.current.getBoundingClientRect();
-        setNotePos((prev) => ({
-          ...prev,
-          top: rect.top,
-          left: rect.left,
-          width: rect.width,
-          height: rect.height,
-        }));
-      }
-      if (!modalTrigger) {
-        setOpacityTrigger(true);
-      }
-    }, [trigger2, modalTrigger]);
 
     const handlePinClick = async (e) => {
       closeToolTip();
@@ -176,9 +122,6 @@ const Note = memo(
             note: note,
             initialIndex: initialIndex,
           });
-          setTimeout(() => {
-            window.dispatchEvent(new Event("closeModal"));
-          }, 0);
 
           window.dispatchEvent(new Event("loadingStart"));
           await undoAction({
@@ -205,14 +148,6 @@ const Note = memo(
 
     const handleMenuIsOpenChange = useCallback((value) => {
       setColorMenuOpen(value);
-    }, []);
-
-    const handleModalTriggerChange = useCallback((value) => {
-      setModalTrigger(value);
-    }, []);
-
-    const handleTrigger2Change = useCallback((value) => {
-      setTrigger2(value);
     }, []);
 
     const handleCheckClick = (e) => {
@@ -269,9 +204,6 @@ const Note = memo(
           note: note,
           initialIndex: initialIndex,
         });
-        setTimeout(() => {
-          window.dispatchEvent(new Event("closeModal"));
-        }, 0);
         window.dispatchEvent(new Event("loadingStart"));
         await undoAction({
           type: "UNDO_ARCHIVE",
@@ -520,26 +452,6 @@ const Note = memo(
             />
           </div>
         </motion.div>
-        {modalTrigger && (
-          <NoteModal
-            trigger={modalTrigger}
-            setTrigger={handleModalTriggerChange}
-            trigger2={trigger2}
-            setTrigger2={handleTrigger2Change}
-            notePos={notePos}
-            note={note}
-            dispatchNotes={dispatchNotes}
-            calculateLayout={calculateLayout}
-            index={index}
-            isLoadingImages={isLoadingImages}
-            setIsLoadingImages={setIsLoadingImages}
-            openSnackFunction={openSnackFunction}
-            setTooltipAnchor={setTooltipAnchor}
-            handleArchive={handleArchive}
-            isLoading={isLoading}
-            userID={userID}
-          />
-        )}
       </>
     );
   }

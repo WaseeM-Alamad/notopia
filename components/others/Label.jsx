@@ -12,6 +12,8 @@ const Label = ({
   setTooltipAnchor,
   triggerReRender,
   dispatchNotes,
+  index,
+  calculateLayout,
 }) => {
   const { updateLabel } = useAppContext();
   const [mounted, setMounted] = useState(false);
@@ -20,18 +22,29 @@ const Label = ({
   const [isFocused, setIsFocused] = useState(false);
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
   const [charCount, setCharCount] = useState(0);
+  const [isImageLoading, setIsImageLoading] = useState(false);
   const labelDate = getNoteFormattedDate(labelData.createdAt);
   const [selectedColor, setSelectedColor] = useState(labelData.color);
+  const isRemoteImage =
+    labelData.image?.startsWith("http") || labelData.image?.startsWith("https");
   const labelRef = useRef(null);
   const labelTitleRef = useRef(null);
   const originalTitleRef = useRef(null);
   const moreRef = useRef(null);
   const dateRef = useRef(null);
+  const imageRef = useRef(null);
+  const isFirstRender = useRef(true);
 
   useEffect(() => {
     labelTitleRef.current.innerText = labelData.label;
     originalTitleRef.current = labelData.label;
-    setCharCount(labelTitleRef.current.innerText.trim().length);
+    setCharCount(() => {
+      if (labelTitleRef.current.innerText.trim().length > 50) {
+        return 50;
+      }
+
+      return labelTitleRef.current.innerText.trim().length;
+    });
 
     setTimeout(() => {
       setMounted(true);
@@ -110,6 +123,32 @@ const Label = ({
     }
   };
 
+  const [height, setHeight] = useState(0);
+
+  useEffect(() => {
+    const observer = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        setHeight(entry.contentRect.height);
+      }
+    });
+
+    if (labelRef.current) {
+      observer.observe(labelRef.current);
+    }
+
+    return () => {
+      observer.disconnect(); // Cleanup observer on unmount
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    calculateLayout();
+  }, [height]);
+
   return (
     <>
       <div
@@ -140,23 +179,49 @@ const Label = ({
               "background-color 0.3s ease-in-out, border-color 0.3s ease-in-out, box-shadow 0.2s ease ",
           }}
         >
-          <div
+          <Button
+            onClick={handleMoreClick}
+            ref={moreRef}
+            className="label-more-icon"
             style={{
-              display: "flex",
-              paddingBottom: "0.9rem",
-              position: "relative",
+              zIndex: "20",
+              marginLeft: "auto",
+              opacity: (isOpen || colorMenuOpen) && "1",
             }}
           >
-            <TestIcon
-              color={
-                labelData.color === "rgba(255, 255, 255, 1)"
-                  ? "#212121"
-                  : darkenColor(labelData.color, 0.85)
-              }
-              size="35"
-            />
+            <MoreVert style={{ rotate: "90deg" }} />
+          </Button>
+          {labelData.image && (
+            <div style={{ position: "relative" }}>
+              <img
+                ref={imageRef}
+                style={{
+                  width: "100%",
+                  display: "block",
+                  opacity: !isImageLoading ? "1" : "0.5",
+                  transition: "opacity 0.2s ease",
+                }}
+                src={
+                  isRemoteImage
+                    ? labelData.image + `?v=${new Date().getTime()}`
+                    : labelData.image
+                }
+              />
+              <AnimatePresence>
+                {isImageLoading && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="linear-loader"
+                  />
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+          <div style={{ padding: "0.8rem 1.1rem 0.8rem 1.1rem" }}>
             <AnimatePresence>
-              {isFocused && (
+              {isFocused && labelData.image && (
                 <motion.div
                   initial={{
                     y: 3,
@@ -167,7 +232,7 @@ const Label = ({
                     opacity: 1,
                   }}
                   exit={{
-                    y: 3,
+                    y: 5,
                     opacity: 0,
                   }}
                   transition={{
@@ -179,124 +244,181 @@ const Label = ({
                     },
                     opacity: { duration: 0.2 },
                   }}
+                  style={{
+                    bottom: "1.1rem",
+                    right: "13px",
+                    width: "18px",
+                    height: "18px",
+                  }}
                   className="edit-icon"
                 />
               )}
             </AnimatePresence>
-            <Button
-              onClick={handleMoreClick}
-              ref={moreRef}
-              className="label-more-icon"
+            <div
               style={{
-                marginLeft: "auto",
-                opacity: (isOpen || colorMenuOpen) && "1",
+                display: "flex",
+                paddingBottom: !labelData.image && "0.9rem",
+                position: "relative",
               }}
             >
-              <MoreVert style={{ rotate: "90deg" }} />
-            </Button>
-          </div>
-          {/* <div style={{ paddingBottom: "0.6rem", fontWeight: "550" }}>
+              {!labelData.image && (
+                <TestIcon
+                  color={
+                    labelData.color === "rgba(255, 255, 255, 1)"
+                      ? "rgb(53, 53, 53)"
+                      : darkenColor(labelData.color, 0.85)
+                  }
+                  size="35"
+                />
+              )}
+              <AnimatePresence>
+                {isFocused && !labelData.image && (
+                  <motion.div
+                    initial={{
+                      y: 3,
+                      opacity: 0,
+                    }}
+                    animate={{
+                      y: 0,
+                      opacity: 1,
+                    }}
+                    exit={{
+                      y: 3,
+                      opacity: 0,
+                    }}
+                    transition={{
+                      y: {
+                        type: "spring",
+                        stiffness: 1000,
+                        damping: 70,
+                        mass: 1,
+                      },
+                      opacity: { duration: 0.2 },
+                    }}
+                    className="edit-icon"
+                  />
+                )}
+              </AnimatePresence>
+            </div>
+            {/* <div style={{ paddingBottom: "0.6rem", fontWeight: "550" }}>
             {labelData.label}
           </div> */}
 
-          <div
-            // style={{ outlineColor: darkenColor(labelData.color, 0.85) }}
-            contentEditable={isFocused}
-            suppressContentEditableWarning
-            onInput={handleTitleInput}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-              }
-            }}
-            onPaste={handlePaste}
-            onFocus={() => {
-              setIsFocused(true);
-              labelTitleRef.current.style.outline =
-                `2px ` + darkenColor(labelData.color, 0.85);
-              moreRef.current.classList.add("zero-opacity");
-              dateRef.current.classList.add("zero-opacity");
-            }}
-            onBlur={() => {
-              setIsFocused(false);
-              labelTitleRef.current.blur();
-              moreRef.current.classList.remove("zero-opacity");
-              dateRef.current.classList.remove("zero-opacity");
-              labelTitleRef.current.style.removeProperty("pointer-events");
-              labelTitleRef.current.style.removeProperty("outline");
-              if (labelTitleRef.current.innerText.trim() === "") {
-                labelTitleRef.current.innerText = originalTitleRef.current;
-                return;
-              }
-              if (
-                labelTitleRef.current.innerText.trim() !==
-                originalTitleRef.current.trim()
-              ) {
-                originalTitleRef.current =
-                  labelTitleRef.current.innerText.trim();
-                updateLabel(
-                  labelData.uuid,
-                  labelTitleRef.current.innerText.trim()
-                );
-              } else {
-                labelTitleRef.current.innerText =
-                  originalTitleRef.current.trim();
-              }
-            }}
-            ref={labelTitleRef}
-            className="label-title-input"
-            role="textbox"
-            tabIndex="0"
-            aria-multiline="true"
-            spellCheck="false"
-          />
+            <div
+              // style={{ outlineColor: darkenColor(labelData.color, 0.85) }}
+              contentEditable={isFocused}
+              data-index={index}
+              suppressContentEditableWarning
+              onInput={handleTitleInput}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  labelTitleRef.current.blur();
+                }
+              }}
+              onPaste={handlePaste}
+              onFocus={() => {
+                labelTitleRef.current.style.pointerEvents = "auto";
+                setCursorAtEnd(labelTitleRef);
+                setIsOpen(false);
+                setCharCount(() => {
+                  if (labelTitleRef.current.innerText.trim().length > 50) {
+                    return 50;
+                  }
 
-          <div
-            ref={dateRef}
-            className="label-date"
-            style={{
-              color: "#5E5E5E",
-              fontSize: "0.8rem",
-              opacity: (isOpen || colorMenuOpen) && "1",
-            }}
-          >
-            {labelDate}
-          </div>
-          <AnimatePresence>
-            {isFocused && (
-              <motion.div
-                initial={{
-                  y: 0,
-                  opacity: 0,
-                }}
-                animate={{
-                  y: 0,
-                  opacity: 1,
-                }}
-                exit={{
-                  y: 0,
-                  opacity: 0,
-                }}
-                transition={{
-                  y: {
-                    type: "spring",
-                    stiffness: 1000,
-                    damping: 70,
-                    mass: 1,
-                  },
-                  opacity: { duration: 0.2 },
-                }}
-                style={{
-                  position: "absolute",
-                  bottom: "1rem",
-                  color: "#5E5E5E",
-                  fontSize: "0.7rem",
-                }}
+                  return labelTitleRef.current.innerText.trim().length;
+                });
+                setIsFocused(true);
+                // labelTitleRef.current.style.outline =
+                // `1px ` + darkenColor(labelData.color, 0.85);
+                moreRef.current.classList.add("zero-opacity");
+                dateRef.current.classList.add("zero-opacity");
+              }}
+              onBlur={() => {
+                setIsFocused(false);
+                labelTitleRef.current.blur();
+                moreRef.current.classList.remove("zero-opacity");
+                dateRef.current.classList.remove("zero-opacity");
+                labelTitleRef.current.style.removeProperty("pointer-events");
+                // labelTitleRef.current.style.removeProperty("outline");
+                if (labelTitleRef.current.innerText.trim() === "") {
+                  labelTitleRef.current.innerText = originalTitleRef.current;
+                  return;
+                }
+                if (
+                  labelTitleRef.current.innerText.trim() !==
+                  originalTitleRef.current.trim()
+                ) {
+                  originalTitleRef.current =
+                    labelTitleRef.current.innerText.trim();
+                  updateLabel(
+                    labelData.uuid,
+                    labelTitleRef.current.innerText.trim()
+                  );
+                } else {
+                  labelTitleRef.current.innerText =
+                    originalTitleRef.current.trim();
+                }
+              }}
+              ref={labelTitleRef}
+              className="label-title-input"
+              role="textbox"
+              tabIndex="0"
+              aria-multiline="true"
+              spellCheck="false"
+            />
+
+            <div
+              style={{
+                color: "#5E5E5E",
+                fontSize: "0.8rem",
+                position: "relative",
+              }}
+            >
+              <AnimatePresence>
+                {isFocused && (
+                  <motion.div
+                    initial={{
+                      y: 0,
+                      opacity: 0,
+                    }}
+                    animate={{
+                      y: 0,
+                      opacity: 1,
+                    }}
+                    exit={{
+                      y: 0,
+                      opacity: 0,
+                    }}
+                    transition={{
+                      y: {
+                        type: "spring",
+                        stiffness: 1000,
+                        damping: 70,
+                        mass: 1,
+                      },
+                      opacity: { duration: 0.2 },
+                    }}
+                    style={{
+                      position: "absolute",
+                      // bottom: "1.2rem",
+                      color: "#5E5E5E",
+                      fontSize: "0.7rem",
+                    }}
+                  >
+                    {50 - charCount} Characters left
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              <div
+                ref={dateRef}
+                className="label-date"
+                style={{ opacity: (isOpen || colorMenuOpen) && "1" }}
               >
-                {50 - charCount} Characters left
-              </motion.div>
-            )}
-          </AnimatePresence>
+                {labelDate}
+              </div>
+            </div>
+          </div>
         </motion.div>
       </div>
       <LabelMenu
@@ -314,6 +436,8 @@ const Label = ({
         dispatchNotes={dispatchNotes}
         labelTitleRef={labelTitleRef}
         setCursorAtEnd={setCursorAtEnd}
+        imageRef={imageRef}
+        setIsImageLoading={setIsImageLoading}
       />
     </>
   );

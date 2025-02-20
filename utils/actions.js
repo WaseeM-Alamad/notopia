@@ -473,7 +473,7 @@ export const removeLabelAction = async (data) => {
 
     await Note.updateOne(
       { uuid: data.noteUUID },
-      { $pull: { labels: data.labelUUID  } }
+      { $pull: { labels: data.labelUUID } }
     );
   } catch (error) {
     console.log(error);
@@ -481,79 +481,107 @@ export const removeLabelAction = async (data) => {
   }
 };
 
-export const updateLabelColorAction = async (data) => {
-  if (!session) {
-    return { success: false, message: "Unauthorized", status: 401 };
-  }
-  try {
-    await connectDB();
-
-    await User.findOneAndUpdate(
-      { _id: userID, "labels.uuid": data.uuid },
-      { $set: { "labels.$.color": data.color } }
-    );
-
-    return {
-      success: true,
-      message: "Label color updated successfully!",
-      status: 201,
-    };
-  } catch (error) {
-    console.log(error);
-    return { message: "Failed to update label color", status: 500 };
-  }
-};
-
 export const updateLabelAction = async (data) => {
   if (!session) {
     return { success: false, message: "Unauthorized", status: 401 };
   }
+
   try {
     await connectDB();
 
-    await User.findOneAndUpdate(
-      { _id: userID, "labels.uuid": data.uuid },
-      { $set: { "labels.$.label": data.label.trim() } }
-    );
+    if (data.type === "color") {
+      await User.findOneAndUpdate(
+        { _id: userID, "labels.uuid": data.uuid },
+        { $set: { "labels.$.color": data.color } }
+      );
 
-    return {
-      success: true,
-      message: "Label updated successfully!",
-      status: 201,
-    };
+      return {
+        success: true,
+        message: "Label color updated successfully!",
+        status: 201,
+      };
+    } else if (data.type === "title") {
+      await User.findOneAndUpdate(
+        { _id: userID, "labels.uuid": data.uuid },
+        { $set: { "labels.$.label": data.label.trim() } }
+      );
+
+      return {
+        success: true,
+        message: "Label updated successfully!",
+        status: 201,
+      };
+    } else if (data.type === "image") {
+      await User.findOneAndUpdate(
+        { _id: userID, "labels.uuid": data.uuid },
+        { $set: { "labels.$.image": data.imageURL } }
+      );
+
+      return {
+        success: true,
+        message: "Label image updated successfully!",
+        status: 201,
+      };
+    } else if (data.type === "delete_image") {
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.NEXT_SUPABASE_SERVICE_ROLE_KEY
+      );
+
+      await User.findOneAndUpdate(
+        { _id: userID, "labels.uuid": data.uuid },
+        { $set: { "labels.$.image": null } }
+      );
+
+      const filePath = `${userID}/labels/${data.uuid}`;
+
+      await supabase.storage.from("notopia").remove([filePath]);
+
+      return {
+        success: true,
+        message: "Label image deleted successfully!",
+        status: 201,
+      };
+    }
   } catch (error) {
     console.log(error);
     return { message: "Failed to update label", status: 500 };
   }
-}
+};
 
 export const deleteLabelAction = async (data) => {
   if (!session) {
     return { success: false, message: "Unauthorized", status: 401 };
   }
 
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_SUPABASE_SERVICE_ROLE_KEY
+  );
+
   try {
     await connectDB();
 
     await User.findOneAndUpdate(
       { _id: userID, "labels.uuid": data.labelUUID },
-      { $pull: { labels: {uuid: data.labelUUID} } }
+      { $pull: { labels: { uuid: data.labelUUID } } }
     );
 
     await Note.updateMany(
-      { "labels": data.labelUUID},
-      { $pull: { labels:  data.labelUUID} }
+      { labels: data.labelUUID },
+      { $pull: { labels: data.labelUUID } }
     );
+
+    const filePath = `${userID}/labels/${data.labelUUID}`;
+    await supabase.storage.from("notopia").remove([filePath]);
 
     return {
       success: true,
       message: "Label deleted and removed successfully!",
       status: 201,
     };
-    
   } catch (error) {
     console.log(error);
     return { message: "Failed to delete label", status: 500 };
   }
-
-}
+};

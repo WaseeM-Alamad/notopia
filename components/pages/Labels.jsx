@@ -1,10 +1,9 @@
 "use client";
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import "@/assets/styles/home.css";
-import { motion } from "framer-motion";
 import { useAppContext } from "@/context/AppContext";
-import NewLabel from "../others/NewLabel";
 import Label from "../others/Label";
+import { v4 as uuid } from "uuid";
 
 const COLUMN_WIDTH = 240;
 const GUTTER = 15;
@@ -85,6 +84,40 @@ const Labels = memo(({ setTooltipAnchor, dispatchNotes }) => {
     }, 100);
   }, [calculateLayout, reRender]);
 
+  const handleCreateLabel = () => {
+    const newUUID = uuid();
+    let newLabel = "New label";
+    [...labelsRef.current].map(([uuid, labelData]) => {
+      const existingLabel = labelData.label.toLowerCase();
+
+      if (
+        existingLabel.replace(/\d+/g, "").trim().toLowerCase() === "new label"
+      ) {
+        const num = existingLabel.match(/\d+/)?.[0];
+        if (num !== undefined) {
+          newLabel = `New label ${parseInt(num, 10) + 1}`;
+        } else {
+          newLabel = `New label 2`;
+        }
+      }
+    });
+
+    const createdAt = new Date();
+    createLabel(newUUID, newLabel, createdAt);
+    triggerReRender((prev) => !prev);
+    setTimeout(() => {
+      const element = document.querySelector(
+        '.labels-container [data-index="0"]'
+      );
+      element.focus();
+    }, 10);
+  };
+
+  useEffect(() => {
+    window.addEventListener("addLabel", handleCreateLabel);
+    return () => window.removeEventListener("addLabel", handleCreateLabel);
+  }, []);
+
   useEffect(() => {
     calculateLayout();
     window.addEventListener("resize", debouncedCalculateLayout);
@@ -105,20 +138,22 @@ const Labels = memo(({ setTooltipAnchor, dispatchNotes }) => {
       <div className="starting-div">
         <div
           ref={containerRef}
-          className="notes-container"
+          className="labels-container"
           style={{
             visibility: isLayoutReady ? "visible" : "hidden",
           }}
         >
-          <NewLabel triggerReRender={triggerReRender} />
+          {/* <NewLabel triggerReRender={triggerReRender} /> */}
           {[...labelsRef.current].reverse().map(([uuid, labelData], index) => {
             return (
               <Label
+                index={index === 0 ? index : ""}
                 setTooltipAnchor={setTooltipAnchor}
                 key={uuid}
                 dispatchNotes={dispatchNotes}
                 labelData={labelData}
                 triggerReRender={triggerReRender}
+                calculateLayout={calculateLayout}
               />
             );
           })}

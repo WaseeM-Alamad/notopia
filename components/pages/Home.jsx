@@ -5,7 +5,6 @@ import React, {
   useEffect,
   useRef,
   useState,
-  useMemo,
 } from "react";
 import "@/assets/styles/home.css";
 import Note from "../others/Note";
@@ -36,12 +35,8 @@ const NoteWrapper = memo(
     setTooltipAnchor,
     handleNoteClick,
   }) => {
-    // const { modalOpen, setModalOpen } = useAppContext();
     const [mounted, setMounted] = useState(false);
-    const [mountOpacity, setMountOpacity] = useState(true);
-    const [modalTrigger, setModalTrigger] = useState(false);
     const noteRef = useRef(null);
-    const timeoutRef = useRef(null);
 
     const setRefs = (element) => {
       noteRef.current = element;
@@ -52,17 +47,6 @@ const NoteWrapper = memo(
       setTimeout(() => {
         setMounted(true);
       }, 100);
-    }, []);
-
-    useEffect(() => {
-      const handler = () => {
-        setMountOpacity(true);
-      };
-
-      window.addEventListener("closeModal", handler);
-      return () => {
-        window.removeEventListener("closeModal", handler);
-      };
     }, []);
 
     let startX, startY;
@@ -80,7 +64,6 @@ const NoteWrapper = memo(
         if (deltaX > 5 || deltaY > 5) {
           if (
             targetElement === noteRef.current &&
-            !modalTrigger &&
             !target.classList.contains("not-draggable")
           ) {
             handleDragStart(e, targetElement);
@@ -116,15 +99,12 @@ const NoteWrapper = memo(
         {/* <button onClick={()=> console.log(note)}>note</button> */}
         <motion.div
           initial={{ y: 11, opacity: 0 }}
-          animate={{ y: 0, opacity: isVisible ? (mountOpacity ? 1 : 0) : 0 }}
+          animate={{ y: 0, opacity: isVisible ? 1 : 0 }}
           exit={{ y: 11, opacity: 0 }}
           transition={{
             y: { type: "spring", stiffness: 1000, damping: 50, mass: 1 },
             opacity: { duration: 0.2 },
           }}
-          // style={{
-          // opacity: isVisible ? (mountOpacity ? 1 : 0) : 0,
-          // }}
         >
           <Note
             dispatchNotes={dispatchNotes}
@@ -135,9 +115,7 @@ const NoteWrapper = memo(
             setSelectedNotesIDs={setSelectedNotesIDs}
             selectedNotes={selectedNotes}
             isDragging={isDragging}
-            modalTrigger={modalTrigger}
             openSnackFunction={openSnackFunction}
-            setModalTrigger={setModalTrigger}
             index={index}
           />
         </motion.div>
@@ -167,7 +145,6 @@ const Home = memo(
     const containerRef = useRef(null);
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
-    const hasDispatched = useRef(false);
     const isFirstRender = useRef(true);
 
     const [unpinnedNotesNumber, setUnpinnedNotesNumber] = useState(null);
@@ -293,16 +270,6 @@ const Home = memo(
     useEffect(() => {
       selectedRef.current = selectedNotesIDs.length > 0;
     }, [selectedNotesIDs]);
-
-    useEffect(() => {
-      if (!hasDispatched.current && !isFirstRender.current) {
-        window.dispatchEvent(new Event("closeModal"));
-        hasDispatched.current = true;
-      }
-      if (isFirstRender.current) {
-        isFirstRender.current = false;
-      }
-    }, [notes]); // Runs after notes are rendered
 
     const draggedNoteRef = useRef(null);
     const endIndexRef = useRef(null);
