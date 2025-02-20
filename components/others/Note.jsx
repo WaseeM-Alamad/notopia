@@ -35,7 +35,7 @@ const Note = memo(
     openSnackFunction,
     index,
   }) => {
-    const { labelsRef } = useAppContext();
+    const { handleLabelNoteCount, labelsRef } = useAppContext();
     const { data: session } = useSession();
     const userID = session?.user?.id;
     const [localIsArchived, setLocalIsArchived] = useState(false);
@@ -237,6 +237,7 @@ const Note = memo(
         note: note,
         labelUUID: labelUUID,
       });
+      handleLabelNoteCount(labelUUID, "decrement");
       window.dispatchEvent(new Event("loadingStart"));
       await removeLabelAction({
         noteUUID: note.uuid,

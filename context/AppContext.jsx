@@ -6,6 +6,7 @@ import {
   fetchLabelsAction,
   createLabelAction,
   updateLabelAction,
+  deleteLabelAction,
 } from "@/utils/actions";
 import { createClient } from "@supabase/supabase-js";
 
@@ -16,12 +17,16 @@ export function AppProvider({ children }) {
   const userID = session?.user?.id;
 
   const labelsRef = useRef(new Map());
+  const labelLookUPRef = useRef(new Map());
 
   const getLabels = async () => {
     const fetchedLables = await fetchLabelsAction();
     if (!fetchedLables.success) return;
     labelsRef.current = new Map(
-      fetchedLables.data.map((mapLabel) => [mapLabel.uuid, mapLabel])
+      fetchedLables.data.map((mapLabel) => {
+        labelLookUPRef.current.set(mapLabel.label.toLowerCase(), true);
+        return [mapLabel.uuid, mapLabel];
+      })
     );
   };
 
@@ -30,6 +35,7 @@ export function AppProvider({ children }) {
   }, []);
 
   const createLabel = async (uuid, label, createdAt) => {
+    labelLookUPRef.current.set(label.toLowerCase(), true);
     labelsRef.current.set(uuid, {
       uuid: uuid,
       label: label,
@@ -50,7 +56,9 @@ export function AppProvider({ children }) {
     window.dispatchEvent(new Event("loadingEnd"));
   };
 
-  const updateLabel = async (uuid, updatedLabel) => {
+  const updateLabel = async (uuid, updatedLabel, oldLabel) => {
+    labelLookUPRef.current.delete(oldLabel);
+    labelLookUPRef.current.set(updatedLabel, true);
     const newLabel = { ...labelsRef.current.get(uuid), label: updatedLabel };
     const labels = new Map(labelsRef.current).set(uuid, newLabel);
     labelsRef.current = labels;
@@ -96,18 +104,61 @@ export function AppProvider({ children }) {
     }
   };
 
-
-  const deleteLabelImage = async (uuid)=> {
-    const newLabel = {...labelsRef.current.get(uuid), image: null};
+  const deleteLabelImage = async (uuid) => {
+    const newLabel = { ...labelsRef.current.get(uuid), image: null };
     const labels = new Map(labelsRef.current).set(uuid, newLabel);
     labelsRef.current = labels;
     window.dispatchEvent(new Event("loadingStart"));
-    await updateLabelAction({ type: "delete_image", uuid: uuid});
+    await updateLabelAction({ type: "delete_image", uuid: uuid });
     window.dispatchEvent(new Event("loadingEnd"));
-  }
+  };
 
-  const removeLabel = (uuid) => {
+  const handleLabelNoteCount = async (uuid, type = "increment") => {
+    const currentLabel = labelsRef.current.get(uuid);
+    const newLabel = {
+      ...currentLabel,
+      noteCount:
+        type === "decrement"
+          ? currentLabel?.noteCount
+            ? currentLabel.noteCount - 1
+            : 0
+          : (currentLabel?.noteCount || 0) + 1,
+    };
+    const labels = new Map(labelsRef.current).set(uuid, newLabel);
+    labelsRef.current = labels;
+    window.dispatchEvent(new Event("loadingStart"));
+    await updateLabelAction({
+      type: "note_count",
+      uuid: uuid,
+      operation: type,
+    });
+    window.dispatchEvent(new Event("loadingEnd"));
+  };
+
+  const batchDecNoteCount = async (targetUUIDs) => {
+    const updatedLabels = new Map(labelsRef.current);
+
+    targetUUIDs.forEach((uuid) => {
+      if (updatedLabels.has(uuid)) {
+        const label = updatedLabels.get(uuid);
+        updatedLabels.set(uuid, {
+          ...label,
+          noteCount: Math.max(0, label.noteCount - 1),
+        });
+      }
+    });
+
+    labelsRef.current = updatedLabels;
+  };
+
+  const removeLabel = (uuid, label) => {
     labelsRef.current.delete(uuid);
+    console.log(label);
+    labelLookUPRef.current.delete(label.toLowerCase().trim());
+    window.dispatchEvent(new Event("loadingStart"));
+    deleteLabelAction({ labelUUID: uuid }).then(() => {
+      window.dispatchEvent(new Event("loadingEnd"));
+    });
   };
 
   return (
@@ -120,6 +171,9 @@ export function AppProvider({ children }) {
         updateLabel,
         updateLabelImage,
         deleteLabelImage,
+        handleLabelNoteCount,
+        batchDecNoteCount,
+        labelLookUPRef,
       }}
     >
       {children}

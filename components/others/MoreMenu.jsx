@@ -23,7 +23,7 @@ const MoreMenu = ({
   dispatchNotes,
   openSnackFunction,
 }) => {
-  const { createLabel, labelsRef } = useAppContext();
+  const { createLabel, handleLabelNoteCount, labelsRef } = useAppContext();
   const [isClient, setIsClient] = useState();
   const [labelsOpen, setLabelsOpen] = useState(false);
   // const labelInputRef = useRef(null);
@@ -197,6 +197,7 @@ const MoreMenu = ({
         note: note,
         labelUUID: uuid,
       });
+      handleLabelNoteCount(uuid, "decrement");
 
       window.dispatchEvent(new Event("loadingStart"));
       await removeLabelAction({
@@ -210,6 +211,8 @@ const MoreMenu = ({
         note: note,
         labelUUID: uuid,
       });
+      handleLabelNoteCount(uuid);
+
       window.dispatchEvent(new Event("loadingStart"));
       await addLabelAction({
         noteUUID: note.uuid,

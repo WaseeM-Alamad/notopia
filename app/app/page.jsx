@@ -1,6 +1,5 @@
 "use client";
 import ArchiveIcon from "@/components/icons/ArchiveIcon";
-import LabelIcon from "@/components/icons/LabelIcon";
 import NotesIcon from "@/components/icons/NotesIcon";
 import SortByIcon from "@/components/icons/SortByIcon";
 import TrashIcon from "@/components/icons/TrashIcon";

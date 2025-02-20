@@ -2,12 +2,12 @@
 import React, { memo, useEffect, useMemo, useRef, useState } from "react";
 import "@/assets/styles/sidebar.css";
 import HomeIcon from "../icons/HomeIcon";
-import FolderIcon from "../icons/FolderIcon";
 import BellIcon from "../icons/BellIcon";
 import SideArchiveIcon from "../icons/SideArchiveIcon";
 import TrashIcon from "../icons/TrashIcon";
 import { motion } from "framer-motion";
 import AddButton from "../icons/AddButton";
+import LabelIcon from "../icons/LabelIcon";
 
 const Sidebar = memo(() => {
   const [mounted, setMounted] = useState(false);
@@ -30,7 +30,7 @@ const Sidebar = memo(() => {
 
   const navItems = [
     { hash: "home", Icon: HomeIcon, ref: homeRef },
-    { hash: "labels", Icon: FolderIcon, ref: labelsRef },
+    { hash: "labels", Icon: LabelIcon, ref: labelsRef },
     { hash: "reminders", Icon: BellIcon, ref: remindersRef },
     { hash: "archive", Icon: SideArchiveIcon, ref: archiveRef },
     { hash: "trash", Icon: TrashIcon, ref: trashRef },

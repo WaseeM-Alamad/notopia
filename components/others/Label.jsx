@@ -1,11 +1,11 @@
 import React, { memo, useEffect, useRef, useState } from "react";
-import TestIcon from "../icons/TestIcon";
 import Button from "../Tools/Button";
 import MoreVert from "../icons/MoreVert";
 import { getNoteFormattedDate } from "@/utils/noteDateFormatter";
 import { AnimatePresence, motion } from "framer-motion";
 import LabelMenu from "./LabelMenu";
 import { useAppContext } from "@/context/AppContext";
+import NotesIcon from "../icons/NotesIcon";
 
 const Label = ({
   labelData,
@@ -15,13 +15,14 @@ const Label = ({
   index,
   calculateLayout,
 }) => {
-  const { updateLabel } = useAppContext();
+  const { updateLabel, labelLookUPRef } = useAppContext();
   const [mounted, setMounted] = useState(false);
   const [anchorEl, setAnchorEL] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
   const [charCount, setCharCount] = useState(0);
+  const [height, setHeight] = useState(0);
   const [isImageLoading, setIsImageLoading] = useState(false);
   const labelDate = getNoteFormattedDate(labelData.createdAt);
   const [selectedColor, setSelectedColor] = useState(labelData.color);
@@ -123,7 +124,34 @@ const Label = ({
     }
   };
 
-  const [height, setHeight] = useState(0);
+  const handleOnBlur = () => {
+    setIsFocused(false);
+    labelTitleRef.current.blur();
+    moreRef.current.classList.remove("zero-opacity");
+    dateRef.current.classList.remove("zero-opacity");
+    labelTitleRef.current.style.removeProperty("pointer-events");
+    if (labelTitleRef.current.innerText.trim() === "") {
+      labelTitleRef.current.innerText = originalTitleRef.current;
+      return;
+    }
+    if (
+      labelTitleRef.current.innerText.trim() !== originalTitleRef.current.trim()
+    ) {
+      const labelToCheck = labelTitleRef.current.innerText.toLowerCase().trim();
+      if (labelLookUPRef.current.has(labelToCheck)) {
+        labelTitleRef.current.innerText = originalTitleRef.current.trim();
+        return;
+      }
+      updateLabel(
+        labelData.uuid,
+        labelTitleRef.current.innerText.trim(),
+        originalTitleRef.current
+      );
+      originalTitleRef.current = labelTitleRef.current.innerText.trim();
+    } else {
+      labelTitleRef.current.innerText = originalTitleRef.current.trim();
+    }
+  };
 
   useEffect(() => {
     const observer = new ResizeObserver((entries) => {
@@ -179,6 +207,10 @@ const Label = ({
               "background-color 0.3s ease-in-out, border-color 0.3s ease-in-out, box-shadow 0.2s ease ",
           }}
         >
+          <div
+            style={{ display: labelData.image && "none" }}
+            className="corner"
+          />
           <Button
             onClick={handleMoreClick}
             ref={moreRef}
@@ -189,7 +221,7 @@ const Label = ({
               opacity: (isOpen || colorMenuOpen) && "1",
             }}
           >
-            <MoreVert style={{ rotate: "90deg" }} />
+            <MoreVert size="18" style={{ rotate: "90deg" }} />
           </Button>
           {labelData.image && (
             <div style={{ position: "relative" }}>
@@ -221,7 +253,7 @@ const Label = ({
           )}
           <div style={{ padding: "0.8rem 1.1rem 0.8rem 1.1rem" }}>
             <AnimatePresence>
-              {isFocused && labelData.image && (
+              {isFocused && (
                 <motion.div
                   initial={{
                     y: 3,
@@ -244,12 +276,6 @@ const Label = ({
                     },
                     opacity: { duration: 0.2 },
                   }}
-                  style={{
-                    bottom: "1.1rem",
-                    right: "13px",
-                    width: "18px",
-                    height: "18px",
-                  }}
                   className="edit-icon"
                 />
               )}
@@ -257,55 +283,10 @@ const Label = ({
             <div
               style={{
                 display: "flex",
-                paddingBottom: !labelData.image && "0.9rem",
                 position: "relative",
               }}
-            >
-              {!labelData.image && (
-                <TestIcon
-                  color={
-                    labelData.color === "rgba(255, 255, 255, 1)"
-                      ? "rgb(53, 53, 53)"
-                      : darkenColor(labelData.color, 0.85)
-                  }
-                  size="35"
-                />
-              )}
-              <AnimatePresence>
-                {isFocused && !labelData.image && (
-                  <motion.div
-                    initial={{
-                      y: 3,
-                      opacity: 0,
-                    }}
-                    animate={{
-                      y: 0,
-                      opacity: 1,
-                    }}
-                    exit={{
-                      y: 3,
-                      opacity: 0,
-                    }}
-                    transition={{
-                      y: {
-                        type: "spring",
-                        stiffness: 1000,
-                        damping: 70,
-                        mass: 1,
-                      },
-                      opacity: { duration: 0.2 },
-                    }}
-                    className="edit-icon"
-                  />
-                )}
-              </AnimatePresence>
-            </div>
-            {/* <div style={{ paddingBottom: "0.6rem", fontWeight: "550" }}>
-            {labelData.label}
-          </div> */}
-
+            ></div>
             <div
-              // style={{ outlineColor: darkenColor(labelData.color, 0.85) }}
               contentEditable={isFocused}
               data-index={index}
               suppressContentEditableWarning
@@ -329,37 +310,10 @@ const Label = ({
                   return labelTitleRef.current.innerText.trim().length;
                 });
                 setIsFocused(true);
-                // labelTitleRef.current.style.outline =
-                // `1px ` + darkenColor(labelData.color, 0.85);
                 moreRef.current.classList.add("zero-opacity");
                 dateRef.current.classList.add("zero-opacity");
               }}
-              onBlur={() => {
-                setIsFocused(false);
-                labelTitleRef.current.blur();
-                moreRef.current.classList.remove("zero-opacity");
-                dateRef.current.classList.remove("zero-opacity");
-                labelTitleRef.current.style.removeProperty("pointer-events");
-                // labelTitleRef.current.style.removeProperty("outline");
-                if (labelTitleRef.current.innerText.trim() === "") {
-                  labelTitleRef.current.innerText = originalTitleRef.current;
-                  return;
-                }
-                if (
-                  labelTitleRef.current.innerText.trim() !==
-                  originalTitleRef.current.trim()
-                ) {
-                  originalTitleRef.current =
-                    labelTitleRef.current.innerText.trim();
-                  updateLabel(
-                    labelData.uuid,
-                    labelTitleRef.current.innerText.trim()
-                  );
-                } else {
-                  labelTitleRef.current.innerText =
-                    originalTitleRef.current.trim();
-                }
-              }}
+              onBlur={handleOnBlur}
               ref={labelTitleRef}
               className="label-title-input"
               role="textbox"
@@ -367,7 +321,6 @@ const Label = ({
               aria-multiline="true"
               spellCheck="false"
             />
-
             <div
               style={{
                 color: "#5E5E5E",
@@ -416,6 +369,14 @@ const Label = ({
                 style={{ opacity: (isOpen || colorMenuOpen) && "1" }}
               >
                 {labelDate}
+                {labelData?.noteCount > 0 && (
+                  <>
+                    ,
+                    <span style={{ paddingLeft: "0.4rem" }}>
+                      {labelData?.noteCount + " notes"}
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           </div>

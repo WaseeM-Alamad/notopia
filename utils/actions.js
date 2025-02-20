@@ -217,6 +217,20 @@ export const DeleteNoteAction = async (noteUUID) => {
       return { success: false, message: "Note not found" };
     }
 
+    if (note.labels.length > 0) {
+      await User.updateOne(
+        { _id: userID },
+        {
+          $inc: { "labels.$[elem].noteCount": -1 },
+        },
+        {
+          arrayFilters: [
+            { "elem.uuid": { $in: note.labels }, "elem.noteCount": { $gt: 0 } },
+          ],
+        }
+      );
+    }
+
     if (note.images.length !== 0) {
       const folderPath = `${userID}/${noteUUID}/`;
       const bucketName = "notopia";
@@ -432,7 +446,24 @@ export const createLabelAction = async (newUUID, newLabel) => {
   try {
     await connectDB();
 
+    if (newLabel.trim() === "") {
+      return;
+    }
+
     const user = await User.findById(userID);
+    const labelExists = user.labels.some(
+      (labelData) =>
+        labelData.label.toLowerCase().trim() === newLabel.toLowerCase().trim()
+    );
+
+    if (labelExists) {
+      return {
+        success: false,
+        message: "Label already exists.",
+        status: 409,
+      };
+    }
+
     user.labels.push({ uuid: newUUID, label: newLabel });
 
     await user.save();
@@ -501,6 +532,22 @@ export const updateLabelAction = async (data) => {
         status: 201,
       };
     } else if (data.type === "title") {
+      const user = await User.findById(userID);
+
+      const labelExists = user.labels.some(
+        (labelData) =>
+          labelData.label.toLowerCase().trim() ===
+          data.label.toLowerCase().trim()
+      );
+
+      if (labelExists) {
+        return {
+          success: false,
+          message: "Label already exists.",
+          status: 409,
+        };
+      }
+
       await User.findOneAndUpdate(
         { _id: userID, "labels.uuid": data.uuid },
         { $set: { "labels.$.label": data.label.trim() } }
@@ -540,6 +587,29 @@ export const updateLabelAction = async (data) => {
       return {
         success: true,
         message: "Label image deleted successfully!",
+        status: 201,
+      };
+    } else if (data.type === "note_count") {
+      const user = await User.findOne(
+        { _id: userID, "labels.uuid": data.uuid },
+        { "labels.$": 1 }
+      );
+      const noteCount = user.labels[0].noteCount ?? 0;
+
+      const newNoteCount =
+        data.operation === "decrement"
+          ? noteCount > 0
+            ? noteCount - 1
+            : 0
+          : noteCount + 1;
+
+      await User.findOneAndUpdate(
+        { _id: userID, "labels.uuid": data.uuid },
+        { $set: { "labels.$.noteCount": newNoteCount } }
+      );
+      return {
+        success: true,
+        message: "Label note count updated successfully!",
         status: 201,
       };
     }

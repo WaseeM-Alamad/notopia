@@ -60,11 +60,7 @@ const LabelMenu = ({
       type: "REMOVE_LABEL_FROM_NOTES",
       labelUUID: labelData.uuid,
     });
-    removeLabel(labelData.uuid);
-    window.dispatchEvent(new Event("loadingStart"));
-    deleteLabelAction({ labelUUID: labelData.uuid }).then(() => {
-      window.dispatchEvent(new Event("loadingEnd"));
-    });
+    removeLabel(labelData.uuid, labelData.label);
 
     labelRef.current.style.opacity = "0";
     const handler = (e) => {

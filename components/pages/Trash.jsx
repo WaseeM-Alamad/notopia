@@ -5,7 +5,6 @@ import React, {
   useEffect,
   useRef,
   useState,
-  useMemo,
 } from "react";
 import "@/assets/styles/home.css";
 import Note from "../others/Note";
@@ -29,24 +28,11 @@ const NoteWrapper = memo(
     openSnackFunction,
   }) => {
     const [mounted, setMounted] = useState(false);
-    const [mountOpacity, setMountOpacity] = useState(false);
-    const [modalTrigger, setModalTrigger] = useState(false);
 
     useEffect(() => {
       setTimeout(() => {
         setMounted(true);
       }, 100);
-    }, []);
-
-    useEffect(() => {
-      const handler = () => {
-        setMountOpacity(true);
-      };
-
-      window.addEventListener("closeModal", handler);
-      return () => {
-        window.removeEventListener("closeModal", handler);
-      };
     }, []);
 
     return (
@@ -57,7 +43,7 @@ const NoteWrapper = memo(
           width: `${COLUMN_WIDTH}px`,
           marginBottom: `${GUTTER}px`,
           transition: `transform ${mounted ? "0.2s" : "0"} ease, opacity 0s`,
-          opacity: isVisible ? (mountOpacity ? 1 : 0) : 0,
+          opacity: isVisible ? 1 : 0,
           pointerEvents: isVisible ? "auto" : "none",
         }}
       >
@@ -69,8 +55,6 @@ const NoteWrapper = memo(
           setTooltipAnchor={setTooltipAnchor}
           openSnackFunction={openSnackFunction}
           index={index}
-          modalTrigger={modalTrigger}
-          setModalTrigger={setModalTrigger}
         />
         {/* <p>{index}</p> */}
       </motion.div>
@@ -184,16 +168,6 @@ const Home = memo(
     useEffect(() => {
       selectedRef.current = selectedNotesIDs.length > 0;
     }, [selectedNotesIDs]);
-
-    useEffect(() => {
-      if (!hasDispatched.current && !isFirstRender.current) {
-        window.dispatchEvent(new Event("closeModal"));
-        hasDispatched.current = true;
-      }
-      if (isFirstRender.current) {
-        isFirstRender.current = false;
-      }
-    }, [notes]); // Runs after notes are rendered
 
     return (
       <>

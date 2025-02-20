@@ -21,6 +21,7 @@ import DeleteIcon from "../icons/DeleteIcon";
 import RestoreIcon from "../icons/RestoreIcon";
 import { AnimatePresence } from "framer-motion";
 import DeleteModal from "./DeleteModal";
+import { useAppContext } from "@/context/AppContext";
 
 const NoteTools = ({
   images,
@@ -41,6 +42,7 @@ const NoteTools = ({
   openSnackFunction,
   setTooltipAnchor,
 }) => {
+  const { batchDecNoteCount } = useAppContext();
   const [selectedColor, setSelectedColor] = useState(note.color);
   const [anchorEl, setAnchorEl] = useState(null);
   const [colorAnchorEl, setColorAnchorEl] = useState(null);
@@ -101,7 +103,7 @@ const NoteTools = ({
   };
 
   const handleOnChange = async (event) => {
-    console.log("img", event.target)
+    console.log("img", event.target);
     const file = event.target?.files[0];
     const imageURL = URL.createObjectURL(file);
     const newUUID = uuid();
@@ -142,6 +144,7 @@ const NoteTools = ({
   }, []);
 
   const handleDeleteNote = async () => {
+    batchDecNoteCount(note.labels);
     setIsNoteDeleted(true);
     window.dispatchEvent(new Event("loadingStart"));
     await DeleteNoteAction(note.uuid);
@@ -196,12 +199,12 @@ const NoteTools = ({
   };
 
   const containerClick = useCallback((e) => {
-      e.stopPropagation();
-    }, []);
+    e.stopPropagation();
+  }, []);
 
   return (
     <span
-    onClick={containerClick}
+      onClick={containerClick}
       style={{
         opacity: images ? "0.8" : "1",
         transition: "all 0.3s ease",
