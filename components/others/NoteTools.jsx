@@ -213,9 +213,8 @@ const NoteTools = ({
       <div
         style={{
           opacity: (colorMenuOpen || moreMenuOpen) && "1",
-          backgroundColor: images && note.color,
         }}
-        className="note-bottom"
+        className={`note-bottom ${images && note.color}`}
       >
         {/* <p className="date">{FormattedDate}</p> */}
         <div className="note-bottom-icons">

@@ -8,6 +8,7 @@ const SettingsIcon = () => {
       viewBox="0 0 28 28"
       fill="none"
       stroke="#7A7A7A"
+      className="settings-icon"
       xmlns="http://www.w3.org/2000/svg"
     >
       <path

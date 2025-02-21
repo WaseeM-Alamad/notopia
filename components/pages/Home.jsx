@@ -1,11 +1,5 @@
 "use client";
-import React, {
-  memo,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import "@/assets/styles/home.css";
 import Note from "../others/Note";
 import AddNoteModal from "../others/AddNoteModal";

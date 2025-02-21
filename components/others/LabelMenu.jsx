@@ -24,6 +24,7 @@ const LabelMenu = ({
   setCursorAtEnd,
   imageRef,
   setIsImageLoading,
+  openSnackFunction,
 }) => {
   const { updateLabelColor, updateLabelImage, deleteLabelImage, removeLabel } =
     useAppContext();
@@ -116,6 +117,36 @@ const LabelMenu = ({
 
   const handleRenameLabel = () => {
     labelTitleRef.current.focus();
+  };
+
+  const handleRemoveImage = () => {
+    const image = labelData.image;
+
+    deleteLabelImage({ uuid: labelData.uuid, action: "remove" });
+    triggerReRender((prev) => !prev);
+    setIsOpen(false);
+    const onClose = () => {
+      deleteLabelImage({ uuid: labelData.uuid, action: "delete" });
+      triggerReRender((prev) => !prev);
+      setIsOpen(false);
+    };
+
+    const undo = () => {
+      deleteLabelImage({
+        uuid: labelData.uuid,
+        image: image,
+        action: "restore",
+      });
+      triggerReRender((prev) => !prev);
+      setIsOpen(false);
+    };
+
+    openSnackFunction({
+      snackMessage: "Image deleted",
+      snackOnUndo: undo,
+      snackOnClose: onClose,
+      unloadWarn: true,
+    });
   };
 
   const containerClick = useCallback((e) => {
@@ -211,11 +242,7 @@ const LabelMenu = ({
                     color: "#3c4043",
                   }}
                   className="menu-btn not-draggable"
-                  onClick={() => {
-                    deleteLabelImage(labelData.uuid);
-                    triggerReRender((prev) => !prev);
-                    setIsOpen(false);
-                  }}
+                  onClick={handleRemoveImage}
                 >
                   Remove image
                 </div>

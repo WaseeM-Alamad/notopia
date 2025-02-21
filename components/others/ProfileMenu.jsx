@@ -7,9 +7,25 @@ import { Edit } from "../icons/EditIcon";
 const ProfileMenu = forwardRef(({ user, isOpen, menuPosition }, ref) => {
   const [isClient, setIsClient] = useState(false);
 
+
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "dark") {
+      document.documentElement.classList.add("dark-mode");
+    }
+  }, []);
+
+  const toggleDarkMode = () => {
+    document.documentElement.classList.toggle("dark-mode");
+    const newMode = document.documentElement.classList.contains("dark-mode")
+      ? "dark"
+      : "light";
+    localStorage.setItem("theme", newMode);
+  };
 
   if (!isClient) {
     return null;
@@ -55,19 +71,18 @@ const ProfileMenu = forwardRef(({ user, isOpen, menuPosition }, ref) => {
                     src={user?.image}
                     alt="pfp"
                   />
-                  <div className="img-edit-icon">
-                    {" "}
-                    <Edit width="11px" height="11px" />{" "}
-                  </div>
+                  <div className="img-edit-icon"/>
                 </div>
-                <span style={{ margin: "auto 0", color: "rgb(56, 56, 56)" }}>
+                <span className="username">
                   {user.name}
                 </span>
               </div>
             </div>
             <div className="menu-buttons">
               <div className="menu-btn">Account Settings</div>
-              <div className="menu-btn">Dark theme</div>
+              <div onClick={toggleDarkMode} className="menu-btn">
+                Dark theme
+              </div>
               <div className="menu-btn">Profile</div>
               <div onClick={() => signOut()} className="menu-btn">
                 Sign out

@@ -62,13 +62,6 @@ const Note = memo(
       height: 20,
     }));
 
-    const noteStyle = useMemo(
-      () => ({
-        backgroundColor: note.color,
-        border: "solid 1px transparent",
-      }),
-      [note.color]
-    );
 
     // const noteStyle = useMemo(
     //   () => ({
@@ -307,7 +300,7 @@ const Note = memo(
           </span>
           <div
             style={{
-              ...noteStyle,
+              border: "solid 0.5px transparent",
               paddingBottom:
                 note.images.length === 0 ||
                 note.labels.length !== 0 ||
@@ -317,12 +310,12 @@ const Note = memo(
                   : "0px  ",
               borderColor: selected
                 ? "#212121"
-                : note.color === "rgba(255, 255, 255, 1)"
+                : note.color === "Default"
                 ? "#e0e0e0"
                 : "transparent",
               outline: `solid 1px ${selected ? "#212121" : "transparent"} `,
             }}
-            className="note"
+            className={`note ${note.color}`}
             onClick={handleNoteClick}
             ref={noteRef}
           >

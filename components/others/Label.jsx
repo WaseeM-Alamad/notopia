@@ -14,6 +14,7 @@ const Label = ({
   dispatchNotes,
   index,
   calculateLayout,
+  openSnackFunction,
 }) => {
   const { updateLabel, labelLookUPRef } = useAppContext();
   const [mounted, setMounted] = useState(false);
@@ -24,6 +25,7 @@ const Label = ({
   const [charCount, setCharCount] = useState(0);
   const [height, setHeight] = useState(0);
   const [isImageLoading, setIsImageLoading] = useState(false);
+  const [labelExists, setLabelExists] = useState(false);
   const labelDate = getNoteFormattedDate(labelData.createdAt);
   const [selectedColor, setSelectedColor] = useState(labelData.color);
   const isRemoteImage =
@@ -99,6 +101,9 @@ const Label = ({
   };
 
   const handleTitleInput = (e) => {
+    if (labelExists) {
+      setLabelExists(false);
+    }
     const text = e.target.innerText;
     const length = text.length;
     setCharCount(() => {
@@ -126,6 +131,7 @@ const Label = ({
 
   const handleOnBlur = () => {
     setIsFocused(false);
+    setLabelExists(false);
     labelTitleRef.current.blur();
     moreRef.current.classList.remove("zero-opacity");
     dateRef.current.classList.remove("zero-opacity");
@@ -294,7 +300,20 @@ const Label = ({
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   e.preventDefault();
-                  labelTitleRef.current.blur();
+                  const oldLabel = originalTitleRef.current
+                    .toLowerCase()
+                    .trim();
+                  const newLabel = labelTitleRef.current.innerText
+                    .toLowerCase()
+                    .trim();
+                  if (
+                    labelLookUPRef.current.has(newLabel) &&
+                    newLabel !== oldLabel
+                  ) {
+                    setLabelExists(true);
+                  } else {
+                    labelTitleRef.current.blur();
+                  }
                 }
               }}
               onPaste={handlePaste}
@@ -359,7 +378,11 @@ const Label = ({
                       fontSize: "0.7rem",
                     }}
                   >
-                    {50 - charCount} Characters left
+                    {labelExists ? (
+                      <span> Label already exists </span>
+                    ) : (
+                      <span>{50 - charCount} Characters left</span>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -399,6 +422,7 @@ const Label = ({
         setCursorAtEnd={setCursorAtEnd}
         imageRef={imageRef}
         setIsImageLoading={setIsImageLoading}
+        openSnackFunction={openSnackFunction}
       />
     </>
   );

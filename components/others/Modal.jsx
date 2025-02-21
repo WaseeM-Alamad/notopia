@@ -341,7 +341,7 @@ const Modal = ({
   return createPortal(
     <>
       <div
-        className="modal"
+        className={`modal ${selectedColor}`}
         ref={modalRef}
         style={{
           display: display ? "flex" : "none",
@@ -352,7 +352,6 @@ const Modal = ({
             ? "translate(-50%, -30%) "
             : `scale(0.4, ${initialStyle?.height / modalHeightRef?.current})`,
           transformOrigin: "top left",
-          backgroundColor: selectedColor,
           border: "solid 1px",
           borderColor: note?.color === "#FFFFFF" ? "#e0e0e0" : "transparent",
         }}

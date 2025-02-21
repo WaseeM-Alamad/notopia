@@ -13,6 +13,11 @@ body {
   overflow-x: hidden !important;
 }
 
+.dark-mode body {
+  background-color: rgb(32, 33, 36);
+  color: rgb(232, 234, 237);
+}
+
 ::-webkit-scrollbar {
   width: 10px;
   overflow-x: scroll;
@@ -27,6 +32,181 @@ body {
   background: #c0c0c0;
 
   border-radius: 0.3em;
+}
+
+.Default {
+  background-color: rgba(255, 255, 255, 1);
+  fill: rgba(255, 255, 255, 1);
+}
+
+.dark-mode .Default {
+  background-color: rgb(32, 33, 36);
+  fill: rgb(32, 33, 36);
+}
+
+.Coral {
+  background-color: rgba(247, 155, 146, 1);
+  fill: rgba(247, 155, 146, 1);
+}
+
+.dark-mode .Coral {
+  background-color: rgb(165, 83, 73);
+  fill: rgb(165, 83, 73);
+}
+
+.Peach {
+  background-color: rgba(240, 146, 101, 1);
+  fill: rgba(240, 146, 101, 1);
+}
+
+.dark-mode .Peach {
+  background-color: rgb(165, 94, 61);
+  fill: rgb(165, 94, 61);
+}
+
+.Sand {
+  background-color: rgba(252, 243, 162, 1);
+  fill: rgba(252, 243, 162, 1);
+}
+
+.dark-mode .Sand {
+  background-color: rgb(165, 162, 77);
+  fill: rgb(165, 162, 77);
+}
+
+.Mint {
+  background-color: rgba(208, 245, 181, 1);
+  fill: rgba(208, 245, 181, 1);
+}
+
+.dark-mode .Mint {
+  background-color: rgb(130, 170, 102);
+  fill: rgb(130, 170, 102);
+}
+
+.Seafoam {
+  background-color: rgba(162, 224, 209, 1);
+  fill: rgba(162, 224, 209, 1);
+}
+
+.dark-mode .Seafoam {
+  background-color: rgb(106, 170, 154);
+  fill: rgb(106, 170, 154);
+}
+
+.Fog {
+  background-color: rgba(185, 217, 235, 1);
+  fill: rgba(185, 217, 235, 1);
+}
+
+.dark-mode .Fog {
+  background-color: rgb(102, 142, 165);
+  fill: rgb(102, 142, 165);
+}
+
+.Storm {
+  background-color: rgba(151, 196, 219, 1);
+  fill: rgba(151, 196, 219, 1);
+}
+
+.dark-mode .Storm {
+  background-color: rgb(85, 122, 141);
+  fill: rgb(85, 122, 141);
+}
+
+.Lavender {
+  background-color: rgba(205, 169, 219, 1);
+  fill: rgba(205, 169, 219, 1);
+}
+
+.dark-mode .Lavender {
+  background-color: rgb(125, 87, 139);
+  fill: rgb(125, 87, 139);
+}
+
+.Blossom {
+  background-color: rgba(255, 206, 194, 1);
+  fill: rgba(255, 206, 194, 1);
+}
+
+.dark-mode .Blossom {
+  background-color: rgb(184, 131, 118);
+  fill: rgb(184, 131, 118);
+}
+
+.Clay {
+  background-color: rgba(230, 216, 184, 1);
+  fill: rgba(230, 216, 184, 1);
+}
+
+.dark-mode .Clay {
+  background-color: rgb(128, 109, 65);
+  fill: rgb(128, 109, 65);
+}
+
+.Wisteria {
+  background-color: rgba(223, 223, 240, 1);
+  fill: rgba(223, 223, 240, 1);
+}
+
+.dark-mode .Wisteria {
+  background-color: rgb(112, 112, 153);
+  fill: rgb(112, 112, 153);
+}
+
+.checkmark-circle {
+  fill: #212121;
+}
+
+.dark-mode .checkmark-circle {
+  fill: #e4e4e4;
+}
+
+.default-color-icon {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M21.19 21.19l-3.06-3.06-1.43-1.43-8.3-8.3L7 7 2.81 2.81 1.39 4.22l4.25 4.25A8.056 8.056 0 0 0 4.01 13H4c0 4.42 3.58 8 8 8 1.74 0 3.35-.57 4.66-1.51l3.12 3.12 1.41-1.42zM12 19c-3.22 0-5.86-2.55-5.99-5.74l.01-.19c.04-1.14.42-2.25 1.06-3.18l8.16 8.16c-.95.6-2.05.95-3.24.95zm0-14.17l4.25 4.24a6.014 6.014 0 0 1 1.74 4.01l.01.17c-.02.56-.13 1.11-.3 1.62l1.53 1.53c.49-1.03.77-2.18.77-3.4h-.01a7.975 7.975 0 0 0-2.33-5.35L12 2 8.41 5.58 9.83 7 12 4.83z'%3E%3C/path%3E%3C/svg%3E");
+}
+
+.dark-mode .default-color-icon {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff' d='M21.19 21.19l-3.06-3.06-1.43-1.43-8.3-8.3L7 7 2.81 2.81 1.39 4.22l4.25 4.25A8.056 8.056 0 0 0 4.01 13H4c0 4.42 3.58 8 8 8 1.74 0 3.35-.57 4.66-1.51l3.12 3.12 1.41-1.42zM12 19c-3.22 0-5.86-2.55-5.99-5.74l.01-.19c.04-1.14.42-2.25 1.06-3.18l8.16 8.16c-.95.6-2.05.95-3.24.95zm0-14.17l4.25 4.24a6.014 6.014 0 0 1 1.74 4.01l.01.17c-.02.56-.13 1.11-.3 1.62l1.53 1.53c.49-1.03.77-2.18.77-3.4h-.01a7.975 7.975 0 0 0-2.33-5.35L12 2 8.41 5.58 9.83 7 12 4.83z'%3E%3C/path%3E%3C/svg%3E");
+}
+
+.menu-color-btn {
+  outline: solid 0.1rem transparent;
+  border: solid 0.03rem transparent;
+  height: 32px;
+  width: 32px;
+  background-size: 18px 18px;
+  background-repeat: no-repeat;
+  background-position: center;
+  border-radius: 50%;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+
+.hovered-color {
+  outline: solid 0.1rem #212121;
+  border: solid 0.03rem #212121;
+}
+
+.dark-mode .hovered-color {
+  outline: solid 0.1rem #ffffff;
+  border: solid 0.03rem #ffffff;
+}
+
+.menu-color-selected {
+  outline: solid 0.1rem #a142f4;
+  border: solid 0.03rem #a142f4;
+}
+
+.menu-color-default {
+  outline: solid 0.1rem #e0e0e0;
+  border: solid 0.03rem #e0e0e0;
+}
+
+.dark-mode .menu-color-default {
+  outline: solid 0.1rem #5f6368;
+  border: solid 0.03rem #5f6368;
 }
 
 .starting-div-header {
@@ -45,7 +225,7 @@ body {
 }
 
 .add-button-icon {
-  fill: #2b2b2b;
+  fill: #b91818;
   margin: 0 auto;
   z-index: 11;
   cursor: pointer;
@@ -232,11 +412,14 @@ img {
   overflow: hidden;
 }
 
+.dark-mode .menu {
+  background-color: #282a2c;
+}
+
 .menu-buttons {
   display: flex;
   flex-direction: column;
   /* color: rgb(128, 128, 128); */
-  color: white;
   box-sizing: border-box;
   position: relative;
   overflow: hidden;
@@ -255,9 +438,17 @@ img {
   transition: all 0.2s ease;
 }
 
+.dark-mode .menu-btn {
+  color: rgb(201, 201, 201);
+}
+
 .menu-btn:hover {
   background-color: rgb(238, 238, 238);
   /* color: #ffffff; */
+}
+
+.dark-mode .menu-btn:hover {
+  background-color: #303235;
 }
 
 .menu-upper-section {
@@ -266,6 +457,34 @@ img {
   justify-content: center;
   font-weight: 600;
   gap: 8px;
+}
+
+.username {
+  margin: auto 0;
+  color: rgb(56, 56, 56);
+}
+
+.dark-mode .username {
+  color: rgb(201, 201, 201);
+}
+
+.color-menu {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  height: fit-content;
+  width: fit-content;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background-color: white;
+  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.3),
+    0 2px 6px 2px rgba(60, 64, 67, 0.15);
+  gap: 0.4rem;
+  z-index: 999;
+}
+
+.dark-mode .color-menu {
+  background-color: #282a2c;
 }
 
 .dragging * {
@@ -570,6 +789,10 @@ img {
   cursor: pointer;
 }
 
+.dark-mode .label {
+  color: white;
+}
+
 .label:hover {
   -webkit-box-shadow: 2px 3px 4px 0px rgba(0, 0, 0, 0.1);
   -moz-box-shadow: 2px 3px 4px 0px rgba(0, 0, 0, 0.1);
@@ -577,7 +800,7 @@ img {
 }
 
 .label-more-icon {
-  top: 5px; 
+  top: 5px;
   right: 7px;
   position: absolute;
   opacity: 0;
@@ -646,4 +869,8 @@ img {
   background-position: center;
   width: 18px;
   height: 18px;
+}
+
+.dark-mode .edit-icon {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='20px' viewBox='0 -960 960 960' width='20px' fill='%23cecece'%3E%3Cpath d='M216-216h51l375-375-51-51-375 375v51Zm-72 72v-153l498-498q11-11 23.84-16 12.83-5 27-5 14.16 0 27.16 5t24 16l51 51q11 11 16 24t5 26.54q0 14.45-5.02 27.54T795-642L297-144H144Zm600-549-51-51 51 51Zm-127.95 76.95L591-642l51 51-25.95-25.05Z'/%3E%3C/svg%3E");
 }

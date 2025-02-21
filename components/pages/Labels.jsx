@@ -8,7 +8,7 @@ import { v4 as uuid } from "uuid";
 const COLUMN_WIDTH = 240;
 const GUTTER = 15;
 
-const Labels = memo(({ setTooltipAnchor, dispatchNotes }) => {
+const Labels = memo(({ setTooltipAnchor, dispatchNotes, openSnackFunction }) => {
   const { createLabel, labelsRef } = useAppContext();
   const [reRender, triggerReRender] = useState(false);
   const [isLayoutReady, setIsLayoutReady] = useState(false);
@@ -154,6 +154,7 @@ const Labels = memo(({ setTooltipAnchor, dispatchNotes }) => {
                 labelData={labelData}
                 triggerReRender={triggerReRender}
                 calculateLayout={calculateLayout}
+                openSnackFunction={openSnackFunction}
               />
             );
           })}

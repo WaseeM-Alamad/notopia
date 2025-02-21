@@ -17,6 +17,7 @@
   max-height: 90vh;
   z-index: 101;
   border-radius: 0.7rem;
+  box-shadow: 0 4px 16px rgba(0,0,0,.2);
   /* box-sizing: border-box; */
   /* will-change: auto; */
   transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1),

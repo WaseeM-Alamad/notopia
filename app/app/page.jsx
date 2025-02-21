@@ -515,6 +515,7 @@ const page = () => {
         <Labels
           setTooltipAnchor={setTooltipAnchor}
           dispatchNotes={dispatchNotes}
+          openSnackFunction={openSnackFunction}
         />
       );
     else if (currentPage?.includes("archive"))

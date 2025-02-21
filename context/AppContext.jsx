@@ -57,8 +57,8 @@ export function AppProvider({ children }) {
   };
 
   const updateLabel = async (uuid, updatedLabel, oldLabel) => {
-    labelLookUPRef.current.delete(oldLabel);
-    labelLookUPRef.current.set(updatedLabel, true);
+    labelLookUPRef.current.delete(oldLabel.toLowerCase().trim());
+    labelLookUPRef.current.set(updatedLabel.toLowerCase().trim(), true);
     const newLabel = { ...labelsRef.current.get(uuid), label: updatedLabel };
     const labels = new Map(labelsRef.current).set(uuid, newLabel);
     labelsRef.current = labels;
@@ -104,13 +104,26 @@ export function AppProvider({ children }) {
     }
   };
 
-  const deleteLabelImage = async (uuid) => {
-    const newLabel = { ...labelsRef.current.get(uuid), image: null };
-    const labels = new Map(labelsRef.current).set(uuid, newLabel);
-    labelsRef.current = labels;
-    window.dispatchEvent(new Event("loadingStart"));
-    await updateLabelAction({ type: "delete_image", uuid: uuid });
-    window.dispatchEvent(new Event("loadingEnd"));
+  const deleteLabelImage = async (data) => {
+    if (data.action === "delete") {
+      const newLabel = { ...labelsRef.current.get(data.uuid), image: null };
+      const labels = new Map(labelsRef.current).set(data.uuid, newLabel);
+      labelsRef.current = labels;
+      window.dispatchEvent(new Event("loadingStart"));
+      await updateLabelAction({ type: "delete_image", uuid: data.uuid });
+      window.dispatchEvent(new Event("loadingEnd"));
+    } else if (data.action === "remove") {
+      const newLabel = { ...labelsRef.current.get(data.uuid), image: null };
+      const labels = new Map(labelsRef.current).set(data.uuid, newLabel);
+      labelsRef.current = labels;
+    } else if (data.action === "restore") {
+      const newLabel = {
+        ...labelsRef.current.get(data.uuid),
+        image: data.image,
+      };
+      const labels = new Map(labelsRef.current).set(data.uuid, newLabel);
+      labelsRef.current = labels;
+    }
   };
 
   const handleLabelNoteCount = async (uuid, type = "increment") => {
