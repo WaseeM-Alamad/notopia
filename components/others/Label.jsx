@@ -23,6 +23,7 @@ const Label = ({
   const [isFocused, setIsFocused] = useState(false);
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
   const [charCount, setCharCount] = useState(0);
+  const [selected, setSelected] = useState(false);
   const [height, setHeight] = useState(0);
   const [isImageLoading, setIsImageLoading] = useState(false);
   const [labelExists, setLabelExists] = useState(false);
@@ -194,23 +195,18 @@ const Label = ({
         }}
       >
         <motion.div
-          className="label"
+          className={`label ${labelData.color} ${
+            selected
+              ? "element-selected"
+              : labelData.color === "Default"
+              ? "default-border"
+              : "transparent-border"
+          }`}
           initial={{ y: 11, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{
             y: { type: "spring", stiffness: 700, damping: 50, mass: 1 },
             opacity: { duration: 0.2 },
-          }}
-          style={{
-            border: "solid",
-            backgroundColor: changeOpacity(labelData.color, 0.5),
-            border: "solid 1px transparent",
-            borderColor:
-              labelData.color === "rgba(255, 255, 255, 1)"
-                ? "#e0e0e0"
-                : "transparent",
-            transition:
-              "background-color 0.3s ease-in-out, border-color 0.3s ease-in-out, box-shadow 0.2s ease ",
           }}
         >
           <div
@@ -227,7 +223,7 @@ const Label = ({
               opacity: (isOpen || colorMenuOpen) && "1",
             }}
           >
-            <MoreVert size="18" style={{ rotate: "90deg" }} />
+            <MoreVert size="16" style={{ rotate: "90deg" }} />
           </Button>
           {labelData.image && (
             <div style={{ position: "relative" }}>
@@ -371,10 +367,9 @@ const Label = ({
                       },
                       opacity: { duration: 0.2 },
                     }}
+                    className="label-bottom-message"
                     style={{
                       position: "absolute",
-                      // bottom: "1.2rem",
-                      color: "#5E5E5E",
                       fontSize: "0.7rem",
                     }}
                   >

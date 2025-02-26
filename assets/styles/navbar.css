@@ -8,7 +8,6 @@ nav {
   height: 4rem;
   background-color: white;
   z-index: 100;
-  transition: all 0.3s ease, margin-left 0s, padding-left 0s;
 }
 
 .dark-mode nav {

@@ -25,8 +25,6 @@ const NoteSchema = new Schema(
     labels: [
       {
         type: String,
-        required: true,
-        unique: [true, "UUID must be unique"],
       },
     ],
     isPinned: {

@@ -8,6 +8,7 @@
   border-radius: 0.7rem;
   box-sizing: border-box;
   font-size: 1rem;
+  border: solid 1px transparent;
   box-sizing: border-box;
   font-weight: 400;
   user-select: none;
@@ -155,7 +156,7 @@
 }
 
 .dark-mode .empty-note::before {
-  color: rgb(206, 206, 206)
+  color: rgb(172, 172, 172);
 }
 
 .delete-modal-button {
@@ -163,12 +164,21 @@
   padding: 0.5rem 1.5rem;
   border-radius: 0.3rem;
   background-color: rgba(0, 0, 0, 0);
+  color: rgb(60, 64, 67);
   cursor: pointer;
   user-select: none;
   font-weight: 500;
   transition: all 0.2s ease;
 }
 
+.dark-mode .delete-modal-button {
+  color: rgb(232, 234, 237);
+}
+
 .delete-modal-button:hover {
   background-color: rgba(0, 0, 0, 0.07);
+}
+
+.dark-mode .delete-modal-button:hover {
+  background-color: #303235;
 }

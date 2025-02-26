@@ -31,6 +31,7 @@ const DeleteModal = ({ setIsOpen, handleDelete, message }) => {
       }}
     >
       <motion.div
+        className="delete-modal"
         initial={{ transform: "translate(-50%, -45%) scale(0.95)", opacity: 0 }}
         animate={{ transform: "translate(-50%, -45%) scale(1)", opacity: 1 }}
         exit={{ transform: "translate(-50%, -45%) scale(0.95)", opacity: 0 }}
@@ -38,25 +39,12 @@ const DeleteModal = ({ setIsOpen, handleDelete, message }) => {
           transform: { type: "spring", stiffness: 1000, damping: 50, mass: 1 },
           opacity: { duration: 0.1 },
         }}
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          position: "fixed",
-          top: "45%",
-          left: "50%",
-          // transform: "translate(-50%, -45%)",
-          backgroundColor: "white",
-          borderRadius: "0.7rem",
-          padding: "1.4rem 1rem 0.7rem 1.2rem",
-          width: "400px",
-        }}
       >
         <span
           style={{
             paddingBottom: "2rem",
-            color: "rgb(60,64,67)",
             userSelect: "none",
-            fontSize: "0.9rem"
+            fontSize: "0.9rem",
           }}
         >
           {message}

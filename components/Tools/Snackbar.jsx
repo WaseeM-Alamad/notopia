@@ -87,18 +87,7 @@ const Snackbar = ({
           y: { type: "spring", stiffness: 1000, damping: 50, mass: 1 },
           opacity: { type: "spring", stiffness: 1000, damping: 50, mass: 1 },
         }}
-        style={{
-          position: "fixed",
-          bottom: 35,
-          left: 40,
-          borderRadius: "0.6rem",
-          backgroundColor: "#1f1f27",
-          color: "white",
-          padding: "0.925rem 0.925rem 0.925rem 1.25rem",
-          alignItems: "center",
-          zIndex: "2000",
-          width: "25.875rem",
-        }}
+        className="snackbar"
       >
         <div style={{ cursor: "default" }}>{snackbarState.message}</div>
         <div style={{ marginLeft: "auto", display: "flex", gap: "0.5rem" }}>

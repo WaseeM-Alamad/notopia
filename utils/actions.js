@@ -253,6 +253,73 @@ export const DeleteNoteAction = async (noteUUID) => {
   }
 };
 
+export const emptyTrashAction = async () => {
+  if (!session) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_SUPABASE_SERVICE_ROLE_KEY
+  );
+  try {
+    await connectDB();
+
+    const deletedNotes = await Note.find({ isTrash: true });
+    let deletedUUIDs = [];
+    let deletedIDs = [];
+    let deletedLabels = [];
+    let deletedImages = [];
+
+    deletedNotes.map((note) => {
+      deletedIDs.push(note._id);
+      deletedUUIDs.push(note.uuid);
+      deletedLabels.push(...note.labels);
+      note.images.map((imageData) => {
+        const filePath = `${userID}/${note.uuid}/${imageData.uuid}`;
+        deletedImages.push(filePath);
+      });
+    });
+
+    const labelCountsMap = deletedLabels.reduce((acc, label) => {
+      acc[label] = acc[label] ? acc[label] + 1 : 1;
+      return acc;
+    }, {});
+
+    const bulkOperations = [
+      {
+        updateOne: {
+          filter: { _id: userID },
+          update: {
+            $pull: {
+              notesOrder: { $in: deletedUUIDs },
+              notes: { $in: deletedIDs },
+            },
+          },
+        },
+      },
+      ...Object.entries(labelCountsMap).map(([label, count]) => ({
+        updateOne: {
+          filter: { "labels.uuid": label },
+          update: { $inc: { "labels.$.noteCount": -count } },
+        },
+      })),
+    ];
+
+    await Note.deleteMany({ isTrash: true });
+    await User.bulkWrite(bulkOperations);
+
+    if (deletedImages.length !== 0) {
+      const bucketName = "notopia";
+      await supabase.storage.from(bucketName).remove(deletedImages);
+    }
+
+    return { success: true, message: "Trash emptied successfully" };
+  } catch (error) {
+    console.log("Error deleting notes.", error);
+    return { success: false, message: "Error deleting notes" };
+  }
+};
+
 export const updateOrderAction = async (data) => {
   if (!session) {
     return new Response("Unauthorized", { status: 401 });

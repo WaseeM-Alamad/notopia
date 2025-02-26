@@ -6,6 +6,7 @@ import { Edit } from "../icons/EditIcon";
 
 const ProfileMenu = forwardRef(({ user, isOpen, menuPosition }, ref) => {
   const [isClient, setIsClient] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
 
   useEffect(() => {
@@ -16,6 +17,7 @@ const ProfileMenu = forwardRef(({ user, isOpen, menuPosition }, ref) => {
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme === "dark") {
       document.documentElement.classList.add("dark-mode");
+      setIsDarkMode(true);
     }
   }, []);
 
@@ -25,6 +27,7 @@ const ProfileMenu = forwardRef(({ user, isOpen, menuPosition }, ref) => {
       ? "dark"
       : "light";
     localStorage.setItem("theme", newMode);
+    setIsDarkMode(newMode === "dark")
   };
 
   if (!isClient) {
@@ -81,7 +84,7 @@ const ProfileMenu = forwardRef(({ user, isOpen, menuPosition }, ref) => {
             <div className="menu-buttons">
               <div className="menu-btn">Account Settings</div>
               <div onClick={toggleDarkMode} className="menu-btn">
-                Dark theme
+                {`${!isDarkMode? "Dark theme": "Light theme"}`}
               </div>
               <div className="menu-btn">Profile</div>
               <div onClick={() => signOut()} className="menu-btn">

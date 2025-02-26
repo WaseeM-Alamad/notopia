@@ -62,18 +62,7 @@ const Note = memo(
       height: 20,
     }));
 
-
-    // const noteStyle = useMemo(
-    //   () => ({
-    //     // backgroundColor: note.color,
     //     background: "url(https://www.gstatic.com/keep/backgrounds/recipe_light_0609.svg)",
-    //     backgroundPositionX: "right",
-    //     backgroundPositionY: "bottom",
-    //     backgroundSize: "cover",
-    //     border: "solid 1px transparent",
-    //   }),
-    //   [note.color]
-    // );
 
     const handleNoteClick = (e) => {
       if (!selectedNotes.current) {
@@ -300,7 +289,6 @@ const Note = memo(
           </span>
           <div
             style={{
-              border: "solid 0.5px transparent",
               paddingBottom:
                 note.images.length === 0 ||
                 note.labels.length !== 0 ||
@@ -308,14 +296,14 @@ const Note = memo(
                 note.content
                   ? "45px"
                   : "0px  ",
-              borderColor: selected
-                ? "#212121"
-                : note.color === "Default"
-                ? "#e0e0e0"
-                : "transparent",
-              outline: `solid 1px ${selected ? "#212121" : "transparent"} `,
             }}
-            className={`note ${note.color}`}
+            className={`note ${note.color} ${
+              selected
+                ? "element-selected"
+                : note.color === "Default"
+                ? "default-border"
+                : "transparent-border"
+            }`}
             onClick={handleNoteClick}
             ref={noteRef}
           >
@@ -337,17 +325,10 @@ const Note = memo(
                     onClick={handlePinClick}
                   >
                     <PinIcon
-                      pinColor={note.color}
-                      color={
-                        note.isPinned || localArchivedPin
-                          ? "#212121"
-                          : "transparent"
-                      }
-                      opacity={0.8}
+                      isPinned={note.isPinned}
                       rotation={
                         note.isPinned || localArchivedPin ? "-45deg" : "-5deg"
                       }
-                      images={note.images.length !== 0}
                     />
                   </Button>
                 )}
@@ -410,6 +391,10 @@ const Note = memo(
                             <label className="note-label">{label}</label>
                             <div
                               onClick={() => removeLabel(labelUUID)}
+                              onMouseEnter={(e) =>
+                                handleMouseEnter(e, "Remove label")
+                              }
+                              onMouseLeave={handleMouseLeave}
                               className="remove-label"
                             />
                           </div>

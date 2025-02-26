@@ -128,21 +128,16 @@ const NoteModalTools = ({
     <div style={{ opacity: "1" }} className={`modal-bottom  `}>
       {/* <p className="date">{FormattedDate}</p> */}
       <div className="modal-bottom-icons">
-        <Button>
-          <Bell size={15} opacity={0.8} />
-        </Button>
-        <Button>
-          <PersonAdd size={15} opacity={0.8} />
-        </Button>
+        <Button className="reminder-icon btn-hover" />
+        <Button className="person-add-icon btn-hover" />
         <Button
-          className="close"
+          className="close archive-icon btn-hover"
           onClick={handleModalArchive}
           onMouseEnter={(e) => handleMouseEnter(e, "Archive")}
           onMouseLeave={handleMouseLeave}
-        >
-          <ArchiveIcon size={15} opacity={0.8} color="#212121" />
-        </Button>
+        />
         <Button
+          className="image-icon btn-hover"
           onClick={() => {
             closeToolTip();
             inputRef.current.click();
@@ -156,15 +151,13 @@ const NoteModalTools = ({
             type="file"
             onChange={handleOnChange}
           />
-          <ImageIcon size={15} opacity={0.8} />
         </Button>
         <Button
+          className="color-icon btn-hover"
           onClick={toggleColorMenu}
           onMouseEnter={(e) => handleMouseEnter(e, "Background options")}
           onMouseLeave={handleMouseLeave}
-        >
-          <ColorIcon size={15} opacity={0.8} />
-        </Button>
+        />
         <AnimatePresence>
           {colorMenuOpen && (
             <ColorSelectMenu
@@ -177,25 +170,19 @@ const NoteModalTools = ({
             />
           )}
         </AnimatePresence>
-        <Button>
-          <MoreVert size={15} opacity={0.8} />
-        </Button>
-          <>
-            <Button>
-              <BackIcon size={15} opacity={0.8} />
-            </Button>
-            <Button>
-              <BackIcon size={15} opacity={0.8} direction="1" />
-            </Button>
-          </>
+        <Button className="more-icon btn-hover" />
+        <>
+          <Button>
+            <BackIcon />
+          </Button>
+          <Button>
+            <BackIcon direction="1" />
+          </Button>
+        </>
       </div>
-        <button
-          ref={closeRef}
-          onClick={handleClose}
-          className="close close-btn"
-        >
-          Close
-        </button>
+      <button ref={closeRef} onClick={handleClose} className="close close-btn">
+        Close
+      </button>
     </div>
   );
 };

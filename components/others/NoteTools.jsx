@@ -222,18 +222,17 @@ const NoteTools = ({
             <>
               {" "}
               <Button
+                className="reminder-icon btn-hover"
                 onMouseEnter={(e) => handleMouseEnter(e, "Remind me")}
                 onMouseLeave={handleMouseLeave}
-              >
-                <Bell size={15} opacity={0.9} />
-              </Button>
+              />
               <Button
+                className="person-add-icon btn-hover"
                 onMouseEnter={(e) => handleMouseEnter(e, "Collaborator")}
                 onMouseLeave={handleMouseLeave}
-              >
-                <PersonAdd size={15} opacity={0.9} />
-              </Button>
+              />
               <Button
+                className="archive-icon btn-hover"
                 onClick={() => {
                   closeToolTip();
                   handleArchive();
@@ -245,10 +244,9 @@ const NoteTools = ({
                   )
                 }
                 onMouseLeave={handleMouseLeave}
-              >
-                <ArchiveIcon size={15} opacity={0.9} color="#212121" />
-              </Button>
+              />
               <Button
+                className="image-icon btn-hover"
                 onClick={() => {
                   setTooltipAnchor((prev) => ({
                     ...prev,
@@ -265,15 +263,13 @@ const NoteTools = ({
                   type="file"
                   onChange={handleOnChange}
                 />
-                <ImageIcon size={15} opacity={0.9} />
               </Button>
               <Button
+                className="color-icon btn-hover"
                 onClick={toggleMenu}
                 onMouseEnter={(e) => handleMouseEnter(e, "Background options")}
                 onMouseLeave={handleMouseLeave}
-              >
-                <ColorIcon size={15} opacity={0.9} />
-              </Button>
+              />
               <AnimatePresence>
                 {colorMenuOpen && (
                   <ColorSelectMenu
@@ -287,12 +283,11 @@ const NoteTools = ({
                 )}
               </AnimatePresence>
               <Button
+                className="more-icon btn-hover"
                 onClick={handleMoreClick}
                 onMouseEnter={(e) => handleMouseEnter(e, "More")}
                 onMouseLeave={handleMouseLeave}
-              >
-                <MoreVert size={15} opacity={0.9} />
-              </Button>
+              />
               <AnimatePresence>
                 {moreMenuOpen && (
                   <MoreMenu

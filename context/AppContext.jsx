@@ -13,7 +13,7 @@ import { createClient } from "@supabase/supabase-js";
 const AppContext = createContext();
 
 export function AppProvider({ children }) {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const userID = session?.user?.id;
 
   const labelsRef = useRef(new Map());
@@ -31,8 +31,10 @@ export function AppProvider({ children }) {
   };
 
   useEffect(() => {
+    if (status === "authenticated") {
     getLabels();
-  }, []);
+    }
+  }, [status]);
 
   const createLabel = async (uuid, label, createdAt) => {
     labelLookUPRef.current.set(label.toLowerCase(), true);
@@ -40,7 +42,7 @@ export function AppProvider({ children }) {
       uuid: uuid,
       label: label,
       createdAt: createdAt,
-      color: "rgba(255, 255, 255, 1)",
+      color: "Default",
     });
     window.dispatchEvent(new Event("loadingStart"));
     await createLabelAction(uuid, label);

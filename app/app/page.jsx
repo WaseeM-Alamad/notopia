@@ -382,7 +382,7 @@ const page = () => {
     const handleHashChange = () => {
       const currentHash = window.location.hash;
 
-      // console.log("HASH CHANGE")
+      console.log("HASH CHANGE");
       setTooltipAnchor(null);
       setTimeout(() => {
         setCurrentPage(currentHash);
@@ -449,42 +449,9 @@ const page = () => {
     });
   }, []);
 
-  const Header = memo(() => (
-    <div className="starting-div-header">
-      {/* <div className="page-header">
-        {window?.location?.hash?.includes("archive") ? (
-          <ArchiveIcon size={22} color="#212121" />
-        ) : window?.location?.hash?.includes("trash") ? (
-          <TrashIcon size={22} color="#212121" />
-        ) : (
-          <NotesIcon size={34} />
-        )}
-        <h1 className="page-header-title">
-          {window?.location?.hash?.includes("archive") ? (
-            <span>Archive</span>
-          ) : window?.location?.hash?.includes("trash") ? (
-            <span>Trash</span>
-          ) : (
-            <span>All Notes</span>
-          )}
-        </h1>
-        <div
-        // animate={{ width: "100%" }}
-        // className="page-header-divider"
-        />
-        <div className="divider-tools-container">
-          <div className="divider-tool">
-            <SortByIcon />
-            <span className="divider-tool-text">Sort by</span>
-          </div>
-          <div className="divider-tool">
-            <LabelIcon />
-            <span className="divider-tool-text">Labels</span>
-          </div>
-        </div>
-      </div> */}
-    </div>
-  ));
+  if (currentPage === null) return;
+
+  const Header = memo(() => <div className="starting-div-header" />);
 
   Header.displayName = "Header";
 

@@ -11,6 +11,7 @@ import Note from "../others/Note";
 import AddNoteModal from "../others/AddNoteModal";
 import { motion } from "framer-motion";
 import TopMenuHome from "../others/topMenu/TopMenuHome";
+import { emptyTrashAction } from "@/utils/actions";
 
 const COLUMN_WIDTH = 240;
 const GUTTER = 15;
@@ -168,6 +169,17 @@ const Home = memo(
     useEffect(() => {
       selectedRef.current = selectedNotesIDs.length > 0;
     }, [selectedNotesIDs]);
+
+    useEffect(()=> {
+
+      const handler = async ()=> {
+        await emptyTrashAction();
+      }
+
+      window.addEventListener("emptyTrash", handler);
+
+      return ()=> window.removeEventListener("emptyTrash", handler)
+    }, [])
 
     return (
       <>

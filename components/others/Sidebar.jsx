@@ -8,113 +8,67 @@ import TrashIcon from "../icons/TrashIcon";
 import { motion } from "framer-motion";
 import AddButton from "../icons/AddButton";
 import LabelIcon from "../icons/LabelIcon";
+import FolderIcon from "../icons/FolderIcon";
+import { emptyTrashAction } from "@/utils/actions";
 
 const Sidebar = memo(() => {
-  const [mounted, setMounted] = useState(false);
   const addButtonRef = useRef(null);
-  const homeRef = useRef(null);
-  const labelsRef = useRef(null);
-  const remindersRef = useRef(null);
-  const archiveRef = useRef(null);
-  const trashRef = useRef(null);
-
+  const [currentHash, setCurrentHash] = useState(null);
   const ICON_SIZE = 22;
 
-  const springTransition = {
-    type: "spring",
-    stiffness: 1400,
-    damping: 70,
-    mass: 1,
-    duration: !mounted && 0,
-  };
-
   const navItems = [
-    { hash: "home", Icon: HomeIcon, ref: homeRef },
-    { hash: "labels", Icon: LabelIcon, ref: labelsRef },
-    { hash: "reminders", Icon: BellIcon, ref: remindersRef },
-    { hash: "archive", Icon: SideArchiveIcon, ref: archiveRef },
-    { hash: "trash", Icon: TrashIcon, ref: trashRef },
+    { hash: "home", Icon: HomeIcon },
+    { hash: "labels", Icon: FolderIcon },
+    { hash: "reminders", Icon: BellIcon },
+    { hash: "archive", Icon: SideArchiveIcon },
+    { hash: "trash", Icon: TrashIcon },
   ];
-
-  const [highlightPosition, setHighlightPosition] = useState({
-    top: 0,
-    left: 0,
-  });
 
   const currentYear = useMemo(() => new Date().getFullYear(), []);
 
-  const handleAddNote = () => {
+  useEffect(() => {
+    setCurrentHash(window.location.hash.replace("#", "")); // Set hash after hydration
+  }, []);
+
+  const handleAddNote = async() => {
     addButtonRef.current.classList.remove("animate");
     void addButtonRef.current.offsetWidth;
     addButtonRef.current.classList.add("animate");
-    const currentHash = window.location.hash;
-    if (currentHash.includes("labels")) {
+    const hash = window.location.hash;
+    if (hash.includes("labels")) {
       window.dispatchEvent(new Event("addLabel"));
       return;
-    } else if (currentHash === "" || currentHash.includes("home")) {
+    } else if (hash === "" || hash.includes("home")) {
       window.dispatchEvent(new Event("openModal"));
+      return;
+    } else if (hash.includes("trash")) {
+      window.dispatchEvent(new Event("emptyTrash"));
       return;
     }
   };
 
-  const handleIconClick = (hash, ref) => {
+  const handleIconClick = (hash) => {
     window.dispatchEvent(new Event("sectionChange"));
     window.location.hash = hash;
-    const rect = ref.current?.getBoundingClientRect();
-    const containerRect = ref.current?.parentElement?.getBoundingClientRect(); // parent is .sidebar-icons-container
-    // console.log(
-    //   "top: ",
-    //   rect.top - containerRect.top,
-    //   "left: ",
-    //   rect.left - containerRect.left
-    // );
-    if (rect && containerRect) {
-      setHighlightPosition({
-        top: rect.top - containerRect.top, // Adjust top relative to the container
-        left: rect.left - containerRect.left, // Adjust left relative to the container
-      });
-    }
   };
 
   useEffect(() => {
-    setHighlightPosition(() => {
-      const hash = window.location.hash.replace("#", "");
-      switch (hash) {
-        case "home":
-          return { top: 0, left: 0, section: "home" };
-        case "labels":
-          return { top: 62.390625, left: 0, section: "labels" };
-        case "reminders":
-          return { top: 124.78125, left: 0, section: "reminders" };
-        case "archive":
-          return { top: 187.171875, left: 0, section: "archive" };
-        case "trash":
-          return { top: 249.5625, left: 0, section: "trash" };
-        default:
-          return { top: 0, left: 0, section: "home" };
-      }
-    });
-
     const handleHashChange = () => {
-      const currentHash = window.location.hash.replace("#", "");
-      setHighlightPosition((prev) => ({
-        ...prev,
-        section: currentHash,
-      }));
+      const hash = window.location.hash.replace("#", "");
+      setCurrentHash(hash);
     };
 
     handleHashChange();
 
     window.addEventListener("hashchange", handleHashChange);
-    setTimeout(() => {
-      setMounted(true);
-    }, 10);
 
     // Cleanup event listener on component unmount
     return () => {
       window.removeEventListener("hashchange", handleHashChange);
     };
   }, []);
+
+  if (currentHash === null) return;
 
   return (
     <>
@@ -132,26 +86,16 @@ const Sidebar = memo(() => {
             <AddButton />
           </div>
           <div className="sidebar-icons-container">
-            <motion.div
-              initial={{ y: highlightPosition.top, x: highlightPosition.left }}
-              animate={{ y: highlightPosition.top, x: highlightPosition.left }}
-              transition={{ y: springTransition }}
-              className="selected-highlight"
-            />
-            {navItems.map(({ hash, Icon, ref }) => (
+            {navItems.map(({ hash, Icon }) => (
               <button
-                ref={ref}
-                className={`link-btn `}
+                className={`link-btn ${
+                  currentHash.includes(hash) && "link-btn-selected"
+                } `}
                 key={hash}
-                onClick={() => handleIconClick(hash, ref)}
+                onClick={() => handleIconClick(hash)}
                 style={{ zIndex: "9" }}
               >
-                <Icon
-                  size={ICON_SIZE}
-                  color={
-                    highlightPosition.section === hash ? "#212121" : "#535353"
-                  }
-                />
+                <Icon selected={currentHash.includes(hash)} size={ICON_SIZE} />
               </button>
             ))}
           </div>

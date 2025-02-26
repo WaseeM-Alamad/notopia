@@ -347,7 +347,7 @@ const Modal = ({
           display: display ? "flex" : "none",
           top: !trigger ? initialStyle?.top : "30%",
           left: !trigger ? initialStyle?.left : "50%",
-          width: "600px",
+          width: "100%",
           transform: trigger
             ? "translate(-50%, -30%) "
             : `scale(0.4, ${initialStyle?.height / modalHeightRef?.current})`,

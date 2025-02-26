@@ -87,7 +87,7 @@ const NoteWrapper = memo(
           marginBottom: `${GUTTER}px`,
           transition: `transform ${
             mounted ? "0.22s" : "0"
-          } cubic-bezier(0.2, 0, 0, 1), opacity 0s`,
+          } cubic-bezier(0.5, 0.2, 0.3, 1), opacity 0s`,
         }}
       >
         {/* <button onClick={()=> console.log(note)}>note</button> */}

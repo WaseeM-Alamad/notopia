@@ -19,7 +19,7 @@ const Navbar = ({ user }) => {
   const [UpToDatetrigger, setUpToDateTrigger] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const isDarkMode = document.documentElement.classList.contains("dark-mode");
+  // const isDarkMode = document.documentElement.classList.contains("dark-mode");
   const [menuPosition, setMenuPosition] = useState({
     top: 100,
     left: 600,
@@ -145,6 +145,8 @@ const Navbar = ({ user }) => {
     setIsMenuOpen((prev) => !prev);
   };
 
+  if (window.location.hash === null) return;
+
   return (
     <>
       <ProfileMenu
@@ -196,7 +198,7 @@ const Navbar = ({ user }) => {
                   >
                     <Box>
                       <CircularProgress
-                        sx={{ color: isDarkMode ? "#ADADAD" : "#7A7A7A" }}
+                        sx={{ color: document.documentElement.classList.contains("dark-mode") ? "#ADADAD" : "#7A7A7A" }}
                         size={20}
                         thickness={5}
                       />

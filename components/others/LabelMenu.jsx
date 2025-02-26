@@ -190,12 +190,7 @@ const LabelMenu = ({
           >
             <div className="menu-buttons not-draggable">
               <div
-                style={{
-                  padding: "0.6rem 2rem 0.6rem 1rem",
-                  fontSize: "0.9rem",
-                  color: "#3c4043",
-                }}
-                className="menu-btn not-draggable"
+                className="menu-btn label-menu-btn not-draggable"
                 onClick={() => {
                   setDeleteModalOpen(true);
                   setIsOpen(false);
@@ -204,12 +199,7 @@ const LabelMenu = ({
                 Delete label
               </div>
               <div
-                style={{
-                  padding: "0.6rem 2rem 0.6rem 1rem",
-                  fontSize: "0.9rem",
-                  color: "#3c4043",
-                }}
-                className="menu-btn not-draggable"
+                className="menu-btn label-menu-btn not-draggable"
                 onClick={() => {
                   setColorMenuOpen(true);
                   setIsOpen(false);
@@ -218,12 +208,7 @@ const LabelMenu = ({
                 Change color
               </div>
               <div
-                style={{
-                  padding: "0.6rem 2rem 0.6rem 1rem",
-                  fontSize: "0.9rem",
-                  color: "#3c4043",
-                }}
-                className="menu-btn not-draggable"
+                className="menu-btn label-menu-btn not-draggable"
                 onClick={() => inputRef.current.click()}
               >
                 {labelData.image ? "Change image" : "Add image"}
@@ -236,24 +221,14 @@ const LabelMenu = ({
               </div>
               {labelData.image && (
                 <div
-                  style={{
-                    padding: "0.6rem 2rem 0.6rem 1rem",
-                    fontSize: "0.9rem",
-                    color: "#3c4043",
-                  }}
-                  className="menu-btn not-draggable"
+                  className="menu-btn label-menu-btn not-draggable"
                   onClick={handleRemoveImage}
                 >
                   Remove image
                 </div>
               )}
               <div
-                style={{
-                  padding: "0.6rem 2rem 0.6rem 1rem",
-                  fontSize: "0.9rem",
-                  color: "#3c4043",
-                }}
-                className="menu-btn not-draggable"
+                className="menu-btn label-menu-btn not-draggable"
                 onClick={handleRenameLabel}
               >
                 Rename label
