@@ -24,7 +24,7 @@ const AddNoteModal = ({
     uuid: "",
     title: "",
     content: "",
-    color: "#FFFFFF",
+    color: "Default",
     labels: [],
     isPinned: false,
     isArchived: false,
@@ -44,7 +44,7 @@ const AddNoteModal = ({
   const [isClient, setIsClient] = useState(false);
   const [trigger, setTrigger] = useState(false);
   const [trigger2, setTrigger2] = useState(false);
-  const [selectedColor, setSelectedColor] = useState("#FFFFFF");
+  const [selectedColor, setSelectedColor] = useState("Default");
   const [isEmptyNote, setIsEmptyNote] = useState(true);
   const modalRef = useRef(null);
   const titleRef = useRef(null);
@@ -63,7 +63,7 @@ const AddNoteModal = ({
       setIsEmptyNote(true);
       if (titleRef.current) titleRef.current.textContent = "";
       if (contentRef.current) contentRef.current.textContent = "";
-      setSelectedColor("#FFFFFF");
+      setSelectedColor("Default");
       setModalPosition({
         top: "30%",
         left: "50%",
@@ -77,7 +77,7 @@ const AddNoteModal = ({
         uuid: "",
         title: "",
         content: "",
-        color: "#FFFFFF",
+        color: "Default",
         labels: [],
         isPinned: false,
         isArchived: false,
@@ -152,16 +152,12 @@ const AddNoteModal = ({
         closeRef?.current === e.target) &&
       trigger2
     ) {
-      console.log("handle close");
       setTrigger2(false);
-      setTimeout(() => {
-        lastAddedNoteRef.current.style.opacity = "0"  
-      }, 10);
       
+
       setTimeout(() => {
-        window.dispatchEvent(new Event("closeModal"));
         setTrigger(false);
-        lastAddedNoteRef.current.style.opacity = "1"
+        lastAddedNoteRef.current.style.opacity = "1";
       }, 260);
 
       if (
@@ -170,6 +166,9 @@ const AddNoteModal = ({
         (note.images && note.images.length > 0)
       ) {
         try {
+          setTimeout(() => {
+            lastAddedNoteRef.current.style.opacity = "0";
+          }, 10);
           setIsEmptyNote(false);
           setTimeout(() => {
             if (!note.isArchived) {
@@ -389,11 +388,10 @@ const AddNoteModal = ({
           minHeight: trigger2 ? "185px" : "",
           transform: modalPosition.transform,
           borderRadius: modalPosition.borderRadius,
-          backgroundColor: selectedColor,
           transition:
             "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), width 0.1s ease, height 0.1s ease, background-color 0.25s linear, border-radius 0.1s, margin-left 0s, max-height 0s",
         }}
-        className="modal"
+        className={`modal ${note.color} `}
       >
         <div
           style={{ overflowY: trigger2 ? "auto" : "hidden" }}

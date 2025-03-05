@@ -26,27 +26,15 @@ const NoteWrapper = memo(
     index,
     dispatchNotes,
     setTooltipAnchor,
+    noteActions,
     openSnackFunction,
   }) => {
     const [mounted, setMounted] = useState(false);
-    const [mountOpacity, setMountOpacity] = useState(false);
-    const [modalTrigger, setModalTrigger] = useState(false);
 
     useEffect(() => {
       setTimeout(() => {
         setMounted(true);
       }, 100);
-    }, []);
-
-    useEffect(() => {
-      const handler = () => {
-        setMountOpacity(true);
-      };
-
-      window.addEventListener("closeModal", handler);
-      return () => {
-        window.removeEventListener("closeModal", handler);
-      };
     }, []);
 
     return (
@@ -57,7 +45,7 @@ const NoteWrapper = memo(
           width: `${COLUMN_WIDTH}px`,
           marginBottom: `${GUTTER}px`,
           transition: `transform ${mounted ? "0.2s" : "0"} ease, opacity 0s`,
-          opacity: isVisible ? (mountOpacity ? 1 : 0) : 0,
+          opacity: isVisible ? 1 : 0,
           pointerEvents: isVisible ? "auto" : "none",
         }}
       >
@@ -65,12 +53,11 @@ const NoteWrapper = memo(
           note={note}
           dispatchNotes={dispatchNotes}
           index={index}
+          noteActions={noteActions}
           setTooltipAnchor={setTooltipAnchor}
           setSelectedNotesIDs={setSelectedNotesIDs}
           selectedNotes={selectedNotes}
           openSnackFunction={openSnackFunction}
-          modalTrigger={modalTrigger}
-          setModalTrigger={setModalTrigger}
         />
         {/* <p>{index}</p> */}
       </motion.div>
@@ -81,7 +68,14 @@ const NoteWrapper = memo(
 NoteWrapper.displayName = "NoteWrapper";
 
 const Archive = memo(
-  ({ notes, order, dispatchNotes, setTooltipAnchor, openSnackFunction }) => {
+  ({
+    notes,
+    order,
+    dispatchNotes,
+    setTooltipAnchor,
+    openSnackFunction,
+    noteActions,
+  }) => {
     const [isLayoutReady, setIsLayoutReady] = useState(false);
     const [selectedNotesIDs, setSelectedNotesIDs] = useState([]);
     const hasDispatched = useRef(false);
@@ -219,6 +213,7 @@ const Archive = memo(
                     dispatchNotes={dispatchNotes}
                     isVisible={isLayoutReady}
                     index={index}
+                    noteActions={noteActions}
                     setTooltipAnchor={setTooltipAnchor}
                     setSelectedNotesIDs={setSelectedNotesIDs}
                     openSnackFunction={openSnackFunction}

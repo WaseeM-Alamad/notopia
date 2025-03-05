@@ -1,17 +1,12 @@
 "use client";
-import React, {
-  memo,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import "@/assets/styles/home.css";
 import Note from "../others/Note";
 import AddNoteModal from "../others/AddNoteModal";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import TopMenuHome from "../others/topMenu/TopMenuHome";
 import { emptyTrashAction } from "@/utils/actions";
+import DeleteModal from "../others/DeleteModal";
 
 const COLUMN_WIDTH = 240;
 const GUTTER = 15;
@@ -19,6 +14,7 @@ const GUTTER = 15;
 const NoteWrapper = memo(
   ({
     note,
+    noteActions,
     isVisible,
     ref,
     setSelectedNotesIDs,
@@ -43,13 +39,14 @@ const NoteWrapper = memo(
         style={{
           width: `${COLUMN_WIDTH}px`,
           marginBottom: `${GUTTER}px`,
-          transition: `transform ${mounted ? "0.2s" : "0"} ease, opacity 0s`,
+          transition: `transform ${mounted ? "0.2s" : "0"} ease`,
           opacity: isVisible ? 1 : 0,
           pointerEvents: isVisible ? "auto" : "none",
         }}
       >
         <Note
           note={note}
+          noteActions={noteActions}
           setSelectedNotesIDs={setSelectedNotesIDs}
           selectedNotes={selectedNotes}
           dispatchNotes={dispatchNotes}
@@ -66,11 +63,17 @@ const NoteWrapper = memo(
 NoteWrapper.displayName = "NoteWrapper";
 
 const Home = memo(
-  ({ notes, order, dispatchNotes, setTooltipAnchor, openSnackFunction }) => {
+  ({
+    notes,
+    order,
+    dispatchNotes,
+    setTooltipAnchor,
+    openSnackFunction,
+    noteActions,
+  }) => {
     const [isLayoutReady, setIsLayoutReady] = useState(false);
     const [selectedNotesIDs, setSelectedNotesIDs] = useState([]);
-    const hasDispatched = useRef(false);
-    const isFirstRender = useRef(true);
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const selectedRef = useRef(false);
     const containerRef = useRef(null);
     const resizeTimeoutRef = useRef(null);
@@ -144,6 +147,28 @@ const Home = memo(
       }, 100);
     }, [calculateLayout]);
 
+    const handleEmptyTrash = async () => {
+      const notes = containerRef.current.querySelectorAll(".grid-item");
+      for (const note of notes) {
+        if (!note) return;
+        note.classList.add("fade-out");
+      }
+
+      const lastNote = notes[notes.length - 1];
+
+      const handleTransitionEnd = async (e) => {
+        if (e.propertyName === "opacity") {
+          dispatchNotes({ type: "EMPTY_TRASH" });
+          lastNote.removeEventListener("transitionend", handleTransitionEnd);
+        }
+      };
+
+      lastNote.addEventListener("transitionend", handleTransitionEnd);
+      window.dispatchEvent(new Event("loadingStart"));
+      await emptyTrashAction();
+      window.dispatchEvent(new Event("loadingEnd"));
+    };
+
     useEffect(() => {
       calculateLayout();
       window.addEventListener("resize", debouncedCalculateLayout);
@@ -170,16 +195,15 @@ const Home = memo(
       selectedRef.current = selectedNotesIDs.length > 0;
     }, [selectedNotesIDs]);
 
-    useEffect(()=> {
-
-      const handler = async ()=> {
-        await emptyTrashAction();
-      }
+    useEffect(() => {
+      const handler = async () => {
+        setDeleteModalOpen(true);
+      };
 
       window.addEventListener("emptyTrash", handler);
 
-      return ()=> window.removeEventListener("emptyTrash", handler)
-    }, [])
+      return () => window.removeEventListener("emptyTrash", handler);
+    }, []);
 
     return (
       <>
@@ -188,6 +212,9 @@ const Home = memo(
           setSelectedNotesIDs={setSelectedNotesIDs}
         />
         <div className="starting-div">
+          <div className="trash-section-header">
+            Notes in Trash are deleted after 7 days.
+          </div>
           <div
             ref={containerRef}
             className="notes-container"
@@ -202,6 +229,7 @@ const Home = memo(
                   <NoteWrapper
                     key={note.uuid}
                     note={note}
+                    noteActions={noteActions}
                     isVisible={isLayoutReady}
                     dispatchNotes={dispatchNotes}
                     index={index}
@@ -221,6 +249,17 @@ const Home = memo(
           lastAddedNoteRef={null}
           openSnackFunction={openSnackFunction}
         />
+        <AnimatePresence>
+          {deleteModalOpen && (
+            <DeleteModal
+              setIsOpen={setDeleteModalOpen}
+              handleDelete={handleEmptyTrash}
+              message={
+                "Empty trash? All notes in Trash will be permanently deleted."
+              }
+            />
+          )}
+        </AnimatePresence>
       </>
     );
   }

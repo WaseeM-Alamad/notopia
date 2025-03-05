@@ -55,7 +55,6 @@ const NoteImagesLayout = ({
 
   const calculateLayout = () => {
     if (!containerRef.current || loadedImages.length === 0) return;
-    console.log("hi")
     const containerWidth = containerRef.current.offsetWidth;
     const maxRows = 4;
     const maxImagesPerRow = 3;

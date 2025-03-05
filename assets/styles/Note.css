@@ -82,6 +82,7 @@
 .note-wrapper {
   border-radius: 0.7rem;
   background-color: transparent;
+  position: relative;
   transition: box-shadow 0.2s ease;
 }
 

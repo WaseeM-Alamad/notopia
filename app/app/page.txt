@@ -315,7 +315,6 @@ function notesReducer(state, action) {
 const page = () => {
   const { batchDecNoteCount } = useAppContext();
   const [currentPage, setCurrentPage] = useState();
-  const [current, setCurrent] = useState("Home");
   const [tooltipAnchor, setTooltipAnchor] = useState(null);
   const [notesState, dispatchNotes] = useReducer(notesReducer, initialStates);
   const [modalStyle, setModalStyle] = useState(null);
@@ -373,6 +372,16 @@ const page = () => {
   };
 
   useEffect(() => {
+    const handler = () => {
+      openSnackFunction({ close: true });
+    };
+
+    window.addEventListener("sectionChange", handler);
+
+    return () => window.removeEventListener("sectionChange", handler);
+  }, []);
+
+  useEffect(() => {
     const handleBeforeUnload = (event) => {
       if (unloadWarn) {
         const message =
@@ -388,6 +397,26 @@ const page = () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [unloadWarn]);
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const currentHash = window.location.hash;
+
+      setTooltipAnchor(null);
+      setTimeout(() => {
+        setCurrentPage(currentHash);
+      }, 0);
+    };
+
+    handleHashChange();
+
+    window.addEventListener("hashchange", handleHashChange);
+
+    // Cleanup event listener on component unmount
+    return () => {
+      window.removeEventListener("hashchange", handleHashChange);
+    };
+  }, []);
 
   const getNotes = async () => {
     window.dispatchEvent(new Event("loadingStart"));
@@ -654,47 +683,69 @@ const page = () => {
     }
   }, []);
 
-  useEffect(() => {
-    const handleHashChange = () => {
-      setTooltipAnchor(null);
-    };
-
-    handleHashChange();
-
-    window.addEventListener("hashchange", handleHashChange);
-
-    return () => {
-      window.removeEventListener("hashchange", handleHashChange);
-    };
-  }, []);
-
-  useEffect(() => {
-    const handler = (e) => {
-      requestAnimationFrame(() => {
-        const selected = e.detail.hash;
-        const captialized = (hash) =>
-          hash.charAt(0).toUpperCase() + hash.slice(1);
-        console.log(captialized(selected));
-        setCurrent(captialized(selected));
-        openSnackFunction({ close: true });
-      });
-    };
-
-    window.addEventListener("sectionChange", handler);
-    return () => window.removeEventListener("sectionChange", handler);
-  }, []);
-
-  const components = {
-    Home,
-    Labels,
-    Reminders,
-    Archive,
-    Trash,
-  };
-
-  const Page = components[current];
-
   if (currentPage === null) return;
+
+  const Header = memo(() => <div className="starting-div-header" />);
+
+  Header.displayName = "Header";
+
+  const renderPage = () => { 
+    if (currentPage?.includes("trash"))
+      return (
+        <Trash
+          dispatchNotes={dispatchNotes}
+          notes={notesState.notes}
+          noteActions={noteActions}
+          order={notesState.order}
+          setTooltipAnchor={setTooltipAnchor}
+          openSnackFunction={openSnackFunction}
+        />
+      );
+    else if (currentPage?.includes("home"))
+      return (
+        <Home
+          dispatchNotes={dispatchNotes}
+          notes={notesState.notes}
+          order={notesState.order}
+          setTooltipAnchor={setTooltipAnchor}
+          openSnackFunction={openSnackFunction}
+          noteActions={noteActions}
+          handleNoteClick={handleNoteClick}
+        />
+      );
+    else if (currentPage?.includes("labels"))
+      return (
+        <Labels
+          setTooltipAnchor={setTooltipAnchor}
+          dispatchNotes={dispatchNotes}
+          openSnackFunction={openSnackFunction}
+        />
+      );
+    else if (currentPage?.includes("archive"))
+      return (
+        <Archive
+          dispatchNotes={dispatchNotes}
+          notes={notesState.notes}
+          order={notesState.order}
+          setTooltipAnchor={setTooltipAnchor}
+          openSnackFunction={openSnackFunction}
+          noteActions={noteActions}
+        />
+      );
+    else if (currentPage?.includes("reminders")) return <Reminders />;
+    else
+      return (
+        <Home
+          dispatchNotes={dispatchNotes}
+          notes={notesState.notes}
+          order={notesState.order}
+          setTooltipAnchor={setTooltipAnchor}
+          openSnackFunction={openSnackFunction}
+          handleNoteClick={handleNoteClick}
+          noteActions={noteActions}
+        />
+      );
+  };
 
   return (
     <>
@@ -755,16 +806,8 @@ const page = () => {
         setUnloadWarn={setUnloadWarn}
         onClose={onCloseFunction}
       />
-      <div className="starting-div-header" />
-      <Page
-        dispatchNotes={dispatchNotes}
-        notes={notesState.notes}
-        order={notesState.order}
-        setTooltipAnchor={setTooltipAnchor}
-        openSnackFunction={openSnackFunction}
-        handleNoteClick={handleNoteClick}
-        noteActions={noteActions}
-      />
+      <Header />
+      {renderPage()}
     </>
   );
 };

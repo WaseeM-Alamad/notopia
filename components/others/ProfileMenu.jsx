@@ -4,7 +4,7 @@ import React, { forwardRef, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Edit } from "../icons/EditIcon";
 
-const ProfileMenu = forwardRef(({ user, isOpen, menuPosition }, ref) => {
+const ProfileMenu = forwardRef(({ user, isOpen, setIsOpen, menuPosition }, ref) => {
   const [isClient, setIsClient] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
@@ -28,6 +28,7 @@ const ProfileMenu = forwardRef(({ user, isOpen, menuPosition }, ref) => {
       : "light";
     localStorage.setItem("theme", newMode);
     setIsDarkMode(newMode === "dark")
+    setIsOpen(false);
   };
 
   if (!isClient) {
@@ -86,7 +87,7 @@ const ProfileMenu = forwardRef(({ user, isOpen, menuPosition }, ref) => {
               <div onClick={toggleDarkMode} className="menu-btn">
                 {`${!isDarkMode? "Dark theme": "Light theme"}`}
               </div>
-              <div className="menu-btn">Profile</div>
+              <div className="menu-btn">Keyboard shortcuts</div>
               <div onClick={() => signOut()} className="menu-btn">
                 Sign out
               </div>

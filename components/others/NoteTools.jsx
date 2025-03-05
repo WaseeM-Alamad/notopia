@@ -27,6 +27,7 @@ const NoteTools = ({
   images,
   index,
   note,
+  noteRef,
   dispatchNotes,
   colorMenuOpen,
   setColorMenuOpen,
@@ -35,7 +36,7 @@ const NoteTools = ({
   setIsLoadingImages,
   userID,
   setLocalIsArchived,
-  handleArchive,
+  noteActions,
   setLocalIsTrash,
   setTriggerUndoCopy,
   setIsNoteDeleted,
@@ -51,18 +52,14 @@ const NoteTools = ({
   const inputRef = useRef(null);
 
   const handleColorClick = useCallback(async (newColor) => {
-    if (newColor === selectedColor) return;
-    setSelectedColor(newColor);
-
-    dispatchNotes({
+    closeToolTip();
+    noteActions({
       type: "UPDATE_COLOR",
+      selectedColor: selectedColor,
+      setSelectedColor: setSelectedColor,
       note: note,
       newColor: newColor,
     });
-
-    window.dispatchEvent(new Event("loadingStart"));
-    await NoteUpdateAction("color", newColor, note.uuid);
-    window.dispatchEvent(new Event("loadingEnd"));
   });
 
   const toggleMenu = (e) => {
@@ -144,46 +141,20 @@ const NoteTools = ({
   }, []);
 
   const handleDeleteNote = async () => {
-    batchDecNoteCount(note.labels);
-    setIsNoteDeleted(true);
-    window.dispatchEvent(new Event("loadingStart"));
-    await DeleteNoteAction(note.uuid);
-    window.dispatchEvent(new Event("loadingEnd"));
+    noteActions({
+      type: "DELETE_NOTE",
+      note: note,
+      noteRef: noteRef,
+    });
   };
 
-  const handleRestoreNote = async () => {
-    setLocalIsTrash(true);
-
-    const initialIndex = index;
-    const undoTrash = async () => {
-      dispatchNotes({
-        type: "UNDO_TRASH",
-        note: note,
-        initialIndex: initialIndex,
-      });
-      setTimeout(() => {
-        window.dispatchEvent(new Event("closeModal"));
-      }, 0);
-
-      window.dispatchEvent(new Event("loadingStart"));
-      await undoAction({
-        type: "UNDO_TRASH",
-        noteUUID: note.uuid,
-        value: true,
-        initialIndex: initialIndex,
-        endIndex: 0,
-      });
-      window.dispatchEvent(new Event("loadingEnd"));
-    };
-
-    openSnackFunction({
-      snackMessage: "Note restored",
-      snackOnUndo: undoTrash,
+  const handleRestoreNote = () => {
+    noteActions({
+      type: "TRASH_NOTE",
+      note: note,
+      noteRef: noteRef,
+      index: index,
     });
-
-    window.dispatchEvent(new Event("loadingStart"));
-    await NoteUpdateAction("isTrash", false, note.uuid);
-    window.dispatchEvent(new Event("loadingEnd"));
   };
 
   const handleMouseEnter = (e, text) => {
@@ -235,7 +206,12 @@ const NoteTools = ({
                 className="archive-icon btn-hover"
                 onClick={() => {
                   closeToolTip();
-                  handleArchive();
+                  noteActions({
+                    type: "archive",
+                    index: index,
+                    note: note,
+                    noteRef: noteRef,
+                  });
                 }}
                 onMouseEnter={(e) =>
                   handleMouseEnter(
@@ -299,6 +275,8 @@ const NoteTools = ({
                     setLocalIsTrash={setLocalIsTrash}
                     setTriggerUndoCopy={setTriggerUndoCopy}
                     openSnackFunction={openSnackFunction}
+                    noteActions={noteActions}
+                    noteRef={noteRef}
                     index={index}
                     uuid={note.uuid}
                     note={note}

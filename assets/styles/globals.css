@@ -32,10 +32,26 @@ svg {
   outline: solid 1px #d6d6d6;
 }
 
+.dark-mode ::-webkit-scrollbar-track {
+  outline: solid 1px #383838;
+}
+
 ::-webkit-scrollbar-thumb {
   background: #c0c0c0;
 
   border-radius: 0.3em;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #939393;
+}
+
+.dark-mode ::-webkit-scrollbar-thumb {
+  background: #636466;
+}
+
+.dark-mode ::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a2;
 }
 
 .Default {
@@ -236,12 +252,11 @@ svg {
 }
 
 .starting-div-header {
-  height: 6.625rem;
+  height: 4rem;
 }
 
 .starting-div {
-  padding-left: 6.5rem;
-  padding-right: 0.2rem;
+  padding-left: 5.275rem;
 }
 
 .add-button-icon-circle {
@@ -618,10 +633,9 @@ img {
 .labels-container {
   display: flex;
   flex-wrap: wrap;
-  /* padding-top: 3.7rem; */
+  padding-top: 2rem;
   padding-left: 0.1rem;
   padding-right: 1rem;
-  /* padding-bottom: 6.25rem; */
   min-height: 550px;
 }
 
@@ -950,6 +964,14 @@ img {
   fill: #212121;
 }
 
+.add-btn-stroke {
+  stroke: #e6e6e6;
+}
+
+.dark-mode .add-btn-stroke {
+  stroke: #212121;
+}
+
 .add-circle-fill {
   fill: #212121;
 }
@@ -959,11 +981,11 @@ img {
 }
 
 .side-icon-fill {
-  fill: #535353;
+  fill: #212121;
 }
 
 .dark-mode .side-icon-fill {
-  fill: #adadad;
+  fill: #e8eaed;
 }
 
 .selected-icon-fill {
@@ -1110,6 +1132,24 @@ img {
   width: 100%;
 }
 
+.dark-mode .snackbar {
+  background-color: #3e3e4e;
+}
+
 .btn-hover:hover {
   opacity: 0.85;
+}
+
+.fade-out {
+  opacity: 0 !important;
+  transition: opacity 0.18s ease !important;
+  pointer-events: none !important;
+}
+
+.trash-section-header {
+  display: flex;
+  justify-content: center;
+  padding-top: 1.5rem;
+  user-select: none;
+  font-style: italic;
 }

@@ -10,6 +10,7 @@ aside {
   width: 5.275rem;
   background-color: #ffffff;
   z-index: 99;
+  transition: box-shadow 0.2s ease;
 }
 
 .dark-mode aside {
@@ -23,6 +24,18 @@ aside {
   gap: 1rem;
   width: 100%;
   margin-top: 4rem;
+}
+
+.copyright-text {
+  margin-top: auto;
+  margin-bottom: 160px;
+  user-select: none;
+  font-size: 0.7rem;
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.dark-mode .copyright-text {
+  color: rgba(255, 255, 255, 0.4);
 }
 
 .link-btn {

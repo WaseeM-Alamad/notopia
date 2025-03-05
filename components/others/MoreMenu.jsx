@@ -16,12 +16,12 @@ const MoreMenu = ({
   isOpen,
   setIsOpen,
   anchorEl,
-  setLocalIsTrash,
-  uuid,
+  noteRef,
   note,
   index,
   dispatchNotes,
   openSnackFunction,
+  noteActions,
 }) => {
   const { createLabel, handleLabelNoteCount, labelsRef } = useAppContext();
   const [isClient, setIsClient] = useState();
@@ -69,36 +69,13 @@ const MoreMenu = ({
   }, [labelsOpen, note.labels]);
 
   const handleDelete = async (e) => {
-    const initialIndex = index;
-    const undoTrash = async () => {
-      dispatchNotes({
-        type: "UNDO_TRASH",
-        note: note,
-        initialIndex: initialIndex,
-      });
-      setTimeout(() => {
-        window.dispatchEvent(new Event("closeModal"));
-      }, 0);
-    };
-
-    const onClose = async () => {
-      window.dispatchEvent(new Event("loadingStart"));
-      await NoteUpdateAction("isTrash", true, uuid);
-      window.dispatchEvent(new Event("loadingEnd"));
-    };
-
-    if (!note.isTrash) {
-      openSnackFunction({
-        snackMessage: `${
-          note.isPinned ? "Note unpinned and trashed" : "Note trashed"
-        }`,
-        snackOnUndo: undoTrash,
-        snackOnClose: onClose,
-        unloadWarn: true,
-      });
-    }
-    setLocalIsTrash(true);
-    setIsOpen(false);
+    noteActions({
+      type: "RESTORE_NOTE",
+      note: note,
+      index: index,
+      noteRef: noteRef, 
+      setIsOpen: setIsOpen,
+    })
   };
 
   const handleMakeCopy = (e) => {

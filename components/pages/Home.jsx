@@ -1,16 +1,27 @@
 "use client";
-import React, { memo, useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import "@/assets/styles/home.css";
 import Note from "../others/Note";
 import AddNoteModal from "../others/AddNoteModal";
 import { useAppContext } from "@/context/AppContext";
 import { AnimatePresence, motion } from "framer-motion";
 import TopMenuHome from "../others/topMenu/TopMenuHome";
-import { NoteUpdateAction, updateOrderAction } from "@/utils/actions";
+import {
+  NoteUpdateAction,
+  undoAction,
+  updateOrderAction,
+} from "@/utils/actions";
 
 const COLUMN_WIDTH = 240;
 const GUTTER = 15;
-const GAP_BETWEEN_SECTIONS = 120;
+const GAP_BETWEEN_SECTIONS = 88;
 
 const NoteWrapper = memo(
   ({
@@ -18,6 +29,7 @@ const NoteWrapper = memo(
     openSnackFunction,
     note,
     isVisible,
+    noteActions,
     lastAddedNoteRef,
     calculateLayout,
     isLoadingImages,
@@ -91,28 +103,20 @@ const NoteWrapper = memo(
         }}
       >
         {/* <button onClick={()=> console.log(note)}>note</button> */}
-        <motion.div
-          initial={{ y: 11, opacity: 0 }}
-          animate={{ y: 0, opacity: isVisible ? 1 : 0 }}
-          exit={{ y: 11, opacity: 0 }}
-          transition={{
-            y: { type: "spring", stiffness: 1000, damping: 50, mass: 1 },
-            opacity: { duration: 0.2 },
-          }}
-        >
-          <Note
-            dispatchNotes={dispatchNotes}
-            note={note}
-            setTooltipAnchor={setTooltipAnchor}
-            calculateLayout={calculateLayout}
-            isLoadingImagesAddNote={isLoadingImages}
-            setSelectedNotesIDs={setSelectedNotesIDs}
-            selectedNotes={selectedNotes}
-            isDragging={isDragging}
-            openSnackFunction={openSnackFunction}
-            index={index}
-          />
-        </motion.div>
+
+        <Note
+          dispatchNotes={dispatchNotes}
+          note={note}
+          noteActions={noteActions}
+          setTooltipAnchor={setTooltipAnchor}
+          calculateLayout={calculateLayout}
+          isLoadingImagesAddNote={isLoadingImages}
+          setSelectedNotesIDs={setSelectedNotesIDs}
+          selectedNotes={selectedNotes}
+          isDragging={isDragging}
+          openSnackFunction={openSnackFunction}
+          index={index}
+        />
         {/* <p>{index}</p> */}
       </motion.div>
     );
@@ -129,9 +133,10 @@ const Home = memo(
     setTooltipAnchor,
     openSnackFunction,
     handleNoteClick,
+    noteActions,
   }) => {
     const [isLayoutReady, setIsLayoutReady] = useState(false);
-    const [othersHeight, setOthersHeight] = useState(null);
+    const [pinnedHeight, setPinnedHeight] = useState(null);
     const [isLoadingImages, setIsLoadingImages] = useState([]);
     const [selectedNotesIDs, setSelectedNotesIDs] = useState([]);
     const selectedRef = useRef(false);
@@ -212,7 +217,10 @@ const Home = memo(
         // Gap between pinned and unpinned sections
         const gapBetweenSections =
           pinnedItems.length > 0 ? GAP_BETWEEN_SECTIONS : 0;
-        const pinnedHeight = positionItems(pinnedItems);
+        const pinnedHeight = positionItems(
+          pinnedItems,
+          pinnedItems.length > 0 && 30
+        );
         const unpinnedHeight = positionItems(
           unpinnedItems,
           pinnedHeight + gapBetweenSections
@@ -220,7 +228,7 @@ const Home = memo(
 
         setUnpinnedNotesNumber(unpinnedItems.length);
         setPinnedNotesNumber(pinnedItems.length);
-        setOthersHeight(pinnedHeight);
+        setPinnedHeight(pinnedHeight);
         container.style.height = `${unpinnedHeight}px`;
 
         // Set layout ready after initial calculation
@@ -432,16 +440,6 @@ const Home = memo(
       handleDragOver(overNoteIsPinned, overIndex);
     };
 
-    useEffect(() => {
-      const handler = () => {
-        calculateLayout();
-      };
-
-      window.addEventListener("calculateLayout", handler);
-
-      return () => window.removeEventListener("calculateLayout", handler);
-    }, []);
-
     return (
       <>
         <TopMenuHome
@@ -486,7 +484,7 @@ const Home = memo(
             <p
               className="section-label"
               style={{
-                top: "33px",
+                // top: "33px",
                 opacity: pinnedNotesNumber > 0 ? "1" : "0",
               }}
             >
@@ -495,7 +493,7 @@ const Home = memo(
             <p
               className="section-label"
               style={{
-                top: `${othersHeight + 150}px`,
+                top: `${pinnedHeight + GAP_BETWEEN_SECTIONS + 2}px`,
                 opacity:
                   pinnedNotesNumber > 0 && unpinnedNotesNumber > 0 ? "1" : "0",
               }}
@@ -512,6 +510,7 @@ const Home = memo(
                     key={note.uuid}
                     note={note}
                     index={index}
+                    noteActions={noteActions}
                     dispatchNotes={dispatchNotes}
                     isDragging={isDragging}
                     setTooltipAnchor={setTooltipAnchor}

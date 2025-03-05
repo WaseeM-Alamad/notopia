@@ -154,6 +154,7 @@ const Navbar = ({ user }) => {
         ref={menuRef}
         menuPosition={menuPosition}
         isOpen={isMenuOpen}
+        setIsOpen={setIsMenuOpen}
       />
       {pathName !== "/" && (
         <nav

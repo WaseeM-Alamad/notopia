@@ -25,6 +25,7 @@ import { useAppContext } from "@/context/AppContext";
 const Note = memo(
   ({
     note,
+    noteActions,
     dispatchNotes,
     calculateLayout,
     isLoadingImagesAddNote = [],
@@ -94,37 +95,12 @@ const Note = memo(
           window.dispatchEvent(new Event("loadingEnd"));
         }
       } else {
-        setLocalArchivedPin((prev) => !prev);
-        window.dispatchEvent(new Event("loadingStart"));
-        const initialIndex = index;
-
-        const undoPinArchived = async () => {
-          dispatchNotes({
-            type: "UNDO_PIN_ARCHIVED",
-            note: note,
-            initialIndex: initialIndex,
-          });
-
-          window.dispatchEvent(new Event("loadingStart"));
-          await undoAction({
-            type: "UNDO_PIN_ARCHIVED",
-            noteUUID: note.uuid,
-            initialIndex: initialIndex,
-            endIndex: 0,
-          });
-          window.dispatchEvent(new Event("loadingEnd"));
-        };
-
-        openSnackFunction({
-          snackMessage: "Note unarchived and pinned",
-          snackOnUndo: undoPinArchived,
+        noteActions({
+          type: "PIN_ARCHIVED_NOTE",
+          note: note,
+          noteRef: noteRef,
+          index: index,
         });
-
-        try {
-          await NoteUpdateAction("pinArchived", true, note.uuid);
-        } finally {
-          window.dispatchEvent(new Event("loadingEnd"));
-        }
       }
     };
 
@@ -177,42 +153,6 @@ const Note = memo(
       }));
     };
 
-    const handleArchive = useCallback(async () => {
-      const initialIndex = index;
-      setLocalIsArchived((prev) => !prev);
-      const undoArchive = async () => {
-        dispatchNotes({
-          type: "UNDO_ARCHIVE",
-          note: note,
-          initialIndex: initialIndex,
-        });
-        window.dispatchEvent(new Event("loadingStart"));
-        await undoAction({
-          type: "UNDO_ARCHIVE",
-          noteUUID: note.uuid,
-          value: note.isArchived,
-          pin: note.isPinned,
-          initialIndex: initialIndex,
-          endIndex: 0,
-        });
-        window.dispatchEvent(new Event("loadingEnd"));
-      };
-      openSnackFunction({
-        snackMessage: `${
-          note.isArchived
-            ? "Note unarchived"
-            : note.isPinned
-            ? "Note unpinned and archived"
-            : "Note Archived"
-        }`,
-        snackOnUndo: undoArchive,
-      });
-      const first = index === 0;
-      window.dispatchEvent(new Event("loadingStart"));
-      await NoteUpdateAction("isArchived", !note.isArchived, note.uuid, first);
-      window.dispatchEvent(new Event("loadingEnd"));
-    }, [index, note]);
-
     const removeLabel = async (labelUUID) => {
       dispatchNotes({
         type: "REMOVE_LABEL",
@@ -230,42 +170,9 @@ const Note = memo(
 
     return (
       <>
-        <motion.div
-          animate={{
-            opacity:
-              localIsArchived ||
-              localIsTrash ||
-              isNoteDeleted ||
-              localArchivedPin
-                ? 0
-                : 1,
-          }}
-          transition={{ duration: 0.2 }}
-          onAnimationComplete={() => {
-            if (localIsArchived) {
-              dispatchNotes({
-                type: "ARCHIVE_NOTE",
-                note: note,
-              });
-            } else if (localIsTrash) {
-              dispatchNotes({
-                type: "TRASH_NOTE",
-                note: note,
-              });
-            } else if (isNoteDeleted) {
-              dispatchNotes({
-                type: "DELETE_NOTE",
-                note: note,
-              });
-            } else if (localArchivedPin) {
-              dispatchNotes({
-                type: "PIN_ARCHIVED_NOTE",
-                note: note,
-              });
-            }
-          }}
+        <div
           className="note-wrapper"
-          style={{ position: "relative" }}
+          ref={noteRef}
         >
           <span
             style={{
@@ -305,7 +212,6 @@ const Note = memo(
                 : "transparent-border"
             }`}
             onClick={handleNoteClick}
-            ref={noteRef}
           >
             <div ref={noteStuffRef}>
               {note.images.length === 0 && <div className="corner" />}
@@ -419,18 +325,19 @@ const Note = memo(
               setMoreMenuOpen={setMoreMenuOpen}
               images={note.images.length !== 0}
               note={note}
+              noteRef={noteRef}
               dispatchNotes={dispatchNotes}
               setIsLoadingImages={setIsLoadingImages}
               userID={userID}
               openSnackFunction={openSnackFunction}
               setLocalIsArchived={setLocalIsArchived}
               setLocalIsTrash={setLocalIsTrash}
-              handleArchive={handleArchive}
+              noteActions={noteActions}
               setIsNoteDeleted={setIsNoteDeleted}
               index={index}
             />
           </div>
-        </motion.div>
+        </div>
       </>
     );
   }

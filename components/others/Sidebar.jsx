@@ -13,6 +13,7 @@ import { emptyTrashAction } from "@/utils/actions";
 
 const Sidebar = memo(() => {
   const addButtonRef = useRef(null);
+  const containerRef = useRef(null);
   const [currentHash, setCurrentHash] = useState(null);
   const ICON_SIZE = 22;
 
@@ -27,10 +28,11 @@ const Sidebar = memo(() => {
   const currentYear = useMemo(() => new Date().getFullYear(), []);
 
   useEffect(() => {
-    setCurrentHash(window.location.hash.replace("#", "")); // Set hash after hydration
+    const hash = window.location.hash.replace("#", "");
+    setCurrentHash(hash); // Set hash after hydration
   }, []);
 
-  const handleAddNote = async() => {
+  const handleAddNote = async () => {
     addButtonRef.current.classList.remove("animate");
     void addButtonRef.current.offsetWidth;
     addButtonRef.current.classList.add("animate");
@@ -48,14 +50,40 @@ const Sidebar = memo(() => {
   };
 
   const handleIconClick = (hash) => {
-    window.dispatchEvent(new Event("sectionChange"));
     window.location.hash = hash;
   };
 
   useEffect(() => {
     const handleHashChange = () => {
-      const hash = window.location.hash.replace("#", "");
-      setCurrentHash(hash);
+      requestAnimationFrame(() => {
+        const hash = window.location.hash.replace("#", "");
+        setCurrentHash(hash);
+
+        const container = containerRef.current;
+
+        Array.from(container.children).forEach((btn) => {
+          if (btn.id === hash) {
+            const prevItem = container.querySelector(".link-btn-selected");
+            if (prevItem) {
+              prevItem?.classList.remove("link-btn-selected");
+              prevItem.children[0].style.opacity = "0.75";
+            }
+            const event = new CustomEvent("sectionChange", {
+              detail: { hash },
+            });
+            window.dispatchEvent(event);
+            btn.classList.add("link-btn-selected");
+            btn.children[0].style.opacity = "1";
+          }
+        });
+
+        if (!container.querySelector(".link-btn-selected")) {
+          const item = container.querySelector("button[id=home]");
+
+          item.classList.add("link-btn-selected");
+          item.children[0].style.opacity = "1";
+        }
+      });
     };
 
     handleHashChange();
@@ -85,33 +113,21 @@ const Sidebar = memo(() => {
           >
             <AddButton />
           </div>
-          <div className="sidebar-icons-container">
+          <div ref={containerRef} className="sidebar-icons-container">
             {navItems.map(({ hash, Icon }) => (
               <button
-                className={`link-btn ${
-                  currentHash.includes(hash) && "link-btn-selected"
-                } `}
+                className={`link-btn`}
+                id={hash}
                 key={hash}
                 onClick={() => handleIconClick(hash)}
                 style={{ zIndex: "9" }}
               >
-                <Icon selected={currentHash.includes(hash)} size={ICON_SIZE} />
+                <Icon size={ICON_SIZE} />
               </button>
             ))}
           </div>
         </div>
-        <span
-          className="copyright-text"
-          style={{
-            marginTop: "auto",
-            marginBottom: "160px",
-            userSelect: "none",
-            fontSize: "0.7rem",
-            color: "rgba(0,0,0,0.3)",
-          }}
-        >
-          &copy; {currentYear}
-        </span>
+        <span className="copyright-text">&copy; {currentYear}</span>
       </aside>
     </>
   );
