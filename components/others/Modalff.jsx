@@ -49,6 +49,7 @@ const Modal = ({
   const archiveRef = useRef(false);
   const isFirstRenderRef = useRef(true);
   const imagesChangedRef = useRef(false);
+  const prevHash = useRef(null);
 
   useEffect(() => {
     if (isFirstRenderRef.current) {
@@ -56,7 +57,11 @@ const Modal = ({
       return;
     }
     if (isOpen) {
-      initialStyle.element.classList.add("opacity");
+      const hash = window.location.hash.replace("#", "");
+      prevHash.current = hash;
+
+      window.location.hash = `NOTE/${note.uuid}`;
+      if (initialStyle) initialStyle.element.classList.add("opacity");
       setSelectedColor(note?.color);
       setLocalImages(note?.images);
       titleTextRef.current = note?.title;
@@ -76,16 +81,18 @@ const Modal = ({
         setDisplay(true);
       }, 0);
     } else {
+      window.location.hash = prevHash.current || "home";
+      prevHash.current = null;
       modalHeightRef.current =
         modalRef?.current?.getBoundingClientRect()?.height;
       handleClose();
 
       setTimeout(() => {
         setModalStyle((prev) => {
-          const rect = prev.element.getBoundingClientRect();
+          const rect = prev?.element.getBoundingClientRect();
           return {
             ...prev,
-            height: rect.height,
+            height: rect?.height,
           };
         });
         setTrigger(false);
@@ -95,10 +102,10 @@ const Modal = ({
     const handler = (e) => {
       if (e.propertyName === "top" && !isOpen) {
         // console.log("finish");
-        initialStyle.element.classList.remove("opacity");
+        if (initialStyle) initialStyle.element.classList.remove("opacity");
 
         if (initialStyle?.element) {
-          initialStyle.element.style.opacity = "1";
+          if (initialStyle) initialStyle.element.style.opacity = "1";
         }
 
         if (archiveRef.current) {
@@ -125,7 +132,7 @@ const Modal = ({
 
         modalRef.current.removeEventListener("transitionend", handler);
       }
-    };  
+    };
 
     if (modalRef.current) {
       modalRef.current.addEventListener("transitionend", handler);

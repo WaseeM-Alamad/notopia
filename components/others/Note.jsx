@@ -170,10 +170,7 @@ const Note = memo(
 
     return (
       <>
-        <div
-          className="note-wrapper"
-          ref={noteRef}
-        >
+        <div className="note-wrapper" ref={noteRef}>
           <span
             style={{
               opacity: (selected || colorMenuOpen || moreMenuOpen) && "1",
@@ -259,17 +256,17 @@ const Note = memo(
 
               {note.images.length === 0 &&
                 note.labels.length === 0 &&
-                !note.title.trim() &&
-                !note.content.trim() && (
+                !note.title?.trim() &&
+                !note.content?.trim() && (
                   <div className="empty-note" aria-label="Empty note" />
                 )}
               <div ref={inputsRef}>
-                {note.title.trim() && (
+                {note.title?.trim() && (
                   <div ref={titleRef} className="title">
                     {note.title}
                   </div>
                 )}
-                {note.content.trim() && (
+                {note.content?.trim() && (
                   <div ref={contentRef} className="content">
                     {note.content}
                   </div>
@@ -292,7 +289,12 @@ const Note = memo(
                           <div
                             onClick={(e) => e.stopPropagation()}
                             key={labelUUID}
-                            className="label-wrapper"
+                            className={[
+                              "label-wrapper",
+                              !note.isTrash && "label-wrapper-h",
+                            ]
+                              .filter(Boolean)
+                              .join(" ")}
                           >
                             <label className="note-label">{label}</label>
                             <div

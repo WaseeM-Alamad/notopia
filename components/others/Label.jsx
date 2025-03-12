@@ -5,7 +5,8 @@ import { getNoteFormattedDate } from "@/utils/noteDateFormatter";
 import { AnimatePresence, motion } from "framer-motion";
 import LabelMenu from "./LabelMenu";
 import { useAppContext } from "@/context/AppContext";
-import NotesIcon from "../icons/NotesIcon";
+import DeleteModal from "./DeleteModal";
+import ColorSelectMenu from "./ColorSelectMenu";
 
 const Label = ({
   labelData,
@@ -15,8 +16,16 @@ const Label = ({
   index,
   calculateLayout,
   openSnackFunction,
+  handleDeleteLabel,
 }) => {
-  const { updateLabel, labelLookUPRef } = useAppContext();
+  const {
+    updateLabel,
+    updateLabelColor,
+    updateLabelImage,
+    deleteLabelImage,
+    removeLabel,
+    labelLookUPRef,
+  } = useAppContext();
   const [mounted, setMounted] = useState(false);
   const [anchorEl, setAnchorEL] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -27,6 +36,7 @@ const Label = ({
   const [height, setHeight] = useState(0);
   const [isImageLoading, setIsImageLoading] = useState(false);
   const [labelExists, setLabelExists] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const labelDate = getNoteFormattedDate(labelData.createdAt);
   const [selectedColor, setSelectedColor] = useState(labelData.color);
   const isRemoteImage =
@@ -60,24 +70,6 @@ const Label = ({
     setIsOpen((prev) => !prev);
     setColorMenuOpen(false);
   };
-
-  function changeOpacity(color, newOpacity) {
-    let parts = color.split(",");
-    parts[3] = ` ${newOpacity})`; // Replace opacity while keeping format
-    return parts.join(",");
-  }
-
-  function darkenColor(rgba, factor = 0.8) {
-    let parts = rgba.match(/\d+/g); // Extracts [R, G, B, A] as strings
-    let [r, g, b, a] = parts.map(Number); // Convert to numbers
-
-    // Reduce RGB values to darken (factor < 1 makes it darker)
-    r = Math.max(0, Math.floor(r * factor));
-    g = Math.max(0, Math.floor(g * factor));
-    b = Math.max(0, Math.floor(b * factor));
-
-    return `rgba(${r}, ${g}, ${b}, ${a})`;
-  }
 
   const handlePaste = (e) => {
     e.preventDefault();
@@ -183,6 +175,21 @@ const Label = ({
     }
     calculateLayout();
   }, [height]);
+
+  const handleColorClick = (color) => {
+    setSelectedColor(color);
+    updateLabelColor(labelData.uuid, color);
+    triggerReRender((prev) => !prev);
+  };
+
+  const handleDelete = () => {
+    handleDeleteLabel({
+      labelData: labelData,
+      labelRef: labelRef,
+      isOpen: isOpen,
+      triggerReRender: triggerReRender,
+    });
+  };
 
   return (
     <>
@@ -400,25 +407,47 @@ const Label = ({
           </div>
         </motion.div>
       </div>
-      <LabelMenu
-        isOpen={isOpen}
-        setIsOpen={setIsOpen}
-        labelRef={labelRef}
-        colorMenuOpen={colorMenuOpen}
-        setColorMenuOpen={setColorMenuOpen}
-        setTooltipAnchor={setTooltipAnchor}
-        anchorEl={anchorEl}
-        selectedColor={selectedColor}
-        setSelectedColor={setSelectedColor}
-        labelData={labelData}
-        triggerReRender={triggerReRender}
-        dispatchNotes={dispatchNotes}
-        labelTitleRef={labelTitleRef}
-        setCursorAtEnd={setCursorAtEnd}
-        imageRef={imageRef}
-        setIsImageLoading={setIsImageLoading}
-        openSnackFunction={openSnackFunction}
-      />
+      <AnimatePresence>
+        {isOpen && (
+          <LabelMenu
+            isOpen={isOpen}
+            setIsOpen={setIsOpen}
+            setColorMenuOpen={setColorMenuOpen}
+            setDeleteModalOpen={setDeleteModalOpen}
+            anchorEl={anchorEl}
+            setSelectedColor={setSelectedColor}
+            labelData={labelData}
+            triggerReRender={triggerReRender}
+            labelTitleRef={labelTitleRef}
+            imageRef={imageRef}
+            setIsImageLoading={setIsImageLoading}
+            openSnackFunction={openSnackFunction}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {deleteModalOpen && (
+          <DeleteModal
+            setIsOpen={setDeleteModalOpen}
+            handleDelete={handleDelete}
+            message={
+              "This label will be deleted and removed from all of your notes. Your notes won't be deleted."
+            }
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {colorMenuOpen && (
+          <ColorSelectMenu
+            handleColorClick={handleColorClick}
+            anchorEl={anchorEl}
+            selectedColor={selectedColor}
+            setTooltipAnchor={setTooltipAnchor}
+            isOpen={colorMenuOpen}
+            setIsOpen={setColorMenuOpen}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 };

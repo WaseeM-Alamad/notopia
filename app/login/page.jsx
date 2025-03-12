@@ -178,10 +178,10 @@ export default function Page() {
                 transition={{
                   y: {
                     duration: 0.5,
-                    type: "spring", // Use spring animation for y
-                    stiffness: 250, // Controls the spring's strength (higher = more stiff)
-                    damping: 30, // Controls the bounciness (higher = less bouncy)
-                    mass: 1, // Mass of the object (affects how fast it moves)
+                    type: "spring",
+                    stiffness: 250,
+                    damping: 30,
+                    mass: 1,
                   },
                   opacity: { duration: 0.5 },
                 }}

@@ -32,8 +32,12 @@ const ColorSelectMenu = ({
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (!menuRef.current.contains(e.target) && !anchorEl.contains(e.target)) {
-        if (isOpen) setIsOpen(false);
+      if (
+        !menuRef.current.contains(e.target) &&
+        !anchorEl.contains(e.target) &&
+        !e.target.classList.contains("menu-btn")
+      ) {
+        setIsOpen(false);
       }
     };
 

@@ -8,6 +8,7 @@ import Trash from "@/components/pages/Trash";
 import Snackbar from "@/components/Tools/Snackbar";
 import Tooltip from "@/components/Tools/Tooltip";
 import {
+  deleteLabelAction,
   DeleteNoteAction,
   fetchNotes,
   NoteUpdateAction,
@@ -313,14 +314,14 @@ function notesReducer(state, action) {
 }
 
 const page = () => {
-  const { batchDecNoteCount } = useAppContext();
-  const [currentPage, setCurrentPage] = useState();
+  const { batchDecNoteCount, removeLabel } = useAppContext();
   const [current, setCurrent] = useState("Home");
   const [tooltipAnchor, setTooltipAnchor] = useState(null);
   const [notesState, dispatchNotes] = useReducer(notesReducer, initialStates);
   const [modalStyle, setModalStyle] = useState(null);
   const [selectedNote, setSelectedNote] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [notesReady, setNotesReady] = useState(false);
   const [snackbarState, setSnackbarState] = useState({
     snackOpen: false,
     showUndo: true,
@@ -403,6 +404,7 @@ const page = () => {
       notes: notesMap,
       order: fetchedNotes.order,
     });
+    setNotesReady(true);
   };
 
   useEffect(() => {
@@ -425,17 +427,12 @@ const page = () => {
       setModalStyle({
         index: index,
         element: element,
-        top: `${rect.top}px`,
-        left: `${rect.left}px`,
-        width: `${rect.width}`,
-        height: `${rect.height}`,
+        rect: rect,
       });
 
-      setTimeout(() => {
-        setSelectedNote(note);
-        setIsModalOpen(true);
-        element.style.opacity = "0";
-      }, 20);
+      setSelectedNote(note);
+      setIsModalOpen(true);
+      element.style.opacity = "0";
     });
   }, []);
 
@@ -443,9 +440,18 @@ const page = () => {
     if (data.type === "archive") {
       const initialIndex = data.index;
 
+      const timeOut = setTimeout(() => {
+        dispatchNotes({
+          type: "ARCHIVE_NOTE",
+          note: data.note,
+        });
+      }, 210);
+
       const handler = (e) => {
         if (e.propertyName === "opacity") {
           data.noteRef.current.removeEventListener("transitionend", handler);
+
+          clearTimeout(timeOut);
 
           dispatchNotes({
             type: "ARCHIVE_NOTE",
@@ -495,9 +501,17 @@ const page = () => {
       );
       window.dispatchEvent(new Event("loadingEnd"));
     } else if (data.type === "TRASH_NOTE") {
+      const timeOut = setTimeout(() => {
+        dispatchNotes({
+          type: "TRASH_NOTE",
+          note: data.note,
+        });
+      }, 210);
+
       const handler = (e) => {
         if (e.propertyName === "opacity") {
           data.noteRef.current.removeEventListener("transitionend", handler);
+          clearTimeout(timeOut);
           dispatchNotes({
             type: "TRASH_NOTE",
             note: data.note,
@@ -536,9 +550,17 @@ const page = () => {
       await NoteUpdateAction("isTrash", false, data.note.uuid);
       window.dispatchEvent(new Event("loadingEnd"));
     } else if (data.type === "RESTORE_NOTE") {
+      const timeOut = setTimeout(() => {
+        dispatchNotes({
+          type: "TRASH_NOTE",
+          note: data.note,
+        });
+      }, 210);
+
       const handler = (e) => {
         if (e.propertyName === "opacity") {
           data.noteRef.current.removeEventListener("transitionend", handler);
+          clearTimeout(timeOut);
           dispatchNotes({
             type: "TRASH_NOTE",
             note: data.note,
@@ -578,9 +600,17 @@ const page = () => {
     } else if (data.type === "DELETE_NOTE") {
       batchDecNoteCount(data.note.labels);
 
+      const timeOut = setTimeout(() => {
+        dispatchNotes({
+          type: "DELETE_NOTE",
+          note: data.note,
+        });
+      }, 210);
+
       const handler = (e) => {
         if (e.propertyName === "opacity") {
           data.noteRef.current.removeEventListener("transitionend", handler);
+          clearTimeout(timeOut);
           dispatchNotes({
             type: "DELETE_NOTE",
             note: data.note,
@@ -595,9 +625,16 @@ const page = () => {
       await DeleteNoteAction(data.note.uuid);
       window.dispatchEvent(new Event("loadingEnd"));
     } else if (data.type === "PIN_ARCHIVED_NOTE") {
+      const timeOut = setTimeout(() => {
+        dispatchNotes({
+          type: "PIN_ARCHIVED_NOTE",
+          note: data.note,
+        });
+      }, 210);
       const handler = (e) => {
         if (e.propertyName === "opacity") {
           data.noteRef.current.removeEventListener("transitionend", handler);
+          clearTimeout(timeOut);
           dispatchNotes({
             type: "PIN_ARCHIVED_NOTE",
             note: data.note,
@@ -655,7 +692,7 @@ const page = () => {
   }, []);
 
   useEffect(() => {
-    const handleHashChange = () => {
+    const handleHashChange = (e) => {
       setTooltipAnchor(null);
     };
 
@@ -669,12 +706,24 @@ const page = () => {
   }, []);
 
   useEffect(() => {
+    const hash = window.location.hash.replace("#", "");
+    if (hash.startsWith("NOTE")) {
+      const noteUUID = hash.slice(5);
+      const note = notesState.notes.get(noteUUID);
+
+      setSelectedNote(note);
+      if (note !== undefined) {
+        setIsModalOpen(true);
+      }
+    }
+  }, [notesReady]);
+
+  useEffect(() => {
     const handler = (e) => {
       requestAnimationFrame(() => {
         const selected = e.detail.hash;
         const captialized = (hash) =>
           hash.charAt(0).toUpperCase() + hash.slice(1);
-        console.log(captialized(selected));
         setCurrent(captialized(selected));
         openSnackFunction({ close: true });
       });
@@ -694,7 +743,62 @@ const page = () => {
 
   const Page = components[current];
 
-  if (currentPage === null) return;
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      if (notesState.order.length === 0 && current === "Trash") {
+        const btn = document.body.querySelector("#add-btn");
+        btn.disabled = true;
+        return;
+      }
+      if (current === "Trash") {
+        const trashNotes = notesState.order.some(
+          (uuid) => notesState.notes.get(uuid).isTrash
+        );
+        if (!trashNotes) {
+          const btn = document.body.querySelector("#add-btn");
+          btn.disabled = true;
+        } else {
+          const btn = document.body.querySelector("#add-btn");
+          btn.disabled = false;
+        }
+      } else {
+        const btn = document.body.querySelector("#add-btn");
+        btn.disabled = false;
+      }
+    });
+  }, [current, notesState.order, notesState.notes]);
+
+  const handleDeleteLabel = (data) => {
+    window.dispatchEvent(new Event("loadingStart"));
+    deleteLabelAction({ labelUUID: data.labelData.uuid }).then(() => {
+      window.dispatchEvent(new Event("loadingEnd"));
+    });
+    data.labelRef.current.style.opacity = "0";
+
+    const timeOut = setTimeout(() => {
+      console.log("timeout");
+      dispatchNotes({
+        type: "REMOVE_LABEL_FROM_NOTES",
+        labelUUID: data.labelData.uuid,
+      });
+      removeLabel(data.labelData.uuid, data.labelData.label);
+    }, 270);
+
+    const handler = (e) => {
+      if (e.propertyName === "opacity" && !data.isOpen) {
+        clearTimeout(timeOut);
+        dispatchNotes({
+          type: "REMOVE_LABEL_FROM_NOTES",
+          labelUUID: data.labelData.uuid,
+        });
+        removeLabel(data.labelData.uuid, data.labelData.label);
+        data.triggerReRender((prev) => !prev);
+        data.labelRef.current.removeEventListener("transitionend", handler);
+      }
+    };
+
+    data.labelRef.current.addEventListener("transitionend", handler);
+  };
 
   return (
     <>
@@ -704,17 +808,14 @@ const page = () => {
             initial={{
               opacity: 0,
               display: "none",
-              backgroundColor: "rgba(0,0,0,0.0)",
             }}
             animate={{
               opacity: 1,
               display: "block",
-              backgroundColor: "rgba(0,0,0,0.5)",
             }}
             exit={{
               opacity: 0,
               display: "none",
-              backgroundColor: "rgba(0,0,0,0.0)",
             }}
             transition={{
               all: {
@@ -724,9 +825,13 @@ const page = () => {
                 mass: 1,
               },
             }}
+            style={{
+              backgroundColor: "rgba(0,0,0,0.5)",
+            }}
             onClick={() => {
               setIsModalOpen(false);
             }}
+            id="n-overlay"
             className="modal-container no-transition"
           />
         )}
@@ -756,6 +861,7 @@ const page = () => {
         onClose={onCloseFunction}
       />
       <div className="starting-div-header" />
+
       <Page
         dispatchNotes={dispatchNotes}
         notes={notesState.notes}
@@ -763,7 +869,9 @@ const page = () => {
         setTooltipAnchor={setTooltipAnchor}
         openSnackFunction={openSnackFunction}
         handleNoteClick={handleNoteClick}
+        handleDeleteLabel={handleDeleteLabel}
         noteActions={noteActions}
+        notesReady={notesReady}
       />
     </>
   );

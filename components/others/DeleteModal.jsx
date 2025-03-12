@@ -32,9 +32,9 @@ const DeleteModal = ({ setIsOpen, handleDelete, message }) => {
     >
       <motion.div
         className="delete-modal"
-        initial={{ transform: "translate(-50%, -45%) scale(0.95)", opacity: 0 }}
+        initial={{ transform: "translate(-50%, -45%) scale(1.05)", opacity: 0 }}
         animate={{ transform: "translate(-50%, -45%) scale(1)", opacity: 1 }}
-        exit={{ transform: "translate(-50%, -45%) scale(0.95)", opacity: 0 }}
+        exit={{ transform: "translate(-50%, -45%) scale(1.05)", opacity: 0 }}
         transition={{
           transform: { type: "spring", stiffness: 1000, damping: 50, mass: 1 },
           opacity: { duration: 0.1 },

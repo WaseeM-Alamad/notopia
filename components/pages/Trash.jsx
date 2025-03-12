@@ -70,6 +70,7 @@ const Home = memo(
     setTooltipAnchor,
     openSnackFunction,
     noteActions,
+    notesReady,
   }) => {
     const [isLayoutReady, setIsLayoutReady] = useState(false);
     const [selectedNotesIDs, setSelectedNotesIDs] = useState([]);
@@ -163,7 +164,9 @@ const Home = memo(
         }
       };
 
-      lastNote.addEventListener("transitionend", handleTransitionEnd);
+      if (lastNote) {
+        lastNote.addEventListener("transitionend", handleTransitionEnd);
+      }
       window.dispatchEvent(new Event("loadingStart"));
       await emptyTrashAction();
       window.dispatchEvent(new Event("loadingEnd"));
@@ -197,13 +200,19 @@ const Home = memo(
 
     useEffect(() => {
       const handler = async () => {
-        setDeleteModalOpen(true);
+        const trashNotes = order.some(
+          (uuid) => notes.get(uuid).isTrash === true
+        );
+
+        if (trashNotes) {
+          setDeleteModalOpen(true);
+        }
       };
 
       window.addEventListener("emptyTrash", handler);
 
       return () => window.removeEventListener("emptyTrash", handler);
-    }, []);
+    }, [notes, order]);
 
     return (
       <>
@@ -240,6 +249,46 @@ const Home = memo(
                   />
                 );
             })}
+          </div>
+          <div className="empty-page">
+            <AnimatePresence>
+              {notesReady && !containerRef.current?.hasChildNodes() && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 800,
+                    damping: 50,
+                    mass: 1,
+                  }}
+                  className="empty-page-box"
+                >
+                  <div className="empty-page-trash" />
+                  No notes in trash
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <AnimatePresence>
+              {!notesReady && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 800,
+                    damping: 50,
+                    mass: 1,
+                  }}
+                  className="empty-page-box"
+                >
+                  <div className="empty-page-loading" />
+                  Loading notes...
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
         <AddNoteModal

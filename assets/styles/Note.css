@@ -116,6 +116,12 @@
   box-shadow: 2px 3px 4px 0px rgba(0, 0, 0, 0.1);
 }
 
+.dark-mode .note-wrapper:hover {
+  -webkit-box-shadow: 2px 3px 4px 0px rgba(0, 0, 0, 0.5);
+  -moz-box-shadow: 2px 3px 4px 0px rgba(0, 0, 0, 0.5);
+  box-shadow: 2px 3px 4px 0px rgba(0, 0, 0, 0.5);
+}
+
 .date {
   margin-top: 0.1rem;
   margin-left: 0.2rem;

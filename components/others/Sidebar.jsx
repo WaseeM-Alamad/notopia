@@ -102,17 +102,14 @@ const Sidebar = memo(() => {
     <>
       <aside className="sidebar">
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <div
+          <button
             ref={addButtonRef}
             onClick={handleAddNote}
+            id="add-btn"
             className="add-button-icon pulse-button"
-            style={{
-              borderRadius: "50%",
-              display: "flex",
-            }}
           >
             <AddButton />
-          </div>
+          </button>
           <div ref={containerRef} className="sidebar-icons-container">
             {navItems.map(({ hash, Icon }) => (
               <button

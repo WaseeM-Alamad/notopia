@@ -25,6 +25,30 @@
     opacity 0.1s;
 }
 
+
+.modall {
+  display: none;
+  flex-direction: column;
+  position: fixed;
+  overflow: hidden;
+  max-width: 37.5rem;
+  width: 100%;
+  max-height: 90vh;
+  min-height: 11.5625rem;
+  transform-origin: top left;
+  z-index: 101;
+  border-radius: 0.7rem;
+  border: solid 1px transparent;
+}
+
+.modal-shadow {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.dark-mode .modal-shadow {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.6), 0 4px 8px 3px rgba(0, 0, 0, 0.3);
+}
+
 .modal-editable-title:empty:before {
   content: attr(aria-label);
   color: rgba(32, 33, 36, 0.7);
@@ -39,7 +63,7 @@
 }
 
 .dark-mode .modal-editable-title:empty:before {
-  color: rgba(255,255,255,0.7);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .modal-title-input {
@@ -99,7 +123,7 @@
 }
 
 .dark-mode .modal-editable-content:empty::before {
-  color: rgba(255,255,255,0.7);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .modal-inputs-container {
@@ -137,7 +161,7 @@
 }
 
 .dark-mode .edited {
-  color: rgba(255,255,255,0.8)
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .modal-bottom {
@@ -192,7 +216,7 @@
 }
 
 .close-btn:hover {
-  background-color: rgba(255,255,255,0.03)
+  background-color: rgba(255, 255, 255, 0.03);
 }
 
 .close-btn:focus {
@@ -222,17 +246,19 @@
   display: flex;
   flex-direction: column;
   position: fixed;
-  top: 45%;
+  will-change: transform;
+  top: 40%;
   left: 50%;
   background-color: #ffffff;
   border-radius: 0.7rem;
-  box-shadow: 0 1px 3px 0 rgba(60,64,67,0.3),0 4px 8px 3px rgba(60,64,67,0.15);
+  box-shadow: 0 1px 3px 0 rgba(60, 64, 67, 0.3),
+    0 4px 8px 3px rgba(60, 64, 67, 0.15);
   padding: 1.4rem 1rem 0.7rem 1.2rem;
   max-width: 400px;
   width: 100%;
 }
 
 .dark-mode .delete-modal {
-  box-shadow: 0 1px 3px 0 rgba(0,0,0,0.6),0 4px 8px 3px rgba(0,0,0,0.3);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.6), 0 4px 8px 3px rgba(0, 0, 0, 0.3);
   background-color: #282a2c;
 }

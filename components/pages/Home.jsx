@@ -134,6 +134,7 @@ const Home = memo(
     openSnackFunction,
     handleNoteClick,
     noteActions,
+    notesReady,
   }) => {
     const [isLayoutReady, setIsLayoutReady] = useState(false);
     const [pinnedHeight, setPinnedHeight] = useState(null);
@@ -456,31 +457,6 @@ const Home = memo(
               visibility: isLayoutReady ? "visible" : "hidden",
             }}
           >
-            {/* <button 
-            onClick={() => console.log("order", order)}
-          >
-            gg
-          </button>  */}
-            {pinnedNotesNumber === 0 &&
-              unpinnedNotesNumber === 0 &&
-              isLayoutReady && (
-                <AnimatePresence>
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0, transition: { duration: 0.3 } }}
-                    style={{
-                      margin: "auto",
-                      marginTop: "auto",
-                      paddingRight: "4.5rem",
-                      fontSize: "1.8rem",
-                      color: "#cecece",
-                    }}
-                  >
-                    Notes you add appear here
-                  </motion.div>
-                </AnimatePresence>
-              )}
             <p
               className="section-label"
               style={{
@@ -528,6 +504,48 @@ const Home = memo(
                 )
               );
             })}
+          </div>
+          <div className="empty-page">
+            <AnimatePresence>
+              {notesReady &&
+                pinnedNotesNumber === 0 &&
+                unpinnedNotesNumber === 0 && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 800,
+                      damping: 50,
+                      mass: 1,
+                    }}
+                    className="empty-page-box"
+                  >
+                    <div className="empty-page-home" />
+                    Notes you add appear here
+                  </motion.div>
+                )}
+            </AnimatePresence>
+            <AnimatePresence>
+              {!notesReady && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 800,
+                    damping: 50,
+                    mass: 1,
+                  }}
+                  className="empty-page-box"
+                >
+                  <div className="empty-page-loading" />
+                  Loading notes...
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
         <AddNoteModal

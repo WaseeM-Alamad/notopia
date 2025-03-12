@@ -168,12 +168,7 @@ export function AppProvider({ children }) {
 
   const removeLabel = (uuid, label) => {
     labelsRef.current.delete(uuid);
-    console.log(label);
     labelLookUPRef.current.delete(label.toLowerCase().trim());
-    window.dispatchEvent(new Event("loadingStart"));
-    deleteLabelAction({ labelUUID: uuid }).then(() => {
-      window.dispatchEvent(new Event("loadingEnd"));
-    });
   };
 
   return (

@@ -10,7 +10,7 @@ import React, {
 import "@/assets/styles/home.css";
 import Note from "../others/Note";
 import AddNoteModal from "../others/AddNoteModal";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import TopMenuHome from "../others/topMenu/TopMenuHome";
 
 const COLUMN_WIDTH = 240;
@@ -75,6 +75,7 @@ const Archive = memo(
     setTooltipAnchor,
     openSnackFunction,
     noteActions,
+    notesReady,
   }) => {
     const [isLayoutReady, setIsLayoutReady] = useState(false);
     const [selectedNotesIDs, setSelectedNotesIDs] = useState([]);
@@ -221,6 +222,47 @@ const Archive = memo(
                   />
                 );
             })}
+          </div>
+          <div className="empty-page">
+            <AnimatePresence>
+              {notesReady &&
+                !containerRef.current?.hasChildNodes() && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 800,
+                      damping: 50,
+                      mass: 1,
+                    }}
+                    className="empty-page-box"
+                  >
+                    <div className="empty-page-archive" />
+                    Your archived notes appear here
+                  </motion.div>
+                )}
+            </AnimatePresence>
+            <AnimatePresence>
+              {!notesReady && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 800,
+                    damping: 50,
+                    mass: 1,
+                  }}
+                  className="empty-page-box"
+                >
+                  <div className="empty-page-loading" />
+                  Loading notes...
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
         <AddNoteModal

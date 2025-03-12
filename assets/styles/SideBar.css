@@ -10,7 +10,6 @@ aside {
   width: 5.275rem;
   background-color: #ffffff;
   z-index: 99;
-  transition: box-shadow 0.2s ease;
 }
 
 .dark-mode aside {

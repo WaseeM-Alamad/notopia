@@ -22,6 +22,7 @@ import RestoreIcon from "../icons/RestoreIcon";
 import { AnimatePresence } from "framer-motion";
 import DeleteModal from "./DeleteModal";
 import { useAppContext } from "@/context/AppContext";
+import ManageLabelsMenu from "./ManageLabelsMenu";
 
 const NoteTools = ({
   images,
@@ -48,6 +49,11 @@ const NoteTools = ({
   const [anchorEl, setAnchorEl] = useState(null);
   const [colorAnchorEl, setColorAnchorEl] = useState(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [labelsOpen, setLabelsOpen] = useState(false);
+  const [labelMenuPos, setLabelMenuPos] = useState({
+    left: 0,
+    top: 0,
+  });
 
   const inputRef = useRef(null);
 
@@ -265,13 +271,15 @@ const NoteTools = ({
                 onMouseLeave={handleMouseLeave}
               />
               <AnimatePresence>
-                {moreMenuOpen && (
+                {moreMenuOpen && !labelsOpen && (
                   <MoreMenu
                     setIsOpen={setMoreMenuOpen}
                     dispatchNotes={dispatchNotes}
                     anchorEl={anchorEl}
                     setAnchorEl={setAnchorEl}
                     isOpen={moreMenuOpen}
+                    setLabelsOpen={setLabelsOpen}
+                    setLabelMenuPos={setLabelMenuPos}
                     setLocalIsTrash={setLocalIsTrash}
                     setTriggerUndoCopy={setTriggerUndoCopy}
                     openSnackFunction={openSnackFunction}
@@ -280,6 +288,19 @@ const NoteTools = ({
                     index={index}
                     uuid={note.uuid}
                     note={note}
+                  />
+                )}
+              </AnimatePresence>
+              <AnimatePresence>
+                {labelsOpen && (
+                  <ManageLabelsMenu
+                    dispatchNotes={dispatchNotes}
+                    note={note}
+                    isOpen={labelsOpen}
+                    setIsOpen={setLabelsOpen}
+                    anchorEl={anchorEl}
+                    noteRef={noteRef}
+                    labelMenuPos={labelMenuPos}
                   />
                 )}
               </AnimatePresence>

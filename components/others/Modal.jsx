@@ -29,12 +29,10 @@ const Modal = ({
   setModalStyle,
 }) => {
   const [isMounted, setIsMounted] = useState(false);
-  const [display, setDisplay] = useState(false);
-  const [trigger, setTrigger] = useState(false);
   const [selectedColor, setSelectedColor] = useState(null);
   const [modalIsPinned, setModalIsPinned] = useState(false);
   const [localImages, setLocalImages] = useState([]);
-  const FormattedEditedDate = trigger
+  const FormattedEditedDate = isOpen
     ? getNoteFormattedDate(note?.updatedAt)
     : null;
 
@@ -45,167 +43,104 @@ const Modal = ({
   const titleRef = useRef(null);
   const contentRef = useRef(null);
   const modalRef = useRef(null);
-  const modalHeightRef = useRef(null);
   const archiveRef = useRef(false);
-  const isFirstRenderRef = useRef(true);
   const imagesChangedRef = useRef(false);
+  const prevHash = useRef(null);
+
+  const centerModal = () => {
+    requestAnimationFrame(() => {
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const modalWidth = modalRef.current.offsetWidth;
+      const modalHeight = modalRef.current.offsetHeight;
+
+      modalRef.current.style.transform = "none";
+      modalRef.current.style.left = `${(viewportWidth - modalWidth) / 2}px`;
+      modalRef.current.style.top = `${(viewportHeight - modalHeight) / 3}px`;
+    });
+  };
+
+  const positionModal = () => {
+    if (!initialStyle) return;
+    const rect = initialStyle.element.getBoundingClientRect();
+    modalRef.current.style.display = "flex";
+    modalRef.current.style.left = `${rect.left}px`;
+    modalRef.current.style.top = `${rect.top}px`;
+    const scale = `scale(${rect.width / modalRef.current.offsetWidth}, ${
+      rect.height / modalRef.current.offsetHeight
+    } )`;
+    modalRef.current.style.transform = scale;
+  };
 
   useEffect(() => {
-    if (isFirstRenderRef.current) {
-      isFirstRenderRef.current = false;
-      return;
-    }
     if (isOpen) {
-      initialStyle.element.classList.add("opacity");
-      setSelectedColor(note?.color);
-      setLocalImages(note?.images);
-      titleTextRef.current = note?.title;
+      window.addEventListener("resize", centerModal);
+    }
+    return () => window.removeEventListener("resize", centerModal);
+  }, [isOpen]);
 
+  useEffect(() => {
+    if (!modalRef.current) return;
+
+    if (isOpen) {
+      prevHash.current = window.location.hash.replace("#", "");
+      window.location.hash = `NOTE/${note?.uuid}`;
+
+      setLocalImages(note?.images);
+      setSelectedColor(note?.color);
+      setModalIsPinned(note?.isPinned);
+      titleTextRef.current = note?.title;
       contentTextRef.current = note?.content;
+
       if (contentRef?.current) {
         contentRef.current.textContent = note?.content;
       }
       if (titleRef?.current) {
         titleRef.current.innerText = note?.title;
       }
-      setModalIsPinned(note?.isPinned);
-      setTimeout(() => {
-        setTrigger(true);
-      }, 20);
-      setTimeout(() => {
-        setDisplay(true);
-      }, 0);
+
+      positionModal();
+
+      modalRef.current.offsetHeight;
+
+      modalRef.current.style.transition =
+        "all 0.2s cubic-bezier(0.35, 0.9, 0.25, 1)";
+
+      centerModal();
     } else {
-      modalHeightRef.current =
-        modalRef?.current?.getBoundingClientRect()?.height;
-      handleClose();
+      const overlay = document.getElementById("n-overlay");
+      if (!overlay) return;
+      window.location.hash = prevHash.current || "home";
+      modalRef.current.offsetHeight;
+      positionModal();
+      checkForChanges();
 
-      setTimeout(() => {
-        setModalStyle((prev) => {
-          const rect = prev.element.getBoundingClientRect();
-          return {
-            ...prev,
-            height: rect.height,
-          };
-        });
-        setTrigger(false);
-      }, 10);
-    }
-
-    const handler = (e) => {
-      if (e.propertyName === "top" && !isOpen) {
-        // console.log("finish");
-        initialStyle.element.classList.remove("opacity");
-
-        if (initialStyle?.element) {
+      const handleModalClose = (e) => {
+        if (e.propertyName === "left") {
+          modalRef.current.removeEventListener(
+            "transitionend",
+            handleModalClose
+          );
+          modalRef.current.removeAttribute("style");
+          setLocalImages([]);
           initialStyle.element.style.opacity = "1";
         }
+      };
 
-        if (archiveRef.current) {
-          handleArchive();
-        }
+      modalRef.current.removeEventListener("transitionend", handleModalClose); // Remove before adding
+      modalRef.current.addEventListener("transitionend", handleModalClose);
 
-        setDisplay(false);
-        // setSelectedColor(null);
-
-        if (modalIsPinned !== note?.isPinned) {
-          dispatchNotes({
-            type: "PIN_NOTE",
-            note: note,
-          });
-        }
-
-        setLocalImages([]);
-        // titleTextRef.current = null;
-        // contentTextRef.current = null;
-        // titleRef.current = null;
-        // contentRef.current = null;
-        onClose();
-        imagesChangedRef.current = false;
-
-        modalRef.current.removeEventListener("transitionend", handler);
-      }
-    };  
-
-    if (modalRef.current) {
-      modalRef.current.addEventListener("transitionend", handler);
+      return () =>
+        modalRef.current?.removeEventListener(
+          "transitionend",
+          handleModalClose
+        );
     }
   }, [isOpen]);
 
   useEffect(() => {
-    closeRef.current = handleClose;
-  }, [note, modalIsPinned]);
-
-  const handleClose = () => {
-    if (
-      titleTextRef.current !== note?.title ||
-      contentTextRef.current !== note?.content
-    ) {
-      console.log("compare text");
-      dispatchNotes({
-        type: "UPDATE_TEXT",
-        note: note,
-        newTitle: titleTextRef.current,
-        newContent: contentTextRef.current,
-      });
-    }
-    if (imagesChangedRef.current) {
-      console.log("images changed");
-      dispatchNotes({
-        type: "UPDATE_IMAGES",
-        note: note,
-        newImages: localImages,
-      });
-      closeSnackbar();
-    }
-  };
-
-  const updateTextDebounced = useCallback(
-    debounce(async (values) => {
-      window.dispatchEvent(new Event("loadingStart"));
-      await NoteTextUpdateAction(values, note?.uuid);
-      window.dispatchEvent(new Event("loadingEnd"));
-    }, 600),
-    [note?.uuid] // Dependencies array, make sure it's updated when `note.uuid` changes
-  );
-
-  const handleTitleInput = useCallback(
-    (e) => {
-      const text = e.target.innerText;
-      const t = text === "\n" ? "" : text;
-      titleTextRef.current = t;
-
-      updateTextDebounced({ title: t, content: contentTextRef.current });
-
-      if (text === "\n") {
-        e.target.innerText = "";
-      }
-    },
-    [note?.content]
-  );
-
-  const handleContentInput = useCallback(
-    (e) => {
-      const text = e.target.innerText;
-      const t = text === "\n" ? "" : text;
-      contentTextRef.current = t;
-
-      updateTextDebounced({ title: titleTextRef.current, content: t });
-
-      if (text === "\n") {
-        e.target.innerText = "";
-      }
-    },
-    [note?.title]
-  );
-
-  const handlePaste = (e) => {
-    e.preventDefault();
-    // Get plain text from clipboard
-    const text = e.clipboardData.getData("text/plain");
-    // Insert only the text at cursor position
-    document.execCommand("insertText", false, text);
-  };
+    setIsMounted(true);
+  }, []);
 
   const handlePinClick = async () => {
     setModalIsPinned((prev) => !prev);
@@ -215,73 +150,6 @@ const Modal = ({
     } finally {
       window.dispatchEvent(new Event("loadingEnd"));
     }
-  };
-
-  useEffect(() => {
-    const nav = document.querySelector("nav");
-    if (trigger) {
-      const scrollbarWidth =
-        window.innerWidth - document.documentElement.clientWidth;
-      document.body.style.overflow = "hidden";
-      document.body.style.paddingRight = `${scrollbarWidth}px`;
-      if (modalRef.current) modalRef.current.style.marginLeft = `${0}px`;
-      if (nav) nav.style.marginLeft = `${-scrollbarWidth}px`;
-      if (nav) nav.style.paddingLeft = `${scrollbarWidth}px`;
-    } else {
-      document.body.style.overflow = "auto";
-      document.body.style.paddingRight = "";
-      if (nav) nav.style.marginLeft = "0px";
-      if (nav) nav.style.paddingLeft = "0px";
-    }
-    return () => (document.body.style.overflow = "auto"); // Cleanup
-  }, [trigger]);
-
-  const handleArchive = async () => {
-    setTimeout(async () => {
-      const undoArchive = async () => {
-        const initialIndex = initialStyle.index;
-        dispatchNotes({
-          type: "UNDO_ARCHIVE",
-          note: note,
-          initialIndex: initialIndex,
-        });
-        setTimeout(() => {
-          window.dispatchEvent(new Event("closeModal"));
-        }, 0);
-        window.dispatchEvent(new Event("loadingStart"));
-        await undoAction({
-          type: "UNDO_ARCHIVE",
-          noteUUID: note.uuid,
-          value: note.isArchived,
-          pin: note.isPinned,
-          initialIndex: initialIndex,
-          endIndex: 0,
-        });
-        window.dispatchEvent(new Event("loadingEnd"));
-      };
-
-      dispatchNotes({
-        type: "ARCHIVE_NOTE",
-        note: note,
-      });
-
-      openSnackFunction({
-        snackMessage: `${
-          note.isArchived
-            ? "Note unarchived"
-            : note.isPinned
-            ? "Note unpinned and archived"
-            : "Note Archived"
-        }`,
-        snackOnUndo: undoArchive,
-      });
-      const first = initialStyle.index === 0;
-      window.dispatchEvent(new Event("loadingStart"));
-      await NoteUpdateAction("isArchived", !note.isArchived, note.uuid, first);
-      window.dispatchEvent(new Event("loadingEnd"));
-
-      archiveRef.current = false;
-    }, 10);
   };
 
   const noteImageDelete = useCallback(
@@ -330,45 +198,100 @@ const Modal = ({
     [note?.uuid]
   );
 
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
+  const handlePaste = (e) => {
+    e.preventDefault();
+    // Get plain text from clipboard
+    const text = e.clipboardData.getData("text/plain");
+    // Insert only the text at cursor position
+    document.execCommand("insertText", false, text);
+  };
+
+  const updateTextDebounced = useCallback(
+    debounce(async (values) => {
+      window.dispatchEvent(new Event("loadingStart"));
+      await NoteTextUpdateAction(values, note?.uuid);
+      window.dispatchEvent(new Event("loadingEnd"));
+    }, 600),
+    [note?.uuid] // Dependencies array, make sure it's updated when `note.uuid` changes
+  );
+
+  const handleTitleInput = useCallback(
+    (e) => {
+      const text = e.target.innerText;
+      const t = text === "\n" ? "" : text;
+      titleTextRef.current = t;
+
+      updateTextDebounced({ title: t, content: contentTextRef.current });
+
+      if (text === "\n") {
+        e.target.innerText = "";
+      }
+    },
+    [note?.content]
+  );
+
+  const handleContentInput = useCallback(
+    (e) => {
+      const text = e.target.innerText;
+      const t = text === "\n" ? "" : text;
+      contentTextRef.current = t;
+
+      updateTextDebounced({ title: titleTextRef.current, content: t });
+
+      if (text === "\n") {
+        e.target.innerText = "";
+      }
+    },
+    [note?.title]
+  );
+
+  const checkForChanges = () => {
+    if (
+      titleTextRef.current !== note?.title ||
+      contentTextRef.current !== note?.content
+    ) {
+      console.log("compare text");
+      dispatchNotes({
+        type: "UPDATE_TEXT",
+        note: note,
+        newTitle: titleTextRef.current,
+        newContent: contentTextRef.current,
+      });
+    }
+    if (imagesChangedRef.current) {
+      console.log("images changed");
+      dispatchNotes({
+        type: "UPDATE_IMAGES",
+        note: note,
+        newImages: localImages,
+      });
+    }
+  };
 
   if (!isMounted) return;
 
   return createPortal(
     <>
       <div
-        className={`modal ${selectedColor}`}
         ref={modalRef}
-        style={{
-          display: display ? "flex" : "none",
-          top: !trigger ? initialStyle?.top : "30%",
-          left: !trigger ? initialStyle?.left : "50%",
-          width: "100%",
-          transform: trigger
-            ? "translate(-50%, -30%) "
-            : `scale(0.4, ${initialStyle?.height / modalHeightRef?.current})`,
-          transformOrigin: "top left",
-          border: "solid 1px",
-          borderColor: note?.color === "#FFFFFF" ? "#e0e0e0" : "transparent",
-        }}
+        className={[
+          "modall",
+          selectedColor,
+          isOpen && "modal-shadow",
+          selectedColor === "Default" ? "default-border" : "transparent-border",
+        ]
+          .filter(Boolean)
+          .join(" ")}
       >
-        <div
-          style={{
-            overflowY: trigger ? "auto" : "hidden",
-            opacity: trigger ? "1" : "0",
-          }}
-          className="modal-inputs-container"
-        >
+        <div className="modal-inputs-container">
           {localImages.length === 0 && (
-            <div className={trigger ? `modal-corner` : `corner`} />
+            <div className={isOpen ? `modal-corner` : `corner`} />
           )}
           <div className="modal-pin">
             <Button
               onClick={handlePinClick}
-              disabled={!trigger}
-              style={{ opacity: !trigger && "0" }}
+              disabled={!isOpen}
+              style={{ opacity: !isOpen && "0" }}
             >
               <PinIcon
                 color={modalIsPinned ? "#212121" : "transparent"}
@@ -381,7 +304,6 @@ const Modal = ({
           <div
             style={{
               position: "relative",
-              // opacity: isLoading ? "0.6" : "1",
               transition: "all 0.2s ease",
             }}
           >
@@ -390,11 +312,11 @@ const Modal = ({
               // isLoadingImages={isLoadingImages}
               deleteSource="note"
               noteImageDelete={noteImageDelete}
-              modalOpen={trigger}
+              modalOpen={isOpen}
             />
             {/* {isLoading && <div className="linear-loader" />} */}
           </div>
-          {!trigger &&
+          {!isOpen &&
             note?.images.length === 0 &&
             !titleTextRef.current?.trim() &&
             !contentTextRef.current?.trim() && (
@@ -402,7 +324,7 @@ const Modal = ({
             )}
           <div
             style={{
-              opacity: trigger
+              opacity: isOpen
                 ? "1"
                 : contentTextRef.current && !titleTextRef.current
                 ? "0"
@@ -425,7 +347,7 @@ const Modal = ({
           />
           <div
             style={{
-              opacity: trigger
+              opacity: isOpen
                 ? "1"
                 : !contentTextRef.current && titleTextRef.current
                 ? "0"
@@ -447,6 +369,7 @@ const Modal = ({
             aria-label="Note"
             spellCheck="false"
           />
+
           {isOpen && (
             <div className="modal-date-section">
               <div className="edited">
@@ -457,7 +380,7 @@ const Modal = ({
           )}
         </div>
         <Tools
-          trigger={trigger}
+          trigger={isOpen}
           archiveRef={archiveRef}
           selectedColor={selectedColor}
           setSelectedColor={setSelectedColor}
