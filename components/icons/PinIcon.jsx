@@ -5,7 +5,7 @@ const PinIcon = ({ rotation, isPinned }) => {
     <>
       <svg
         style={{
-          transition: "all 0.15s ease",
+          transition: "all 0.2s linear",
           rotate: rotation,
           flexShrink: "0",
         }}

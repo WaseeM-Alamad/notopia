@@ -187,7 +187,7 @@ const Note = memo(
             onMouseLeave={handleMouseLeave}
           >
             <CheckMark
-              color={selected ? "rgb(111, 111, 111)" : note.color}
+              color={selected ? "note-checkmark-selected" : note.color}
               size="23"
             />
           </span>
@@ -298,7 +298,10 @@ const Note = memo(
                           >
                             <label className="note-label">{label}</label>
                             <div
-                              onClick={() => removeLabel(labelUUID)}
+                              onClick={() => {
+                                closeToolTip();
+                                removeLabel(labelUUID);
+                              }}
                               onMouseEnter={(e) =>
                                 handleMouseEnter(e, "Remove label")
                               }
@@ -332,8 +335,6 @@ const Note = memo(
               setIsLoadingImages={setIsLoadingImages}
               userID={userID}
               openSnackFunction={openSnackFunction}
-              setLocalIsArchived={setLocalIsArchived}
-              setLocalIsTrash={setLocalIsTrash}
               noteActions={noteActions}
               setIsNoteDeleted={setIsNoteDeleted}
               index={index}

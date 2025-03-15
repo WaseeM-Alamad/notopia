@@ -28,7 +28,6 @@ const NoteWrapper = memo(
     dispatchNotes,
     openSnackFunction,
     note,
-    isVisible,
     noteActions,
     lastAddedNoteRef,
     calculateLayout,
@@ -136,7 +135,6 @@ const Home = memo(
     noteActions,
     notesReady,
   }) => {
-    const [isLayoutReady, setIsLayoutReady] = useState(false);
     const [pinnedHeight, setPinnedHeight] = useState(null);
     const [isLoadingImages, setIsLoadingImages] = useState([]);
     const [selectedNotesIDs, setSelectedNotesIDs] = useState([]);
@@ -231,13 +229,8 @@ const Home = memo(
         setPinnedNotesNumber(pinnedItems.length);
         setPinnedHeight(pinnedHeight);
         container.style.height = `${unpinnedHeight}px`;
-
-        // Set layout ready after initial calculation
-        if (!isLayoutReady) {
-          setTimeout(() => setIsLayoutReady(true), 300);
-        }
       });
-    }, [isLayoutReady]);
+    }, []);
 
     const debouncedCalculateLayout = useCallback(() => {
       if (resizeTimeoutRef.current) {
@@ -449,13 +442,13 @@ const Home = memo(
           setTooltipAnchor={setTooltipAnchor}
         />
         <div className="starting-div">
-          <div
+          <motion.div
+            initial={{opacity: 0}}
+            animate={{opacity: 1}}
+            transition={{duration: 0.15}}
             ref={containerRef}
             className="notes-container"
             onMouseMove={handleMouseMove}
-            style={{
-              visibility: isLayoutReady ? "visible" : "hidden",
-            }}
           >
             <p
               className="section-label"
@@ -491,7 +484,6 @@ const Home = memo(
                     isDragging={isDragging}
                     setTooltipAnchor={setTooltipAnchor}
                     handleDragStart={handleDragStart}
-                    isVisible={isLayoutReady}
                     openSnackFunction={openSnackFunction}
                     setSelectedNotesIDs={setSelectedNotesIDs}
                     handleNoteClick={handleNoteClick}
@@ -504,16 +496,14 @@ const Home = memo(
                 )
               );
             })}
-          </div>
+          </motion.div>
           <div className="empty-page">
-            <AnimatePresence>
               {notesReady &&
                 pinnedNotesNumber === 0 &&
                 unpinnedNotesNumber === 0 && (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
                     transition={{
                       type: "spring",
                       stiffness: 800,
@@ -526,13 +516,10 @@ const Home = memo(
                     Notes you add appear here
                   </motion.div>
                 )}
-            </AnimatePresence>
-            <AnimatePresence>
               {!notesReady && (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
                   transition={{
                     type: "spring",
                     stiffness: 800,
@@ -545,7 +532,6 @@ const Home = memo(
                   Loading notes...
                 </motion.div>
               )}
-            </AnimatePresence>
           </div>
         </div>
         <AddNoteModal

@@ -1,6 +1,7 @@
 import { format } from "date-fns";
 
 export const getNoteFormattedDate = (recievedDate) => {
+  if (!recievedDate) return;
   const currentDate = new Date();
   const noteYear = new Date(recievedDate).getFullYear();
   const noteDay = new Date(recievedDate).getDate();

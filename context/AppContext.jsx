@@ -21,7 +21,7 @@ export function AppProvider({ children }) {
 
   const getLabels = async () => {
     const fetchedLables = await fetchLabelsAction();
-    if (!fetchedLables.success) return;
+    if (!fetchedLables.success || !fetchedLables) return;
     labelsRef.current = new Map(
       fetchedLables.data.map((mapLabel) => {
         labelLookUPRef.current.set(mapLabel.label.toLowerCase(), true);
@@ -31,10 +31,9 @@ export function AppProvider({ children }) {
   };
 
   useEffect(() => {
-    if (status === "authenticated") {
-    getLabels();
-    }
-  }, [status]);
+    window.addEventListener("loadLables", getLabels);
+    return () => window.removeEventListener("loadLables", getLabels);
+  }, []);
 
   const createLabel = async (uuid, label, createdAt) => {
     labelLookUPRef.current.set(label.toLowerCase(), true);

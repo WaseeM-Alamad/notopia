@@ -15,7 +15,6 @@ const NoteWrapper = memo(
   ({
     note,
     noteActions,
-    isVisible,
     ref,
     setSelectedNotesIDs,
     dispatchNotes,
@@ -40,8 +39,6 @@ const NoteWrapper = memo(
           width: `${COLUMN_WIDTH}px`,
           marginBottom: `${GUTTER}px`,
           transition: `transform ${mounted ? "0.2s" : "0"} ease`,
-          opacity: isVisible ? 1 : 0,
-          pointerEvents: isVisible ? "auto" : "none",
         }}
       >
         <Note
@@ -72,9 +69,9 @@ const Home = memo(
     noteActions,
     notesReady,
   }) => {
-    const [isLayoutReady, setIsLayoutReady] = useState(false);
     const [selectedNotesIDs, setSelectedNotesIDs] = useState([]);
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [notesExist, setNotesExist] = useState(false);
     const selectedRef = useRef(false);
     const containerRef = useRef(null);
     const resizeTimeoutRef = useRef(null);
@@ -109,6 +106,7 @@ const Home = memo(
         container.style.transform = "translateX(-50%)";
 
         const items = container.children;
+        setNotesExist(items.length > 0);
 
         const positionItems = (itemList) => {
           const columnHeights = new Array(columns).fill(0);
@@ -131,13 +129,8 @@ const Home = memo(
 
         const totalHeight = positionItems(Array.from(items));
         container.style.height = `${totalHeight}px`;
-
-        // Set layout ready after initial calculation
-        if (!isLayoutReady) {
-          setTimeout(() => setIsLayoutReady(true), 300);
-        }
       });
-    }, [isLayoutReady]);
+    }, []);
 
     const debouncedCalculateLayout = useCallback(() => {
       if (resizeTimeoutRef.current) {
@@ -224,12 +217,12 @@ const Home = memo(
           <div className="trash-section-header">
             Notes in Trash are deleted after 7 days.
           </div>
-          <div
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.15 }}
             ref={containerRef}
             className="notes-container"
-            style={{
-              visibility: isLayoutReady ? "visible" : "hidden",
-            }}
           >
             {order.map((uuid, index) => {
               const note = notes.get(uuid);
@@ -239,7 +232,6 @@ const Home = memo(
                     key={note.uuid}
                     note={note}
                     noteActions={noteActions}
-                    isVisible={isLayoutReady}
                     dispatchNotes={dispatchNotes}
                     index={index}
                     setSelectedNotesIDs={setSelectedNotesIDs}
@@ -249,14 +241,12 @@ const Home = memo(
                   />
                 );
             })}
-          </div>
+          </motion.div>
           <div className="empty-page">
-            <AnimatePresence>
-              {notesReady && !containerRef.current?.hasChildNodes() && (
+              {notesReady && !notesExist && (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
                   transition={{
                     type: "spring",
                     stiffness: 800,
@@ -269,13 +259,10 @@ const Home = memo(
                   No notes in trash
                 </motion.div>
               )}
-            </AnimatePresence>
-            <AnimatePresence>
               {!notesReady && (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
                   transition={{
                     type: "spring",
                     stiffness: 800,
@@ -288,7 +275,6 @@ const Home = memo(
                   Loading notes...
                 </motion.div>
               )}
-            </AnimatePresence>
           </div>
         </div>
         <AddNoteModal
@@ -303,8 +289,9 @@ const Home = memo(
             <DeleteModal
               setIsOpen={setDeleteModalOpen}
               handleDelete={handleEmptyTrash}
+              title="Empty trash"
               message={
-                "Empty trash? All notes in Trash will be permanently deleted."
+                "All notes in Trash will be permanently deleted."
               }
             />
           )}

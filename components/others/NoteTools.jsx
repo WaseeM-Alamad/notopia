@@ -36,11 +36,8 @@ const NoteTools = ({
   setMoreMenuOpen,
   setIsLoadingImages,
   userID,
-  setLocalIsArchived,
   noteActions,
   setLocalIsTrash,
-  setTriggerUndoCopy,
-  setIsNoteDeleted,
   openSnackFunction,
   setTooltipAnchor,
 }) => {
@@ -50,10 +47,6 @@ const NoteTools = ({
   const [colorAnchorEl, setColorAnchorEl] = useState(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [labelsOpen, setLabelsOpen] = useState(false);
-  const [labelMenuPos, setLabelMenuPos] = useState({
-    left: 0,
-    top: 0,
-  });
 
   const inputRef = useRef(null);
 
@@ -276,17 +269,13 @@ const NoteTools = ({
                     setIsOpen={setMoreMenuOpen}
                     dispatchNotes={dispatchNotes}
                     anchorEl={anchorEl}
-                    setAnchorEl={setAnchorEl}
                     isOpen={moreMenuOpen}
                     setLabelsOpen={setLabelsOpen}
-                    setLabelMenuPos={setLabelMenuPos}
                     setLocalIsTrash={setLocalIsTrash}
-                    setTriggerUndoCopy={setTriggerUndoCopy}
                     openSnackFunction={openSnackFunction}
                     noteActions={noteActions}
                     noteRef={noteRef}
                     index={index}
-                    uuid={note.uuid}
                     note={note}
                   />
                 )}
@@ -300,7 +289,6 @@ const NoteTools = ({
                     setIsOpen={setLabelsOpen}
                     anchorEl={anchorEl}
                     noteRef={noteRef}
-                    labelMenuPos={labelMenuPos}
                   />
                 )}
               </AnimatePresence>
@@ -318,7 +306,11 @@ const NoteTools = ({
                   <DeleteModal
                     setIsOpen={setDeleteModalOpen}
                     handleDelete={handleDeleteNote}
-                    message={"Delete note forever?"}
+                    title="Delete note"
+                    message={<>
+                      Are you sure you want to delete this note? <br/> this action can't be undone.
+                      </>
+                    }
                   />
                 )}
               </AnimatePresence>

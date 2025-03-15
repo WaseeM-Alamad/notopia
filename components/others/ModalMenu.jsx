@@ -6,17 +6,14 @@ import { createPortal } from "react-dom";
 import { v4 as generateUUID } from "uuid";
 import ManageLabelsMenu from "./ManageLabelsMenu";
 
-const MoreMenu = ({
+const ModalMenu = ({
   isOpen,
   setIsOpen,
   setLabelsOpen,
   anchorEl,
-  noteRef,
   note,
-  index,
   dispatchNotes,
   openSnackFunction,
-  noteActions,
 }) => {
   const [isClient, setIsClient] = useState();
 
@@ -48,13 +45,7 @@ const MoreMenu = ({
   }, [isOpen]);
 
   const handleDelete = async (e) => {
-    noteActions({
-      type: "RESTORE_NOTE",
-      note: note,
-      index: index,
-      noteRef: noteRef,
-      setIsOpen: setIsOpen,
-    });
+
   };
 
   const handleMakeCopy = (e) => {
@@ -210,4 +201,4 @@ const MoreMenu = ({
   );
 };
 
-export default MoreMenu;
+export default ModalMenu;

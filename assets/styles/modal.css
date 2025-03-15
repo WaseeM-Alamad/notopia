@@ -1,5 +1,6 @@
 .modal-container {
   position: fixed;
+  perspective: 1200px;
   top: 0;
   left: 0;
   width: 100%;
@@ -35,6 +36,7 @@
   width: 100%;
   max-height: 90vh;
   min-height: 11.5625rem;
+  will-change: left, top;
   transform-origin: top left;
   z-index: 101;
   border-radius: 0.7rem;
@@ -158,6 +160,9 @@
   font-size: 0.75rem;
   margin-left: auto;
   color: rgba(0, 0, 0, 0.7);
+  height: fit-content;
+  cursor: default;
+  user-select: none;
 }
 
 .dark-mode .edited {
@@ -244,21 +249,56 @@
 
 .delete-modal {
   display: flex;
+  align-items: center;
+  box-sizing: border-box;
   flex-direction: column;
+  overflow: hidden;
   position: fixed;
-  will-change: transform;
-  top: 40%;
-  left: 50%;
-  background-color: #ffffff;
-  border-radius: 0.7rem;
-  box-shadow: 0 1px 3px 0 rgba(60, 64, 67, 0.3),
-    0 4px 8px 3px rgba(60, 64, 67, 0.15);
-  padding: 1.4rem 1rem 0.7rem 1.2rem;
-  max-width: 400px;
+  padding: 1.2rem 1rem;
+  transform-origin: center center;
   width: 100%;
+  max-width: 360px;
+  min-height: 180px;
+  box-shadow: 0 1px 3px 0 rgba(60,64,67,0.3),0 4px 8px 3px rgba(60,64,67,0.15);
+  background-color: white;
+  border-radius: .9rem;
+  left: 50%;
+  top: 40%;
 }
 
 .dark-mode .delete-modal {
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.6), 0 4px 8px 3px rgba(0, 0, 0, 0.3);
   background-color: #282a2c;
 }
+
+.delete-modal-button {
+  border: none;
+  min-height: 2.3rem;
+  width: 6rem;
+  border-radius: 0.5rem;
+  background-color: rgb(240, 240, 240);
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.delete-modal-button:hover {
+  background-color: rgb(223, 222, 222);
+}
+
+.delete-btn {
+  background-color: rgb(241, 70, 70);
+}
+
+.delete-btn:hover {
+  background-color: rgb(228, 16, 16);
+}
+
+.buttons-con {
+  display: flex;
+  justify-content: center;
+  gap: 0.8rem;
+  width: 100%;
+  margin-top: auto;
+  min-height: 2rem;
+}
+

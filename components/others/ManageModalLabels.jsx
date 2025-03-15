@@ -6,11 +6,13 @@ import { createPortal } from "react-dom";
 import { Popper } from "@mui/material";
 import { v4 as generateUUID } from "uuid";
 
-const ManageLabelsMenu = ({
+const ManageModalLabels = ({
   dispatchNotes,
   note,
   isOpen,
   setIsOpen,
+  modalLabels,
+  setModalLabels,
   anchorEl,
 }) => {
   const { createLabel, handleLabelNoteCount, labelsRef } = useAppContext();
@@ -58,10 +60,10 @@ const ManageLabelsMenu = ({
     if (!isOpen) return;
 
     const labelsMap = new Map(
-      note.labels.map((noteLabel) => [noteLabel, true])
+        modalLabels.map((noteLabel) => [noteLabel, true])
     );
     setNoteLabels(labelsMap);
-  }, [isOpen, note.labels, isClient]);
+  }, [isOpen, modalLabels, isClient]);
 
   const handleInputKeyDown = (e) => {
     let temp;
@@ -94,10 +96,11 @@ const ManageLabelsMenu = ({
 
   const addLabel = async (uuid, label) => {
     if (noteLabels.has(uuid)) {
-      dispatchNotes({
-        type: "REMOVE_LABEL",
-        note: note,
-        labelUUID: uuid,
+      setModalLabels((prev) => {
+        const newLabels = prev.filter(
+          (noteLabelUUID) => noteLabelUUID !== uuid
+        );
+        return newLabels;
       });
       handleLabelNoteCount(uuid, "decrement");
 
@@ -108,11 +111,7 @@ const ManageLabelsMenu = ({
       });
       window.dispatchEvent(new Event("loadingEnd"));
     } else {
-      dispatchNotes({
-        type: "ADD_LABEL",
-        note: note,
-        labelUUID: uuid,
-      });
+      setModalLabels((prev) => [...prev, uuid]);
       handleLabelNoteCount(uuid);
 
       window.dispatchEvent(new Event("loadingStart"));
@@ -206,7 +205,6 @@ const ManageLabelsMenu = ({
             className="label-items-container"
             style={{ paddingBottom: "6px" }}
           >
-            {/* style={{paddingBottom: "0.55rem"}} */}
             {[...labelsRef.current]
               .reverse()
               .map(([uuid, labelData], index) => {
@@ -276,4 +274,4 @@ const ManageLabelsMenu = ({
   );
 };
 
-export default ManageLabelsMenu;
+export default ManageModalLabels;

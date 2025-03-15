@@ -4,6 +4,7 @@ import "@/assets/styles/home.css";
 import { useAppContext } from "@/context/AppContext";
 import Label from "../others/Label";
 import { v4 as uuid } from "uuid";
+import { AnimatePresence, motion } from "framer-motion";
 
 const COLUMN_WIDTH = 240;
 const GUTTER = 15;
@@ -17,7 +18,8 @@ const Labels = memo(
   }) => {
     const { createLabel, labelsRef } = useAppContext();
     const [reRender, triggerReRender] = useState(false);
-    const [isLayoutReady, setIsLayoutReady] = useState(false);
+    const [labelsExist, setLabelsExist] = useState(false);
+    const [notesReady, setNotesReady] = useState(false);
     const containerRef = useRef(null);
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
@@ -52,6 +54,8 @@ const Labels = memo(
 
         const items = container.children;
 
+        setLabelsExist(items.length > 0);
+
         const positionItems = (itemList) => {
           const columnHeights = new Array(columns).fill(0);
 
@@ -73,13 +77,8 @@ const Labels = memo(
 
         const totalHeight = positionItems(Array.from(items));
         container.style.height = `${totalHeight}px`;
-
-        // Set layout ready after initial calculation
-        if (!isLayoutReady) {
-          setTimeout(() => setIsLayoutReady(true), 300);
-        }
       });
-    }, [isLayoutReady]);
+    }, []);
 
     const debouncedCalculateLayout = useCallback(() => {
       if (resizeTimeoutRef.current) {
@@ -142,12 +141,12 @@ const Labels = memo(
     return (
       <>
         <div className="starting-div">
-          <div
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.15 }}
             ref={containerRef}
             className="labels-container"
-            style={{
-              visibility: isLayoutReady ? "visible" : "hidden",
-            }}
           >
             {/* <NewLabel triggerReRender={triggerReRender} /> */}
             {[...labelsRef.current]
@@ -167,7 +166,47 @@ const Labels = memo(
                   />
                 );
               })}
-          </div>
+          </motion.div>
+          {/* <div className="empty-page">
+            <AnimatePresence>
+              {notesReady && !labelsExist && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 800,
+                    damping: 50,
+                    mass: 1,
+                  }}
+                  className="empty-page-box"
+                >
+                  <div className="empty-page-trash" />
+                  No notes in trash
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <AnimatePresence>
+              {!notesReady && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 800,
+                    damping: 50,
+                    mass: 1,
+                  }}
+                  className="empty-page-box"
+                >
+                  <div className="empty-page-loading" />
+                  Loading labels...
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div> */}
         </div>
       </>
     );

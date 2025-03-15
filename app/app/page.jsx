@@ -285,6 +285,19 @@ function notesReducer(state, action) {
       };
     }
 
+    case "UPDATE_NOTE_LABELS": {
+      const newNote = {
+        ...state.notes.get(action.note.uuid),
+        labels: action.newLabels,
+      };
+      const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
+
+      return {
+        ...state,
+        notes: updatedNotes,
+      };
+    }
+
     case "EMPTY_TRASH": {
       const updatedNotes = new Map();
       const updatedOrder = [];
@@ -333,6 +346,7 @@ const page = () => {
   const closeRef = useRef(null);
 
   const openSnackFunction = useCallback((data) => {
+    const showUndo = data.showUndo ?? true;
     if (data.close) {
       setSnackbarState((prev) => ({
         ...prev,
@@ -349,7 +363,7 @@ const page = () => {
       setTimeout(() => {
         setSnackbarState({
           message: data.snackMessage,
-          showUndo: true,
+          showUndo: showUndo,
           snackOpen: true,
         });
         if (data.snackOnUndo !== undefined) {
@@ -391,20 +405,22 @@ const page = () => {
   }, [unloadWarn]);
 
   const getNotes = async () => {
-    window.dispatchEvent(new Event("loadingStart"));
-    const fetchedNotes = await fetchNotes();
-    // console.log("initial notes", fetchedNotes.data)
-    window.dispatchEvent(new Event("loadingEnd"));
+    requestAnimationFrame(async () => {
+      window.dispatchEvent(new Event("loadingStart"));
+      window.dispatchEvent(new Event("loadLables"));
+      const fetchedNotes = await fetchNotes();
+      window.dispatchEvent(new Event("loadingEnd"));
 
-    const notesMap = new Map(
-      fetchedNotes.data.map((note) => [note.uuid, note])
-    );
-    dispatchNotes({
-      type: "SET_INITIAL_DATA",
-      notes: notesMap,
-      order: fetchedNotes.order,
+      const notesMap = new Map(
+        fetchedNotes.data.map((note) => [note.uuid, note])
+      );
+      dispatchNotes({
+        type: "SET_INITIAL_DATA",
+        notes: notesMap,
+        order: fetchedNotes.order,
+      });
+      setNotesReady(true);
     });
-    setNotesReady(true);
   };
 
   useEffect(() => {
@@ -839,6 +855,7 @@ const page = () => {
 
       <Modal
         note={selectedNote}
+        setNote={setSelectedNote}
         dispatchNotes={dispatchNotes}
         initialStyle={modalStyle}
         onClose={() => setSelectedNote(null)}

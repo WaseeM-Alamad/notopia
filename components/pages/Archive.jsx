@@ -19,7 +19,6 @@ const GUTTER = 15;
 const NoteWrapper = memo(
   ({
     note,
-    isVisible,
     ref,
     setSelectedNotesIDs,
     selectedNotes,
@@ -45,8 +44,6 @@ const NoteWrapper = memo(
           width: `${COLUMN_WIDTH}px`,
           marginBottom: `${GUTTER}px`,
           transition: `transform ${mounted ? "0.2s" : "0"} ease, opacity 0s`,
-          opacity: isVisible ? 1 : 0,
-          pointerEvents: isVisible ? "auto" : "none",
         }}
       >
         <Note
@@ -77,8 +74,8 @@ const Archive = memo(
     noteActions,
     notesReady,
   }) => {
-    const [isLayoutReady, setIsLayoutReady] = useState(false);
     const [selectedNotesIDs, setSelectedNotesIDs] = useState([]);
+    const [notesExist, setNotesExist] = useState(false);
     const hasDispatched = useRef(false);
     const isFirstRender = useRef(true);
     const selectedRef = useRef(false);
@@ -116,6 +113,8 @@ const Archive = memo(
 
         const items = container.children;
 
+        setNotesExist(items.length > 0);
+
         const positionItems = (itemList) => {
           const columnHeights = new Array(columns).fill(0);
 
@@ -137,13 +136,8 @@ const Archive = memo(
 
         const totalHeight = positionItems(Array.from(items));
         container.style.height = `${totalHeight}px`;
-
-        // Set layout ready after initial calculation
-        if (!isLayoutReady) {
-          setTimeout(() => setIsLayoutReady(true), 300);
-        }
       });
-    }, [isLayoutReady]);
+    }, []);
 
     const debouncedCalculateLayout = useCallback(() => {
       if (resizeTimeoutRef.current) {
@@ -197,12 +191,12 @@ const Archive = memo(
           setSelectedNotesIDs={setSelectedNotesIDs}
         />
         <div className="starting-div">
-          <div
+          <motion.div
             ref={containerRef}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.15 }}
             className="notes-container"
-            style={{
-              visibility: isLayoutReady ? "visible" : "hidden",
-            }}
           >
             {order.map((uuid, index) => {
               const note = notes.get(uuid);
@@ -212,7 +206,6 @@ const Archive = memo(
                     key={note.uuid}
                     note={note}
                     dispatchNotes={dispatchNotes}
-                    isVisible={isLayoutReady}
                     index={index}
                     noteActions={noteActions}
                     setTooltipAnchor={setTooltipAnchor}
@@ -222,34 +215,28 @@ const Archive = memo(
                   />
                 );
             })}
-          </div>
+          </motion.div>
           <div className="empty-page">
-            <AnimatePresence>
-              {notesReady &&
-                !containerRef.current?.hasChildNodes() && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 800,
-                      damping: 50,
-                      mass: 1,
-                    }}
-                    className="empty-page-box"
-                  >
-                    <div className="empty-page-archive" />
-                    Your archived notes appear here
-                  </motion.div>
-                )}
-            </AnimatePresence>
-            <AnimatePresence>
+              {notesReady && !notesExist && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 800,
+                    damping: 50,
+                    mass: 1,
+                  }}
+                  className="empty-page-box"
+                >
+                  <div className="empty-page-archive" />
+                  Your archived notes appear here
+                </motion.div>
+              )}
               {!notesReady && (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
                   transition={{
                     type: "spring",
                     stiffness: 800,
@@ -262,7 +249,6 @@ const Archive = memo(
                   Loading notes...
                 </motion.div>
               )}
-            </AnimatePresence>
           </div>
         </div>
         <AddNoteModal

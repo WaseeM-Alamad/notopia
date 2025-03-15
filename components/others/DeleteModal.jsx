@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import "@/assets/styles/note.css";
 import "@/assets/styles/modal.css";
 import { motion } from "framer-motion";
 
-const DeleteModal = ({ setIsOpen, handleDelete, message }) => {
+const DeleteModal = ({ setIsOpen, handleDelete, title, message }) => {
   const [isMounted, setIsMounted] = useState(false);
+  const containerRef = useRef(null);
 
   useEffect(() => {
     setIsMounted(true);
@@ -15,14 +16,20 @@ const DeleteModal = ({ setIsOpen, handleDelete, message }) => {
 
   return createPortal(
     <motion.div
+      ref={containerRef}
       className="modal-container"
-      initial={{ backgroundColor: "rgba(0,0,0,0.0)" }}
-      animate={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+      initial={{ backgroundColor: "rgba(0,0,0,0.0)", pointerEvents: "auto" }}
+      animate={{ backgroundColor: "rgba(0,0,0,0.5)", pointerEvents: "auto" }}
       exit={{ backgroundColor: "rgba(0,0,0,0.0)" }}
+      onAnimationComplete={(def) => {
+        if (def.backgroundColor === "rgba(0,0,0,0.0)") {
+          containerRef.current.style.pointerEvents = "none";
+        }
+      }}
       transition={{
         backgroundColor: {
           type: "tween",
-          duration: 0.01,
+          duration: 0.03,
           ease: "linear",
         },
       }}
@@ -32,34 +39,39 @@ const DeleteModal = ({ setIsOpen, handleDelete, message }) => {
     >
       <motion.div
         className="delete-modal"
-        initial={{ transform: "translate(-50%, -45%) scale(1.05)", opacity: 0 }}
-        animate={{ transform: "translate(-50%, -45%) scale(1)", opacity: 1 }}
-        exit={{ transform: "translate(-50%, -45%) scale(1.05)", opacity: 0 }}
-        transition={{
-          transform: { type: "spring", stiffness: 1000, damping: 50, mass: 1 },
-          opacity: { duration: 0.1 },
+        initial={{
+          transform:
+            "translate(-50%, -40%) scale(0.97) rotateX(00deg) rotateY(15deg)",
+          opacity: 0,
+          filter: "blur(5px)"
         }}
+        animate={{
+          transform:
+            "translate(-50%, -40%) scale(1) rotateX(0deg) rotateY(0deg)",
+          opacity: 1,
+          filter: "blur(0px)",
+        }}
+        exit={{
+          transform:
+            "translate(-50%, -40%) scale(0.97) rotateX(00deg) rotateY(15deg)",
+          opacity: 0,
+          filter: "blur(5px)",
+        }}
+        transition={{ type: "spring", stiffness: 400, damping: 50, mass: 1 }}
       >
-        <span
-          style={{
-            paddingBottom: "2rem",
-            userSelect: "none",
-            fontSize: "0.9rem",
-          }}
-        >
-          {message}
-        </span>
         <div
           style={{
-            width: "100%",
-            marginTop: "auto",
-            display: "flex",
-            justifyContent: "flex-end",
-            gap: "2rem",
+            // padding: "2rem",
             boxSizing: "border-box",
-            padding: "0 0.3rem",
+            fontWeight: "600",
+            fontSize: "1.5rem",
+            paddingBottom: ".3rem",
           }}
         >
+          {title}
+        </div>
+        <div style={{ textAlign: "center", fontSize: ".95rem" }}>{message}</div>
+        <div className="buttons-con">
           <button
             className="delete-modal-button"
             onClick={() => setIsOpen(false)}
@@ -67,14 +79,15 @@ const DeleteModal = ({ setIsOpen, handleDelete, message }) => {
             Cancel
           </button>
           <button
-            className="delete-modal-button"
-            style={{ color: "rgb(255, 93, 93)" }}
+            className="delete-modal-button delete-btn"
             onClick={() => {
               handleDelete();
               setIsOpen(false);
             }}
+            style={{ color: "#ffffff" }}
           >
-            Delete
+            {" "}
+            Delete{" "}
           </button>
         </div>
       </motion.div>

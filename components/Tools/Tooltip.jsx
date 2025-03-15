@@ -24,7 +24,6 @@ const Tooltip = ({ anchorEl }) => {
       setDisplay(false);
       isTooltipVisible.current = false;
     }
-
   }, [anchorEl]);
 
   useEffect(() => {
@@ -49,21 +48,9 @@ const Tooltip = ({ anchorEl }) => {
       ]}
     >
       <div
+        className="tooltip"
         style={{
           display: !display && "none",
-          opacity: '0.9',
-          pointerEvents: "none",
-          backgroundColor: "rgb(32,33,36)",
-          color: "white",
-          fontFamily: "sans-serif",
-          fontSize: "12px",
-          letterSpacing: ".3px",
-          lineHeight: "1rem",
-          fontWeight: "350",
-          width: "fit-content",
-          textOverflow: "ellipsis",
-          borderRadius: "0.3rem",
-          padding: "0.3rem 0.5rem",
         }}
       >
         <div>{anchorEl?.text}</div>

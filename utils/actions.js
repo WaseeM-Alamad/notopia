@@ -495,6 +495,7 @@ export const fetchLabelsAction = async () => {
     const user = await User.findById(userID);
     const labels = JSON.parse(JSON.stringify(user?.labels));
 
+
     return {
       success: true,
       message: "Fetched labels successfully!",

@@ -15,7 +15,7 @@
   overflow: hidden;
   transition: transform 0.3s ease-in-out, opacity 0s, box-shadow 0.2s ease,
     background-color 0.3s ease-in-out, border-color 0.2s ease-in-out,
-    outline 0.3s ease-in-out, height 0s;
+    outline 1.3s ease-in-out, height 0s;
   overflow-wrap: break-word;
   word-wrap: break-word;
   white-space: pre-wrap;
@@ -54,10 +54,6 @@
 .content {
   padding: 0.6rem 0.8rem 0.8rem 0.8rem;
   font-size: 1.125rem;
-}
-
-.note-labels-container {
-  padding: 0.8rem 0.8rem 0 0.8rem;
 }
 
 .note-bottom {
@@ -166,26 +162,3 @@
   color: rgb(172, 172, 172);
 }
 
-.delete-modal-button {
-  border: none;
-  padding: 0.5rem 1.5rem;
-  border-radius: 0.3rem;
-  background-color: rgba(0, 0, 0, 0);
-  color: rgb(60, 64, 67);
-  cursor: pointer;
-  user-select: none;
-  font-weight: 500;
-  transition: all 0.2s ease;
-}
-
-.dark-mode .delete-modal-button {
-  color: rgb(232, 234, 237);
-}
-
-.delete-modal-button:hover {
-  background-color: rgba(0, 0, 0, 0.07);
-}
-
-.dark-mode .delete-modal-button:hover {
-  background-color: #303235;
-}

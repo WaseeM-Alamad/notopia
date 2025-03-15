@@ -13,13 +13,19 @@ import { createClient } from "@supabase/supabase-js";
 import { v4 as uuid } from "uuid";
 import { useSession } from "next-auth/react";
 import { AnimatePresence } from "framer-motion";
+import ModalMenu from "./ModalMenu";
+import ManageLabelsMenu from "./ManageLabelsMenu";
+import ManageModalLabels from "./ManageModalLabels";
 
 const NoteModalTools = ({
   trigger,
   setLocalImages,
   selectedColor,
   setSelectedColor,
+  openSnackFunction,
   dispatchNotes,
+  modalLabels,
+  setModalLabels,
   note,
   handleClose,
   // setIsLoadingImages,
@@ -27,9 +33,16 @@ const NoteModalTools = ({
   archiveRef,
   imagesChangedRef,
   setIsOpen,
+  undoStack,
+  redoStack,
+  handleUndo,
+  handleRedo,
 }) => {
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
   const [colorAnchorEl, setColorAnchorEl] = useState(null);
+  const [anchorEl, setAnchorEl] = useState(false);
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  const [labelsOpen, setLabelsOpen] = useState(false);
   const { data: session } = useSession();
   const userID = session?.user?.id;
   const colorButtonRef = useRef(null);
@@ -107,7 +120,7 @@ const NoteModalTools = ({
   const closeToolTip = () => {
     setTooltipAnchor((prev) => ({
       anchor: null,
-      text: prev.text,
+      text: prev?.text,
     }));
   };
 
@@ -125,65 +138,111 @@ const NoteModalTools = ({
   };
 
   return (
-    <div style={{ opacity: "1" }} className={`modal-bottom  `}>
-      {/* <p className="date">{FormattedDate}</p> */}
-      <div className="modal-bottom-icons">
-        <Button className="reminder-icon btn-hover" />
-        <Button className="person-add-icon btn-hover" />
-        <Button
-          className="close archive-icon btn-hover"
-          onClick={handleModalArchive}
-          onMouseEnter={(e) => handleMouseEnter(e, "Archive")}
-          onMouseLeave={handleMouseLeave}
-        />
-        <Button
-          className="image-icon btn-hover"
-          onClick={() => {
-            closeToolTip();
-            inputRef.current.click();
-          }}
-          onMouseEnter={(e) => handleMouseEnter(e, "Add image")}
-          onMouseLeave={handleMouseLeave}
-        >
-          <input
-            ref={inputRef}
-            style={{ display: "none" }}
-            type="file"
-            onChange={handleOnChange}
+    <>
+      <div style={{ opacity: "1" }} className={`modal-bottom  `}>
+        {/* <p className="date">{FormattedDate}</p> */}
+        <div className="modal-bottom-icons">
+          <Button className="reminder-icon btn-hover" />
+          <Button className="person-add-icon btn-hover" />
+          <Button
+            className="close archive-icon btn-hover"
+            onClick={handleModalArchive}
+            onMouseEnter={(e) => handleMouseEnter(e, "Archive")}
+            onMouseLeave={handleMouseLeave}
           />
-        </Button>
-        <Button
-          className="color-icon btn-hover"
-          onClick={toggleColorMenu}
-          onMouseEnter={(e) => handleMouseEnter(e, "Background options")}
-          onMouseLeave={handleMouseLeave}
-        />
-        <AnimatePresence>
-          {colorMenuOpen && (
-            <ColorSelectMenu
-              handleColorClick={handleColorClick}
-              anchorEl={colorAnchorEl}
-              selectedColor={selectedColor}
-              setTooltipAnchor={setTooltipAnchor}
-              isOpen={colorMenuOpen}
-              setIsOpen={setColorMenuOpen}
+          <Button
+            className="image-icon btn-hover"
+            onClick={() => {
+              closeToolTip();
+              inputRef.current.click();
+            }}
+            onMouseEnter={(e) => handleMouseEnter(e, "Add image")}
+            onMouseLeave={handleMouseLeave}
+          >
+            <input
+              ref={inputRef}
+              style={{ display: "none" }}
+              type="file"
+              onChange={handleOnChange}
             />
-          )}
-        </AnimatePresence>
-        <Button className="more-icon btn-hover" />
-        <>
-          <Button>
-            <BackIcon />
           </Button>
-          <Button>
-            <BackIcon direction="1" />
-          </Button>
-        </>
+          <Button
+            className="color-icon btn-hover"
+            onClick={toggleColorMenu}
+            onMouseEnter={(e) => handleMouseEnter(e, "Background options")}
+            onMouseLeave={handleMouseLeave}
+          />
+          <AnimatePresence>
+            {colorMenuOpen && (
+              <ColorSelectMenu
+                handleColorClick={handleColorClick}
+                anchorEl={colorAnchorEl}
+                selectedColor={selectedColor}
+                setTooltipAnchor={setTooltipAnchor}
+                isOpen={colorMenuOpen}
+                setIsOpen={setColorMenuOpen}
+              />
+            )}
+          </AnimatePresence>
+          <Button
+            onClick={(e) => {
+              closeToolTip();
+              setAnchorEl(e.currentTarget);
+              setMoreMenuOpen((prev) => !prev);
+              setLabelsOpen(false);
+            }}
+            className="more-icon btn-hover"
+          />
+          <>
+            <Button
+              onClick={() => {
+                console.log(undoStack);
+                handleUndo();
+              }}
+              disabled={undoStack.length === 0}
+            >
+              <BackIcon />
+            </Button>
+            <Button onClick={handleRedo} disabled={redoStack.length === 0}>
+              <BackIcon direction="1" />
+            </Button>
+          </>
+        </div>
+        <button
+          ref={closeRef}
+          onClick={handleClose}
+          className="close close-btn"
+        >
+          Close
+        </button>
       </div>
-      <button ref={closeRef} onClick={handleClose} className="close close-btn">
-        Close
-      </button>
-    </div>
+      <AnimatePresence>
+        {moreMenuOpen && !labelsOpen && (
+          <ModalMenu
+            setIsOpen={setMoreMenuOpen}
+            dispatchNotes={dispatchNotes}
+            anchorEl={anchorEl}
+            isOpen={moreMenuOpen}
+            setLabelsOpen={setLabelsOpen}
+            openSnackFunction={openSnackFunction}
+            note={note}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {labelsOpen && (
+          <ManageModalLabels
+            dispatchNotes={dispatchNotes}
+            note={note}
+            isOpen={labelsOpen}
+            setIsOpen={setLabelsOpen}
+            modalLabels={modalLabels}
+            setModalLabels={setModalLabels}
+            anchorEl={anchorEl}
+          />
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 

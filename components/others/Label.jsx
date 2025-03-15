@@ -18,14 +18,7 @@ const Label = ({
   openSnackFunction,
   handleDeleteLabel,
 }) => {
-  const {
-    updateLabel,
-    updateLabelColor,
-    updateLabelImage,
-    deleteLabelImage,
-    removeLabel,
-    labelLookUPRef,
-  } = useAppContext();
+  const { updateLabel, updateLabelColor, labelLookUPRef } = useAppContext();
   const [mounted, setMounted] = useState(false);
   const [anchorEl, setAnchorEL] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -130,6 +123,10 @@ const Label = ({
     dateRef.current.classList.remove("zero-opacity");
     labelTitleRef.current.style.removeProperty("pointer-events");
     if (labelTitleRef.current.innerText.trim() === "") {
+      openSnackFunction({
+        snackMessage: "Label cannot be empty",
+        showUndo: false,
+      });
       labelTitleRef.current.innerText = originalTitleRef.current;
       return;
     }
@@ -138,6 +135,12 @@ const Label = ({
     ) {
       const labelToCheck = labelTitleRef.current.innerText.toLowerCase().trim();
       if (labelLookUPRef.current.has(labelToCheck)) {
+        if (!labelExists) {
+          openSnackFunction({
+            snackMessage: "Label already exists!",
+            showUndo: false,
+          });
+        }
         labelTitleRef.current.innerText = originalTitleRef.current.trim();
         return;
       }
@@ -209,29 +212,25 @@ const Label = ({
               ? "default-border"
               : "transparent-border"
           }`}
-          initial={{ y: 11, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{
-            y: { type: "spring", stiffness: 700, damping: 50, mass: 1 },
-            opacity: { duration: 0.2 },
-          }}
         >
           <div
             style={{ display: labelData.image && "none" }}
             className="corner"
           />
-          <Button
-            onClick={handleMoreClick}
-            ref={moreRef}
-            className="label-more-icon"
-            style={{
-              zIndex: "20",
-              marginLeft: "auto",
-              opacity: (isOpen || colorMenuOpen) && "1",
-            }}
-          >
-            <MoreVert size="16" style={{ rotate: "90deg" }} />
-          </Button>
+          <div className="label-more-icon">
+            <Button
+              onClick={handleMoreClick}
+              ref={moreRef}
+              className="btn-hover"
+              style={{
+                zIndex: "20",
+                marginLeft: "auto",
+                opacity: (isOpen || colorMenuOpen) && "1",
+              }}
+            >
+              <MoreVert size="16" style={{ rotate: "90deg" }} />
+            </Button>
+          </div>
           {labelData.image && (
             <div style={{ position: "relative" }}>
               <img
@@ -301,6 +300,12 @@ const Label = ({
               suppressContentEditableWarning
               onInput={handleTitleInput}
               onKeyDown={(e) => {
+                if (
+                  (e.ctrlKey && e.key === "z") ||
+                  (e.ctrlKey && e.shiftKey && e.key === "Z")
+                ) {
+                  return;
+                }
                 if (e.key === "Enter") {
                   e.preventDefault();
                   const oldLabel = originalTitleRef.current
@@ -430,6 +435,7 @@ const Label = ({
           <DeleteModal
             setIsOpen={setDeleteModalOpen}
             handleDelete={handleDelete}
+            title="Delete label"
             message={
               "This label will be deleted and removed from all of your notes. Your notes won't be deleted."
             }

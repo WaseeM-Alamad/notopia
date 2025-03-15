@@ -375,7 +375,7 @@ const AddNoteModal = ({
       }}
       className="modal-container"
     >
-      {/* <button onClick={insert}>insertff</button> */}
+      <button onClick={insert}>insertff</button>
       <div
         ref={modalRef}
         style={{
