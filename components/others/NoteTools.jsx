@@ -1,18 +1,9 @@
-import React, { memo, useCallback, useEffect, useRef, useState } from "react";
+import React, { memo, useCallback, useRef, useState } from "react";
 import {
-  DeleteNoteAction,
   NoteUpdateAction,
-  undoAction,
-  updateOrderAction,
 } from "@/utils/actions";
 import ColorSelectMenu from "./ColorSelectMenu";
 import "@/assets/styles/note.css";
-import PersonAdd from "../icons/PersonAdd";
-import ImageIcon from "../icons/ImageIcon";
-import ColorIcon from "../icons/ColorIcon";
-import ArchiveIcon from "../icons/ArchiveIcon";
-import Bell from "../icons/Bell";
-import MoreVert from "../icons/MoreVert";
 import Button from "../Tools/Button";
 import { v4 as uuid } from "uuid";
 import { createClient } from "@supabase/supabase-js";
@@ -27,7 +18,7 @@ import ManageLabelsMenu from "./ManageLabelsMenu";
 const NoteTools = ({
   images,
   index,
-  note,
+  note={},
   noteRef,
   dispatchNotes,
   colorMenuOpen,
@@ -41,8 +32,10 @@ const NoteTools = ({
   openSnackFunction,
   setTooltipAnchor,
 }) => {
-  const { batchDecNoteCount } = useAppContext();
   const [selectedColor, setSelectedColor] = useState(note.color);
+  const [selectedBG, setSelectedBG] = useState(
+        note.background || "DefaultBG"
+      );
   const [anchorEl, setAnchorEl] = useState(null);
   const [colorAnchorEl, setColorAnchorEl] = useState(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -60,6 +53,21 @@ const NoteTools = ({
       newColor: newColor,
     });
   });
+
+  const handleBackground = useCallback(async (newBG) => {
+    closeToolTip();
+    if (selectedBG === newBG) return;
+    setSelectedBG(newBG);
+
+    dispatchNotes({
+      type: "UPDATE_BG",
+      note: note,
+      newBG: newBG,
+    });
+    window.dispatchEvent(new Event("loadingStart"));
+    await NoteUpdateAction("background", newBG, [note.uuid]);
+    window.dispatchEvent(new Event("loadingEnd"));
+  },[selectedBG]);
 
   const toggleMenu = (e) => {
     closeToolTip();
@@ -121,7 +129,7 @@ const NoteTools = ({
     const updatedImages = await NoteUpdateAction(
       "images",
       { url: path, uuid: newUUID },
-      note.uuid
+      [note.uuid]
     );
     await UploadImageAction({ file: file, id: newUUID }, note.uuid);
     // dispatchNotes({
@@ -173,7 +181,7 @@ const NoteTools = ({
   }, []);
 
   return (
-    <span
+    <div
       onClick={containerClick}
       style={{
         opacity: images ? "0.8" : "1",
@@ -190,7 +198,7 @@ const NoteTools = ({
         <div className="note-bottom-icons">
           {!note.isTrash ? (
             <>
-              {" "}
+             
               <Button
                 className="reminder-icon btn-hover"
                 onMouseEnter={(e) => handleMouseEnter(e, "Remind me")}
@@ -249,8 +257,11 @@ const NoteTools = ({
                 {colorMenuOpen && (
                   <ColorSelectMenu
                     handleColorClick={handleColorClick}
+                    handleBackground={handleBackground}
                     anchorEl={colorAnchorEl}
                     selectedColor={selectedColor}
+                    selectedBG={selectedBG}
+                    setSelectedBG={setSelectedBG}
                     setTooltipAnchor={setTooltipAnchor}
                     isOpen={colorMenuOpen}
                     setIsOpen={setColorMenuOpen}
@@ -307,8 +318,10 @@ const NoteTools = ({
                     setIsOpen={setDeleteModalOpen}
                     handleDelete={handleDeleteNote}
                     title="Delete note"
-                    message={<>
-                      Are you sure you want to delete this note? <br/> this action can't be undone.
+                    message={
+                      <>
+                        Are you sure you want to delete this note? <br /> this
+                        action can't be undone.
                       </>
                     }
                   />
@@ -318,7 +331,7 @@ const NoteTools = ({
           )}
         </div>
       </div>
-    </span>
+    </div>
   );
 };
 

@@ -22,15 +22,17 @@ const NoteModalTools = ({
   setLocalImages,
   selectedColor,
   setSelectedColor,
+  selectedBG,
+  setSelectedBG,
   openSnackFunction,
   dispatchNotes,
   modalLabels,
   setModalLabels,
   note,
-  handleClose,
   // setIsLoadingImages,
   setTooltipAnchor,
   archiveRef,
+  trashRef,
   imagesChangedRef,
   setIsOpen,
   undoStack,
@@ -58,9 +60,28 @@ const NoteModalTools = ({
       newColor: color,
     });
     window.dispatchEvent(new Event("loadingStart"));
-    await NoteUpdateAction("color", color, note.uuid);
+    await NoteUpdateAction("color", color, [note.uuid]);
     window.dispatchEvent(new Event("loadingEnd"));
   });
+
+  const handleBackground = useCallback(
+    async (newBG) => {
+      closeToolTip();
+      if (selectedBG === newBG) return;
+      setSelectedBG(newBG);
+
+      dispatchNotes({
+        type: "UPDATE_BG",
+        note: note,
+        newBG: newBG,
+      });
+      console.log("yes");
+      window.dispatchEvent(new Event("loadingStart"));
+      await NoteUpdateAction("background", newBG, [note.uuid]);
+      window.dispatchEvent(new Event("loadingEnd"));
+    },
+    [selectedBG]
+  );
 
   const UploadImageAction = async (image) => {
     const supabase = createClient(
@@ -99,7 +120,7 @@ const NoteModalTools = ({
       "https://fopkycgspstkfctmhyyq.supabase.co/storage/v1/object/public/notopia";
     const path = `${starter}/${userID}/${note.uuid}/${newUUID}`;
     // setIsLoadingImages((prev) => [...prev, newUUID]);
-    await NoteUpdateAction("images", { url: path, uuid: newUUID }, note.uuid);
+    await NoteUpdateAction("images", { url: path, uuid: newUUID }, [note.uuid]);
     await UploadImageAction({ file: file, id: newUUID }, note.uuid);
     // setIsLoadingImages((prev) => prev.filter((id) => id !== newUUID));
     window.dispatchEvent(new Event("loadingEnd"));
@@ -176,8 +197,11 @@ const NoteModalTools = ({
             {colorMenuOpen && (
               <ColorSelectMenu
                 handleColorClick={handleColorClick}
+                handleBackground={handleBackground}
                 anchorEl={colorAnchorEl}
                 selectedColor={selectedColor}
+                selectedBG={selectedBG}
+                setSelectedBG={setSelectedBG}
                 setTooltipAnchor={setTooltipAnchor}
                 isOpen={colorMenuOpen}
                 setIsOpen={setColorMenuOpen}
@@ -191,16 +215,12 @@ const NoteModalTools = ({
               setMoreMenuOpen((prev) => !prev);
               setLabelsOpen(false);
             }}
+            onMouseEnter={(e) => handleMouseEnter(e, "More")}
+            onMouseLeave={handleMouseLeave}
             className="more-icon btn-hover"
           />
           <>
-            <Button
-              onClick={() => {
-                console.log(undoStack);
-                handleUndo();
-              }}
-              disabled={undoStack.length === 0}
-            >
+            <Button onClick={handleUndo} disabled={undoStack.length === 0}>
               <BackIcon />
             </Button>
             <Button onClick={handleRedo} disabled={redoStack.length === 0}>
@@ -210,7 +230,7 @@ const NoteModalTools = ({
         </div>
         <button
           ref={closeRef}
-          onClick={handleClose}
+          onClick={() => setIsOpen(false)}
           className="close close-btn"
         >
           Close
@@ -220,8 +240,10 @@ const NoteModalTools = ({
         {moreMenuOpen && !labelsOpen && (
           <ModalMenu
             setIsOpen={setMoreMenuOpen}
+            setModalOpen={setIsOpen}
             dispatchNotes={dispatchNotes}
             anchorEl={anchorEl}
+            trashRef={trashRef}
             isOpen={moreMenuOpen}
             setLabelsOpen={setLabelsOpen}
             openSnackFunction={openSnackFunction}

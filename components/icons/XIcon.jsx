@@ -16,21 +16,20 @@ const XIcon = ({color = "#7a7a7a"}) => {
         strokeLinejoin="round"
       ></g>
       <g id="SVGRepo_iconCarrier">
-        {" "}
         <path
           d="M18 6L6 18"
-          stroke={color}
+          stroke="#7a7a7a"
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-        ></path>{" "}
+        ></path>
         <path
           d="M6 6L18 18"
-          stroke={color}
+          stroke="#7a7a7a"
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-        ></path>{" "}
+        ></path>
       </g>
     </svg>
   );

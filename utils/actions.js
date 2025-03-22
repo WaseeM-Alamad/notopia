@@ -91,7 +91,7 @@ export const createNoteAction = async (note) => {
   }
 };
 
-export const NoteUpdateAction = async (type, value, noteUUID, first) => {
+export const NoteUpdateAction = async (type, value, noteUUIDs, first) => {
   if (!session) {
     return new Response("Unauthorized", { status: 401 });
   }
@@ -99,58 +99,96 @@ export const NoteUpdateAction = async (type, value, noteUUID, first) => {
     await connectDB();
     if (type === "images") {
       const updatedImages = await Note.findOneAndUpdate(
-        { uuid: noteUUID },
+        { uuid: noteUUIDs[0] },
         { $push: { images: value } },
         { returnDocument: "after" }
       );
       return JSON.parse(JSON.stringify(updatedImages.images));
     } else if (type === "isArchived") {
       await Note.updateOne(
-        { uuid: noteUUID },
+        { uuid: noteUUIDs[0] },
         { $set: { [type]: value, isPinned: false } }
       );
       if (!first) {
         const user = await User.findById(userID);
         const { notesOrder } = user;
-        const order = notesOrder.filter((uuid) => uuid !== noteUUID);
-        const updatedOrder = [noteUUID, ...order];
+        const order = notesOrder.filter((uuid) => uuid !== noteUUIDs[0]);
+        const updatedOrder = [noteUUIDs[0], ...order];
         user.notesOrder = updatedOrder;
         await user.save();
       }
     } else if (type === "pinArchived") {
       await Note.updateOne(
-        { uuid: noteUUID },
+        { uuid: noteUUIDs[0] },
         { $set: { isPinned: value, isArchived: false } }
       );
       const user = await User.findById(userID);
       const { notesOrder } = user;
-      const order = notesOrder.filter((uuid) => uuid !== noteUUID);
-      const updatedOrder = [noteUUID, ...order];
+      const order = notesOrder.filter((uuid) => uuid !== noteUUIDs[0]);
+      const updatedOrder = [noteUUIDs[0], ...order];
       user.notesOrder = updatedOrder;
       await user.save();
     } else if (type === "isPinned") {
-      await Note.updateOne({ uuid: noteUUID }, { $set: { [type]: value } });
+      await Note.updateOne({ uuid: noteUUIDs[0] }, { $set: { [type]: value } });
       if (!first) {
         const user = await User.findById(userID);
         const { notesOrder } = user;
-        const order = notesOrder.filter((uuid) => uuid !== noteUUID);
-        const updatedOrder = [noteUUID, ...order];
+        const order = notesOrder.filter((uuid) => uuid !== noteUUIDs[0]);
+        const updatedOrder = [noteUUIDs[0], ...order];
         user.notesOrder = updatedOrder;
         await user.save();
       }
     } else if (type === "isTrash") {
       await Note.updateOne(
-        { uuid: noteUUID },
+        { uuid: noteUUIDs[0] },
         { $set: { [type]: value, isPinned: false } }
       );
       const user = await User.findById(userID);
       const { notesOrder } = user;
-      const order = notesOrder.filter((uuid) => uuid !== noteUUID);
-      const updatedOrder = [noteUUID, ...order];
+      const order = notesOrder.filter((uuid) => uuid !== noteUUIDs[0]);
+      const updatedOrder = [noteUUIDs[0], ...order];
       user.notesOrder = updatedOrder;
       await user.save();
     } else {
-      await Note.updateOne({ uuid: noteUUID }, { $set: { [type]: value } });
+      await Note.updateMany(
+        { uuid: { $in: noteUUIDs } },
+        { $set: { [type]: value } }
+      );
+    }
+  } catch (error) {
+    console.log("Error updating note:", error);
+    return new Response("Failed to update note", { status: 500 });
+  }
+};
+
+export const batchUpdateAction = async (data) => {
+  if (!session) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+  try {
+    if (data.type === "BATCH_ARCHIVE") {
+      await connectDB();
+      const user = await User.findById(userID);
+      const { notesOrder } = user;
+      const updatedOrder = [...notesOrder];
+
+      const sortedNotes = data.selectedNotes.sort((a, b) => b.index - a.index);
+      const sortedUUIDs = [];
+
+      sortedNotes.forEach((noteData) => {
+        sortedUUIDs.push(noteData.uuid);
+        updatedOrder.splice(noteData.index, 1);
+      });
+
+      updatedOrder.unshift(...sortedUUIDs);
+
+      await Note.updateMany(
+        { uuid: { $in: sortedUUIDs } },
+        { $set: { isArchived: !data.val } }
+      );
+
+      user.notesOrder = updatedOrder;
+      await user.save();
     }
   } catch (error) {
     console.log("Error updating note:", error);
@@ -494,7 +532,6 @@ export const fetchLabelsAction = async () => {
 
     const user = await User.findById(userID);
     const labels = JSON.parse(JSON.stringify(user?.labels));
-
 
     return {
       success: true,

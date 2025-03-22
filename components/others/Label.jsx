@@ -59,6 +59,7 @@ const Label = ({
   }, []);
 
   const handleMoreClick = (e) => {
+    closeToolTip();
     setAnchorEL(e.currentTarget);
     setIsOpen((prev) => !prev);
     setColorMenuOpen(false);
@@ -180,6 +181,7 @@ const Label = ({
   }, [height]);
 
   const handleColorClick = (color) => {
+    if (labelData.color === color) return;
     setSelectedColor(color);
     updateLabelColor(labelData.uuid, color);
     triggerReRender((prev) => !prev);
@@ -192,6 +194,25 @@ const Label = ({
       isOpen: isOpen,
       triggerReRender: triggerReRender,
     });
+  };
+
+  const closeToolTip = () => {
+    setTooltipAnchor((prev) => ({
+      anchor: null,
+      text: prev?.text,
+    }));
+  };
+
+  const handleMouseEnter = (e, text) => {
+    const target = e.currentTarget;
+    setTooltipAnchor({ anchor: target, text: text, display: true });
+  };
+
+  const handleMouseLeave = () => {
+    setTooltipAnchor((prev) => ({
+      ...prev,
+      display: false,
+    }));
   };
 
   return (
@@ -220,6 +241,10 @@ const Label = ({
           <div className="label-more-icon">
             <Button
               onClick={handleMoreClick}
+              onMouseEnter={(e) =>
+                handleMouseEnter(e, "Options")
+              }
+              onMouseLeave={handleMouseLeave}
               ref={moreRef}
               className="btn-hover"
               style={{

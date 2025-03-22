@@ -19,15 +19,30 @@ const colors = [
   "Wisteria",
 ];
 
+const backgrounds = [
+  "DefaultBG",
+  "Groceries",
+  "Food",
+  "Music",
+  "Recipes",
+  "Notes",
+  "Places",
+  "Travel",
+  "Video",
+  "Celebration",
+];
+
 const ColorSelectMenu = ({
   handleColorClick,
+  handleBackground,
   selectedColor,
+  selectedBG,
   isOpen,
   setIsOpen,
   anchorEl,
   setTooltipAnchor,
 }) => {
-  const [hoveredColor, setHoveredColor] = useState(false);
+  const [hoveredItem, setHoveredItem] = useState(false);
   const menuRef = useRef(null);
 
   useEffect(() => {
@@ -83,6 +98,7 @@ const ColorSelectMenu = ({
     >
       <motion.div
         ref={menuRef}
+        id="color-menu"
         className="not-draggable color-menu"
         initial={{ y: 5, opacity: 0 }}
         animate={{
@@ -95,65 +111,139 @@ const ColorSelectMenu = ({
           opacity: { duration: 0.2 },
         }}
       >
-        {colors.map((color, index) => {
-          const colorClass =
-            hoveredColor === color && selectedColor !== color
-              ? "hovered-color"
-              : color === selectedColor
-              ? "menu-color-selected"
-              : color === "Default"
-              ? "menu-color-default"
-              : "";
+        <div
+          style={{
+            display: "flex",
+            padding: "9px 12px 1px 12px",
+            justifyContent: "space-around",
+          }}
+        >
+          {colors.map((color, index) => {
+            const colorClass =
+              hoveredItem === color && selectedColor !== color
+                ? "hovered-item"
+                : color === selectedColor
+                ? "menu-item-selected"
+                : color === "Default"
+                ? "menu-item-default"
+                : "";
 
-          return (
-            <button
-              onClick={() => handleColorClick(color)}
-              onMouseEnter={(e) => {
-                handleMouseEnter(e, color);
+            return (
+              <button
+                onClick={() => handleColorClick(color)}
+                onMouseEnter={(e) => {
+                  handleMouseEnter(e, color);
 
-                setHoveredColor(color);
-              }}
-              onMouseLeave={() => {
-                setHoveredColor(null);
-                handleMouseLeave();
-              }}
-              disabled={!isOpen}
-              key={index}
-              className={`${colorClass} not-draggable menu-color-btn ${
-                index === 0 && "default-color-icon"
-              } ${color} `}
-            >
-              <AnimatePresence>
-                {color === selectedColor && (
-                  <motion.div
-                    initial={{ scale: 0.5, opacity: 1 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{
-                      scale: 0,
-                      opacity: 0,
-                      transition: { duration: 0.2 },
-                    }}
-                    className="not-draggable"
-                    style={{
-                      backgroundColor: "#a142f4",
-                      position: "absolute",
-                      top: "-8px",
-                      fontSize: "19px",
-                      right: "-4.5px",
-                      display: "flex",
-                      borderRadius: "50%",
-                    }}
-                  >
-                    <DoneRoundedIcon
-                      sx={{ color: "white", margin: "auto", fontSize: "17px" }}
+                  setHoveredItem(color);
+                }}
+                onMouseLeave={() => {
+                  setHoveredItem(null);
+                  handleMouseLeave();
+                }}
+                disabled={!isOpen}
+                key={index}
+                className={`${colorClass} not-draggable menu-color-btn ${
+                  index === 0 && "default-color-icon"
+                } ${color} `}
+              >
+                <AnimatePresence>
+                  {color === selectedColor && (
+                    <motion.div
+                      initial={{ scale: 0.5, opacity: 1 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{
+                        scale: 0,
+                        opacity: 0,
+                        transition: { duration: 0.2 },
+                      }}
                       className="not-draggable"
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </button>
-          );
-        })}
+                      style={{
+                        backgroundColor: "#a142f4",
+                        position: "absolute",
+                        top: "-5px",
+                        fontSize: "19px",
+                        right: "-4.5px",
+                        display: "flex",
+                        borderRadius: "50%",
+                      }}
+                    >
+                      <DoneRoundedIcon
+                        sx={{
+                          color: "white",
+                          margin: "auto",
+                          fontSize: "16px",
+                        }}
+                        className="not-draggable"
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </button>
+            );
+          })}
+        </div>
+        <div className="menu-bg-container">
+          {backgrounds.map((name) => {
+            const itemClass =
+              hoveredItem === name && selectedBG !== name
+                ? "hovered-item"
+                : name === selectedBG
+                ? "menu-item-selected"
+                : name === "DefaultBG"
+                ? "menu-item-default"
+                : "";
+            return (
+              <button
+                onClick={()=>handleBackground(name)}
+                onMouseEnter={(e) => {
+                  handleMouseEnter(e, name === "DefaultBG" ? "Default": name);
+
+                  setHoveredItem(name);
+                }}
+                onMouseLeave={() => {
+                  setHoveredItem(null);
+                  handleMouseLeave();
+                }}
+                className={`menu-bg-btn menu-bg-${name} ${itemClass}`}
+                key={name}
+                disabled={!isOpen}
+              >
+                <AnimatePresence>
+                  {name === selectedBG && (
+                    <motion.div
+                      initial={{ scale: 0.5, opacity: 1 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{
+                        scale: 0,
+                        opacity: 0,
+                        transition: { duration: 0.2 },
+                      }}
+                      className="not-draggable"
+                      style={{
+                        backgroundColor: "#a142f4",
+                        position: "absolute",
+                        top: "-5px",
+                        fontSize: "19px",
+                        right: "-4.5px",
+                        display: "flex",
+                        borderRadius: "50%",
+                      }}
+                    >
+                      <DoneRoundedIcon
+                        sx={{
+                          color: "white",
+                          margin: "auto",
+                          fontSize: "16px",
+                        }}
+                        className="not-draggable"
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </button>
+            );
+          })}
+        </div>
       </motion.div>
     </Popper>,
     document.getElementById("colorMenuPortal")

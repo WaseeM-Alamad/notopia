@@ -12,36 +12,40 @@
   box-sizing: border-box;
   font-weight: 400;
   user-select: none;
+  outline: solid 1px transparent;
   overflow: hidden;
-  transition: transform 0.3s ease-in-out, opacity 0s, box-shadow 0.2s ease,
-    background-color 0.3s ease-in-out, border-color 0.2s ease-in-out,
-    outline 1.3s ease-in-out, height 0s;
+  transition: outline-color .3s ease, background-image 0.25s ease, background-position-y 0.25s ease, background-position-x 0.25s ease,
+    transform 0.3s ease-in-out, opacity 0s, box-shadow 0.2s ease,
+    background-color 0.25s ease-in-out, border-color 0.3s ease-in-out, height 0s;
+  background-size: cover;
+  will-change: background;
   overflow-wrap: break-word;
   word-wrap: break-word;
   white-space: pre-wrap;
 }
 
-.notes-container.dragging .note-wrapper:hover .note-bottom {
+.starting-div.dragging .note-wrapper:hover .note-bottom {
   opacity: 0;
   pointer-events: none;
 }
 
-.notes-container.selected-notes .note-wrapper:hover .note-bottom {
+.starting-div.selected-notes .note-wrapper:hover .note-bottom {
+  display: none;
   opacity: 0;
   pointer-events: none;
 }
 
-.notes-container.dragging .note-wrapper:hover .pin {
+.starting-div.dragging .note-wrapper:hover .pin {
   opacity: 0;
   pointer-events: none;
 }
 
-.notes-container.dragging .note-wrapper:hover .checkmark {
+.starting-div.dragging .note-wrapper:hover .checkmark {
   opacity: 0;
   pointer-events: none;
 }
 
-.notes-container.dragging .note-wrapper:hover {
+.starting-div.dragging .note-wrapper:hover {
   box-shadow: none;
   pointer-events: none;
 }
@@ -161,4 +165,3 @@
 .dark-mode .empty-note::before {
   color: rgb(172, 172, 172);
 }
-

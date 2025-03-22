@@ -9,8 +9,10 @@ import ManageLabelsMenu from "./ManageLabelsMenu";
 const ModalMenu = ({
   isOpen,
   setIsOpen,
+  setModalOpen,
   setLabelsOpen,
   anchorEl,
+  trashRef,
   note,
   dispatchNotes,
   openSnackFunction,
@@ -45,7 +47,9 @@ const ModalMenu = ({
   }, [isOpen]);
 
   const handleDelete = async (e) => {
-
+    trashRef.current = true;
+    setIsOpen(false);
+    setModalOpen(false);
   };
 
   const handleMakeCopy = (e) => {

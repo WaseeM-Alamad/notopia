@@ -24,6 +24,7 @@ import React, {
   useState,
 } from "react";
 import { useAppContext } from "@/context/AppContext";
+import TopMenu from "@/components/others/topMenu/TopMenu";
 
 const initialStates = {
   notes: new Map(),
@@ -94,6 +95,33 @@ function notesReducer(state, action) {
         order: updatedOrder,
       };
     }
+
+    case "BATCH_ARCHIVE": {
+      const sortedNotes = action.selectedNotes.sort(
+        (a, b) => b.index - a.index
+      );
+      let sortedUUIDS = [];
+      const updatedNotes = new Map(state.notes);
+      const updatedOrder = [...state.order];
+      sortedNotes.forEach((noteData) => {
+        const newNote = {
+          ...updatedNotes.get(noteData.uuid),
+          isArchived: !action.isArchived,
+        };
+        updatedNotes.set(noteData.uuid, newNote);
+        updatedOrder.splice(noteData.index, 1);
+        sortedUUIDS.push(noteData.uuid);
+      });
+
+      updatedOrder.unshift(...sortedUUIDS);
+
+      return {
+        ...state,
+        notes: updatedNotes,
+        order: updatedOrder,
+      };
+    }
+
     case "TRASH_NOTE": {
       const newNote = {
         ...state.notes.get(action.note.uuid),
@@ -180,6 +208,47 @@ function notesReducer(state, action) {
         color: action.newColor,
       };
       const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
+
+      return {
+        ...state,
+        notes: updatedNotes,
+      };
+    }
+
+    case "BATCH_UPDATE_COLOR": {
+      const updatedNotes = new Map(state.notes);
+      action.selectedNotes.forEach((data) => {
+        const newNote = { ...updatedNotes.get(data.uuid), color: action.color };
+        updatedNotes.set(data.uuid, newNote);
+      });
+
+      return {
+        ...state,
+        notes: updatedNotes,
+      };
+    }
+
+    case "UPDATE_BG": {
+      const newNote = {
+        ...state.notes.get(action.noteUUID),
+        background: action.newBG,
+      };
+      const updatedNotes = new Map(state.notes).set(action.noteUUID, newNote);
+
+      return {
+        ...state,
+        notes: updatedNotes,
+      };
+    }
+    case "BATCH_UPDATE_BG": {
+      const updatedNotes = new Map(state.notes);
+      action.selectedNotes.forEach((data) => {
+        const newNote = {
+          ...updatedNotes.get(data.uuid),
+          background: action.background,
+        };
+        updatedNotes.set(data.uuid, newNote);
+      });
 
       return {
         ...state,
@@ -335,6 +404,7 @@ const page = () => {
   const [selectedNote, setSelectedNote] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [notesReady, setNotesReady] = useState(false);
+  const [selectedNotesIDs, setSelectedNotesIDs] = useState([]);
   const [snackbarState, setSnackbarState] = useState({
     snackOpen: false,
     showUndo: true,
@@ -512,7 +582,7 @@ const page = () => {
       await NoteUpdateAction(
         "isArchived",
         !data.note.isArchived,
-        data.note.uuid,
+        [data.note.uuid],
         first
       );
       window.dispatchEvent(new Event("loadingEnd"));
@@ -563,7 +633,7 @@ const page = () => {
       });
 
       window.dispatchEvent(new Event("loadingStart"));
-      await NoteUpdateAction("isTrash", false, data.note.uuid);
+      await NoteUpdateAction("isTrash", false, [data.note.uuid]);
       window.dispatchEvent(new Event("loadingEnd"));
     } else if (data.type === "RESTORE_NOTE") {
       const timeOut = setTimeout(() => {
@@ -598,7 +668,7 @@ const page = () => {
 
       const onClose = async () => {
         window.dispatchEvent(new Event("loadingStart"));
-        await NoteUpdateAction("isTrash", true, data.note.uuid);
+        await NoteUpdateAction("isTrash", true, [data.note.uuid]);
         window.dispatchEvent(new Event("loadingEnd"));
       };
 
@@ -687,7 +757,7 @@ const page = () => {
       });
 
       try {
-        await NoteUpdateAction("pinArchived", true, data.note.uuid);
+        await NoteUpdateAction("pinArchived", true, [data.note.uuid]);
       } finally {
         window.dispatchEvent(new Event("loadingEnd"));
       }
@@ -702,13 +772,14 @@ const page = () => {
       });
 
       window.dispatchEvent(new Event("loadingStart"));
-      await NoteUpdateAction("color", data.newColor, data.note.uuid);
+      await NoteUpdateAction("color", data.newColor, [data.note.uuid]);
       window.dispatchEvent(new Event("loadingEnd"));
     }
   }, []);
 
   useEffect(() => {
     const handleHashChange = (e) => {
+      setSelectedNotesIDs([]);
       setTooltipAnchor(null);
     };
 
@@ -816,42 +887,52 @@ const page = () => {
     data.labelRef.current.addEventListener("transitionend", handler);
   };
 
+  const handleSelectNote = useCallback((data) => {
+    if (data.source === "note" && !areNotesSelectedRef.current) {
+      return;
+    }
+    if (data.clear) {
+      setSelectedNotesIDs([]);
+      window.dispatchEvent(new Event("topMenuClose"));
+      return;
+    }
+    data.e.stopPropagation();
+
+    setTooltipAnchor((prev) => ({
+      anchor: null,
+      text: prev.text,
+    }));
+    data.setSelected((prev) => !prev);
+
+    if (data.selected) {
+      data.setSelected(false);
+      setSelectedNotesIDs((prev) =>
+        prev.filter((noteData) => noteData.uuid !== data.uuid)
+      );
+    } else {
+      data.setSelected(true);
+      setSelectedNotesIDs((prev) => [
+        ...prev,
+        { uuid: data.uuid, index: data.index },
+      ]);
+    }
+  }, []);
+
+  const areNotesSelectedRef = useRef(false);
+
+  useEffect(() => {
+    const length = selectedNotesIDs.length;
+
+    if (length === 0) {
+      areNotesSelectedRef.current = false;
+    } else {
+      areNotesSelectedRef.current = true;
+    }
+  }, [selectedNotesIDs.length]);
+
   return (
     <>
-      <AnimatePresence>
-        {isModalOpen && (
-          <motion.div
-            initial={{
-              opacity: 0,
-              display: "none",
-            }}
-            animate={{
-              opacity: 1,
-              display: "block",
-            }}
-            exit={{
-              opacity: 0,
-              display: "none",
-            }}
-            transition={{
-              all: {
-                type: "spring",
-                stiffness: 1000,
-                damping: 50,
-                mass: 1,
-              },
-            }}
-            style={{
-              backgroundColor: "rgba(0,0,0,0.5)",
-            }}
-            onClick={() => {
-              setIsModalOpen(false);
-            }}
-            id="n-overlay"
-            className="modal-container no-transition"
-          />
-        )}
-      </AnimatePresence>
+      <div id="n-overlay" className="note-overlay" />
 
       <Modal
         note={selectedNote}
@@ -879,6 +960,14 @@ const page = () => {
       />
       <div className="starting-div-header" />
 
+      <TopMenu
+        notes={notesState.notes}
+        dispatchNotes={dispatchNotes}
+        selectedNotesIDs={selectedNotesIDs}
+        setSelectedNotesIDs={setSelectedNotesIDs}
+        setTooltipAnchor={setTooltipAnchor}
+      />
+
       <Page
         dispatchNotes={dispatchNotes}
         notes={notesState.notes}
@@ -887,6 +976,9 @@ const page = () => {
         openSnackFunction={openSnackFunction}
         handleNoteClick={handleNoteClick}
         handleDeleteLabel={handleDeleteLabel}
+        selectedNotesIDs={selectedNotesIDs}
+        setSelectedNotesIDs={setSelectedNotesIDs}
+        handleSelectNote={handleSelectNote}
         noteActions={noteActions}
         notesReady={notesReady}
       />

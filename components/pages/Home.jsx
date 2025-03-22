@@ -12,12 +12,13 @@ import Note from "../others/Note";
 import AddNoteModal from "../others/AddNoteModal";
 import { useAppContext } from "@/context/AppContext";
 import { AnimatePresence, motion } from "framer-motion";
-import TopMenuHome from "../others/topMenu/TopMenuHome";
+import TopMenuHome from "../others/topMenu/TopMenu";
 import {
   NoteUpdateAction,
   undoAction,
   updateOrderAction,
 } from "@/utils/actions";
+import AddNoteModall from "../others/AddNoteModall";
 
 const COLUMN_WIDTH = 240;
 const GUTTER = 15;
@@ -36,6 +37,7 @@ const NoteWrapper = memo(
     selectedNotes,
     handleDragStart,
     index,
+    handleSelectNote,
     isDragging,
     setTooltipAnchor,
     handleNoteClick,
@@ -112,6 +114,7 @@ const NoteWrapper = memo(
           isLoadingImagesAddNote={isLoadingImages}
           setSelectedNotesIDs={setSelectedNotesIDs}
           selectedNotes={selectedNotes}
+          handleSelectNote={handleSelectNote}
           isDragging={isDragging}
           openSnackFunction={openSnackFunction}
           index={index}
@@ -132,13 +135,13 @@ const Home = memo(
     setTooltipAnchor,
     openSnackFunction,
     handleNoteClick,
+    setSelectedNotesIDs,
+    handleSelectNote,
     noteActions,
     notesReady,
   }) => {
     const [pinnedHeight, setPinnedHeight] = useState(null);
     const [isLoadingImages, setIsLoadingImages] = useState([]);
-    const [selectedNotesIDs, setSelectedNotesIDs] = useState([]);
-    const selectedRef = useRef(false);
     const lastAddedNoteRef = useRef(null);
     const containerRef = useRef(null);
     const resizeTimeoutRef = useRef(null);
@@ -263,10 +266,6 @@ const Home = memo(
       }
     }, [notes, calculateLayout]);
 
-    useEffect(() => {
-      selectedRef.current = selectedNotesIDs.length > 0;
-    }, [selectedNotesIDs]);
-
     const draggedNoteRef = useRef(null);
     const endIndexRef = useRef(null);
     const isDragging = useRef(false);
@@ -305,7 +304,7 @@ const Home = memo(
           10
         );
         draggedElement.classList.add("dragged-note");
-        document.querySelector(".notes-container")?.classList.add("dragging");
+        document.querySelector(".starting-div")?.classList.add("dragging");
 
         const rect = draggedElement.getBoundingClientRect();
         const offsetX = e.clientX - rect.left;
@@ -351,7 +350,7 @@ const Home = memo(
               }
 
               document
-                .querySelector(".notes-container")
+                .querySelector(".starting-div")
                 ?.classList.remove("dragging");
               const rect = draggedElement.getBoundingClientRect();
               ghostElement.classList.remove("ghost-note");
@@ -436,18 +435,13 @@ const Home = memo(
 
     return (
       <>
-        <TopMenuHome
-          selectedNotesIDs={selectedNotesIDs}
-          setSelectedNotesIDs={setSelectedNotesIDs}
-          setTooltipAnchor={setTooltipAnchor}
-        />
         <div className="starting-div">
           <motion.div
-            initial={{opacity: 0}}
-            animate={{opacity: 1}}
-            transition={{duration: 0.15}}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.15 }}
             ref={containerRef}
-            className="notes-container"
+            className="section-container"
             onMouseMove={handleMouseMove}
           >
             <p
@@ -487,36 +481,20 @@ const Home = memo(
                     openSnackFunction={openSnackFunction}
                     setSelectedNotesIDs={setSelectedNotesIDs}
                     handleNoteClick={handleNoteClick}
+                    handleSelectNote={handleSelectNote}
                     {...(isLoadingImages.includes(note.uuid)
                       ? { isLoadingImages }
                       : {})}
                     calculateLayout={calculateLayout}
-                    selectedNotes={selectedRef}
                   />
                 )
               );
             })}
           </motion.div>
           <div className="empty-page">
-              {notesReady &&
-                pinnedNotesNumber === 0 &&
-                unpinnedNotesNumber === 0 && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 800,
-                      damping: 50,
-                      mass: 1,
-                    }}
-                    className="empty-page-box"
-                  >
-                    <div className="empty-page-home" />
-                    Notes you add appear here
-                  </motion.div>
-                )}
-              {!notesReady && (
+            {notesReady &&
+              pinnedNotesNumber === 0 &&
+              unpinnedNotesNumber === 0 && (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -528,16 +506,38 @@ const Home = memo(
                   }}
                   className="empty-page-box"
                 >
-                  <div className="empty-page-loading" />
-                  Loading notes...
+                  <div className="empty-page-home" />
+                  Notes you add appear here
                 </motion.div>
               )}
+            {!notesReady && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 800,
+                  damping: 50,
+                  mass: 1,
+                }}
+                className="empty-page-box"
+              >
+                <div className="empty-page-loading" />
+                Loading notes...
+              </motion.div>
+            )}
           </div>
         </div>
-        <AddNoteModal
+        {/* <AddNoteModal
           dispatchNotes={dispatchNotes}
           lastAddedNoteRef={lastAddedNoteRef}
           setIsLoadingImages={setIsLoadingImages}
+          setTooltipAnchor={setTooltipAnchor}
+          openSnackFunction={openSnackFunction}
+        /> */}
+        <AddNoteModall
+          dispatchNotes={dispatchNotes}
+          lastAddedNoteRef={lastAddedNoteRef}
           setTooltipAnchor={setTooltipAnchor}
           openSnackFunction={openSnackFunction}
         />

@@ -218,7 +218,7 @@ const Modal = ({
     setModalIsPinned((prev) => !prev);
     window.dispatchEvent(new Event("loadingStart"));
     try {
-      await NoteUpdateAction("isPinned", !note.isPinned, note.uuid);
+      await NoteUpdateAction("isPinned", !note.isPinned, [note.uuid]);
     } finally {
       window.dispatchEvent(new Event("loadingEnd"));
     }
@@ -284,7 +284,7 @@ const Modal = ({
       });
       const first = initialStyle.index === 0;
       window.dispatchEvent(new Event("loadingStart"));
-      await NoteUpdateAction("isArchived", !note.isArchived, note.uuid, first);
+      await NoteUpdateAction("isArchived", !note.isArchived, [note.uuid], first);
       window.dispatchEvent(new Event("loadingEnd"));
 
       archiveRef.current = false;

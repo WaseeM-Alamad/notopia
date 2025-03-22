@@ -4,7 +4,7 @@ import "@/assets/styles/home.css";
 import Note from "../others/Note";
 import AddNoteModal from "../others/AddNoteModal";
 import { AnimatePresence, motion } from "framer-motion";
-import TopMenuHome from "../others/topMenu/TopMenuHome";
+import TopMenuHome from "../others/topMenu/TopMenu";
 import { emptyTrashAction } from "@/utils/actions";
 import DeleteModal from "../others/DeleteModal";
 
@@ -66,13 +66,13 @@ const Home = memo(
     dispatchNotes,
     setTooltipAnchor,
     openSnackFunction,
+    selectedNotesIDs,
+    setSelectedNotesIDs,
     noteActions,
     notesReady,
   }) => {
-    const [selectedNotesIDs, setSelectedNotesIDs] = useState([]);
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [notesExist, setNotesExist] = useState(false);
-    const selectedRef = useRef(false);
     const containerRef = useRef(null);
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
@@ -187,9 +187,6 @@ const Home = memo(
       }
     }, [notes, calculateLayout]);
 
-    useEffect(() => {
-      selectedRef.current = selectedNotesIDs.length > 0;
-    }, [selectedNotesIDs]);
 
     useEffect(() => {
       const handler = async () => {
@@ -209,10 +206,6 @@ const Home = memo(
 
     return (
       <>
-        <TopMenuHome
-          selectedNotesIDs={selectedNotesIDs}
-          setSelectedNotesIDs={setSelectedNotesIDs}
-        />
         <div className="starting-div">
           <div className="trash-section-header">
             Notes in Trash are deleted after 7 days.
@@ -222,7 +215,7 @@ const Home = memo(
             animate={{ opacity: 1 }}
             transition={{ duration: 0.15 }}
             ref={containerRef}
-            className="notes-container"
+            className="section-container"
           >
             {order.map((uuid, index) => {
               const note = notes.get(uuid);
@@ -235,7 +228,6 @@ const Home = memo(
                     dispatchNotes={dispatchNotes}
                     index={index}
                     setSelectedNotesIDs={setSelectedNotesIDs}
-                    selectedNotes={selectedRef}
                     setTooltipAnchor={setTooltipAnchor}
                     openSnackFunction={openSnackFunction}
                   />

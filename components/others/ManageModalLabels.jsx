@@ -60,7 +60,7 @@ const ManageModalLabels = ({
     if (!isOpen) return;
 
     const labelsMap = new Map(
-        modalLabels.map((noteLabel) => [noteLabel, true])
+      modalLabels.map((noteLabel) => [noteLabel, true])
     );
     setNoteLabels(labelsMap);
   }, [isOpen, modalLabels, isClient]);
@@ -172,16 +172,7 @@ const ManageModalLabels = ({
         className="menu not-draggable"
       >
         <div style={{ width: "14.0625rem" }}>
-          <div
-            style={{
-              padding: "0 0.8rem",
-              fontSize: "0.9rem",
-              color: "rgb(32,33,36)",
-              boxSizing: "border-box",
-            }}
-          >
-            Label note
-          </div>
+          <div className="label-note">Label note</div>
           <div
             style={{
               padding: "0.55rem 0.8rem 0.8rem 0.8rem",
@@ -224,12 +215,9 @@ const ManageModalLabels = ({
                     }}
                   >
                     <div
-                      className="label-checkmark"
-                      style={{
-                        backgroundImage:
-                          noteLabels.has(uuid) &&
-                          "url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjMDAwIj48cGF0aCBkPSJNMTkgM0g1Yy0xLjEgMC0yIC45LTIgMnYxNGMwIDEuMS45IDIgMiAyaDE0YzEuMSAwIDItLjkgMi0yVjVjMC0xLjEtLjktMi0yLTJ6bTAgMTZINVY1aDE0djE0eiIvPgogIDxwYXRoIGQ9Ik0xOCA5bC0xLjQtMS40LTYuNiA2LjYtMi42LTIuNkw2IDEzbDQgNHoiLz4KPC9zdmc+Cg==)",
-                      }}
+                      className={`label-checkmark ${
+                        noteLabels.has(uuid) && "label-added"
+                      }`}
                     />
                     <div style={{ width: "100%", paddingLeft: "0.5rem" }}>
                       {labelData.label}
@@ -244,16 +232,7 @@ const ManageModalLabels = ({
                 className="create-icon"
                 // style={{ position: "absolute", bottom: "1px" }}
               />
-              <div
-                style={{
-                  display: "inline-block",
-                  paddingTop: "1px",
-                  paddingLeft: "0.2rem",
-                  fontSize: "13px",
-                  color: "rgb(32,33,36)",
-                  cursor: "pointer",
-                }}
-              >
+              <div className="create-label-box">
                 Create
                 <span
                   style={{

@@ -20,8 +20,15 @@ const NoteSchema = new Schema(
     color: {
       type: String,
       trim: true,
-      default: "#ffffff",
+      default: "Default",
     },
+
+    background: {
+      type: "String",
+      trim: true,
+      default: "DefaultBG",
+    },
+
     labels: [
       {
         type: String,

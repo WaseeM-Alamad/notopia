@@ -196,7 +196,7 @@ const NoteModal = ({
     setIsPinned((prev) => !prev);
     window.dispatchEvent(new Event("loadingStart"));
     try {
-      await NoteUpdateAction("isPinned", !note.isPinned, note.uuid);
+      await NoteUpdateAction("isPinned", !note.isPinned, [note.uuid]);
     } finally {
       window.dispatchEvent(new Event("loadingEnd"));
     }

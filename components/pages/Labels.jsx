@@ -112,7 +112,7 @@ const Labels = memo(
       triggerReRender((prev) => !prev);
       setTimeout(() => {
         const element = document.querySelector(
-          '.labels-container [data-index="0"]'
+          '.section-container [data-index="0"]'
         );
         element.focus();
       }, 10);
@@ -146,7 +146,7 @@ const Labels = memo(
             animate={{ opacity: 1 }}
             transition={{ duration: 0.15 }}
             ref={containerRef}
-            className="labels-container"
+            className="section-container"
           >
             {/* <NewLabel triggerReRender={triggerReRender} /> */}
             {[...labelsRef.current]

@@ -23,17 +23,15 @@ const Modal = ({
   initialStyle,
   isOpen,
   setIsOpen,
-  onClose,
-  closeRef,
   setTooltipAnchor,
   dispatchNotes,
   openSnackFunction,
-  closeSnackbar,
   setModalStyle,
 }) => {
   const { handleLabelNoteCount, labelsRef } = useAppContext();
   const [isMounted, setIsMounted] = useState(false);
   const [selectedColor, setSelectedColor] = useState(null);
+  const [selectedBG, setSelectedBG] = useState(null);
   const [modalIsPinned, setModalIsPinned] = useState(false);
   const [modalLabels, setModalLabels] = useState([]);
   const [localImages, setLocalImages] = useState([]);
@@ -47,6 +45,7 @@ const Modal = ({
     ? getNoteFormattedDate(note?.createdAt)
     : null;
 
+  const overlay = document.getElementById("n-overlay");
   const { data: session } = useSession();
   const userID = session?.user?.id;
   const titleTextRef = useRef(null);
@@ -55,6 +54,7 @@ const Modal = ({
   const contentRef = useRef(null);
   const modalRef = useRef(null);
   const archiveRef = useRef(false);
+  const trashRef = useRef(false);
   const imagesChangedRef = useRef(false);
   const prevHash = useRef(null);
 
@@ -65,9 +65,11 @@ const Modal = ({
       const modalWidth = modalRef.current.offsetWidth;
       const modalHeight = modalRef.current.offsetHeight;
 
+      const topPos = (viewportHeight - modalHeight) / 3;
+
       modalRef.current.style.transform = "none";
       modalRef.current.style.left = `${(viewportWidth - modalWidth) / 2}px`;
-      modalRef.current.style.top = `${(viewportHeight - modalHeight) / 3}px`;
+      modalRef.current.style.top = `${topPos > 30 ? topPos : 30}px`;
     });
   };
 
@@ -98,7 +100,9 @@ const Modal = ({
       window.location.hash = `NOTE/${note?.uuid}`;
 
       archiveRef.current = false;
+      trashRef.current = false;
       setLocalImages(note?.images);
+      setSelectedBG(note?.background || "DefaultBG");
       setSelectedColor(note?.color);
       setModalIsPinned(note?.isPinned);
       setModalLabels(note?.labels);
@@ -114,32 +118,51 @@ const Modal = ({
 
       positionModal();
 
+      overlay.style.display = "block";
+      overlay.offsetHeight;
+      overlay.style.opacity = "1";
+
       modalRef.current.offsetHeight;
 
       modalRef.current.style.transition =
-        "all 0.22s cubic-bezier(0.35, 0.9, 0.25, 1), opacity 0.13s, background-color 0.2s linear";
+        "all 0.22s cubic-bezier(0.35, 0.9, 0.25, 1), opacity 0.13s";
+
+      const handler = (e) => {
+        if (e.propertyName === "top") {
+          modalRef.current.removeEventListener("transitionend", handler);
+          modalRef.current.style.transition =
+            "all .25s ease-in-out, left 0s, top .13s, opacity 0.13s, background-color 0.25s ease-in-out";
+        }
+      };
+
+      modalRef.current.addEventListener("transitionend", handler);
 
       centerModal();
-    } else {
-      const overlay = document.getElementById("n-overlay");
-      if (!overlay) return;
-      window.location.hash = prevHash.current || "home";
 
+      return () =>
+        modalRef.current.removeEventListener("transitionend", handler);
+    } else {
+      window.location.hash = prevHash.current || "home";
+      modalRef.current.style.transition =
+        "all 0.22s cubic-bezier(0.35, 0.9, 0.25, 1), opacity 0.13s";
       modalRef.current.offsetHeight;
+      overlay.style.opacity = "0";
       checkForChanges();
       setTimeout(() => {
         positionModal();
       }, 10);
 
       const handleModalClose = (e) => {
-        if (e.propertyName === "left") {
+        if (e.propertyName === "top") {
           modalRef.current.removeEventListener(
             "transitionend",
             handleModalClose
           );
           modalRef.current.removeAttribute("style");
+          overlay.removeAttribute("style");
 
           setSelectedColor(null);
+          setSelectedBG(null);
           setModalIsPinned(false);
           setLocalImages([]);
           setModalLabels([]);
@@ -158,12 +181,17 @@ const Modal = ({
             setTimeout(() => {
               handleArchive();
             }, 20);
+          } else if (trashRef.current) {
+            setTimeout(() => {
+              handleTrash();
+            }, 20);
           }
-          if (!archiveRef.current) {
+          if (!archiveRef.current || !trashRef.current) {
             initialStyle.element.style.opacity = "1";
           }
 
           archiveRef.current = false;
+          trashRef.current = false;
         }
       };
 
@@ -177,6 +205,39 @@ const Modal = ({
         );
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    const nav = document.querySelector("nav");
+    if (isOpen) {
+      const scrollbarWidth =
+        window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.overflow = "hidden";
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+      // modalRef.current.style.marginLeft = `${0}px`;
+      if (nav) nav.style.paddingRight = `${scrollbarWidth}px`;
+    } else {
+      const scrollbarWidth =
+        window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.overflow = "auto";
+      document.body.style.paddingRight = ""; // Remove padding
+      // if (modalRef.current)
+      // modalRef.current.style.marginLeft = `${
+      // scrollbarWidth === 0 ? 0 : scrollbarWidth - 5
+      // }px`;
+      if (nav) nav.style.paddingRight = "0px";
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.target.id === "n-overlay") {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("click", handler);
+    return () => document.removeEventListener("click", handler);
+  }, []);
 
   useEffect(() => {
     setIsMounted(true);
@@ -211,7 +272,7 @@ const Modal = ({
       snackMessage: `${
         note.isArchived
           ? "Note unarchived"
-          : note.isPinned
+          : modalIsPinned
           ? "Note unpinned and archived"
           : "Note Archived"
       }`,
@@ -219,17 +280,50 @@ const Modal = ({
     });
     const first = initialStyle.index === 0;
     window.dispatchEvent(new Event("loadingStart"));
-    await NoteUpdateAction("isArchived", !note.isArchived, note.uuid, first);
+    await NoteUpdateAction("isArchived", !note.isArchived, [note.uuid], first);
     window.dispatchEvent(new Event("loadingEnd"));
 
     archiveRef.current = false;
+  };
+
+  const handleTrash = () => {
+    dispatchNotes({
+      type: "TRASH_NOTE",
+      note: note,
+    });
+
+    const undoTrash = async () => {
+      dispatchNotes({
+        type: "UNDO_TRASH",
+        note: note,
+        initialIndex: initialStyle?.index,
+      });
+    };
+
+    const onClose = async () => {
+      window.dispatchEvent(new Event("loadingStart"));
+      await NoteUpdateAction("isTrash", true, [note.uuid]);
+      window.dispatchEvent(new Event("loadingEnd"));
+    };
+
+    if (!note.isTrash) {
+      openSnackFunction({
+        snackMessage: `${
+          modalIsPinned ? "Note unpinned and trashed" : "Note trashed"
+        }`,
+        snackOnUndo: undoTrash,
+        snackOnClose: onClose,
+        unloadWarn: true,
+      });
+    }
+    trashRef.current = false;
   };
 
   const handlePinClick = async () => {
     setModalIsPinned((prev) => !prev);
     window.dispatchEvent(new Event("loadingStart"));
     try {
-      await NoteUpdateAction("isPinned", !note.isPinned, note.uuid);
+      await NoteUpdateAction("isPinned", !modalIsPinned, [note.uuid]);
     } finally {
       window.dispatchEvent(new Event("loadingEnd"));
     }
@@ -298,26 +392,78 @@ const Modal = ({
     [note?.uuid] // Dependencies array, make sure it's updated when `note.uuid` changes
   );
 
-  const debouncedSetUndo = useCallback(
-    debounce((text) => {
-      setUndoStack((prev) => [...prev, { type: "title", text }]);
-    }, 200),
+  const titleDebouncedSetUndo = useCallback(
+    debounce((data) => {
+      setUndoStack((prev) => [...prev, data]);
+    }, 120),
     []
   );
 
-  const debouncedSetRedo = useCallback(
-    debounce((text) => {
-      setRedoStack((prev) => [...prev, { type: "title", text }]);
-    }, 200),
+  const contentDebouncedSetUndo = useCallback(
+    debounce((data) => {
+      setUndoStack((prev) => [...prev, data]);
+    }, 100),
     []
   );
+
+  const handleUndo = async () => {
+    if (undoStack.length === 1) {
+      setRedoStack((prev) => [...prev, undoStack[0]]);
+      setUndoStack([]);
+      titleRef.current.innerText = note?.title;
+      contentRef.current.innerText = note?.content;
+      titleTextRef.current = note?.title;
+      contentTextRef.current = note?.content;
+      window.dispatchEvent(new Event("loadingStart"));
+      await NoteTextUpdateAction(
+        { title: note?.title, content: note?.content },
+        note?.uuid
+      );
+      window.dispatchEvent(new Event("loadingEnd"));
+    } else {
+      const redoItem = undoStack[undoStack.length - 1];
+      setRedoStack((prev) => [...prev, redoItem]);
+      const updatedStack = undoStack.slice(0, -1);
+      setUndoStack(updatedStack);
+      const undoItem = updatedStack[updatedStack.length - 1];
+
+      titleRef.current.innerText = undoItem.title;
+      contentRef.current.innerText = undoItem.content;
+      titleTextRef.current = undoItem.title;
+      contentTextRef.current = undoItem.content;
+      window.dispatchEvent(new Event("loadingStart"));
+      await NoteTextUpdateAction(
+        { title: undoItem.title, content: undoItem.content },
+        note?.uuid
+      );
+      window.dispatchEvent(new Event("loadingEnd"));
+    }
+  };
+
+  const handleRedo = async () => {
+    const undoItem = redoStack[redoStack.length - 1];
+    setUndoStack((prev) => [...prev, undoItem]);
+    setRedoStack((prev) => prev.slice(0, -1));
+    const redoItem = redoStack[redoStack.length - 1];
+
+    titleRef.current.innerText = redoItem.title;
+    contentRef.current.innerText = redoItem.content;
+    titleTextRef.current = redoItem.title;
+    contentTextRef.current = redoItem.content;
+
+    window.dispatchEvent(new Event("loadingStart"));
+    await NoteTextUpdateAction(
+      { title: redoItem.title, content: redoItem.content },
+      note?.uuid
+    );
+    window.dispatchEvent(new Event("loadingEnd"));
+  };
 
   const handleTitleInput = useCallback(
     (e) => {
       const text = e.target.innerText;
       const t = text === "\n" ? "" : text;
-
-      // debouncedSetUndo(t);
+      titleDebouncedSetUndo({ title: t, content: contentTextRef.current });
 
       titleTextRef.current = t;
 
@@ -327,13 +473,16 @@ const Modal = ({
         e.target.innerText = "";
       }
     },
-    [note?.content]
+    [note?.content, note?.title, undoStack]
   );
 
   const handleContentInput = useCallback(
     (e) => {
       const text = e.target.innerText;
       const t = text === "\n" ? "" : text;
+
+      contentDebouncedSetUndo({ title: titleTextRef.current, content: t });
+
       contentTextRef.current = t;
 
       updateTextDebounced({ title: titleTextRef.current, content: t });
@@ -342,7 +491,7 @@ const Modal = ({
         e.target.innerText = "";
       }
     },
-    [note?.title]
+    [note?.content, note?.title, undoStack]
   );
 
   const checkForChanges = () => {
@@ -437,17 +586,13 @@ const Modal = ({
       >
         <div
           style={{ overflowY: !isOpen && "hidden" }}
-          className="modal-inputs-container"
+          className={`modal-inputs-container ${"n-bg-" + selectedBG}`}
         >
           {localImages.length === 0 && (
             <div className={isOpen ? `modal-corner` : `corner`} />
           )}
-          <div className="modal-pin">
-            <Button
-              onClick={handlePinClick}
-              disabled={!isOpen}
-              style={{ opacity: !isOpen && "0" }}
-            >
+          <div style={{ opacity: !isOpen && "0" }} className="modal-pin">
+            <Button onClick={handlePinClick} disabled={!isOpen}>
               <PinIcon
                 isPinned={modalIsPinned}
                 opacity={0.8}
@@ -587,8 +732,11 @@ const Modal = ({
         <Tools
           trigger={isOpen}
           archiveRef={archiveRef}
+          trashRef={trashRef}
           selectedColor={selectedColor}
           setSelectedColor={setSelectedColor}
+          selectedBG={selectedBG}
+          setSelectedBG={setSelectedBG}
           setTooltipAnchor={setTooltipAnchor}
           openSnackFunction={openSnackFunction}
           note={note}
@@ -601,6 +749,8 @@ const Modal = ({
           setLocalImages={setLocalImages}
           undoStack={undoStack}
           redoStack={redoStack}
+          handleUndo={handleUndo}
+          handleRedo={handleRedo}
         />
       </div>
     </>,

@@ -1,25 +1,13 @@
-import React, {
-  memo,
-  useEffect,
-  useRef,
-  useState,
-  useCallback,
-  useMemo,
-} from "react";
+import React, { memo, useEffect, useRef, useState, useCallback } from "react";
 import "@/assets/styles/note.css";
 import "@/assets/styles/LinearLoader.css";
 import NoteTools from "./NoteTools";
 import PinIcon from "../icons/PinIcon";
-import {
-  NoteUpdateAction,
-  removeLabelAction,
-  undoAction,
-} from "@/utils/actions";
+import { NoteUpdateAction, removeLabelAction } from "@/utils/actions";
 import Button from "../Tools/Button";
 import NoteImagesLayout from "../Tools/NoteImagesLayout";
 import { useSession } from "next-auth/react";
 import CheckMark from "../icons/CheckMark";
-import { motion } from "framer-motion";
 import { useAppContext } from "@/context/AppContext";
 
 const Note = memo(
@@ -31,6 +19,7 @@ const Note = memo(
     isLoadingImagesAddNote = [],
     setSelectedNotesIDs,
     selectedNotes,
+    handleSelectNote,
     isDragging,
     setTooltipAnchor,
     openSnackFunction,
@@ -39,10 +28,6 @@ const Note = memo(
     const { handleLabelNoteCount, labelsRef } = useAppContext();
     const { data: session } = useSession();
     const userID = session?.user?.id;
-    const [localIsArchived, setLocalIsArchived] = useState(false);
-    const [localIsTrash, setLocalIsTrash] = useState(false);
-    const [localArchivedPin, setLocalArchivedPin] = useState(false);
-    const [isNoteDeleted, setIsNoteDeleted] = useState(false);
     const [colorMenuOpen, setColorMenuOpen] = useState(false);
     const [moreMenuOpen, setMoreMenuOpen] = useState(false);
     const [isLoadingImages, setIsLoadingImages] = useState([]);
@@ -56,30 +41,9 @@ const Note = memo(
     const contentRef = useRef(null);
     const checkRef = useRef(null);
 
-    const [notePos, setNotePos] = useState(() => ({
-      top: 0,
-      left: 0,
-      width: 240,
-      height: 20,
-    }));
-
-    //     background: "url(https://www.gstatic.com/keep/backgrounds/recipe_light_0609.svg)",
-
-    const handleNoteClick = (e) => {
-      if (!selectedNotes.current) {
-        // openNote(e);
-      } else {
-        // if (!inputsRef.current?.contains(e.target))
-        handleCheckClick(e);
-      }
-    };
-
     const handlePinClick = async (e) => {
       closeToolTip();
-      if (selectedNotes.current) {
-        setSelectedNotesIDs([]);
-        window.dispatchEvent(new Event("topMenuClose"));
-      }
+      handleSelectNote({ clear: true });
       e.stopPropagation(); // Prevent note click event
       if (!note.isArchived) {
         window.dispatchEvent(new Event("loadingStart"));
@@ -90,7 +54,12 @@ const Note = memo(
 
         try {
           const first = index === 0;
-          await NoteUpdateAction("isPinned", !note.isPinned, note.uuid, first);
+          await NoteUpdateAction(
+            "isPinned",
+            !note.isPinned,
+            [note.uuid],
+            first
+          );
         } finally {
           window.dispatchEvent(new Event("loadingEnd"));
         }
@@ -107,20 +76,6 @@ const Note = memo(
     const handleMenuIsOpenChange = useCallback((value) => {
       setColorMenuOpen(value);
     }, []);
-
-    const handleCheckClick = (e) => {
-      e.stopPropagation();
-      closeToolTip();
-      setSelected((prev) => !prev);
-
-      if (selected) {
-        setSelected(false);
-        setSelectedNotesIDs((prev) => prev.filter((id) => id !== note.uuid));
-      } else {
-        setSelected(true);
-        setSelectedNotesIDs((prev) => [...prev, note.uuid]);
-      }
-    };
 
     useEffect(() => {
       const handleCloseMenu = () => {
@@ -177,7 +132,16 @@ const Note = memo(
             }}
             ref={checkRef}
             className="checkmark"
-            onClick={handleCheckClick}
+            onClick={(e) =>
+              handleSelectNote({
+                source: "checkmark",
+                e: e,
+                selected: selected,
+                setSelected: setSelected,
+                uuid: note.uuid,
+                index: index,
+              })
+            }
             onMouseEnter={(e) =>
               handleMouseEnter(
                 e,
@@ -201,14 +165,23 @@ const Note = memo(
                   ? "45px"
                   : "0px  ",
             }}
-            className={`note ${note.color} ${
+            className={`note ${note.color} ${"n-bg-" + note.background} ${
               selected
                 ? "element-selected"
                 : note.color === "Default"
                 ? "default-border"
                 : "transparent-border"
             }`}
-            onClick={handleNoteClick}
+            onClick={(e) =>
+              handleSelectNote({
+                source: "note",
+                e: e,
+                selected: selected,
+                setSelected: setSelected,
+                uuid: note.uuid,
+                index: index,
+              })
+            }
           >
             <div ref={noteStuffRef}>
               {note.images.length === 0 && <div className="corner" />}
@@ -229,9 +202,7 @@ const Note = memo(
                   >
                     <PinIcon
                       isPinned={note.isPinned}
-                      rotation={
-                        note.isPinned || localArchivedPin ? "-45deg" : "-5deg"
-                      }
+                      rotation={note.isPinned ? "-45deg" : "-5deg"}
                     />
                   </Button>
                 )}
@@ -322,24 +293,23 @@ const Note = memo(
                 </>
               )}
             </div>
-            <NoteTools
-              colorMenuOpen={colorMenuOpen}
-              setColorMenuOpen={handleMenuIsOpenChange}
-              setTooltipAnchor={setTooltipAnchor}
-              moreMenuOpen={moreMenuOpen}
-              setMoreMenuOpen={setMoreMenuOpen}
-              images={note.images.length !== 0}
-              note={note}
-              noteRef={noteRef}
-              dispatchNotes={dispatchNotes}
-              setIsLoadingImages={setIsLoadingImages}
-              userID={userID}
-              openSnackFunction={openSnackFunction}
-              noteActions={noteActions}
-              setIsNoteDeleted={setIsNoteDeleted}
-              index={index}
-            />
           </div>
+          <NoteTools
+            colorMenuOpen={colorMenuOpen}
+            setColorMenuOpen={handleMenuIsOpenChange}
+            setTooltipAnchor={setTooltipAnchor}
+            moreMenuOpen={moreMenuOpen}
+            setMoreMenuOpen={setMoreMenuOpen}
+            images={note.images.length !== 0}
+            note={note}
+            noteRef={noteRef}
+            dispatchNotes={dispatchNotes}
+            setIsLoadingImages={setIsLoadingImages}
+            userID={userID}
+            openSnackFunction={openSnackFunction}
+            noteActions={noteActions}
+            index={index}
+          />
         </div>
       </>
     );

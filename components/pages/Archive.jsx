@@ -11,7 +11,7 @@ import "@/assets/styles/home.css";
 import Note from "../others/Note";
 import AddNoteModal from "../others/AddNoteModal";
 import { AnimatePresence, motion } from "framer-motion";
-import TopMenuHome from "../others/topMenu/TopMenuHome";
+import TopMenuHome from "../others/topMenu/TopMenu";
 
 const COLUMN_WIDTH = 240;
 const GUTTER = 15;
@@ -71,14 +71,13 @@ const Archive = memo(
     dispatchNotes,
     setTooltipAnchor,
     openSnackFunction,
+    setSelectedNotesIDs,
     noteActions,
     notesReady,
   }) => {
-    const [selectedNotesIDs, setSelectedNotesIDs] = useState([]);
     const [notesExist, setNotesExist] = useState(false);
     const hasDispatched = useRef(false);
     const isFirstRender = useRef(true);
-    const selectedRef = useRef(false);
     const containerRef = useRef(null);
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
@@ -171,10 +170,6 @@ const Archive = memo(
     }, [notes, calculateLayout]);
 
     useEffect(() => {
-      selectedRef.current = selectedNotesIDs.length > 0;
-    }, [selectedNotesIDs]);
-
-    useEffect(() => {
       if (!hasDispatched.current && !isFirstRender.current) {
         window.dispatchEvent(new Event("closeModal"));
         hasDispatched.current = true;
@@ -186,17 +181,13 @@ const Archive = memo(
 
     return (
       <>
-        <TopMenuHome
-          selectedNotesIDs={selectedNotesIDs}
-          setSelectedNotesIDs={setSelectedNotesIDs}
-        />
         <div className="starting-div">
           <motion.div
             ref={containerRef}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.15 }}
-            className="notes-container"
+            className="section-container"
           >
             {order.map((uuid, index) => {
               const note = notes.get(uuid);
@@ -211,7 +202,6 @@ const Archive = memo(
                     setTooltipAnchor={setTooltipAnchor}
                     setSelectedNotesIDs={setSelectedNotesIDs}
                     openSnackFunction={openSnackFunction}
-                    selectedNotes={selectedRef}
                   />
                 );
             })}

@@ -15,7 +15,8 @@ const PinIcon = ({ rotation, isPinned }) => {
         height="24"
         viewBox="0 0 24 24"
         strokeWidth="2"
-        className={`stroke ${isPinned && "fill"}`}
+        fill="none"
+        className={["stroke", isPinned && "fill"].filter(Boolean).join(" ")}
         strokeLinecap="round"
         strokeLinejoin="round"
       >

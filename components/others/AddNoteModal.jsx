@@ -153,7 +153,6 @@ const AddNoteModal = ({
       trigger2
     ) {
       setTrigger2(false);
-      
 
       setTimeout(() => {
         setTrigger(false);
