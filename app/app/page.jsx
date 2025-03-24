@@ -25,6 +25,7 @@ import React, {
 } from "react";
 import { useAppContext } from "@/context/AppContext";
 import TopMenu from "@/components/others/topMenu/TopMenu";
+import SelectionBox from "@/components/others/SelectionBox";
 
 const initialStates = {
   notes: new Map(),
@@ -1008,6 +1009,56 @@ const page = () => {
     }
   }, [selectedNotesIDs.length]);
 
+  const dragStart = useRef({ x: 0, y: 0 });
+  const isMouseDown = useRef(false);
+  const selectionBoxRef = useRef(null);
+
+  const handleMouseMove = (e) => {
+    if (isMouseDown.current) {
+      const box = selectionBoxRef.current;
+      box.style.display = "block";
+
+      const newX = Math.min(e.clientX, dragStart.current.x);
+      const newY = Math.min(e.clientY, dragStart.current.y);
+      const width = Math.abs(e.clientX - dragStart.current.x);
+      const height = Math.abs(e.clientY - dragStart.current.y);
+
+      box.style.left = newX + scrollX + "px";
+      box.style.top = newY + scrollY + "px";
+      box.style.width = width + "px";
+      box.style.height = height + "px";
+    }
+  };
+
+  const handleMouseDown = (e) => {
+    isMouseDown.current = true;
+    dragStart.current = {
+      x: e.clientX,
+      y: e.clientY,
+    };
+    const box = selectionBoxRef.current;
+    box.style.left = e.clientX + "px";
+    box.style.top = e.clientY + "px";
+  };
+
+  const handleMouseUp = (e) => {
+    isMouseDown.current = false;
+    const box = selectionBoxRef.current;
+    box.removeAttribute("style");
+  };
+
+  useEffect(() => {
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mousedown", handleMouseDown);
+    window.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mousedown", handleMouseDown);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, []);
+
   return (
     <>
       <div id="n-overlay" className="note-overlay" />
@@ -1064,6 +1115,8 @@ const page = () => {
         noteActions={noteActions}
         notesReady={notesReady}
       />
+
+      <SelectionBox ref={selectionBoxRef} />
     </>
   );
 };

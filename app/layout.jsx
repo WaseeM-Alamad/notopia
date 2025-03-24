@@ -43,6 +43,7 @@ const MainLayout = async ({ children }) => {
           <div id="modal-portal" />
           <div id="moreMenu" />
           <div id="deleteModal" />
+          <div id="selectionBox" />
           </AppProvider>
           </AuthProvider>
         </body>

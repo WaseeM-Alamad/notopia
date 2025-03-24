@@ -381,6 +381,7 @@ const AddNoteModall = ({
   const handleTitleInput = (e) => {
     const text = e.target.textContent;
     const t = text === "\n" ? "" : text;
+    setRedoStack([]);
     titleDebouncedSetUndo({ title: t, content: contentRef.current.innerText });
     setNote({ ...note, title: t });
     if (text === "\n") {
@@ -391,6 +392,7 @@ const AddNoteModall = ({
   const handleContentInput = (e) => {
     const text = e.target.textContent;
     const t = text === "\n" ? "" : text;
+    setRedoStack([]);
     contentDebouncedSetUndo({ title: titleRef.current.innerText, content: t });
     setNote({ ...note, content: t });
     if (text === "\n") {
