@@ -62,6 +62,7 @@ function notesReducer(state, action) {
         order: [action.note.uuid, ...updatedOrder],
       };
     }
+
     case "ARCHIVE_NOTE": {
       const newNote = {
         ...state.notes.get(action.note.uuid),
@@ -107,6 +108,7 @@ function notesReducer(state, action) {
         const newNote = {
           ...updatedNotes.get(noteData.uuid),
           isArchived: !action.isArchived,
+          isPinned: false,
         };
         updatedNotes.set(noteData.uuid, newNote);
         updatedOrder.splice(noteData.index, 1);
@@ -114,6 +116,81 @@ function notesReducer(state, action) {
       });
 
       updatedOrder.unshift(...sortedUUIDS);
+
+      return {
+        ...state,
+        notes: updatedNotes,
+        order: updatedOrder,
+      };
+    }
+
+    case "BATCH_PIN": {
+      const sortedNotes = action.selectedNotes.sort(
+        (a, b) => b.index - a.index
+      );
+      const updatedNotes = new Map(state.notes);
+      const updatedOrder = [...state.order];
+      let sortedUUIDS = [];
+      sortedNotes.forEach((noteData) => {
+        const newNote = {
+          ...updatedNotes.get(noteData.uuid),
+          isPinned: !action.isPinned,
+          isArchived: false,
+        };
+        updatedNotes.set(noteData.uuid, newNote);
+        updatedOrder.splice(noteData.index, 1);
+        sortedUUIDS.push(noteData.uuid);
+      });
+
+      updatedOrder.unshift(...sortedUUIDS);
+
+      return {
+        ...state,
+        notes: updatedNotes,
+        order: updatedOrder,
+      };
+    }
+
+    case "UNDO_BATCH_ARCHIVE": {
+      const sortedNotes = action.selectedNotes.sort(
+        (a, b) => a.index - b.index
+      );
+      const updatedNotes = new Map(state.notes);
+      const updatedOrder = state.order.slice(action.length);
+
+      sortedNotes.forEach((noteData) => {
+        const newNote = {
+          ...updatedNotes.get(noteData.uuid),
+          isArchived: action.isArchived,
+          isPinned: noteData.isPinned,
+        };
+        updatedNotes.set(noteData.uuid, newNote);
+        updatedOrder.splice(noteData.index, 0, noteData.uuid);
+      });
+
+      return {
+        ...state,
+        notes: updatedNotes,
+        order: updatedOrder,
+      };
+    }
+
+    case "UNDO_BATCH_PIN_ARCHIVED": {
+      const sortedNotes = action.selectedNotes.sort(
+        (a, b) => a.index - b.index
+      );
+      const updatedNotes = new Map(state.notes);
+      const updatedOrder = state.order.slice(action.length);
+
+      sortedNotes.forEach((noteData) => {
+        const newNote = {
+          ...updatedNotes.get(noteData.uuid),
+          isArchived: true,
+          isPinned: false,
+        };
+        updatedNotes.set(noteData.uuid, newNote);
+        updatedOrder.splice(noteData.index, 0, noteData.uuid);
+      });
 
       return {
         ...state,
@@ -230,10 +307,10 @@ function notesReducer(state, action) {
 
     case "UPDATE_BG": {
       const newNote = {
-        ...state.notes.get(action.noteUUID),
+        ...state.notes.get(action.note.uuid),
         background: action.newBG,
       };
-      const updatedNotes = new Map(state.notes).set(action.noteUUID, newNote);
+      const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
 
       return {
         ...state,
@@ -405,6 +482,7 @@ const page = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [notesReady, setNotesReady] = useState(false);
   const [selectedNotesIDs, setSelectedNotesIDs] = useState([]);
+  const [fadingNotes, setFadingNotes] = useState(new Set());
   const [snackbarState, setSnackbarState] = useState({
     snackOpen: false,
     showUndo: true,
@@ -913,7 +991,7 @@ const page = () => {
       data.setSelected(true);
       setSelectedNotesIDs((prev) => [
         ...prev,
-        { uuid: data.uuid, index: data.index },
+        { uuid: data.uuid, index: data.index, isPinned: data.isPinned },
       ]);
     }
   }, []);
@@ -963,6 +1041,8 @@ const page = () => {
       <TopMenu
         notes={notesState.notes}
         dispatchNotes={dispatchNotes}
+        openSnackFunction={openSnackFunction}
+        setFadingNotes={setFadingNotes}
         selectedNotesIDs={selectedNotesIDs}
         setSelectedNotesIDs={setSelectedNotesIDs}
         setTooltipAnchor={setTooltipAnchor}
@@ -975,10 +1055,12 @@ const page = () => {
         setTooltipAnchor={setTooltipAnchor}
         openSnackFunction={openSnackFunction}
         handleNoteClick={handleNoteClick}
+        handleSelectNote={handleSelectNote}
         handleDeleteLabel={handleDeleteLabel}
         selectedNotesIDs={selectedNotesIDs}
+        fadingNotes={fadingNotes}
+        setFadingNotes={setFadingNotes}
         setSelectedNotesIDs={setSelectedNotesIDs}
-        handleSelectNote={handleSelectNote}
         noteActions={noteActions}
         notesReady={notesReady}
       />

@@ -141,10 +141,7 @@ const Labels = memo(
     return (
       <>
         <div className="starting-div">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.15 }}
+          <div
             ref={containerRef}
             className="section-container"
           >
@@ -166,7 +163,7 @@ const Labels = memo(
                   />
                 );
               })}
-          </motion.div>
+          </div>
           {/* <div className="empty-page">
             <AnimatePresence>
               {notesReady && !labelsExist && (

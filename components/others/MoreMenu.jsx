@@ -65,6 +65,7 @@ const MoreMenu = ({
       title: note.title,
       content: note.content,
       color: note.color,
+      background: note.background,
       labels: note.labels,
       isPinned: false,
       isArchived: false,

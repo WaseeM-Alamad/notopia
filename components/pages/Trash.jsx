@@ -210,10 +210,7 @@ const Home = memo(
           <div className="trash-section-header">
             Notes in Trash are deleted after 7 days.
           </div>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.15 }}
+          <div
             ref={containerRef}
             className="section-container"
           >
@@ -233,7 +230,7 @@ const Home = memo(
                   />
                 );
             })}
-          </motion.div>
+          </div>
           <div className="empty-page">
               {notesReady && !notesExist && (
                 <motion.div

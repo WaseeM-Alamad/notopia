@@ -184,7 +184,30 @@ export const batchUpdateAction = async (data) => {
 
       await Note.updateMany(
         { uuid: { $in: sortedUUIDs } },
-        { $set: { isArchived: !data.val } }
+        { $set: { isArchived: !data.val, isPinned: false } }
+      );
+
+      user.notesOrder = updatedOrder;
+      await user.save();
+    } else if (data.type === "BATCH_PIN") {
+      await connectDB();
+      const user = await User.findById(userID);
+      const { notesOrder } = user;
+      const updatedOrder = [...notesOrder];
+
+      const sortedNotes = data.selectedNotes.sort((a, b) => b.index - a.index);
+      const sortedUUIDs = [];
+
+      sortedNotes.forEach((noteData) => {
+        sortedUUIDs.push(noteData.uuid);
+        updatedOrder.splice(noteData.index, 1);
+      });
+
+      updatedOrder.unshift(...sortedUUIDs);
+
+      await Note.updateMany(
+        { uuid: { $in: sortedUUIDs } },
+        { $set: { isPinned: !data.val, isArchived: false } }
       );
 
       user.notesOrder = updatedOrder;
@@ -459,6 +482,45 @@ export const undoAction = async (data) => {
         const filesToDelete = files.map((file) => `${folderPath}${file.name}`);
         await supabase.storage.from(bucketName).remove(filesToDelete);
       }
+    } else if (data.type === "UNDO_BATCH_ARCHIVE") {
+      const updatedOrder = notesOrder.slice(data.selectedNotes.length);
+      const sortedNotes = data.selectedNotes.sort((a, b) => a.index - b.index);
+      let selectedUUIDs = [];
+      const bulkOperations = [];
+
+      sortedNotes.forEach((noteData) => {
+        selectedUUIDs.push(noteData.uuid);
+        updatedOrder.splice(noteData.index, 0, noteData.uuid);
+
+        bulkOperations.push({
+          updateOne: {
+            filter: { uuid: noteData.uuid },
+            update: {
+              $set: { isArchived: data.val, isPinned: noteData.isPinned },
+            },
+          },
+        });
+      });
+
+      await Note.bulkWrite(bulkOperations);
+      user.notesOrder = updatedOrder;
+      await user.save();
+    } else if (data.type === "UNDO_BATCH_PIN_ARCHIVED") {
+      const updatedOrder = notesOrder.slice(data.selectedNotes.length);
+      const sortedNotes = data.selectedNotes.sort((a, b) => a.index - b.index);
+      let selectedUUIDs = [];
+
+      sortedNotes.forEach((noteData) => {
+        selectedUUIDs.push(noteData.uuid);
+        updatedOrder.splice(noteData.index, 0, noteData.uuid);
+      });
+
+      await Note.updateMany(
+        { uuid: { $in: selectedUUIDs } },
+        { $set: { isArchived: true, isPinned: false } }
+      );
+      user.notesOrder = updatedOrder;
+      await user.save();
     }
   } catch (error) {
     console.log(error);

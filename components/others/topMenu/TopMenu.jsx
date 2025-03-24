@@ -2,11 +2,17 @@ import Button from "@/components/Tools/Button";
 import { AnimatePresence, motion } from "framer-motion";
 import React, { useEffect, useRef, useState } from "react";
 import ColorSelectMenu from "../ColorSelectMenu";
-import { batchUpdateAction, NoteUpdateAction } from "@/utils/actions";
+import {
+  batchUpdateAction,
+  NoteUpdateAction,
+  undoAction,
+} from "@/utils/actions";
 
 const TopMenuHome = ({
   notes,
   dispatchNotes,
+  openSnackFunction,
+  setFadingNotes,
   selectedNotesIDs,
   setSelectedNotesIDs,
   setTooltipAnchor,
@@ -14,6 +20,7 @@ const TopMenuHome = ({
   const [colorAnchorEl, setColorAnchorEl] = useState(null);
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
   const [selectedBG, setSelectedBG] = useState(null);
+  const [pinNotes, setPinNotes] = useState(false);
   const [selectedColor, setSelectedColor] = useState();
   const topMenuRef = useRef(null);
 
@@ -47,9 +54,7 @@ const TopMenuHome = ({
         !e.target.closest(".top-menu") &&
         !e.target.closest("aside") &&
         !e.target.closest(".color-menu") &&
-        !document
-          .querySelector(".starting-div")
-          .classList.contains("dragging")
+        !document.querySelector(".starting-div").classList.contains("dragging")
       ) {
         handleClose();
       }
@@ -68,13 +73,22 @@ const TopMenuHome = ({
     } else {
       let sharedColor = new Set();
       let sharedBG = new Set();
+      let pinned = null;
       selectedNotesIDs.forEach((noteData) => {
         const note = notes.get(noteData.uuid);
         const color = note.color;
         const bg = note.background;
+        if (pinned !== false) {
+          if (note.isPinned) {
+            pinned = true;
+          } else {
+            pinned = false;
+          }
+        }
         sharedColor.add(color);
         sharedBG.add(bg);
       });
+      setPinNotes(pinned);
       if (sharedColor.size === 1) {
         setSelectedColor([...sharedColor][0]);
       } else {
@@ -142,27 +156,113 @@ const TopMenuHome = ({
   };
 
   const handleArchive = async () => {
-    // const firstItem = selectedNotesIDs[0];
-    // const val = notes.get(firstItem.uuid).isArchived;
+    const firstItem = selectedNotesIDs[0];
+    const val = notes.get(firstItem.uuid).isArchived;
+    const length = selectedNotesIDs.length;
 
-    // dispatchNotes({
-    //   type: "BATCH_ARCHIVE",
-    //   selectedNotes: selectedNotesIDs,
-    //   isArchived: val,
-    // });
-    // setSelectedNotesIDs([])
-    // window.dispatchEvent(new Event("loadingStart"));
+    window.dispatchEvent(new Event("loadingStart"));
 
-    const container = document.body.querySelector(".section-container");
-    console.log(Array.from(container.children))
+    batchUpdateAction({
+      type: "BATCH_ARCHIVE",
+      selectedNotes: selectedNotesIDs,
+      val: val,
+    }).then(() => window.dispatchEvent(new Event("loadingEnd")));
 
+    const selectedUUIDs = selectedNotesIDs.map(({ uuid }) => uuid);
 
-    // await batchUpdateAction({
-    //   type: "BATCH_ARCHIVE",
-    //   selectedNotes: selectedNotesIDs,
-    //   val: val,
-    // });
-    // window.dispatchEvent(new Event("loadingEnd"));
+    setFadingNotes(new Set(selectedUUIDs));
+
+    const undo = () => {
+      window.dispatchEvent(new Event("loadingStart"));
+
+      undoAction({
+        type: "UNDO_BATCH_ARCHIVE",
+        selectedNotes: selectedNotesIDs,
+        val: val,
+      }).then(() => window.dispatchEvent(new Event("loadingEnd")));
+
+      dispatchNotes({
+        type: "UNDO_BATCH_ARCHIVE",
+        selectedNotes: selectedNotesIDs,
+        isArchived: val,
+        length: length,
+      });
+    };
+
+    const snackMessage =
+      length === 1 ? "Note archived" : `${length} notes archived`;
+
+    openSnackFunction({
+      snackMessage: snackMessage,
+      snackOnUndo: undo,
+    });
+
+    handleClose();
+
+    setTimeout(() => {
+      dispatchNotes({
+        type: "BATCH_ARCHIVE",
+        selectedNotes: selectedNotesIDs,
+        isArchived: val,
+      });
+      setFadingNotes(new Set());
+    }, 200);
+  };
+
+  const handlePin = () => {
+    handleClose();
+
+    const firstItem = selectedNotesIDs[0];
+    const ArchiveVal = notes.get(firstItem.uuid).isArchived;
+
+    if (ArchiveVal) {
+      const selectedUUIDs = selectedNotesIDs.map((data) => data.uuid);
+      const length = selectedNotesIDs.length;
+      setFadingNotes(new Set(selectedUUIDs));
+
+      const undo = () => {
+        window.dispatchEvent(new Event("loadingStart"));
+
+        undoAction({
+          type: "UNDO_BATCH_PIN_ARCHIVED",
+          selectedNotes: selectedNotesIDs,
+        }).then(() => window.dispatchEvent(new Event("loadingEnd")));
+
+        dispatchNotes({
+          type: "UNDO_BATCH_PIN_ARCHIVED",
+          selectedNotes: selectedNotesIDs,
+          length: length,
+        });
+      };
+
+      const snackMessage =
+        length === 1
+          ? "Note unarchived and pinned"
+          : `${length} notes unarchived and pinned`;
+
+      openSnackFunction({
+        snackMessage: snackMessage,
+        snackOnUndo: undo,
+      });
+    }
+
+    setTimeout(
+      () => {
+        dispatchNotes({
+          type: "BATCH_PIN",
+          selectedNotes: selectedNotesIDs,
+          isPinned: pinNotes,
+        });
+        setFadingNotes(new Set());
+      },
+      ArchiveVal ? 200 : 0
+    );
+    window.dispatchEvent(new Event("loadingStart"));
+    batchUpdateAction({
+      type: "BATCH_PIN",
+      selectedNotes: selectedNotesIDs,
+      val: pinNotes,
+    }).then(() => window.dispatchEvent(new Event("loadingEnd")));
   };
 
   return (
@@ -198,7 +298,8 @@ const TopMenuHome = ({
             <span>{selectedNotesIDs.length} Selected</span>
             <div className="top-menu-tools">
               <Button
-                className="top-pin-icon"
+                onClick={handlePin}
+                className={pinNotes ? "top-pinned-icon" : "top-pin-icon"}
                 style={{ width: "45px", height: "45px" }}
               />
               <Button

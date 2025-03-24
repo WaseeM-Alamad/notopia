@@ -30,7 +30,6 @@
 }
 
 .starting-div.selected-notes .note-wrapper:hover .note-bottom {
-  display: none;
   opacity: 0;
   pointer-events: none;
 }

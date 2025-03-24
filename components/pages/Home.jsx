@@ -30,6 +30,8 @@ const NoteWrapper = memo(
     openSnackFunction,
     note,
     noteActions,
+    fadingNotes,
+    setFadingNotes,
     lastAddedNoteRef,
     calculateLayout,
     isLoadingImages,
@@ -94,7 +96,7 @@ const NoteWrapper = memo(
         data-position={index}
         onMouseDown={handleMouseDown}
         onClick={(e) => handleNoteClick(e, note, index)}
-        className="grid-item"
+        className={`grid-item ${fadingNotes.has(note.uuid) ? "fade-out": ""}`}
         style={{
           width: `${COLUMN_WIDTH}px`,
           marginBottom: `${GUTTER}px`,
@@ -131,6 +133,8 @@ const Home = memo(
   ({
     notes,
     order,
+    fadingNotes,
+    setFadingNotes,
     dispatchNotes,
     setTooltipAnchor,
     openSnackFunction,
@@ -372,7 +376,7 @@ const Home = memo(
                 endIndexRef.current = null;
                 ghostElementRef.current = null;
               }, 250);
-            }, 30);
+            }, 50);
           }
           document.removeEventListener("mousemove", updateGhostPosition);
           document.removeEventListener("mouseup", handleDragEnd);
@@ -436,10 +440,7 @@ const Home = memo(
     return (
       <>
         <div className="starting-div">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.15 }}
+          <div
             ref={containerRef}
             className="section-container"
             onMouseMove={handleMouseMove}
@@ -472,6 +473,8 @@ const Home = memo(
                     lastAddedNoteRef={index === 0 ? lastAddedNoteRef : null}
                     key={note.uuid}
                     note={note}
+                    fadingNotes={fadingNotes}
+                    setFadingNotes={setFadingNotes}
                     index={index}
                     noteActions={noteActions}
                     dispatchNotes={dispatchNotes}
@@ -490,7 +493,7 @@ const Home = memo(
                 )
               );
             })}
-          </motion.div>
+          </div>
           <div className="empty-page">
             {notesReady &&
               pinnedNotesNumber === 0 &&

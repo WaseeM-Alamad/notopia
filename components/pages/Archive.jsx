@@ -23,6 +23,10 @@ const NoteWrapper = memo(
     setSelectedNotesIDs,
     selectedNotes,
     index,
+    handleNoteClick,
+    handleSelectNote,
+    fadingNotes,
+    setFadingNotes,
     dispatchNotes,
     setTooltipAnchor,
     noteActions,
@@ -39,7 +43,8 @@ const NoteWrapper = memo(
     return (
       <motion.div
         ref={ref}
-        className="grid-item"
+        className={`grid-item ${fadingNotes.has(note.uuid) ? "fade-out" : ""}`}
+        onClick={(e) => handleNoteClick(e, note, index)}
         style={{
           width: `${COLUMN_WIDTH}px`,
           marginBottom: `${GUTTER}px`,
@@ -51,6 +56,7 @@ const NoteWrapper = memo(
           dispatchNotes={dispatchNotes}
           index={index}
           noteActions={noteActions}
+          handleSelectNote={handleSelectNote}
           setTooltipAnchor={setTooltipAnchor}
           setSelectedNotesIDs={setSelectedNotesIDs}
           selectedNotes={selectedNotes}
@@ -72,6 +78,10 @@ const Archive = memo(
     setTooltipAnchor,
     openSnackFunction,
     setSelectedNotesIDs,
+    handleNoteClick,
+    handleSelectNote,
+    fadingNotes,
+    setFadingNotes,
     noteActions,
     notesReady,
   }) => {
@@ -182,11 +192,8 @@ const Archive = memo(
     return (
       <>
         <div className="starting-div">
-          <motion.div
+          <div
             ref={containerRef}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.15 }}
             className="section-container"
           >
             {order.map((uuid, index) => {
@@ -198,6 +205,10 @@ const Archive = memo(
                     note={note}
                     dispatchNotes={dispatchNotes}
                     index={index}
+                    handleNoteClick={handleNoteClick}
+                    handleSelectNote={handleSelectNote}
+                    fadingNotes={fadingNotes}
+                    setFadingNotes={setFadingNotes}
                     noteActions={noteActions}
                     setTooltipAnchor={setTooltipAnchor}
                     setSelectedNotesIDs={setSelectedNotesIDs}
@@ -205,40 +216,40 @@ const Archive = memo(
                   />
                 );
             })}
-          </motion.div>
+          </div>
           <div className="empty-page">
-              {notesReady && !notesExist && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 800,
-                    damping: 50,
-                    mass: 1,
-                  }}
-                  className="empty-page-box"
-                >
-                  <div className="empty-page-archive" />
-                  Your archived notes appear here
-                </motion.div>
-              )}
-              {!notesReady && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 800,
-                    damping: 50,
-                    mass: 1,
-                  }}
-                  className="empty-page-box"
-                >
-                  <div className="empty-page-loading" />
-                  Loading notes...
-                </motion.div>
-              )}
+            {notesReady && !notesExist && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 800,
+                  damping: 50,
+                  mass: 1,
+                }}
+                className="empty-page-box"
+              >
+                <div className="empty-page-archive" />
+                Your archived notes appear here
+              </motion.div>
+            )}
+            {!notesReady && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 800,
+                  damping: 50,
+                  mass: 1,
+                }}
+                className="empty-page-box"
+              >
+                <div className="empty-page-loading" />
+                Loading notes...
+              </motion.div>
+            )}
           </div>
         </div>
         <AddNoteModal

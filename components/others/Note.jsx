@@ -140,6 +140,7 @@ const Note = memo(
                 setSelected: setSelected,
                 uuid: note.uuid,
                 index: index,
+                isPinned: note.isPinned,
               })
             }
             onMouseEnter={(e) =>
@@ -180,6 +181,7 @@ const Note = memo(
                 setSelected: setSelected,
                 uuid: note.uuid,
                 index: index,
+                isPinned: note.isPinned,
               })
             }
           >
