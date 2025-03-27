@@ -165,6 +165,20 @@ export function AppProvider({ children }) {
     labelsRef.current = updatedLabels;
   };
 
+  const decNoteCountMultiple = (labelsToDec) => {
+    const updatedLabels = new Map(labelsRef.current);
+
+    labelsToDec.forEach((labelUUID) => {
+      const label = updatedLabels.get(labelUUID);
+      updatedLabels.set(labelUUID, {
+        ...label,
+        noteCount: Math.max(0, label.noteCount - 1),
+      });
+    });
+
+    labelsRef.current = updatedLabels;
+  };
+
   const removeLabel = (uuid, label) => {
     labelsRef.current.delete(uuid);
     labelLookUPRef.current.delete(label.toLowerCase().trim());
@@ -183,6 +197,7 @@ export function AppProvider({ children }) {
         handleLabelNoteCount,
         batchDecNoteCount,
         labelLookUPRef,
+        decNoteCountMultiple,
       }}
     >
       {children}

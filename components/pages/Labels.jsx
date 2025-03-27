@@ -15,6 +15,7 @@ const Labels = memo(
     dispatchNotes,
     openSnackFunction,
     handleDeleteLabel,
+    rootContainerRef,
   }) => {
     const { createLabel, labelsRef } = useAppContext();
     const [reRender, triggerReRender] = useState(false);
@@ -140,7 +141,7 @@ const Labels = memo(
 
     return (
       <>
-        <div className="starting-div">
+        <div ref={rootContainerRef} className="starting-div">
           <div
             ref={containerRef}
             className="section-container"

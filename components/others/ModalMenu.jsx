@@ -2,7 +2,6 @@ import { copyNoteAction, undoAction } from "@/utils/actions";
 import { Popper } from "@mui/material";
 import { motion } from "framer-motion";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { v4 as generateUUID } from "uuid";
 import ManageLabelsMenu from "./ManageLabelsMenu";
 
@@ -117,7 +116,7 @@ const ModalMenu = ({
   }, []);
 
   if (!isClient) return;
-  return createPortal(
+  return (
     <>
       <Popper
         open={isOpen}
@@ -200,8 +199,7 @@ const ModalMenu = ({
           </motion.div>
         )}
       </Popper>
-    </>,
-    document.getElementById("moreMenu")
+    </>
   );
 };
 

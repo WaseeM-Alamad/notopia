@@ -409,12 +409,13 @@ const AddNoteModall = ({
   };
 
   const insert = async () => {
-      for (let i = 0; i < 50; i++) {
+      for (let i = 0; i < 20; i++) {
         const newNote = {
           uuid: uuid(),
           title: note.title,
           content: note.content,
           color: note.color,
+          background: "DefaultBG",
           labels: note.labels,
           isPinned: note.isPinned,
           isArchived: note.isArchived,
@@ -443,6 +444,7 @@ const AddNoteModall = ({
           .filter(Boolean)
           .join(" ")}
       >
+        {/* <button onClick={insert}>insert</button> */}
         <div
           style={{ overflowY: !isOpen && "hidden" }}
           className="modal-inputs-container"

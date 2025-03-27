@@ -92,7 +92,7 @@ const DeleteModal = ({ setIsOpen, handleDelete, title, message }) => {
         </div>
       </motion.div>
     </motion.div>,
-    document.getElementById("deleteModal")
+    document.getElementById("modal-portal")
   );
 };
 

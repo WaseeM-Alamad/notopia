@@ -27,6 +27,7 @@ const Modal = ({
   dispatchNotes,
   openSnackFunction,
   setModalStyle,
+  current,
 }) => {
   const { handleLabelNoteCount, labelsRef } = useAppContext();
   const [isMounted, setIsMounted] = useState(false);
@@ -74,15 +75,31 @@ const Modal = ({
   };
 
   const positionModal = () => {
-    if (!initialStyle) return;
-    const rect = initialStyle.element.getBoundingClientRect();
-    modalRef.current.style.display = "flex";
-    modalRef.current.style.left = `${rect.left}px`;
-    modalRef.current.style.top = `${rect.top}px`;
-    const scale = `scale(${rect.width / modalRef.current.offsetWidth}, ${
-      rect.height / modalRef.current.offsetHeight
-    } )`;
-    modalRef.current.style.transform = scale;
+    if (initialStyle) {
+      const rect = initialStyle.element.getBoundingClientRect();
+      modalRef.current.style.display = "flex";
+      modalRef.current.style.left = `${rect.left}px`;
+      modalRef.current.style.top = `${rect.top}px`;
+      const scale = `scale(${rect.width / modalRef.current.offsetWidth}, ${
+        rect.height / modalRef.current.offsetHeight
+      } )`;
+      modalRef.current.style.transform = scale;
+    } else {
+      modalRef.current.style.display = "flex";
+      modalRef.current.style.left = `50%`;
+      modalRef.current.style.top = `30%`;
+      modalRef.current.style.transform = "translate(50%, 30%)";
+    }
+  };
+
+  const reset = () => {
+    setSelectedColor(null);
+    setSelectedBG(null);
+    setModalIsPinned(false);
+    setLocalImages([]);
+    setModalLabels([]);
+    setRedoStack([]);
+    setUndoStack([]);
   };
 
   useEffect(() => {
@@ -142,16 +159,18 @@ const Modal = ({
       return () =>
         modalRef.current.removeEventListener("transitionend", handler);
     } else {
-      window.location.hash = prevHash.current || "home";
+      // window.location.hash = prevHash.current || "home";
+      window.location.hash = current.toLowerCase();
       modalRef.current.style.transition =
         "all 0.22s cubic-bezier(0.35, 0.9, 0.25, 1), opacity 0.13s";
       modalRef.current.offsetHeight;
       overlay.style.opacity = "0";
       checkForChanges();
-      setTimeout(() => {
-        positionModal();
-      }, 10);
-
+      if (initialStyle) {
+        setTimeout(() => {
+          positionModal();
+        }, 10);
+      }
       const handleModalClose = (e) => {
         if (e.propertyName === "top") {
           modalRef.current.removeEventListener(
@@ -161,13 +180,7 @@ const Modal = ({
           modalRef.current.removeAttribute("style");
           overlay.removeAttribute("style");
 
-          setSelectedColor(null);
-          setSelectedBG(null);
-          setModalIsPinned(false);
-          setLocalImages([]);
-          setModalLabels([]);
-          setRedoStack([]);
-          setUndoStack([]);
+          reset();
 
           if (modalIsPinned !== note?.isPinned) {
             setTimeout(() => {
@@ -583,6 +596,7 @@ const Modal = ({
         ]
           .filter(Boolean)
           .join(" ")}
+        style={{ minHeight: "180px" }}
       >
         <div
           style={{ overflowY: !isOpen && "hidden" }}

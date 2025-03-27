@@ -1,7 +1,5 @@
 import React, { memo, useCallback, useRef, useState } from "react";
-import {
-  NoteUpdateAction,
-} from "@/utils/actions";
+import { copyNoteAction, NoteUpdateAction, undoAction } from "@/utils/actions";
 import ColorSelectMenu from "./ColorSelectMenu";
 import "@/assets/styles/note.css";
 import Button from "../Tools/Button";
@@ -18,13 +16,13 @@ import ManageLabelsMenu from "./ManageLabelsMenu";
 const NoteTools = ({
   images,
   index,
-  note={},
-  noteRef,
+  note = {},
   dispatchNotes,
   colorMenuOpen,
   setColorMenuOpen,
   moreMenuOpen,
   setMoreMenuOpen,
+  setFadingNotes,
   setIsLoadingImages,
   userID,
   noteActions,
@@ -33,9 +31,7 @@ const NoteTools = ({
   setTooltipAnchor,
 }) => {
   const [selectedColor, setSelectedColor] = useState(note.color);
-  const [selectedBG, setSelectedBG] = useState(
-        note.background || "DefaultBG"
-      );
+  const [selectedBG, setSelectedBG] = useState(note.background || "DefaultBG");
   const [anchorEl, setAnchorEl] = useState(null);
   const [colorAnchorEl, setColorAnchorEl] = useState(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -54,20 +50,23 @@ const NoteTools = ({
     });
   });
 
-  const handleBackground = useCallback(async (newBG) => {
-    closeToolTip();
-    if (selectedBG === newBG) return;
-    setSelectedBG(newBG);
+  const handleBackground = useCallback(
+    async (newBG) => {
+      closeToolTip();
+      if (selectedBG === newBG) return;
+      setSelectedBG(newBG);
 
-    dispatchNotes({
-      type: "UPDATE_BG",
-      note: note,
-      newBG: newBG,
-    });
-    window.dispatchEvent(new Event("loadingStart"));
-    await NoteUpdateAction("background", newBG, [note.uuid]);
-    window.dispatchEvent(new Event("loadingEnd"));
-  },[selectedBG]);
+      dispatchNotes({
+        type: "UPDATE_BG",
+        note: note,
+        newBG: newBG,
+      });
+      window.dispatchEvent(new Event("loadingStart"));
+      await NoteUpdateAction("background", newBG, [note.uuid]);
+      window.dispatchEvent(new Event("loadingEnd"));
+    },
+    [selectedBG]
+  );
 
   const toggleMenu = (e) => {
     closeToolTip();
@@ -78,7 +77,7 @@ const NoteTools = ({
   const closeToolTip = () => {
     setTooltipAnchor((prev) => ({
       anchor: null,
-      text: prev.text,
+      text: prev?.text,
     }));
   };
 
@@ -151,7 +150,7 @@ const NoteTools = ({
     noteActions({
       type: "DELETE_NOTE",
       note: note,
-      noteRef: noteRef,
+      noteRef: note.ref,
     });
   };
 
@@ -159,7 +158,7 @@ const NoteTools = ({
     noteActions({
       type: "TRASH_NOTE",
       note: note,
-      noteRef: noteRef,
+      noteRef: note.ref,
       index: index,
     });
   };
@@ -180,6 +179,44 @@ const NoteTools = ({
     e.stopPropagation();
   }, []);
 
+  const handleTrashNote = async (e) => {
+    noteActions({
+      type: "RESTORE_NOTE",
+      note: note,
+      index: index,
+      noteRef: note.ref,
+      setIsOpen: setMoreMenuOpen,
+    });
+  };
+
+  const handleMakeCopy = async () => {
+    noteActions({
+      type: "COPY_NOTE",
+      setMoreMenuOpen: setMoreMenuOpen,
+      note: note,
+    });
+  };
+
+  const handleLabels = () => {
+    setLabelsOpen(true);
+    setMoreMenuOpen(false);
+  };
+
+  const menuItems = [
+    {
+      title: "Delete note",
+      function: handleTrashNote,
+    },
+    {
+      title: "Add label",
+      function: handleLabels,
+    },
+    {
+      title: "Make a copy",
+      function: handleMakeCopy,
+    },
+  ];
+
   return (
     <div
       onClick={containerClick}
@@ -198,7 +235,6 @@ const NoteTools = ({
         <div className="note-bottom-icons">
           {!note.isTrash ? (
             <>
-             
               <Button
                 className="reminder-icon btn-hover"
                 onMouseEnter={(e) => handleMouseEnter(e, "Remind me")}
@@ -217,7 +253,7 @@ const NoteTools = ({
                     type: "archive",
                     index: index,
                     note: note,
-                    noteRef: noteRef,
+                    noteRef: note.ref,
                   });
                 }}
                 onMouseEnter={(e) =>
@@ -278,16 +314,9 @@ const NoteTools = ({
                 {moreMenuOpen && !labelsOpen && (
                   <MoreMenu
                     setIsOpen={setMoreMenuOpen}
-                    dispatchNotes={dispatchNotes}
                     anchorEl={anchorEl}
                     isOpen={moreMenuOpen}
-                    setLabelsOpen={setLabelsOpen}
-                    setLocalIsTrash={setLocalIsTrash}
-                    openSnackFunction={openSnackFunction}
-                    noteActions={noteActions}
-                    noteRef={noteRef}
-                    index={index}
-                    note={note}
+                    menuItems={menuItems}
                   />
                 )}
               </AnimatePresence>
@@ -299,19 +328,20 @@ const NoteTools = ({
                     isOpen={labelsOpen}
                     setIsOpen={setLabelsOpen}
                     anchorEl={anchorEl}
-                    noteRef={noteRef}
                   />
                 )}
               </AnimatePresence>
             </>
           ) : (
             <>
-              <Button onClick={() => setDeleteModalOpen(true)}>
-                <DeleteIcon size={18} opacity={0.9} />
-              </Button>
-              <Button onClick={handleRestoreNote}>
-                <RestoreIcon size={18} opacity={0.9} />
-              </Button>
+              <Button
+                className="note-delete-icon"
+                onClick={() => setDeleteModalOpen(true)}
+              />
+              <Button
+                className="note-restore-icon"
+                onClick={handleRestoreNote}
+              />
               <AnimatePresence>
                 {deleteModalOpen && (
                   <DeleteModal

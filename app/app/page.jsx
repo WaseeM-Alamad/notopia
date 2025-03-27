@@ -8,15 +8,15 @@ import Trash from "@/components/pages/Trash";
 import Snackbar from "@/components/Tools/Snackbar";
 import Tooltip from "@/components/Tools/Tooltip";
 import {
+  copyNoteAction,
   deleteLabelAction,
   DeleteNoteAction,
   fetchNotes,
   NoteUpdateAction,
   undoAction,
 } from "@/utils/actions";
-import { AnimatePresence, motion } from "framer-motion";
 import React, {
-  memo,
+  createRef,
   useCallback,
   useEffect,
   useReducer,
@@ -26,6 +26,7 @@ import React, {
 import { useAppContext } from "@/context/AppContext";
 import TopMenu from "@/components/others/topMenu/TopMenu";
 import SelectionBox from "@/components/others/SelectionBox";
+import { v4 as uuid } from "uuid";
 
 const initialStates = {
   notes: new Map(),
@@ -44,9 +45,51 @@ function notesReducer(state, action) {
     case "ADD_NOTE":
       return {
         ...state,
-        notes: new Map(state.notes).set(action.newNote.uuid, action.newNote),
+        notes: new Map(state.notes).set(action.newNote.uuid, {
+          ...action.newNote,
+          ref: createRef(),
+        }),
         order: [action.newNote.uuid, ...state.order],
       };
+
+    case "BATCH_COPY_NOTE": {
+      const updatedNotes = new Map(state.notes);
+      const updatedOrder = [...state.order];
+
+      action.newNotes.forEach((note) => {
+        updatedNotes.set(note.uuid, { ...note, ref: createRef() });
+        updatedOrder.unshift(note.uuid);
+      });
+
+      return {
+        ...state,
+        notes: updatedNotes,
+        order: updatedOrder,
+      };
+    }
+
+    case "UNDO_BATCH_COPY": {
+      const updatedNotes = new Map(state.notes);
+      [...updatedNotes].filter((n) => !action.notesToDel.includes(n.uuid));
+      const updatedOrder = state.order.slice(action.length);
+
+      return {
+        ...state,
+        notes: updatedNotes,
+        order: updatedOrder,
+      };
+    }
+
+    case "SET_NOTE": {
+      const updatedNotes = new Map(state.notes).set(action.note.uuid, {
+        ...action.note,
+        ref: createRef(),
+      });
+      return {
+        ...state,
+        notes: updatedNotes,
+      };
+    }
 
     case "PIN_NOTE": {
       const newNote = {
@@ -98,7 +141,7 @@ function notesReducer(state, action) {
       };
     }
 
-    case "BATCH_ARCHIVE": {
+    case "BATCH_ARCHIVE/TRASH": {
       const sortedNotes = action.selectedNotes.sort(
         (a, b) => b.index - a.index
       );
@@ -108,7 +151,7 @@ function notesReducer(state, action) {
       sortedNotes.forEach((noteData) => {
         const newNote = {
           ...updatedNotes.get(noteData.uuid),
-          isArchived: !action.isArchived,
+          [action.property]: !action.val,
           isPinned: false,
         };
         updatedNotes.set(noteData.uuid, newNote);
@@ -152,7 +195,26 @@ function notesReducer(state, action) {
       };
     }
 
-    case "UNDO_BATCH_ARCHIVE": {
+    case "BATCH_DELETE_NOTES": {
+      const updatedNotes = new Map();
+      const updatedOrder = [];
+
+      for (const noteUUID of state.order) {
+        const note = state.notes.get(noteUUID);
+        if (!action.deletedUUIDs.includes(noteUUID)) {
+          updatedNotes.set(noteUUID, note);
+          updatedOrder.push(noteUUID);
+        }
+      }
+
+      return {
+        ...state,
+        notes: updatedNotes,
+        order: updatedOrder,
+      };
+    }
+
+    case "UNDO_BATCH_ARCHIVE/TRASH": {
       const sortedNotes = action.selectedNotes.sort(
         (a, b) => a.index - b.index
       );
@@ -162,7 +224,7 @@ function notesReducer(state, action) {
       sortedNotes.forEach((noteData) => {
         const newNote = {
           ...updatedNotes.get(noteData.uuid),
-          isArchived: action.isArchived,
+          [action.property]: action.val,
           isPinned: noteData.isPinned,
         };
         updatedNotes.set(noteData.uuid, newNote);
@@ -478,6 +540,7 @@ const page = () => {
   const [current, setCurrent] = useState("Home");
   const [tooltipAnchor, setTooltipAnchor] = useState(null);
   const [notesState, dispatchNotes] = useReducer(notesReducer, initialStates);
+  const notesStateRef = useRef(notesState);
   const [modalStyle, setModalStyle] = useState(null);
   const [selectedNote, setSelectedNote] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -561,7 +624,10 @@ const page = () => {
       window.dispatchEvent(new Event("loadingEnd"));
 
       const notesMap = new Map(
-        fetchedNotes.data.map((note) => [note.uuid, note])
+        fetchedNotes.data.map((note) => [
+          note.uuid,
+          { ...note, ref: createRef() },
+        ])
       );
       dispatchNotes({
         type: "SET_INITIAL_DATA",
@@ -853,6 +919,72 @@ const page = () => {
       window.dispatchEvent(new Event("loadingStart"));
       await NoteUpdateAction("color", data.newColor, [data.note.uuid]);
       window.dispatchEvent(new Event("loadingEnd"));
+    } else if (data.type === "COPY_NOTE") {
+      const newUUID = uuid();
+      const note = data.note;
+      const newImages = [];
+
+      if (note.images.length > 0) {
+        note.images.forEach((image) => {
+          const newUUID = uuid();
+          const newImage = { uuid: newUUID, url: image.url };
+          newImages.push(newImage);
+        });
+      }
+
+      const newNote = {
+        uuid: newUUID,
+        title: note.title,
+        content: note.content,
+        color: note.color,
+        background: note.background,
+        labels: note.labels,
+        isPinned: false,
+        isArchived: false,
+        isTrash: note.isTrash,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        images: newImages,
+      };
+
+      dispatchNotes({
+        type: "ADD_NOTE",
+        newNote: newNote,
+      });
+
+      const undoCopy = async () => {
+        setFadingNotes(new Set([newUUID]));
+        setTimeout(async () => {
+          dispatchNotes({
+            type: "UNDO_COPY",
+            noteUUID: newNote.uuid,
+          });
+          setFadingNotes(new Set());
+          window.dispatchEvent(new Event("loadingStart"));
+          await undoAction({
+            type: "UNDO_COPY",
+            noteUUID: newNote.uuid,
+            isImages: note.images.length,
+          });
+          window.dispatchEvent(new Event("loadingEnd"));
+        }, 250);
+      };
+      openSnackFunction({
+        snackMessage: "Note created",
+        snackOnUndo: undoCopy,
+      });
+      data.setMoreMenuOpen(false);
+
+      window.dispatchEvent(new Event("loadingStart"));
+      const received = await copyNoteAction({
+        originalNoteUUID: note.uuid,
+        newNoteUUID: newUUID,
+        newImages: newImages,
+      });
+      const receivedNote = received.note;
+      window.dispatchEvent(new Event("loadingEnd"));
+
+      dispatchNotes({ type: "SET_NOTE", note: receivedNote });
     }
   }, []);
 
@@ -910,6 +1042,7 @@ const page = () => {
   const Page = components[current];
 
   useEffect(() => {
+    notesStateRef.current = notesState;
     requestAnimationFrame(() => {
       if (notesState.order.length === 0 && current === "Trash") {
         const btn = document.body.querySelector("#add-btn");
@@ -979,7 +1112,7 @@ const page = () => {
 
     setTooltipAnchor((prev) => ({
       anchor: null,
-      text: prev.text,
+      text: prev?.text,
     }));
     data.setSelected((prev) => !prev);
 
@@ -1009,42 +1142,115 @@ const page = () => {
     }
   }, [selectedNotesIDs.length]);
 
-  const dragStart = useRef({ x: 0, y: 0 });
+  const dragStartRef = useRef({ x: 0, y: 0 });
+  const isDraggingRef = useRef(false);
   const isMouseDown = useRef(false);
   const selectionBoxRef = useRef(null);
+  const selectedNotesRef = useRef(new Set());
+  const rootContainerRef = useRef(null);
 
   const handleMouseMove = (e) => {
     if (isMouseDown.current) {
+      const pageX = e.pageX;
+      const pageY = e.pageY;
+      const start = dragStartRef.current;
+
+      if (Math.abs(pageX - start.x) < 15 && Math.abs(pageY - start.y) < 15) {
+        return;
+      }
+
+      isDraggingRef.current = true;
+      document.body.style.userSelect = "none";
+
       const box = selectionBoxRef.current;
       box.style.display = "block";
 
-      const newX = Math.min(e.clientX, dragStart.current.x);
-      const newY = Math.min(e.clientY, dragStart.current.y);
-      const width = Math.abs(e.clientX - dragStart.current.x);
-      const height = Math.abs(e.clientY - dragStart.current.y);
+      const newX = Math.min(pageX, start.x);
+      const newY = Math.min(pageY, start.y);
+      const width = Math.abs(pageX - start.x);
+      const height = Math.abs(pageY - start.y);
 
-      box.style.left = newX + scrollX + "px";
-      box.style.top = newY + scrollY + "px";
+      box.style.left = newX + "px";
+      box.style.top = newY + "px";
       box.style.width = width + "px";
       box.style.height = height + "px";
+
+      notesStateRef.current.order.forEach((noteUUID) => {
+        const note = notesStateRef.current.notes.get(noteUUID);
+        const noteRef = note?.ref;
+        if (noteRef?.current) {
+          const noteRect = noteRef.current.getBoundingClientRect();
+          const noteLeft = noteRect.left + window.scrollX;
+          const noteTop = noteRect.top + window.scrollY;
+          const noteRight = noteLeft + noteRect.width;
+          const noteBottom = noteTop + noteRect.height;
+
+          if (
+            noteRight > newX &&
+            noteLeft < newX + width &&
+            noteBottom > newY &&
+            noteTop < newY + height
+          ) {
+            if (selectedNotesRef.current.has(note.uuid)) return;
+            selectedNotesRef.current.add(note.uuid);
+            const event = new CustomEvent("selectNote", {
+              detail: { uuid: note.uuid },
+            });
+            window.dispatchEvent(event);
+          } else {
+            if (!selectedNotesRef.current.has(note.uuid)) return;
+            selectedNotesRef.current.delete(note.uuid);
+            const event = new CustomEvent("deselectNote", {
+              detail: { uuid: note.uuid },
+            });
+            window.dispatchEvent(event);
+          }
+        }
+      });
     }
   };
 
   const handleMouseDown = (e) => {
+    const parent = rootContainerRef.current;
+    const container =
+      rootContainerRef.current?.querySelector(".section-container");
+    const target = e.target;
+    const nav = document.body.querySelector("nav");
+    const aside = document.body.querySelector("aside");
+    const menu = document.getElementById("menu");
+    const modal = document.getElementById("modal-portal");
+    const tooltip = document.querySelector("[role='tooltip']");
+
+    if (
+      (parent?.contains(target) && target !== parent && target !== container) ||
+      nav.contains(target) ||
+      aside.contains(target) ||
+      menu.contains(target) ||
+      modal.contains(target) ||
+      tooltip?.contains(target)
+    ) {
+      return;
+    }
     isMouseDown.current = true;
-    dragStart.current = {
-      x: e.clientX,
-      y: e.clientY,
+    dragStartRef.current = {
+      x: e.pageX,
+      y: e.pageY,
     };
     const box = selectionBoxRef.current;
-    box.style.left = e.clientX + "px";
-    box.style.top = e.clientY + "px";
+    box.style.left = e.pageX + "px";
+    box.style.top = e.pageY + "px";
   };
 
-  const handleMouseUp = (e) => {
+  const handleMouseUp = () => {
     isMouseDown.current = false;
+    document.body.style.removeProperty("user-select");
     const box = selectionBoxRef.current;
     box.removeAttribute("style");
+    setTimeout(() => {
+      isDraggingRef.current = false;
+    }, 10);
+
+    // selectedNotesRef.current = new Set();
   };
 
   useEffect(() => {
@@ -1071,6 +1277,7 @@ const page = () => {
         onClose={() => setSelectedNote(null)}
         setTooltipAnchor={setTooltipAnchor}
         closeRef={closeRef}
+        current={current}
         isOpen={isModalOpen}
         setIsOpen={setIsModalOpen}
         openSnackFunction={openSnackFunction}
@@ -1097,6 +1304,8 @@ const page = () => {
         selectedNotesIDs={selectedNotesIDs}
         setSelectedNotesIDs={setSelectedNotesIDs}
         setTooltipAnchor={setTooltipAnchor}
+        isDraggingRef={isDraggingRef}
+        rootContainerRef={rootContainerRef}
       />
 
       <Page
@@ -1114,6 +1323,7 @@ const page = () => {
         setSelectedNotesIDs={setSelectedNotesIDs}
         noteActions={noteActions}
         notesReady={notesReady}
+        rootContainerRef={rootContainerRef}
       />
 
       <SelectionBox ref={selectionBoxRef} />

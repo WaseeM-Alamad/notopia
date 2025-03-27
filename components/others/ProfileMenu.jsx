@@ -93,7 +93,7 @@ const ProfileMenu = forwardRef(
                   <div className="keyboard-icon" /> Keyboard shortcuts
                 </div>
                 <div onClick={() => signOut()} className="menu-btn">
-                <div className="signout-icon" />
+                  <div className="signout-icon" />
                   Sign out
                 </div>
               </div>
@@ -101,7 +101,7 @@ const ProfileMenu = forwardRef(
           )}
         </AnimatePresence>
       </>,
-      document.getElementById("profileMenu")
+      document.getElementById("menu")
     );
   }
 );

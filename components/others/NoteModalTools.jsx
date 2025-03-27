@@ -107,7 +107,7 @@ const NoteModalTools = ({
   const closeToolTip = () => {
     setTooltipAnchor((prev) => ({
       anchor: null,
-      text: prev.text,
+      text: prev?.text,
     }));
   };
 

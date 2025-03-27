@@ -1,7 +1,6 @@
 import React, { memo, useEffect, useRef, useState } from "react";
 import DoneRoundedIcon from "@mui/icons-material/DoneRounded";
 import { AnimatePresence, motion } from "framer-motion";
-import { createPortal } from "react-dom";
 import { Popper } from "@mui/material";
 
 const colors = [
@@ -81,7 +80,7 @@ const ColorSelectMenu = ({
     }));
   };
 
-  return createPortal(
+  return (
     <Popper
       open={isOpen}
       anchorEl={anchorEl}
@@ -245,8 +244,7 @@ const ColorSelectMenu = ({
           })}
         </div>
       </motion.div>
-    </Popper>,
-    document.getElementById("colorMenuPortal")
+    </Popper>
   );
 };
 

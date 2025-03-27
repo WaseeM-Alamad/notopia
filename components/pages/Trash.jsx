@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import TopMenuHome from "../others/topMenu/TopMenu";
 import { emptyTrashAction } from "@/utils/actions";
 import DeleteModal from "../others/DeleteModal";
+import { useAppContext } from "@/context/AppContext";
 
 const COLUMN_WIDTH = 240;
 const GUTTER = 15;
@@ -22,6 +23,9 @@ const NoteWrapper = memo(
     index,
     setTooltipAnchor,
     openSnackFunction,
+    handleSelectNote,
+    calculateLayout,
+    fadingNotes,
   }) => {
     const [mounted, setMounted] = useState(false);
 
@@ -34,7 +38,7 @@ const NoteWrapper = memo(
     return (
       <motion.div
         ref={ref}
-        className="grid-item"
+        className={`grid-item ${fadingNotes.has(note.uuid) ? "fade-out" : ""}`}
         style={{
           width: `${COLUMN_WIDTH}px`,
           marginBottom: `${GUTTER}px`,
@@ -49,7 +53,9 @@ const NoteWrapper = memo(
           dispatchNotes={dispatchNotes}
           setTooltipAnchor={setTooltipAnchor}
           openSnackFunction={openSnackFunction}
+          handleSelectNote={handleSelectNote}
           index={index}
+          calculateLayout={calculateLayout}
         />
         {/* <p>{index}</p> */}
       </motion.div>
@@ -66,11 +72,15 @@ const Home = memo(
     dispatchNotes,
     setTooltipAnchor,
     openSnackFunction,
-    selectedNotesIDs,
     setSelectedNotesIDs,
+    handleSelectNote,
     noteActions,
     notesReady,
+    rootContainerRef,
+    setFadingNotes,
+    fadingNotes,
   }) => {
+    const { decNoteCountMultiple } = useAppContext();
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [notesExist, setNotesExist] = useState(false);
     const containerRef = useRef(null);
@@ -142,24 +152,28 @@ const Home = memo(
     }, [calculateLayout]);
 
     const handleEmptyTrash = async () => {
-      const notes = containerRef.current.querySelectorAll(".grid-item");
-      for (const note of notes) {
-        if (!note) return;
-        note.classList.add("fade-out");
-      }
+      let deletedNotesUUIDs = [];
+      let labelsToDec = [];
 
-      const lastNote = notes[notes.length - 1];
-
-      const handleTransitionEnd = async (e) => {
-        if (e.propertyName === "opacity") {
-          dispatchNotes({ type: "EMPTY_TRASH" });
-          lastNote.removeEventListener("transitionend", handleTransitionEnd);
+      order.map((uuid) => {
+        const note = notes.get(uuid);
+        if (note.isTrash) {
+          deletedNotesUUIDs.push(uuid);
+          if (note.labels.length > 0) {
+            labelsToDec.push(...note.labels);
+          }
         }
-      };
+      });
 
-      if (lastNote) {
-        lastNote.addEventListener("transitionend", handleTransitionEnd);
-      }
+      decNoteCountMultiple(labelsToDec);
+
+      setFadingNotes(new Set(deletedNotesUUIDs));
+
+      setTimeout(() => {
+        dispatchNotes({ type: "EMPTY_TRASH" });
+        setFadingNotes(new Set());
+      }, 250);
+
       window.dispatchEvent(new Event("loadingStart"));
       await emptyTrashAction();
       window.dispatchEvent(new Event("loadingEnd"));
@@ -187,7 +201,6 @@ const Home = memo(
       }
     }, [notes, calculateLayout]);
 
-
     useEffect(() => {
       const handler = async () => {
         const trashNotes = order.some(
@@ -206,14 +219,11 @@ const Home = memo(
 
     return (
       <>
-        <div className="starting-div">
+        <div ref={rootContainerRef} className="starting-div">
           <div className="trash-section-header">
             Notes in Trash are deleted after 7 days.
           </div>
-          <div
-            ref={containerRef}
-            className="section-container"
-          >
+          <div ref={containerRef} className="section-container">
             {order.map((uuid, index) => {
               const note = notes.get(uuid);
               if (note.isTrash)
@@ -227,43 +237,46 @@ const Home = memo(
                     setSelectedNotesIDs={setSelectedNotesIDs}
                     setTooltipAnchor={setTooltipAnchor}
                     openSnackFunction={openSnackFunction}
+                    handleSelectNote={handleSelectNote}
+                    calculateLayout={calculateLayout}
+                    fadingNotes={fadingNotes}
                   />
                 );
             })}
           </div>
           <div className="empty-page">
-              {notesReady && !notesExist && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 800,
-                    damping: 50,
-                    mass: 1,
-                  }}
-                  className="empty-page-box"
-                >
-                  <div className="empty-page-trash" />
-                  No notes in trash
-                </motion.div>
-              )}
-              {!notesReady && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 800,
-                    damping: 50,
-                    mass: 1,
-                  }}
-                  className="empty-page-box"
-                >
-                  <div className="empty-page-loading" />
-                  Loading notes...
-                </motion.div>
-              )}
+            {notesReady && !notesExist && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 800,
+                  damping: 50,
+                  mass: 1,
+                }}
+                className="empty-page-box"
+              >
+                <div className="empty-page-trash" />
+                No notes in trash
+              </motion.div>
+            )}
+            {!notesReady && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 800,
+                  damping: 50,
+                  mass: 1,
+                }}
+                className="empty-page-box"
+              >
+                <div className="empty-page-loading" />
+                Loading notes...
+              </motion.div>
+            )}
           </div>
         </div>
         <AddNoteModal
@@ -279,9 +292,7 @@ const Home = memo(
               setIsOpen={setDeleteModalOpen}
               handleDelete={handleEmptyTrash}
               title="Empty trash"
-              message={
-                "All notes in Trash will be permanently deleted."
-              }
+              message={"All notes in Trash will be permanently deleted."}
             />
           )}
         </AnimatePresence>

@@ -9,6 +9,7 @@ aside {
   height: 100%;
   width: 5.275rem;
   background-color: #ffffff;
+  user-select: none;
   z-index: 99;
 }
 

@@ -18,6 +18,7 @@ const Note = memo(
     calculateLayout,
     isLoadingImagesAddNote = [],
     setSelectedNotesIDs,
+    setFadingNotes,
     selectedNotes,
     handleSelectNote,
     isDragging,
@@ -33,10 +34,9 @@ const Note = memo(
     const [isLoadingImages, setIsLoadingImages] = useState([]);
     const [selected, setSelected] = useState(false);
     const isLoading = isLoadingImagesAddNote.includes(note.uuid);
-    const noteRef = useRef(null);
+    const noteDataRef = useRef(null);
     const inputsRef = useRef(null);
     const imagesRef = useRef(null);
-    const noteStuffRef = useRef(null);
     const titleRef = useRef(null);
     const contentRef = useRef(null);
     const checkRef = useRef(null);
@@ -67,7 +67,7 @@ const Note = memo(
         noteActions({
           type: "PIN_ARCHIVED_NOTE",
           note: note,
-          noteRef: noteRef,
+          noteRef: note.ref,
           index: index,
         });
       }
@@ -89,6 +89,46 @@ const Note = memo(
       };
     }, []);
 
+    useEffect(() => {
+      noteDataRef.current = { ...note, index: index };
+    }, [note, index]);
+
+    useEffect(() => {
+      const handleSelect = (e) => {
+        const receivedUUID = e.detail.uuid;
+        if (noteDataRef.current.uuid === receivedUUID) {
+          setSelected(true);
+          handleSelectNote({
+            source: "idk",
+            e: e,
+            selected: selected,
+            setSelected: setSelected,
+            uuid: noteDataRef.current.uuid,
+            index: noteDataRef.current.index,
+            isPinned: noteDataRef.current.isPinned,
+          });
+        }
+      };
+
+      const handleDeselect = (e) => {
+        const receivedUUID = e.detail.uuid;
+        if (note.uuid === receivedUUID) {
+          setSelected(false);
+          setSelectedNotesIDs((prev) =>
+            prev.filter((noteData) => noteData.uuid !== note.uuid)
+          );
+        }
+      };
+
+      window.addEventListener("selectNote", handleSelect);
+      window.addEventListener("deselectNote", handleDeselect);
+
+      return () => {
+        window.removeEventListener("selectNote", handleSelect);
+        window.removeEventListener("deselectNote", handleDeselect);
+      };
+    }, []);
+
     const handleMouseEnter = (e, text) => {
       const target = e.currentTarget;
       setTooltipAnchor({ anchor: target, text: text, display: true });
@@ -104,7 +144,7 @@ const Note = memo(
     const closeToolTip = () => {
       setTooltipAnchor((prev) => ({
         anchor: null,
-        text: prev.text,
+        text: prev?.text,
       }));
     };
 
@@ -125,7 +165,7 @@ const Note = memo(
 
     return (
       <>
-        <div className="note-wrapper" ref={noteRef}>
+        <div className="note-wrapper" ref={note.ref}>
           <span
             style={{
               opacity: (selected || colorMenuOpen || moreMenuOpen) && "1",
@@ -185,7 +225,7 @@ const Note = memo(
               })
             }
           >
-            <div ref={noteStuffRef}>
+            <div>
               {note.images.length === 0 && <div className="corner" />}
               <div
                 style={{
@@ -301,10 +341,10 @@ const Note = memo(
             setColorMenuOpen={handleMenuIsOpenChange}
             setTooltipAnchor={setTooltipAnchor}
             moreMenuOpen={moreMenuOpen}
+            setFadingNotes={setFadingNotes}
             setMoreMenuOpen={setMoreMenuOpen}
             images={note.images.length !== 0}
             note={note}
-            noteRef={noteRef}
             dispatchNotes={dispatchNotes}
             setIsLoadingImages={setIsLoadingImages}
             userID={userID}

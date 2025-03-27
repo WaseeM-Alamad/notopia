@@ -20,28 +20,6 @@ export const fetchNotes = async () => {
     const notes = await Note.find({ creator: userID }).sort({ createdAt: -1 });
     const user = await User.findById(userID);
     const order = user.notesOrder;
-    // Manually serialize the MongoDB-specific fields
-    // const serializedNotes = notes.map((note) => ({
-    //   _id: note._id.toString(), // Convert ObjectId to string
-    //   uuid: note.uuid,
-    //   title: note.title,
-    //   content: note.content,
-    //   color: note.color,
-    //   labels: note.labels,
-    //   isPinned: note.isPinned,
-    //   isArchived: note.isArchived,
-    //   isTrash: note.isTrash,
-    //   images: Array.isArray(note.images)
-    //     ? note.images.map((image) => ({
-    //         url: image.url,
-    //         uuid: image.uuid,
-    //       }))
-    //     : [],
-    //   position: note.position,
-    //   createdAt: note.createdAt.toISOString(), // If it's a Date, convert to string
-    //   updatedAt: note.updatedAt.toISOString(),
-    //   __v: note.__v,
-    // }));
 
     return {
       success: true,
@@ -99,14 +77,14 @@ export const NoteUpdateAction = async (type, value, noteUUIDs, first) => {
     await connectDB();
     if (type === "images") {
       const updatedImages = await Note.findOneAndUpdate(
-        { uuid: noteUUIDs[0] },
+        { uuid: noteUUIDs[0], creator: userID },
         { $push: { images: value } },
         { returnDocument: "after" }
       );
       return JSON.parse(JSON.stringify(updatedImages.images));
     } else if (type === "isArchived") {
       await Note.updateOne(
-        { uuid: noteUUIDs[0] },
+        { uuid: noteUUIDs[0], creator: userID },
         { $set: { [type]: value, isPinned: false } }
       );
       if (!first) {
@@ -119,7 +97,7 @@ export const NoteUpdateAction = async (type, value, noteUUIDs, first) => {
       }
     } else if (type === "pinArchived") {
       await Note.updateOne(
-        { uuid: noteUUIDs[0] },
+        { uuid: noteUUIDs[0], creator: userID },
         { $set: { isPinned: value, isArchived: false } }
       );
       const user = await User.findById(userID);
@@ -129,7 +107,10 @@ export const NoteUpdateAction = async (type, value, noteUUIDs, first) => {
       user.notesOrder = updatedOrder;
       await user.save();
     } else if (type === "isPinned") {
-      await Note.updateOne({ uuid: noteUUIDs[0] }, { $set: { [type]: value } });
+      await Note.updateOne(
+        { uuid: noteUUIDs[0], creator: userID },
+        { $set: { [type]: value } }
+      );
       if (!first) {
         const user = await User.findById(userID);
         const { notesOrder } = user;
@@ -140,7 +121,7 @@ export const NoteUpdateAction = async (type, value, noteUUIDs, first) => {
       }
     } else if (type === "isTrash") {
       await Note.updateOne(
-        { uuid: noteUUIDs[0] },
+        { uuid: noteUUIDs[0], creator: userID },
         { $set: { [type]: value, isPinned: false } }
       );
       const user = await User.findById(userID);
@@ -151,7 +132,7 @@ export const NoteUpdateAction = async (type, value, noteUUIDs, first) => {
       await user.save();
     } else {
       await Note.updateMany(
-        { uuid: { $in: noteUUIDs } },
+        { uuid: { $in: noteUUIDs }, creator: userID },
         { $set: { [type]: value } }
       );
     }
@@ -166,7 +147,7 @@ export const batchUpdateAction = async (data) => {
     return new Response("Unauthorized", { status: 401 });
   }
   try {
-    if (data.type === "BATCH_ARCHIVE") {
+    if (data.type === "BATCH_ARCHIVE/TRASH") {
       await connectDB();
       const user = await User.findById(userID);
       const { notesOrder } = user;
@@ -183,8 +164,8 @@ export const batchUpdateAction = async (data) => {
       updatedOrder.unshift(...sortedUUIDs);
 
       await Note.updateMany(
-        { uuid: { $in: sortedUUIDs } },
-        { $set: { isArchived: !data.val, isPinned: false } }
+        { uuid: { $in: sortedUUIDs }, creator: userID },
+        { $set: { [data.property]: !data.val, isPinned: false } }
       );
 
       user.notesOrder = updatedOrder;
@@ -206,7 +187,7 @@ export const batchUpdateAction = async (data) => {
       updatedOrder.unshift(...sortedUUIDs);
 
       await Note.updateMany(
-        { uuid: { $in: sortedUUIDs } },
+        { uuid: { $in: sortedUUIDs }, creator: userID },
         { $set: { isPinned: !data.val, isArchived: false } }
       );
 
@@ -227,7 +208,7 @@ export const NoteTextUpdateAction = async (values, noteUUID) => {
     await connectDB();
 
     await Note.updateOne(
-      { uuid: noteUUID },
+      { uuid: noteUUID, creator: userID },
       { $set: { title: values.title, content: values.content } }
     );
   } catch (error) {
@@ -248,7 +229,7 @@ export const NoteImageDeleteAction = async (filePath, noteUUID, imageID) => {
   try {
     await connectDB();
     await Note.updateOne(
-      { uuid: noteUUID, "images.uuid": imageID }, // Make sure both the note's uuid and image's uuid are matched
+      { uuid: noteUUID, "images.uuid": imageID, creator: userID }, // Make sure both the note's uuid and image's uuid are matched
       { $pull: { images: { uuid: imageID } } } // Remove the image with the specified uuid
     );
     await supabase.storage.from("notopia").remove([filePath]);
@@ -268,12 +249,12 @@ export const DeleteNoteAction = async (noteUUID) => {
 
   try {
     await connectDB();
-    const note = await Note.findOne({ uuid: noteUUID });
+    const note = await Note.findOne({ uuid: noteUUID, creator: userID });
     await User.updateOne(
       { _id: userID },
       { $pull: { notes: note._id, notesOrder: noteUUID } }
     );
-    const result = await Note.deleteOne({ uuid: noteUUID });
+    const result = await Note.deleteOne({ uuid: noteUUID, creator: userID });
     if (result.deletedCount === 0) {
       return { success: false, message: "Note not found" };
     }
@@ -325,7 +306,7 @@ export const emptyTrashAction = async () => {
   try {
     await connectDB();
 
-    const deletedNotes = await Note.find({ isTrash: true });
+    const deletedNotes = await Note.find({ isTrash: true, creator: userID });
     let deletedUUIDs = [];
     let deletedIDs = [];
     let deletedLabels = [];
@@ -366,7 +347,7 @@ export const emptyTrashAction = async () => {
       })),
     ];
 
-    await Note.deleteMany({ isTrash: true });
+    await Note.deleteMany({ isTrash: true, creator: userID });
     await User.bulkWrite(bulkOperations);
 
     if (deletedImages.length !== 0) {
@@ -421,7 +402,7 @@ export const undoAction = async (data) => {
 
     if (data.type === "UNDO_ARCHIVE") {
       await Note.updateOne(
-        { uuid: data.noteUUID },
+        { uuid: data.noteUUID, creator: userID },
         { $set: { isArchived: data.value, isPinned: data.pin } }
       );
       const updatedOrder = [...notesOrder];
@@ -432,7 +413,7 @@ export const undoAction = async (data) => {
       await user.save();
     } else if (data.type === "UNDO_TRASH") {
       await Note.updateOne(
-        { uuid: data.noteUUID },
+        { uuid: data.noteUUID, creator: userID },
         { $set: { isTrash: data.value } }
       );
       const updatedOrder = [...notesOrder];
@@ -443,7 +424,7 @@ export const undoAction = async (data) => {
       await user.save();
     } else if (data.type === "UNDO_PIN_ARCHIVED") {
       await Note.updateOne(
-        { uuid: data.noteUUID },
+        { uuid: data.noteUUID, creator: userID },
         { $set: { isPinned: false, isArchived: true } }
       );
       const updatedOrder = [...notesOrder];
@@ -458,12 +439,15 @@ export const undoAction = async (data) => {
         process.env.NEXT_SUPABASE_SERVICE_ROLE_KEY
       );
 
-      const note = await Note.findOne({ uuid: data.noteUUID });
+      const note = await Note.findOne({ uuid: data.noteUUID, creator: userID });
       await User.updateOne(
         { _id: userID },
         { $pull: { notes: note._id, notesOrder: data.noteUUID } }
       );
-      const result = await Note.deleteOne({ uuid: data.noteUUID });
+      const result = await Note.deleteOne({
+        uuid: data.noteUUID,
+        creator: userID,
+      });
       if (result.deletedCount === 0) {
         return { success: false, message: "Note not found" };
       }
@@ -482,7 +466,7 @@ export const undoAction = async (data) => {
         const filesToDelete = files.map((file) => `${folderPath}${file.name}`);
         await supabase.storage.from(bucketName).remove(filesToDelete);
       }
-    } else if (data.type === "UNDO_BATCH_ARCHIVE") {
+    } else if (data.type === "UNDO_BATCH_ARCHIVE/TRASH") {
       const updatedOrder = notesOrder.slice(data.selectedNotes.length);
       const sortedNotes = data.selectedNotes.sort((a, b) => a.index - b.index);
       let selectedUUIDs = [];
@@ -496,7 +480,7 @@ export const undoAction = async (data) => {
           updateOne: {
             filter: { uuid: noteData.uuid },
             update: {
-              $set: { isArchived: data.val, isPinned: noteData.isPinned },
+              $set: { [data.property]: data.val, isPinned: noteData.isPinned },
             },
           },
         });
@@ -516,7 +500,7 @@ export const undoAction = async (data) => {
       });
 
       await Note.updateMany(
-        { uuid: { $in: selectedUUIDs } },
+        { uuid: { $in: selectedUUIDs }, creator: userID },
         { $set: { isArchived: true, isPinned: false } }
       );
       user.notesOrder = updatedOrder;
@@ -527,7 +511,7 @@ export const undoAction = async (data) => {
   }
 };
 
-export const copyNoteAction = async (copiedNote, originalUUID) => {
+export const copyNoteAction = async (data) => {
   if (!session) {
     return new Response("Unauthorized", { status: 401 });
   }
@@ -540,33 +524,46 @@ export const copyNoteAction = async (copiedNote, originalUUID) => {
     );
     await connectDB();
     const user = await User.findById(userID);
-    const sourceFolder = `${userID}/${originalUUID}`;
-    const destinationFolder = `${userID}/${copiedNote.uuid}`;
+    const copiedNote = await Note.findOne({
+      uuid: data.originalNoteUUID,
+      creator: userID,
+    });
+    const sourceFolder = `${userID}/${data.originalNoteUUID}`;
+    const destinationFolder = `${userID}/${data.newNoteUUID}`;
     let copiedImages = [];
 
     if (copiedNote.images.length !== 0) {
       for (let i = 0; i < copiedNote.images.length; i++) {
-        const newUUID = uuid();
+        const newImageUUID = data.newImages[i].uuid;
         const { error: copyError } = await supabase.storage
           .from("notopia")
           .copy(
             `${sourceFolder}/${copiedNote.images[i].uuid}`,
-            `${destinationFolder}/${newUUID}`
+            `${destinationFolder}/${newImageUUID}`
           );
         if (copyError) throw copyError;
         const newImage = {
-          url: `${starter}/${userID}/${copiedNote.uuid}/${newUUID}`,
-          uuid: newUUID,
+          url: `${starter}/${userID}/${data.newNoteUUID}/${newImageUUID}`,
+          uuid: newImageUUID,
         };
         copiedImages.push(newImage);
       }
     }
 
     const noteData = {
-      ...copiedNote,
+      uuid: data.newNoteUUID,
+      title: copiedNote.title,
+      content: copiedNote.content,
+      color: copiedNote.color,
+      background: copiedNote.background,
+      labels: copiedNote.labels,
+      isPinned: false,
+      isArchived: false,
+      isTrash: copiedNote.isTrash,
       images: copiedImages,
       creator: userID,
     };
+
     const newNote = new Note(noteData);
     await newNote.save();
     user.notes.push(newNote._id);
@@ -576,6 +573,7 @@ export const copyNoteAction = async (copiedNote, originalUUID) => {
 
     return {
       success: true,
+      note: JSON.parse(JSON.stringify(newNote)),
       message: "Note copied successfully!",
       status: 201,
     };
@@ -653,7 +651,7 @@ export const addLabelAction = async (data) => {
     await connectDB();
 
     await Note.updateOne(
-      { uuid: data.noteUUID },
+      { uuid: data.noteUUID, creator: userID },
       { $push: { labels: data.labelUUID } }
     );
   } catch (error) {
@@ -670,7 +668,7 @@ export const removeLabelAction = async (data) => {
     await connectDB();
 
     await Note.updateOne(
-      { uuid: data.noteUUID },
+      { uuid: data.noteUUID, creator: userID },
       { $pull: { labels: data.labelUUID } }
     );
   } catch (error) {
@@ -805,7 +803,7 @@ export const deleteLabelAction = async (data) => {
     );
 
     await Note.updateMany(
-      { labels: data.labelUUID },
+      { labels: data.labelUUID, creator: userID },
       { $pull: { labels: data.labelUUID } }
     );
 
@@ -820,5 +818,77 @@ export const deleteLabelAction = async (data) => {
   } catch (error) {
     console.log(error);
     return { message: "Failed to delete label", status: 500 };
+  }
+};
+
+export const batchDeleteNotes = async (data) => {
+  if (!session) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_SUPABASE_SERVICE_ROLE_KEY
+  );
+  try {
+    await connectDB();
+
+    const deletedNotes = await Note.find({
+      uuid: { $in: data.deletedUUIDs },
+      creator: userID,
+    });
+
+    let deletedIDs = [];
+    let deletedLabels = [];
+    let deletedImages = [];
+
+    deletedNotes.map((note) => {
+      deletedIDs.push(note._id);
+      deletedLabels.push(...note.labels);
+      note.images.map((imageData) => {
+        const filePath = `${userID}/${note.uuid}/${imageData.uuid}`;
+        deletedImages.push(filePath);
+      });
+    });
+
+    const labelCountsMap = deletedLabels.reduce((acc, label) => {
+      acc[label] = acc[label] ? acc[label] + 1 : 1;
+      return acc;
+    }, {});
+
+    const bulkOperations = [
+      {
+        updateOne: {
+          filter: { _id: userID },
+          update: {
+            $pull: {
+              notesOrder: { $in: data.deletedUUIDs },
+              notes: { $in: deletedIDs },
+            },
+          },
+        },
+      },
+      ...Object.entries(labelCountsMap).map(([label, count]) => ({
+        updateOne: {
+          filter: { "labels.uuid": label },
+          update: { $inc: { "labels.$.noteCount": -count } },
+        },
+      })),
+    ];
+
+    await Note.deleteMany({
+      uuid: { $in: data.deletedUUIDs },
+      creator: userID,
+    });
+    await User.bulkWrite(bulkOperations);
+
+    if (deletedImages.length !== 0) {
+      const bucketName = "notopia";
+      await supabase.storage.from(bucketName).remove(deletedImages);
+    }
+
+    return { success: true, message: "Trash emptied successfully" };
+  } catch (error) {
+    console.log("Error deleting notes.", error);
+    return { success: false, message: "Error deleting notes" };
   }
 };

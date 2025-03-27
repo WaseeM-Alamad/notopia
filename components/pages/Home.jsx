@@ -113,6 +113,7 @@ const NoteWrapper = memo(
           noteActions={noteActions}
           setTooltipAnchor={setTooltipAnchor}
           calculateLayout={calculateLayout}
+          setFadingNotes={setFadingNotes}
           isLoadingImagesAddNote={isLoadingImages}
           setSelectedNotesIDs={setSelectedNotesIDs}
           selectedNotes={selectedNotes}
@@ -143,6 +144,7 @@ const Home = memo(
     handleSelectNote,
     noteActions,
     notesReady,
+    rootContainerRef,
   }) => {
     const [pinnedHeight, setPinnedHeight] = useState(null);
     const [isLoadingImages, setIsLoadingImages] = useState([]);
@@ -439,7 +441,7 @@ const Home = memo(
 
     return (
       <>
-        <div className="starting-div">
+        <div ref={rootContainerRef} className="starting-div">
           <div
             ref={containerRef}
             className="section-container"

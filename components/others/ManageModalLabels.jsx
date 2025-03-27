@@ -249,7 +249,7 @@ const ManageModalLabels = ({
         </div>
       </motion.div>
     </Popper>,
-    document.getElementById("moreMenu")
+    document.getElementById("menu")
   );
 };
 

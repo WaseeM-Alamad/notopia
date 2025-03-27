@@ -255,7 +255,7 @@ const ManageLabelsMenu = ({
         </div>
       </motion.div>
     </Popper>,
-    document.getElementById("moreMenu")
+    document.getElementById("menu")
   );
 };
 

@@ -3,10 +3,14 @@ import { AnimatePresence, motion } from "framer-motion";
 import React, { useEffect, useRef, useState } from "react";
 import ColorSelectMenu from "../ColorSelectMenu";
 import {
+  batchDeleteNotes,
   batchUpdateAction,
   NoteUpdateAction,
   undoAction,
 } from "@/utils/actions";
+import MoreMenu from "../MoreMenu";
+import { useAppContext } from "@/context/AppContext";
+import { v4 as uuid } from "uuid";
 
 const TopMenuHome = ({
   notes,
@@ -16,9 +20,16 @@ const TopMenuHome = ({
   selectedNotesIDs,
   setSelectedNotesIDs,
   setTooltipAnchor,
+  isDraggingRef,
+  rootContainerRef,
 }) => {
+  const { decNoteCountMultiple } = useAppContext();
   const [colorAnchorEl, setColorAnchorEl] = useState(null);
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  const [labelsOpen, setLabelsOpen] = useState(false);
+  const [inTrash, setInTrash] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
   const [selectedBG, setSelectedBG] = useState(null);
   const [pinNotes, setPinNotes] = useState(false);
   const [selectedColor, setSelectedColor] = useState();
@@ -27,34 +38,37 @@ const TopMenuHome = ({
   const handleClose = () => {
     closeToolTip();
     setSelectedNotesIDs([]);
+    setMoreMenuOpen(false);
+    setColorMenuOpen(false);
     window.dispatchEvent(new Event("topMenuClose"));
   };
 
   useEffect(() => {
     if (
       selectedNotesIDs.length > 0 &&
-      !document
-        .querySelector(".starting-div")
-        .classList.contains("selected-notes")
+      !rootContainerRef.current?.classList.contains("selected-notes")
     ) {
-      document.querySelector(".starting-div").classList.add("selected-notes");
+      const firstItem = selectedNotesIDs[0];
+      const val = notes.get(firstItem.uuid).isTrash;
+      setInTrash(val);
+
+      rootContainerRef.current?.classList.add("selected-notes");
     }
 
     if (selectedNotesIDs.length === 0) {
-      document
-        .querySelector(".starting-div")
-        .classList.remove("selected-notes");
+      rootContainerRef.current?.classList.remove("selected-notes");
     }
 
     const handler = (e) => {
       if (
+        !isDraggingRef.current &&
         selectedNotesIDs.length > 0 &&
         !e.target.closest(".note") &&
         !e.target.closest("nav") &&
         !e.target.closest(".top-menu") &&
         !e.target.closest("aside") &&
         !e.target.closest(".color-menu") &&
-        !document.querySelector(".starting-div").classList.contains("dragging")
+        !rootContainerRef.current?.classList.contains("dragging")
       ) {
         handleClose();
       }
@@ -128,6 +142,7 @@ const TopMenuHome = ({
   };
 
   const handleColorClick = async (newColor) => {
+    closeToolTip();
     if (selectedColor === newColor) return;
     dispatchNotes({
       type: "BATCH_UPDATE_COLOR",
@@ -163,8 +178,9 @@ const TopMenuHome = ({
     window.dispatchEvent(new Event("loadingStart"));
 
     batchUpdateAction({
-      type: "BATCH_ARCHIVE",
+      type: "BATCH_ARCHIVE/TRASH",
       selectedNotes: selectedNotesIDs,
+      property: "isArchived",
       val: val,
     }).then(() => window.dispatchEvent(new Event("loadingEnd")));
 
@@ -176,15 +192,17 @@ const TopMenuHome = ({
       window.dispatchEvent(new Event("loadingStart"));
 
       undoAction({
-        type: "UNDO_BATCH_ARCHIVE",
+        type: "UNDO_BATCH_ARCHIVE/TRASH",
         selectedNotes: selectedNotesIDs,
+        property: "isArchived",
         val: val,
       }).then(() => window.dispatchEvent(new Event("loadingEnd")));
 
       dispatchNotes({
-        type: "UNDO_BATCH_ARCHIVE",
+        type: "UNDO_BATCH_ARCHIVE/TRASH",
         selectedNotes: selectedNotesIDs,
-        isArchived: val,
+        property: "isArchived",
+        val: val,
         length: length,
       });
     };
@@ -201,12 +219,13 @@ const TopMenuHome = ({
 
     setTimeout(() => {
       dispatchNotes({
-        type: "BATCH_ARCHIVE",
+        type: "BATCH_ARCHIVE/TRASH",
         selectedNotes: selectedNotesIDs,
-        isArchived: val,
+        property: "isArchived",
+        val: val,
       });
       setFadingNotes(new Set());
-    }, 200);
+    }, 250);
   };
 
   const handlePin = () => {
@@ -255,7 +274,7 @@ const TopMenuHome = ({
         });
         setFadingNotes(new Set());
       },
-      ArchiveVal ? 200 : 0
+      ArchiveVal ? 250 : 0
     );
     window.dispatchEvent(new Event("loadingStart"));
     batchUpdateAction({
@@ -264,6 +283,174 @@ const TopMenuHome = ({
       val: pinNotes,
     }).then(() => window.dispatchEvent(new Event("loadingEnd")));
   };
+
+  const handleOpenMenu = (e) => {
+    setAnchorEl(e.currentTarget);
+    setMoreMenuOpen((prev) => !prev);
+  };
+
+  const handleTrashNotes = () => {
+    const firstItem = selectedNotesIDs[0];
+    const val = notes.get(firstItem.uuid).isTrash;
+    const length = selectedNotesIDs.length;
+
+    window.dispatchEvent(new Event("loadingStart"));
+
+    batchUpdateAction({
+      type: "BATCH_ARCHIVE/TRASH",
+      selectedNotes: selectedNotesIDs,
+      property: "isTrash",
+      val: val,
+    }).then(() => window.dispatchEvent(new Event("loadingEnd")));
+
+    const selectedUUIDs = selectedNotesIDs.map(({ uuid }) => uuid);
+
+    setFadingNotes(new Set(selectedUUIDs));
+
+    const undo = () => {
+      window.dispatchEvent(new Event("loadingStart"));
+
+      undoAction({
+        type: "UNDO_BATCH_ARCHIVE/TRASH",
+        selectedNotes: selectedNotesIDs,
+        property: "isTrash",
+        val: val,
+      }).then(() => window.dispatchEvent(new Event("loadingEnd")));
+
+      dispatchNotes({
+        type: "UNDO_BATCH_ARCHIVE/TRASH",
+        selectedNotes: selectedNotesIDs,
+        property: "isTrash",
+        val: val,
+        length: length,
+      });
+    };
+
+    const snackMessage =
+      length === 1
+        ? `Note ${val ? "restored" : "trashed"}`
+        : `${length} notes ${val ? "restored" : "trashed"}`;
+
+    openSnackFunction({
+      snackMessage: snackMessage,
+      snackOnUndo: undo,
+    });
+
+    handleClose();
+
+    setTimeout(() => {
+      dispatchNotes({
+        type: "BATCH_ARCHIVE/TRASH",
+        selectedNotes: selectedNotesIDs,
+        property: "isTrash",
+        val: val,
+      });
+      setFadingNotes(new Set());
+    }, 250);
+  };
+
+  const handleDeleteNotes = async () => {
+    let selectedUUIDs = [];
+    let labelsToDec = [];
+
+    selectedNotesIDs.forEach(({ uuid }) => {
+      selectedUUIDs.push(uuid);
+      const note = notes.get(uuid);
+      if (note.labels.length > 0) {
+        labelsToDec.push(...note.labels);
+      }
+    });
+
+    decNoteCountMultiple(labelsToDec);
+
+    setFadingNotes(new Set(selectedUUIDs));
+    setTimeout(() => {
+      dispatchNotes({
+        type: "BATCH_DELETE_NOTES",
+        deletedUUIDs: selectedUUIDs,
+      });
+      setFadingNotes(new Set());
+    }, 250);
+
+    handleClose();
+
+    window.dispatchEvent(new Event("loadingStart"));
+    await batchDeleteNotes({ deletedUUIDs: selectedUUIDs });
+    window.dispatchEvent(new Event("loadingEnd"));
+  };
+
+  const handleMakeCopy = () => {
+    const newNotes = [];
+    const selectedUUIDs = [];
+    const newUUIDs = [];
+    const length = selectedNotesIDs.length;
+
+    const selectedNotes = selectedNotesIDs.sort((a, b) => b.index - a.index);
+
+    selectedNotes.forEach(({ uuid: noteUUID }) => {
+      selectedUUIDs.push(noteUUID);
+      const note = notes.get(noteUUID);
+      const newNoteUUID = uuid();
+      const newNote = {
+        uuid: newNoteUUID,
+        title: note?.title,
+        content: note.content,
+        color: note.color,
+        background: note.background,
+        labels: note.labels,
+        isPinned: false,
+        isArchived: false,
+        isTrash: note.isTrash,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        images: note.images,
+      };
+      newNotes.push(newNote);
+      newUUIDs.push(newNoteUUID);
+    });
+
+    handleClose();
+
+    dispatchNotes({
+      type: "BATCH_COPY_NOTE",
+      newNotes: newNotes,
+      newUUIDs: selectedUUIDs,
+    });
+
+    const undo = () => {
+      setFadingNotes(new Set(newUUIDs));
+      setTimeout(() => {
+        dispatchNotes({
+          type: "UNDO_BATCH_COPY",
+          notesToDel: newUUIDs,
+          length: length,
+        });
+        setFadingNotes(new Set());
+      }, 250);
+    };
+
+    openSnackFunction({
+      snackMessage: `${
+        length === 1 ? "Note created" : length + "notes created"
+      }`,
+      snackOnUndo: undo,
+    });
+  };
+
+  const menuItems = [
+    {
+      title: "Delete note",
+      function: handleTrashNotes,
+    },
+    {
+      title: "Add label",
+      function: () => {},
+    },
+    {
+      title: "Make a copy",
+      function: handleMakeCopy,
+    },
+  ];
 
   return (
     <>
@@ -297,31 +484,60 @@ const TopMenuHome = ({
             />
             <span>{selectedNotesIDs.length} Selected</span>
             <div className="top-menu-tools">
-              <Button
-                onClick={handlePin}
-                className={pinNotes ? "top-pinned-icon" : "top-pin-icon"}
-                style={{ width: "45px", height: "45px" }}
-              />
-              <Button
-                className="top-reminder-icon"
-                style={{ width: "45px", height: "45px" }}
-              />
-              <Button
-                onClick={handleArchive}
-                className="top-archive-icon"
-                style={{ width: "45px", height: "45px" }}
-              />
-              <Button
-                onClick={handleOpenColor}
-                className="top-color-icon"
-                style={{ width: "45px", height: "45px" }}
-              />
-              <Button
-                className="top-more-icon"
-                style={{ width: "45px", height: "45px" }}
-              />
+              {!inTrash ? (
+                <>
+                  <Button
+                    onClick={handlePin}
+                    className={pinNotes ? "top-pinned-icon" : "top-pin-icon"}
+                    style={{ width: "45px", height: "45px" }}
+                  />
+                  <Button
+                    className="top-reminder-icon"
+                    style={{ width: "45px", height: "45px" }}
+                  />
+                  <Button
+                    onClick={handleArchive}
+                    className="top-archive-icon"
+                    style={{ width: "45px", height: "45px" }}
+                  />
+                  <Button
+                    onClick={handleOpenColor}
+                    className="top-color-icon"
+                    style={{ width: "45px", height: "45px" }}
+                  />
+                  <Button
+                    onClick={handleOpenMenu}
+                    className="top-more-icon"
+                    style={{ width: "45px", height: "45px" }}
+                  />
+                </>
+              ) : (
+                <>
+                  <Button
+                    onClick={handleDeleteNotes}
+                    className="top-delete-icon"
+                    style={{ width: "45px", height: "45px" }}
+                  />
+                  <Button
+                    onClick={handleTrashNotes}
+                    className="top-restore-icon"
+                    style={{ width: "45px", height: "45px" }}
+                  />
+                </>
+              )}
             </div>
           </motion.div>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {moreMenuOpen && !labelsOpen && (
+          <MoreMenu
+            setIsOpen={setMoreMenuOpen}
+            anchorEl={anchorEl}
+            isOpen={moreMenuOpen}
+            menuItems={menuItems}
+            transformOrigin="top right"
+          />
         )}
       </AnimatePresence>
       <AnimatePresence>

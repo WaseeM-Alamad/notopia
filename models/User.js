@@ -41,6 +41,7 @@ const UserSchema = new Schema({
   notesOrder: [
     {
       type: String,
+      unique: [true, "UUID must be unique!"]
     },
   ],
   labels: [LabelSchema],

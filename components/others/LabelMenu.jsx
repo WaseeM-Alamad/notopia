@@ -1,7 +1,6 @@
 import { Popper } from "@mui/material";
 import { motion } from "framer-motion";
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { useAppContext } from "@/context/AppContext";
 
 const LabelMenu = ({
@@ -98,7 +97,7 @@ const LabelMenu = ({
 
   if (!isMounted) return;
 
-  return createPortal(
+  return (
     <>
       <Popper
         open={isOpen}
@@ -184,8 +183,7 @@ const LabelMenu = ({
           </div>
         </motion.div>
       </Popper>
-    </>,
-    document.getElementById("moreMenu")
+    </>
   );
 };
 

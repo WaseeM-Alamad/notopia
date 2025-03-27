@@ -26,6 +26,7 @@ const NoteWrapper = memo(
     handleNoteClick,
     handleSelectNote,
     fadingNotes,
+    calculateLayout,
     setFadingNotes,
     dispatchNotes,
     setTooltipAnchor,
@@ -56,6 +57,7 @@ const NoteWrapper = memo(
           dispatchNotes={dispatchNotes}
           index={index}
           noteActions={noteActions}
+          calculateLayout={calculateLayout}
           handleSelectNote={handleSelectNote}
           setTooltipAnchor={setTooltipAnchor}
           setSelectedNotesIDs={setSelectedNotesIDs}
@@ -82,6 +84,7 @@ const Archive = memo(
     handleSelectNote,
     fadingNotes,
     setFadingNotes,
+    rootContainerRef,
     noteActions,
     notesReady,
   }) => {
@@ -191,7 +194,7 @@ const Archive = memo(
 
     return (
       <>
-        <div className="starting-div">
+        <div ref={rootContainerRef} className="starting-div">
           <div
             ref={containerRef}
             className="section-container"
@@ -207,6 +210,7 @@ const Archive = memo(
                     index={index}
                     handleNoteClick={handleNoteClick}
                     handleSelectNote={handleSelectNote}
+                    calculateLayout={calculateLayout}
                     fadingNotes={fadingNotes}
                     setFadingNotes={setFadingNotes}
                     noteActions={noteActions}
