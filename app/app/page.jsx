@@ -507,6 +507,48 @@ function notesReducer(state, action) {
       };
     }
 
+    case "BATCH_REMOVE_LABEL": {
+      const updatedNotes = new Map(state.notes);
+
+      action.selectedNotesIDs.forEach(({ uuid: noteUUID }) => {
+        const note = updatedNotes.get(noteUUID);
+
+        const updatedLabels = note.labels.filter(
+          (labelUUID) => labelUUID !== action.uuid
+        );
+
+        updatedNotes.set(noteUUID, { ...note, labels: updatedLabels });
+      });
+
+      return {
+        ...state,
+        notes: updatedNotes,
+      };
+    }
+
+    case "BATCH_ADD_LABEL": {
+      if (action.case === "shared") {
+        const updatedNotes = new Map(state.notes);
+        action.selectedNotesIDs.forEach(({ uuid: noteUUID }) => {
+          const note = updatedNotes.get(noteUUID);
+
+          const updatedLabels = [action.uuid, ...note.labels];
+
+          updatedNotes.set(noteUUID, { ...note, labels: updatedLabels });
+        });
+
+        return {
+          ...state,
+          notes: updatedNotes,
+        };
+      } else {
+        return {
+          ...state,
+          notes: action.updatedNotes,
+        };
+      }
+    }
+
     case "EMPTY_TRASH": {
       const updatedNotes = new Map();
       const updatedOrder = [];
@@ -536,7 +578,7 @@ function notesReducer(state, action) {
 }
 
 const page = () => {
-  const { batchDecNoteCount, removeLabel } = useAppContext();
+  const { batchNoteCount, removeLabel } = useAppContext();
   const [current, setCurrent] = useState("Home");
   const [tooltipAnchor, setTooltipAnchor] = useState(null);
   const [notesState, dispatchNotes] = useReducer(notesReducer, initialStates);
@@ -829,7 +871,7 @@ const page = () => {
       }
       data.setIsOpen(false);
     } else if (data.type === "DELETE_NOTE") {
-      batchDecNoteCount(data.note.labels);
+      batchNoteCount(data.note.labels);
 
       const timeOut = setTimeout(() => {
         dispatchNotes({
@@ -947,6 +989,14 @@ const page = () => {
         images: newImages,
       };
 
+      const labelsUUIDs = [];
+
+      note.labels.forEach((labelUUID) => {
+        labelsUUIDs.push(labelUUID);
+      });
+
+      batchNoteCount(labelsUUIDs, "inc");
+
       dispatchNotes({
         type: "ADD_NOTE",
         newNote: newNote,
@@ -954,6 +1004,7 @@ const page = () => {
 
       const undoCopy = async () => {
         setFadingNotes(new Set([newUUID]));
+        batchNoteCount(labelsUUIDs);
         setTimeout(async () => {
           dispatchNotes({
             type: "UNDO_COPY",
@@ -1223,10 +1274,10 @@ const page = () => {
 
     if (
       (parent?.contains(target) && target !== parent && target !== container) ||
-      nav.contains(target) ||
-      aside.contains(target) ||
-      menu.contains(target) ||
-      modal.contains(target) ||
+      nav?.contains(target) ||
+      aside?.contains(target) ||
+      menu?.contains(target) ||
+      modal?.contains(target) ||
       tooltip?.contains(target)
     ) {
       return;
@@ -1271,6 +1322,7 @@ const page = () => {
 
       <Modal
         note={selectedNote}
+        noteActions={noteActions}
         setNote={setSelectedNote}
         dispatchNotes={dispatchNotes}
         initialStyle={modalStyle}

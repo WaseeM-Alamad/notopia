@@ -1,4 +1,3 @@
-import { copyNoteAction, undoAction } from "@/utils/actions";
 import { Popper } from "@mui/material";
 import { motion } from "framer-motion";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -13,6 +12,7 @@ const ModalMenu = ({
   anchorEl,
   trashRef,
   note,
+  noteActions,
   dispatchNotes,
   openSnackFunction,
 }) => {
@@ -52,63 +52,11 @@ const ModalMenu = ({
   };
 
   const handleMakeCopy = (e) => {
-    const newUUID = generateUUID();
-
-    const newNote = {
-      uuid: newUUID,
-      title: note.title,
-      content: note.content,
-      color: note.color,
-      labels: note.labels,
-      isPinned: false,
-      isArchived: false,
-      isTrash: note.isTrash,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      images: note.images,
-    };
-
-    dispatchNotes({
-      type: "ADD_NOTE",
-      newNote: newNote,
+    noteActions({
+      type: "COPY_NOTE",
+      setMoreMenuOpen: setIsOpen,
+      note: note,
     });
-
-    setTimeout(() => {
-      const element = document.querySelector('[data-position="0"]');
-
-      const undoCopy = async () => {
-        element.style.transition = "opacity 0.19s ease";
-        element.style.opacity = "0";
-        setTimeout(async () => {
-          dispatchNotes({
-            type: "UNDO_COPY",
-            noteUUID: newNote.uuid,
-          });
-          window.dispatchEvent(new Event("loadingStart"));
-          await undoAction({
-            type: "UNDO_COPY",
-            noteUUID: newNote.uuid,
-            isImages: note.images.length,
-          });
-          window.dispatchEvent(new Event("loadingEnd"));
-        }, 190);
-      };
-      openSnackFunction({
-        snackMessage: "Note created",
-        snackOnUndo: undoCopy,
-      });
-    }, 5);
-
-    setTimeout(() => {
-      window.dispatchEvent(new Event("closeModal"));
-    }, 1);
-    window.dispatchEvent(new Event("loadingStart"));
-
-    copyNoteAction(newNote, note.uuid).then(() =>
-      window.dispatchEvent(new Event("loadingEnd"))
-    );
-
-    setIsOpen(false);
   };
 
   const containerClick = useCallback((e) => {

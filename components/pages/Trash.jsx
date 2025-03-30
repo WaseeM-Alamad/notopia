@@ -80,7 +80,7 @@ const Home = memo(
     setFadingNotes,
     fadingNotes,
   }) => {
-    const { decNoteCountMultiple } = useAppContext();
+    const { batchNoteCount } = useAppContext();
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [notesExist, setNotesExist] = useState(false);
     const containerRef = useRef(null);
@@ -165,7 +165,7 @@ const Home = memo(
         }
       });
 
-      decNoteCountMultiple(labelsToDec);
+      batchNoteCount(labelsToDec);
 
       setFadingNotes(new Set(deletedNotesUUIDs));
 

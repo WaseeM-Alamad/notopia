@@ -45,18 +45,32 @@ export const createNoteAction = async (note) => {
   }));
   try {
     await connectDB();
-    const user = await User.findById(userID);
     const noteData = {
       ...note,
       images: images,
       creator: userID,
     };
     const newNote = new Note(noteData);
-    await newNote.save();
-    user.notes.push(newNote._id);
-    user.notesOrder.unshift(newNote.uuid);
 
-    await user.save();
+    await User.updateOne(
+      { _id: userID },
+      {
+        $inc: { "labels.$[elem].noteCount": 1 },
+        $push: {
+          notesOrder: { $each: [newNote.uuid], $position: 0 },
+        },
+      },
+      {
+        arrayFilters: [
+          {
+            "elem.uuid": { $in: newNote.labels },
+            "elem.noteCount": { $gt: 0 },
+          },
+        ],
+      }
+    );
+
+    await newNote.save();
 
     return {
       success: true,
@@ -229,8 +243,8 @@ export const NoteImageDeleteAction = async (filePath, noteUUID, imageID) => {
   try {
     await connectDB();
     await Note.updateOne(
-      { uuid: noteUUID, "images.uuid": imageID, creator: userID }, // Make sure both the note's uuid and image's uuid are matched
-      { $pull: { images: { uuid: imageID } } } // Remove the image with the specified uuid
+      { uuid: noteUUID, "images.uuid": imageID, creator: userID },
+      { $pull: { images: { uuid: imageID } } }
     );
     await supabase.storage.from("notopia").remove([filePath]);
   } catch (error) {
@@ -250,10 +264,7 @@ export const DeleteNoteAction = async (noteUUID) => {
   try {
     await connectDB();
     const note = await Note.findOne({ uuid: noteUUID, creator: userID });
-    await User.updateOne(
-      { _id: userID },
-      { $pull: { notes: note._id, notesOrder: noteUUID } }
-    );
+    await User.updateOne({ _id: userID }, { $pull: { notesOrder: noteUUID } });
     const result = await Note.deleteOne({ uuid: noteUUID, creator: userID });
     if (result.deletedCount === 0) {
       return { success: false, message: "Note not found" };
@@ -308,12 +319,10 @@ export const emptyTrashAction = async () => {
 
     const deletedNotes = await Note.find({ isTrash: true, creator: userID });
     let deletedUUIDs = [];
-    let deletedIDs = [];
     let deletedLabels = [];
     let deletedImages = [];
 
     deletedNotes.map((note) => {
-      deletedIDs.push(note._id);
       deletedUUIDs.push(note.uuid);
       deletedLabels.push(...note.labels);
       note.images.map((imageData) => {
@@ -334,7 +343,6 @@ export const emptyTrashAction = async () => {
           update: {
             $pull: {
               notesOrder: { $in: deletedUUIDs },
-              notes: { $in: deletedIDs },
             },
           },
         },
@@ -440,10 +448,23 @@ export const undoAction = async (data) => {
       );
 
       const note = await Note.findOne({ uuid: data.noteUUID, creator: userID });
+
       await User.updateOne(
         { _id: userID },
-        { $pull: { notes: note._id, notesOrder: data.noteUUID } }
+        {
+          $inc: { "labels.$[elem].noteCount": -1 },
+          $pull: { notesOrder: data.noteUUID },
+        },
+        {
+          arrayFilters: [
+            {
+              "elem.uuid": { $in: note.labels },
+              "elem.noteCount": { $gt: 0 },
+            },
+          ],
+        }
       );
+
       const result = await Note.deleteOne({
         uuid: data.noteUUID,
         creator: userID,
@@ -505,6 +526,46 @@ export const undoAction = async (data) => {
       );
       user.notesOrder = updatedOrder;
       await user.save();
+    } else if (data.type === "UNDO_BATCH_COPY") {
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.NEXT_SUPABASE_SERVICE_ROLE_KEY
+      );
+
+      const labelCountsMap = data.labelsUUIDs.reduce((acc, label) => {
+        acc[label] = acc[label] ? acc[label] + 1 : 1;
+        return acc;
+      }, {});
+
+      const bulkOperations = [
+        {
+          updateOne: {
+            filter: { _id: userID },
+            update: {
+              $pull: {
+                notesOrder: { $in: data.notesUUIDs },
+              },
+            },
+          },
+        },
+        ...Object.entries(labelCountsMap).map(([label, count]) => ({
+          updateOne: {
+            filter: { "labels.uuid": label },
+            update: { $inc: { "labels.$.noteCount": -count } },
+          },
+        })),
+      ];
+
+      if (data.imagesToDel.length !== 0) {
+        const bucketName = "notopia";
+        await supabase.storage.from(bucketName).remove(data.imagesToDel);
+      }
+
+      await Note.deleteMany({
+        uuid: { $in: data.notesUUIDs },
+        creator: userID,
+      });
+      await User.bulkWrite(bulkOperations);
     }
   } catch (error) {
     console.log(error);
@@ -523,7 +584,6 @@ export const copyNoteAction = async (data) => {
       process.env.NEXT_SUPABASE_SERVICE_ROLE_KEY
     );
     await connectDB();
-    const user = await User.findById(userID);
     const copiedNote = await Note.findOne({
       uuid: data.originalNoteUUID,
       creator: userID,
@@ -565,11 +625,26 @@ export const copyNoteAction = async (data) => {
     };
 
     const newNote = new Note(noteData);
-    await newNote.save();
-    user.notes.push(newNote._id);
-    user.notesOrder.unshift(newNote.uuid);
 
-    await user.save();
+    await User.updateOne(
+      { _id: userID },
+      {
+        $inc: { "labels.$[elem].noteCount": 1 },
+        $push: {
+          notesOrder: { $each: [newNote.uuid], $position: 0 },
+        },
+      },
+      {
+        arrayFilters: [
+          {
+            "elem.uuid": { $in: copiedNote.labels },
+            "elem.noteCount": { $gt: 0 },
+          },
+        ],
+      }
+    );
+
+    await newNote.save();
 
     return {
       success: true,
@@ -580,6 +655,86 @@ export const copyNoteAction = async (data) => {
   } catch (error) {
     console.log("Error creating note:", error);
     return new Response("Failed to add note", { status: 500 });
+  }
+};
+
+export const batchCopyNoteAction = async (data) => {
+  if (!session) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+  const starter =
+    "https://fopkycgspstkfctmhyyq.supabase.co/storage/v1/object/public/notopia";
+  try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_SUPABASE_SERVICE_ROLE_KEY
+    );
+    await connectDB();
+
+    const allLabels = [];
+    const notesUUIDs = [];
+
+    await Promise.all(
+      data.newNotes.map(async (n) => {
+        notesUUIDs.unshift(n.uuid);
+        allLabels.push(...n.labels);
+        n.creator = userID;
+        const destinationFolder = `${userID}/${n.uuid}`;
+        if (n.images.length > 0) {
+          await Promise.all(
+            n.images.map(async (image) => {
+              const sourceDes = data.imagesMap.get(image.uuid);
+              const { error: copyError } = await supabase.storage
+                .from("notopia")
+                .copy(
+                  `${userID}/${sourceDes}`,
+                  `${destinationFolder}/${image.uuid}`
+                );
+              if (copyError) throw copyError;
+              image.url = `${starter}/${destinationFolder}/${image.uuid}`;
+            })
+          );
+        }
+      })
+    );
+
+    const labelCountsMap = allLabels.reduce((acc, label) => {
+      acc[label] = acc[label] ? acc[label] + 1 : 1;
+      return acc;
+    }, {});
+
+    const bulkOperations = [
+      {
+        updateOne: {
+          filter: { _id: userID },
+          update: {
+            $push: {
+              notesOrder: { $each: notesUUIDs, $position: 0 },
+            },
+          },
+        },
+      },
+      ...Object.entries(labelCountsMap).map(([label, count]) => ({
+        updateOne: {
+          filter: { "labels.uuid": label },
+          update: { $inc: { "labels.$.noteCount": +count } },
+        },
+      })),
+    ];
+
+    console.log(JSON.stringify(data.newNotes, null, 2));
+
+    await Note.insertMany(data.newNotes);
+    await User.bulkWrite(bulkOperations);
+
+    return {
+      success: true,
+      message: "Notes copied successfully!",
+      status: 201,
+    };
+  } catch (error) {
+    console.log("Error copying notes:", error);
+    return new Response("Failed to copy notes", { status: 500 });
   }
 };
 
@@ -636,6 +791,33 @@ export const createLabelAction = async (newUUID, newLabel) => {
     return {
       success: true,
       message: "Label added successfully!",
+      status: 201,
+    };
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const createLabelForNotesAction = async (data) => {
+  if (!session) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+  try {
+    await connectDB();
+
+    await Note.updateMany(
+      {
+        uuid: { $in: data.notesUUIDs },
+        creator: userID,
+      },
+      { $push: { labels: data.labelObj.uuid } }
+    );
+
+    await User.updateOne({ _id: userID }, { $push: { labels: data.labelObj } });
+
+    return {
+      success: true,
+      message: "Label created successfully!",
       status: 201,
     };
   } catch (error) {
@@ -837,12 +1019,10 @@ export const batchDeleteNotes = async (data) => {
       creator: userID,
     });
 
-    let deletedIDs = [];
     let deletedLabels = [];
     let deletedImages = [];
 
     deletedNotes.map((note) => {
-      deletedIDs.push(note._id);
       deletedLabels.push(...note.labels);
       note.images.map((imageData) => {
         const filePath = `${userID}/${note.uuid}/${imageData.uuid}`;
@@ -862,7 +1042,6 @@ export const batchDeleteNotes = async (data) => {
           update: {
             $pull: {
               notesOrder: { $in: data.deletedUUIDs },
-              notes: { $in: deletedIDs },
             },
           },
         },
@@ -890,5 +1069,84 @@ export const batchDeleteNotes = async (data) => {
   } catch (error) {
     console.log("Error deleting notes.", error);
     return { success: false, message: "Error deleting notes" };
+  }
+};
+
+export const editLabelCountAction = async (data) => {
+  if (!session) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
+  try {
+    await connectDB();
+
+    if (data.operation === "dec" && data.case === "shared") {
+      await Note.updateMany(
+        {
+          uuid: { $in: data.notesUUIDs },
+          labels: data.labelUUID,
+          creator: userID,
+        },
+        { $pull: { labels: data.labelUUID } }
+      );
+
+      await User.updateOne(
+        { _id: userID },
+        {
+          $inc: { "labels.$[elem].noteCount": -data.count },
+        },
+        {
+          arrayFilters: [
+            {
+              "elem.uuid": data.labelUUID,
+              "elem.noteCount": { $gte: data.count },
+            },
+          ],
+        }
+      );
+      return { success: true, message: "Label decremented successfully" };
+    } else if (data.operation === "inc" && data.case === "shared") {
+      await Note.updateMany(
+        {
+          uuid: { $in: data.notesUUIDs },
+          creator: userID,
+        },
+        { $push: { labels: data.labelUUID } }
+      );
+
+      await User.updateOne(
+        { _id: userID },
+        {
+          $inc: { "labels.$[elem].noteCount": data.count },
+        },
+        {
+          arrayFilters: [{ "elem.uuid": data.labelUUID }],
+        }
+      );
+      return { success: true, message: "Label incremented successfully" };
+    }
+
+    if (data.case === "unshared") {
+      await Note.updateMany(
+        {
+          uuid: { $in: data.notesUUIDs },
+          creator: userID,
+        },
+        { $push: { labels: data.labelUUID } }
+      );
+
+      await User.updateOne(
+        { _id: userID },
+        {
+          $inc: { "labels.$[elem].noteCount": data.count },
+        },
+        {
+          arrayFilters: [{ "elem.uuid": data.labelUUID }],
+        }
+      );
+      return { success: true, message: "Label incremented successfully" };
+    }
+  } catch (error) {
+    return { success: false, message: "Error updating label" };
   }
 };

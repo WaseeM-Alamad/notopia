@@ -7,6 +7,7 @@ import {
   createLabelAction,
   updateLabelAction,
   deleteLabelAction,
+  editLabelCountAction,
 } from "@/utils/actions";
 import { createClient } from "@supabase/supabase-js";
 
@@ -47,6 +48,21 @@ export function AppProvider({ children }) {
     await createLabelAction(uuid, label);
     window.dispatchEvent(new Event("loadingEnd"));
   };
+
+  const createLabelForNotes = async (data) => {
+    const updatedLabels = new Map(labelsRef.current);
+    labelLookUPRef.current.set(data.label.toLowerCase(), true);
+    updatedLabels.set(data.labelUUID, {
+      uuid: data.labelUUID,
+      label: data.label,
+      noteCount: data.count,
+      createdAt: new Date(),
+      color: "Default",
+    });
+
+    
+labelsRef.current = updatedLabels;
+  }
 
   const updateLabelColor = async (uuid, newColor) => {
     const newLabel = { ...labelsRef.current.get(uuid), color: newColor };
@@ -149,34 +165,68 @@ export function AppProvider({ children }) {
     window.dispatchEvent(new Event("loadingEnd"));
   };
 
-  const batchDecNoteCount = async (targetUUIDs) => {
+  const batchNoteCount = (labelsUUIDs, operation = "dec") => {
     const updatedLabels = new Map(labelsRef.current);
 
-    targetUUIDs.forEach((uuid) => {
-      if (updatedLabels.has(uuid)) {
-        const label = updatedLabels.get(uuid);
-        updatedLabels.set(uuid, {
-          ...label,
-          noteCount: Math.max(0, label.noteCount - 1),
-        });
+    const calcCount = (noteCount) => {
+      switch (operation) {
+        case "dec": {
+          return Math.max(0, noteCount - 1);
+        }
+        case "inc": {
+          return Math.max(0, noteCount + 1);
+        }
       }
+    };
+
+    labelsUUIDs.forEach((labelUUID) => {
+      const label = updatedLabels.get(labelUUID);
+      updatedLabels.set(labelUUID, {
+        ...label,
+        noteCount: calcCount(label.noteCount),
+      });
     });
 
     labelsRef.current = updatedLabels;
   };
 
-  const decNoteCountMultiple = (labelsToDec) => {
+  const handleLabelsTop = async (data) => {
     const updatedLabels = new Map(labelsRef.current);
+    const targetedLabel = updatedLabels.get(data.uuid);
+    const noteCount = targetedLabel.noteCount;
 
-    labelsToDec.forEach((labelUUID) => {
-      const label = updatedLabels.get(labelUUID);
-      updatedLabels.set(labelUUID, {
-        ...label,
-        noteCount: Math.max(0, label.noteCount - 1),
+    if (data.case === "shared") {
+      const countOp = Math.max(
+        0,
+        data.operation === "dec"
+          ? noteCount - data.count
+          : noteCount + data.count
+      );
+
+      updatedLabels.set(data.uuid, {
+        ...targetedLabel,
+        noteCount: countOp,
       });
-    });
+    } else {
+      const countOp = Math.max(0, noteCount + data.count);
+
+      updatedLabels.set(data.uuid, {
+        ...targetedLabel,
+        noteCount: countOp,
+      });
+    }
 
     labelsRef.current = updatedLabels;
+
+    window.dispatchEvent(new Event("loadingStart"));
+    await editLabelCountAction({
+      operation: data.operation,
+      case: data.case,
+      notesUUIDs: data.notesUUIDs,
+      labelUUID: data.uuid,
+      count: data.count,
+    });
+    window.dispatchEvent(new Event("loadingEnd"));
   };
 
   const removeLabel = (uuid, label) => {
@@ -188,6 +238,7 @@ export function AppProvider({ children }) {
     <AppContext.Provider
       value={{
         createLabel,
+        createLabelForNotes,
         removeLabel,
         updateLabelColor,
         labelsRef,
@@ -195,9 +246,9 @@ export function AppProvider({ children }) {
         updateLabelImage,
         deleteLabelImage,
         handleLabelNoteCount,
-        batchDecNoteCount,
         labelLookUPRef,
-        decNoteCountMultiple,
+        batchNoteCount,
+        handleLabelsTop,
       }}
     >
       {children}

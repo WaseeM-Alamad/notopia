@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import React, { useEffect, useRef, useState } from "react";
 import ColorSelectMenu from "../ColorSelectMenu";
 import {
+  batchCopyNoteAction,
   batchDeleteNotes,
   batchUpdateAction,
   NoteUpdateAction,
@@ -11,6 +12,8 @@ import {
 import MoreMenu from "../MoreMenu";
 import { useAppContext } from "@/context/AppContext";
 import { v4 as uuid } from "uuid";
+import { useSession } from "next-auth/react";
+import ManageTopLabelsMenu from "../ManageTopLabelsMenu";
 
 const TopMenuHome = ({
   notes,
@@ -23,7 +26,9 @@ const TopMenuHome = ({
   isDraggingRef,
   rootContainerRef,
 }) => {
-  const { decNoteCountMultiple } = useAppContext();
+  const { batchNoteCount } = useAppContext();
+  const { data: session } = useSession();
+  const userID = session?.user?.id;
   const [colorAnchorEl, setColorAnchorEl] = useState(null);
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
@@ -39,6 +44,7 @@ const TopMenuHome = ({
     closeToolTip();
     setSelectedNotesIDs([]);
     setMoreMenuOpen(false);
+    setLabelsOpen(false);
     setColorMenuOpen(false);
     window.dispatchEvent(new Event("topMenuClose"));
   };
@@ -287,6 +293,7 @@ const TopMenuHome = ({
   const handleOpenMenu = (e) => {
     setAnchorEl(e.currentTarget);
     setMoreMenuOpen((prev) => !prev);
+    setLabelsOpen(false);
   };
 
   const handleTrashNotes = () => {
@@ -361,7 +368,7 @@ const TopMenuHome = ({
       }
     });
 
-    decNoteCountMultiple(labelsToDec);
+    batchNoteCount(labelsToDec);
 
     setFadingNotes(new Set(selectedUUIDs));
     setTimeout(() => {
@@ -379,18 +386,33 @@ const TopMenuHome = ({
     window.dispatchEvent(new Event("loadingEnd"));
   };
 
-  const handleMakeCopy = () => {
+  const handleMakeCopy = async () => {
     const newNotes = [];
+    const newNotesUUIDs = [];
     const selectedUUIDs = [];
     const newUUIDs = [];
+    const labelsUUIDs = [];
+    const imagesMap = new Map();
+    const imagesToDel = [];
     const length = selectedNotesIDs.length;
 
     const selectedNotes = selectedNotesIDs.sort((a, b) => b.index - a.index);
 
     selectedNotes.forEach(({ uuid: noteUUID }) => {
-      selectedUUIDs.push(noteUUID);
       const note = notes.get(noteUUID);
       const newNoteUUID = uuid();
+      const newImages = [];
+
+      if (note.images.length > 0) {
+        note.images.forEach((image) => {
+          const newImageUUID = uuid();
+          const newImage = { uuid: newImageUUID, url: image.url };
+          imagesMap.set(newImageUUID, `${note.uuid}/${image.uuid}`);
+          imagesToDel.push(`${userID}/${newNoteUUID}/${newImageUUID}`);
+          newImages.push(newImage);
+        });
+      }
+
       const newNote = {
         uuid: newNoteUUID,
         title: note?.title,
@@ -403,22 +425,26 @@ const TopMenuHome = ({
         isTrash: note.isTrash,
         createdAt: new Date(),
         updatedAt: new Date(),
-        images: note.images,
+        images: newImages,
       };
+      selectedUUIDs.push(noteUUID);
       newNotes.push(newNote);
+      labelsUUIDs.push(...note.labels);
       newUUIDs.push(newNoteUUID);
+      newNotesUUIDs.push(newNoteUUID);
     });
 
-    handleClose();
+    setMoreMenuOpen(false);
+    batchNoteCount(labelsUUIDs, "inc");
 
     dispatchNotes({
       type: "BATCH_COPY_NOTE",
       newNotes: newNotes,
-      newUUIDs: selectedUUIDs,
     });
 
-    const undo = () => {
+    const undo = async () => {
       setFadingNotes(new Set(newUUIDs));
+      batchNoteCount(labelsUUIDs);
       setTimeout(() => {
         dispatchNotes({
           type: "UNDO_BATCH_COPY",
@@ -427,15 +453,31 @@ const TopMenuHome = ({
         });
         setFadingNotes(new Set());
       }, 250);
+      window.dispatchEvent(new Event("loadingStart"));
+      await undoAction({
+        type: "UNDO_BATCH_COPY",
+        imagesToDel: imagesToDel,
+        notesUUIDs: newNotesUUIDs,
+        labelsUUIDs: labelsUUIDs,
+      });
+      window.dispatchEvent(new Event("loadingEnd"));
     };
 
     openSnackFunction({
       snackMessage: `${
-        length === 1 ? "Note created" : length + "notes created"
+        length === 1 ? "Note created" : length + " notes created"
       }`,
       snackOnUndo: undo,
     });
+    window.dispatchEvent(new Event("loadingStart"));
+    await batchCopyNoteAction({ newNotes: newNotes, imagesMap: imagesMap });
+    window.dispatchEvent(new Event("loadingEnd"));
   };
+
+  const handleLabels = ()=> {
+    setMoreMenuOpen(false);
+    setLabelsOpen(true);
+  }
 
   const menuItems = [
     {
@@ -444,7 +486,7 @@ const TopMenuHome = ({
     },
     {
       title: "Add label",
-      function: () => {},
+      function: handleLabels,
     },
     {
       title: "Make a copy",
@@ -552,6 +594,18 @@ const TopMenuHome = ({
             setTooltipAnchor={setTooltipAnchor}
             isOpen={colorMenuOpen}
             setIsOpen={setColorMenuOpen}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {labelsOpen && (
+          <ManageTopLabelsMenu
+            isOpen={labelsOpen}
+            dispatchNotes={dispatchNotes}
+            setIsOpen={setLabelsOpen}
+            anchorEl={anchorEl}
+            selectedNotesIDs={selectedNotesIDs}
+            notes={notes}
           />
         )}
       </AnimatePresence>

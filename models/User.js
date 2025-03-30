@@ -32,16 +32,10 @@ const UserSchema = new Schema({
   image: {
     type: String,
   },
-  notes: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: "Note",
-    },
-  ],
   notesOrder: [
     {
       type: String,
-      unique: [true, "UUID must be unique!"]
+      unique: [true, "UUID must be unique!"],
     },
   ],
   labels: [LabelSchema],

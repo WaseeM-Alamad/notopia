@@ -166,6 +166,7 @@ const Note = memo(
     return (
       <>
         <div className="note-wrapper" ref={note.ref}>
+          {/* <button onClick={()=> console.log(note.images)}>click</button> */}
           <span
             style={{
               opacity: (selected || colorMenuOpen || moreMenuOpen) && "1",

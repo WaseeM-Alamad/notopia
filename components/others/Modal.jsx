@@ -20,6 +20,7 @@ import ModalMenu from "./ModalMenu";
 
 const Modal = ({
   note,
+  noteActions,
   initialStyle,
   isOpen,
   setIsOpen,
@@ -754,6 +755,7 @@ const Modal = ({
           setTooltipAnchor={setTooltipAnchor}
           openSnackFunction={openSnackFunction}
           note={note}
+          noteActions={noteActions}
           modalLabels={modalLabels}
           setModalLabels={setModalLabels}
           dispatchNotes={dispatchNotes}

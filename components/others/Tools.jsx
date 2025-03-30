@@ -29,7 +29,7 @@ const NoteModalTools = ({
   modalLabels,
   setModalLabels,
   note,
-  // setIsLoadingImages,
+  noteActions,
   setTooltipAnchor,
   archiveRef,
   trashRef,
@@ -248,6 +248,7 @@ const NoteModalTools = ({
             setLabelsOpen={setLabelsOpen}
             openSnackFunction={openSnackFunction}
             note={note}
+            noteActions={noteActions}
           />
         )}
       </AnimatePresence>
