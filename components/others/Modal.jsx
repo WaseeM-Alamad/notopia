@@ -103,6 +103,37 @@ const Modal = ({
     setUndoStack([]);
   };
 
+  const closeModal = () => {
+    modalRef.current.removeAttribute("style");
+    overlay.removeAttribute("style");
+
+    reset();
+
+    if (modalIsPinned !== note?.isPinned) {
+      setTimeout(() => {
+        dispatchNotes({
+          type: "PIN_NOTE",
+          note: note,
+        });
+      }, 20);
+    }
+    if (archiveRef.current) {
+      setTimeout(() => {
+        handleArchive();
+      }, 20);
+    } else if (trashRef.current) {
+      setTimeout(() => {
+        handleTrash();
+      }, 20);
+    }
+    if ((!archiveRef.current || !trashRef.current) && initialStyle ) {
+      initialStyle.element.style.opacity = "1";
+    }
+
+    archiveRef.current = false;
+    trashRef.current = false;
+  };
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -178,39 +209,18 @@ const Modal = ({
             "transitionend",
             handleModalClose
           );
-          modalRef.current.removeAttribute("style");
-          overlay.removeAttribute("style");
 
-          reset();
-
-          if (modalIsPinned !== note?.isPinned) {
-            setTimeout(() => {
-              dispatchNotes({
-                type: "PIN_NOTE",
-                note: note,
-              });
-            }, 20);
-          }
-          if (archiveRef.current) {
-            setTimeout(() => {
-              handleArchive();
-            }, 20);
-          } else if (trashRef.current) {
-            setTimeout(() => {
-              handleTrash();
-            }, 20);
-          }
-          if (!archiveRef.current || !trashRef.current) {
-            initialStyle.element.style.opacity = "1";
-          }
-
-          archiveRef.current = false;
-          trashRef.current = false;
+          closeModal();
         }
       };
 
-      modalRef.current.removeEventListener("transitionend", handleModalClose); // Remove before adding
-      modalRef.current.addEventListener("transitionend", handleModalClose);
+      if (initialStyle) {
+        modalRef.current.removeEventListener("transitionend", handleModalClose); // Remove before adding
+        modalRef.current.addEventListener("transitionend", handleModalClose);
+      }
+      else {
+        closeModal();
+      }
 
       return () =>
         modalRef.current?.removeEventListener(

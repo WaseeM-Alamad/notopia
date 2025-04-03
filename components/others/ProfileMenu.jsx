@@ -1,13 +1,13 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { signOut } from "next-auth/react";
-import React, { forwardRef, useEffect, useState } from "react";
+import React, { forwardRef, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Edit } from "../icons/EditIcon";
 
 const ProfileMenu = forwardRef(
   ({ user, isOpen, setIsOpen, menuPosition }, ref) => {
     const [isClient, setIsClient] = useState(false);
-    const [isDarkMode, setIsDarkMode] = useState(false);
+    const isDarkModeRef = useRef(false);
 
     useEffect(() => {
       setIsClient(true);
@@ -17,7 +17,7 @@ const ProfileMenu = forwardRef(
       const savedTheme = localStorage.getItem("theme");
       if (savedTheme === "dark") {
         document.documentElement.classList.add("dark-mode");
-        setIsDarkMode(true);
+        isDarkModeRef.current = true;
       }
     }, []);
 
@@ -27,7 +27,7 @@ const ProfileMenu = forwardRef(
         ? "dark"
         : "light";
       localStorage.setItem("theme", newMode);
-      setIsDarkMode(newMode === "dark");
+      isDarkModeRef.current = newMode === "dark";
       setIsOpen(false);
     };
 
@@ -87,7 +87,7 @@ const ProfileMenu = forwardRef(
                 </div>
                 <div onClick={toggleDarkMode} className="menu-btn">
                   <div className="theme-icon" />
-                  {`${!isDarkMode ? "Dark theme" : "Light theme"}`}
+                  {`${!isDarkModeRef.current ? "Dark theme" : "Light theme"}`}
                 </div>
                 <div className="menu-btn">
                   <div className="keyboard-icon" /> Keyboard shortcuts

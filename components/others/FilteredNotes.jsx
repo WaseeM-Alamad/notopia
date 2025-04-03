@@ -1,17 +1,13 @@
 "use client";
-import React, {
-  memo,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  useMemo,
-} from "react";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import "@/assets/styles/home.css";
 import Note from "../others/Note";
 import AddNoteModal from "../others/AddNoteModal";
 import { AnimatePresence, motion } from "framer-motion";
 import TopMenuHome from "../others/topMenu/TopMenu";
+import { emptyTrashAction } from "@/utils/actions";
+import DeleteModal from "../others/DeleteModal";
+import { useAppContext } from "@/context/AppContext";
 
 const COLUMN_WIDTH = 240;
 const GUTTER = 15;
@@ -19,19 +15,17 @@ const GUTTER = 15;
 const NoteWrapper = memo(
   ({
     note,
+    noteActions,
     ref,
     setSelectedNotesIDs,
+    dispatchNotes,
     selectedNotes,
     index,
-    handleNoteClick,
-    handleSelectNote,
-    fadingNotes,
-    calculateLayout,
-    setFadingNotes,
-    dispatchNotes,
     setTooltipAnchor,
-    noteActions,
     openSnackFunction,
+    handleSelectNote,
+    calculateLayout,
+    fadingNotes,
   }) => {
     const [mounted, setMounted] = useState(false);
 
@@ -45,24 +39,23 @@ const NoteWrapper = memo(
       <motion.div
         ref={ref}
         className={`grid-item ${fadingNotes.has(note.uuid) ? "fade-out" : ""}`}
-        onClick={(e) => handleNoteClick(e, note, index)}
         style={{
           width: `${COLUMN_WIDTH}px`,
           marginBottom: `${GUTTER}px`,
-          transition: `transform ${mounted ? "0.2s" : "0"} ease, opacity 0s`,
+          transition: `transform ${mounted ? "0.2s" : "0"} ease`,
         }}
       >
         <Note
           note={note}
-          dispatchNotes={dispatchNotes}
-          index={index}
           noteActions={noteActions}
-          calculateLayout={calculateLayout}
-          handleSelectNote={handleSelectNote}
-          setTooltipAnchor={setTooltipAnchor}
           setSelectedNotesIDs={setSelectedNotesIDs}
           selectedNotes={selectedNotes}
+          dispatchNotes={dispatchNotes}
+          setTooltipAnchor={setTooltipAnchor}
           openSnackFunction={openSnackFunction}
+          handleSelectNote={handleSelectNote}
+          index={index}
+          calculateLayout={calculateLayout}
         />
         {/* <p>{index}</p> */}
       </motion.div>
@@ -72,7 +65,7 @@ const NoteWrapper = memo(
 
 NoteWrapper.displayName = "NoteWrapper";
 
-const Archive = memo(
+const Home = memo(
   ({
     notes,
     order,
@@ -80,15 +73,12 @@ const Archive = memo(
     setTooltipAnchor,
     openSnackFunction,
     setSelectedNotesIDs,
-    handleNoteClick,
     handleSelectNote,
-    fadingNotes,
-    setFadingNotes,
-    rootContainerRef,
     noteActions,
-    notesReady,
+    setFadingNotes,
+    fadingNotes,
+    selectedColor,
   }) => {
-    const [notesExist, setNotesExist] = useState(false);
     const containerRef = useRef(null);
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
@@ -122,8 +112,6 @@ const Archive = memo(
         container.style.transform = "translateX(-50%)";
 
         const items = container.children;
-
-        setNotesExist(items.length > 0);
 
         const positionItems = (itemList) => {
           const columnHeights = new Array(columns).fill(0);
@@ -182,73 +170,30 @@ const Archive = memo(
 
     return (
       <>
-        <div ref={rootContainerRef} className="starting-div">
-          <div
-            ref={containerRef}
-            className="section-container"
-          >
-            {order.map((uuid, index) => {
-              const note = notes.get(uuid);
-              if (note.isArchived && !note.isTrash)
-                return (
-                  <NoteWrapper
-                    key={note.uuid}
-                    note={note}
-                    dispatchNotes={dispatchNotes}
-                    index={index}
-                    handleNoteClick={handleNoteClick}
-                    handleSelectNote={handleSelectNote}
-                    calculateLayout={calculateLayout}
-                    fadingNotes={fadingNotes}
-                    setFadingNotes={setFadingNotes}
-                    noteActions={noteActions}
-                    setTooltipAnchor={setTooltipAnchor}
-                    setSelectedNotesIDs={setSelectedNotesIDs}
-                    openSnackFunction={openSnackFunction}
-                  />
-                );
-            })}
-          </div>
-          <div className="empty-page">
-            {notesReady && !notesExist && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{
-                  type: "spring",
-                  stiffness: 800,
-                  damping: 50,
-                  mass: 1,
-                }}
-                className="empty-page-box"
-              >
-                <div className="empty-page-archive" />
-                Your archived notes appear here
-              </motion.div>
-            )}
-            {!notesReady && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{
-                  type: "spring",
-                  stiffness: 800,
-                  damping: 50,
-                  mass: 1,
-                }}
-                className="empty-page-box"
-              >
-                <div className="empty-page-loading" />
-                Loading notes...
-              </motion.div>
-            )}
-          </div>
+        <div ref={containerRef} className="section-container">
+          {order.map((uuid, index) => {
+            const note = notes.get(uuid);
+            if (note.isTrash || note.color !== selectedColor) return;
+            return (
+              <NoteWrapper
+                key={note.uuid}
+                note={note}
+                noteActions={noteActions}
+                dispatchNotes={dispatchNotes}
+                index={index}
+                setSelectedNotesIDs={setSelectedNotesIDs}
+                setTooltipAnchor={setTooltipAnchor}
+                openSnackFunction={openSnackFunction}
+                handleSelectNote={handleSelectNote}
+                calculateLayout={calculateLayout}
+                fadingNotes={fadingNotes}
+              />
+            );
+          })}
         </div>
       </>
     );
   }
 );
 
-Archive.displayName = "Archive";
-
-export default Archive;
+export default Home;

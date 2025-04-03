@@ -27,6 +27,7 @@ import { useAppContext } from "@/context/AppContext";
 import TopMenu from "@/components/others/topMenu/TopMenu";
 import SelectionBox from "@/components/others/SelectionBox";
 import { v4 as uuid } from "uuid";
+import Search from "@/components/pages/Search";
 
 const initialStates = {
   notes: new Map(),
@@ -1043,6 +1044,11 @@ const page = () => {
     const handleHashChange = (e) => {
       setSelectedNotesIDs([]);
       setTooltipAnchor(null);
+      openSnackFunction({ close: true });
+      const hash = window.location.hash.replace("#", "");
+      if (hash.startsWith("search")) {
+        setCurrent("Search");
+      }
     };
 
     handleHashChange();
@@ -1067,14 +1073,34 @@ const page = () => {
     }
   }, [notesReady]);
 
+  const colorsSetRef = useRef(new Set());
+
   useEffect(() => {
     const handler = (e) => {
+      if (!e.detail?.hash) return;
       requestAnimationFrame(() => {
         const selected = e.detail.hash;
         const captialized = (hash) =>
           hash.charAt(0).toUpperCase() + hash.slice(1);
-        setCurrent(captialized(selected));
-        openSnackFunction({ close: true });
+
+        if (selected === "search") {
+          const colorSet = new Set();
+          notesStateRef.current.order.forEach((order) => {
+            const note = notesStateRef.current.notes.get(order);
+            if (note.isTrash) return;
+            colorSet.add(note.color);
+          });
+
+          colorsSetRef.current = colorSet;
+          console.log(colorsSetRef.current);
+
+          if (colorsSetRef.current.size > 1) {
+            window.location.hash = "search";
+            setCurrent(captialized(selected));
+          }
+        } else {
+          setCurrent(captialized(selected));
+        }
       });
     };
 
@@ -1088,6 +1114,7 @@ const page = () => {
     Reminders,
     Archive,
     Trash,
+    Search,
   };
 
   const Page = components[current];
@@ -1188,10 +1215,44 @@ const page = () => {
 
     if (length === 0) {
       areNotesSelectedRef.current = false;
+      selectedNotesRef.current = new Set();
     } else {
       areNotesSelectedRef.current = true;
     }
   }, [selectedNotesIDs.length]);
+
+  const ctrlDownRef = useRef(false);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.ctrlKey) {
+        ctrlDownRef.current = true;
+      }
+      if (event.key === "Escape") {
+        setIsModalOpen(false);
+        if (selectedNotesRef.current.size > 0) {
+          setSelectedNotesIDs([]);
+          window.dispatchEvent(new Event("topMenuClose"));
+        }
+      }
+    };
+
+    const handleKeyUp = (event) => {
+      if (event.key === "Control") {
+        ctrlDownRef.current = false;
+      }
+    };
+
+    // Add event listener on mount
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+
+    // Clean up event listener on unmount
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  }, []);
 
   const dragStartRef = useRef({ x: 0, y: 0 });
   const isDraggingRef = useRef(false);
@@ -1249,6 +1310,7 @@ const page = () => {
             });
             window.dispatchEvent(event);
           } else {
+            if (ctrlDownRef.current) return;
             if (!selectedNotesRef.current.has(note.uuid)) return;
             selectedNotesRef.current.delete(note.uuid);
             const event = new CustomEvent("deselectNote", {

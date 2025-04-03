@@ -14,7 +14,8 @@
   user-select: none;
   outline: solid 1px transparent;
   overflow: hidden;
-  transition: outline-color .3s ease, background-image 0.25s ease, background-position-y 0.25s ease, background-position-x 0.25s ease,
+  transition: outline-color 0.3s ease, background-image 0.25s ease,
+    background-position-y 0.25s ease, background-position-x 0.25s ease,
     transform 0.3s ease-in-out, opacity 0s, box-shadow 0.2s ease,
     background-color 0.25s ease-in-out, border-color 0.3s ease-in-out, height 0s;
   background-size: cover;
@@ -82,15 +83,23 @@
   border-radius: 0.7rem;
   background-color: transparent;
   position: relative;
+  outline: none;
   transition: box-shadow 0.2s ease;
 }
 
-.note-wrapper:hover .note-bottom {
+.note-wrapper:hover .note-bottom,
+.note-wrapper:focus .note-bottom,
+.note-wrapper:hover .checkmark,
+.note-wrapper:focus .checkmark {
   opacity: 1;
 }
 
 .note-wrapper:hover .pin {
   opacity: 1;
+}
+
+.pin:focus {
+  opacity: 1 !important;
 }
 
 .checkmark {
@@ -105,9 +114,6 @@
   transition: all 0.3s ease-in-out;
 }
 
-.note-wrapper:hover .checkmark {
-  opacity: 1;
-}
 
 .note-wrapper:hover {
   -webkit-box-shadow: 2px 3px 4px 0px rgba(0, 0, 0, 0.1);
@@ -140,6 +146,7 @@
   z-index: 1;
   right: 0;
   opacity: 0;
+  outline: none;
   padding: 0.3rem 0.4rem 0rem 0rem;
   transition: all 0.3s ease-in-out;
 }

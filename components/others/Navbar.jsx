@@ -166,7 +166,22 @@ const Navbar = ({ user }) => {
           {/* <Logo style={{margin: "auto 0"}} /> */}
           {/* <span style={{marginLeft: "0.5rem"}}>notopia</span> */}
           {/* </div> */}
-          <input className="search" placeholder="Search" spellCheck="false" />
+          <input
+            onClick={() => {
+              const currentHash = window.location.hash.replace("#", "");
+              // if (currentHash.startsWith("search")) {
+              //   return;
+              // }
+              const hash = "search";
+              const event = new CustomEvent("sectionChange", {
+                detail: { hash },
+              });
+              window.dispatchEvent(event);
+            }}
+            className="search"
+            placeholder="Search"
+            spellCheck="false"
+          />
           <div className="top-icons">
             <Button style={{ width: "2.8rem", height: "2.8rem" }}>
               <GridIcon />
@@ -199,7 +214,13 @@ const Navbar = ({ user }) => {
                   >
                     <Box>
                       <CircularProgress
-                        sx={{ color: document.documentElement.classList.contains("dark-mode") ? "#ADADAD" : "#7A7A7A" }}
+                        sx={{
+                          color: document.documentElement.classList.contains(
+                            "dark-mode"
+                          )
+                            ? "#ADADAD"
+                            : "#7A7A7A",
+                        }}
                         size={20}
                         thickness={5}
                       />

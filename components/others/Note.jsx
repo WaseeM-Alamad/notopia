@@ -165,7 +165,7 @@ const Note = memo(
 
     return (
       <>
-        <div className="note-wrapper" ref={note.ref}>
+        <div tabIndex="0" className="note-wrapper" ref={note.ref}>
           {/* <button onClick={()=> console.log(note.images)}>click</button> */}
           <span
             style={{
@@ -234,6 +234,7 @@ const Note = memo(
                   opacity: (colorMenuOpen || moreMenuOpen) && "1",
                 }}
                 className="pin"
+                tabIndex="0"
               >
                 {!note.isTrash && (
                   <Button
@@ -242,6 +243,7 @@ const Note = memo(
                     }
                     onMouseLeave={handleMouseLeave}
                     onClick={handlePinClick}
+                    tabIndex="-1"
                   >
                     <PinIcon
                       isPinned={note.isPinned}

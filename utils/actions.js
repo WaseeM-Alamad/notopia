@@ -722,8 +722,6 @@ export const batchCopyNoteAction = async (data) => {
       })),
     ];
 
-    console.log(JSON.stringify(data.newNotes, null, 2));
-
     await Note.insertMany(data.newNotes);
     await User.bulkWrite(bulkOperations);
 
@@ -747,6 +745,8 @@ export const fetchLabelsAction = async () => {
 
     const user = await User.findById(userID);
     const labels = JSON.parse(JSON.stringify(user?.labels));
+
+    console.log('labels', labels)
 
     return {
       success: true,
