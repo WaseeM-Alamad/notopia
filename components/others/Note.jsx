@@ -165,7 +165,7 @@ const Note = memo(
 
     return (
       <>
-        <div tabIndex="0" className="note-wrapper" ref={note.ref}>
+        <div className="note-wrapper" ref={note.ref}>
           {/* <button onClick={()=> console.log(note.images)}>click</button> */}
           <span
             style={{

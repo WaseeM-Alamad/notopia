@@ -47,7 +47,7 @@ const Modal = ({
     ? getNoteFormattedDate(note?.createdAt)
     : null;
 
-  const overlay = document.getElementById("n-overlay");
+  
   const { data: session } = useSession();
   const userID = session?.user?.id;
   const titleTextRef = useRef(null);
@@ -104,6 +104,7 @@ const Modal = ({
   };
 
   const closeModal = () => {
+    const overlay = document.getElementById("n-overlay");
     modalRef.current.removeAttribute("style");
     overlay.removeAttribute("style");
 
@@ -143,6 +144,7 @@ const Modal = ({
 
   useEffect(() => {
     if (!modalRef.current) return;
+    const overlay = document.getElementById("n-overlay");
 
     if (isOpen) {
       prevHash.current = window.location.hash.replace("#", "");

@@ -1124,7 +1124,9 @@ const page = () => {
     requestAnimationFrame(() => {
       if (notesState.order.length === 0 && current === "Trash") {
         const btn = document.body.querySelector("#add-btn");
-        btn.disabled = true;
+        if (btn) {
+          btn.disabled = true;
+        }
         return;
       }
       if (current === "Trash") {
@@ -1205,6 +1207,8 @@ const page = () => {
         ...prev,
         { uuid: data.uuid, index: data.index, isPinned: data.isPinned },
       ]);
+
+      selectedNotesRef.current.add(data.uuid);
     }
   }, []);
 
@@ -1225,7 +1229,7 @@ const page = () => {
 
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (event.ctrlKey) {
+      if (event.ctrlKey && !ctrlDownRef.current) {
         ctrlDownRef.current = true;
       }
       if (event.key === "Escape") {
@@ -1260,6 +1264,7 @@ const page = () => {
   const selectionBoxRef = useRef(null);
   const selectedNotesRef = useRef(new Set());
   const rootContainerRef = useRef(null);
+  const prevSelectedRef = useRef(null);
 
   const handleMouseMove = (e) => {
     if (isMouseDown.current) {
@@ -1310,13 +1315,21 @@ const page = () => {
             });
             window.dispatchEvent(event);
           } else {
-            if (ctrlDownRef.current) return;
-            if (!selectedNotesRef.current.has(note.uuid)) return;
-            selectedNotesRef.current.delete(note.uuid);
-            const event = new CustomEvent("deselectNote", {
-              detail: { uuid: note.uuid },
-            });
-            window.dispatchEvent(event);
+            if (!ctrlDownRef.current) {
+              if (!selectedNotesRef.current.has(note.uuid)) return;
+              selectedNotesRef.current.delete(note.uuid);
+              const event = new CustomEvent("deselectNote", {
+                detail: { uuid: note.uuid },
+              });
+              window.dispatchEvent(event);
+            } else {
+              if (prevSelectedRef.current.has(note.uuid)) return;
+              selectedNotesRef.current.delete(note.uuid);
+              const event = new CustomEvent("deselectNote", {
+                detail: { uuid: note.uuid },
+              });
+              window.dispatchEvent(event);
+            }
           }
         }
       });
@@ -1345,6 +1358,7 @@ const page = () => {
       return;
     }
     isMouseDown.current = true;
+    prevSelectedRef.current = new Set(selectedNotesRef.current);
     dragStartRef.current = {
       x: e.pageX,
       y: e.pageY,

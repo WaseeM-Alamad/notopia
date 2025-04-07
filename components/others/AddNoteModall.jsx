@@ -35,7 +35,6 @@ const AddNoteModall = ({
   const [selectedColor, setSelectedColor] = useState("Default");
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
-  const overlay = document.getElementById("n-overlay");
   const modalRef = useRef(null);
   const titleRef = useRef(null);
   const contentRef = useRef(null);
@@ -204,6 +203,7 @@ const AddNoteModall = ({
 
   useEffect(() => {
     if (!modalRef.current || !isOpen2) return;
+    const overlay = document.getElementById("n-overlay");
     if (isOpen) {
       modalRef.current.style.display = "flex";
       centerModal();

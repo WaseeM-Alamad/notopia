@@ -7,10 +7,9 @@ import { authOptions } from "./authOptions";
 import { v4 as uuid } from "uuid";
 import { createClient } from "@supabase/supabase-js";
 
-const session = await getServerSession(authOptions);
-const userID = session?.user?.id;
-
 export const fetchNotes = async () => {
+  const session = await getServerSession(authOptions);
+  const userID = session?.user?.id;
   if (!session) {
     return new Response("Unauthorized", { status: 401 });
   }
@@ -34,6 +33,8 @@ export const fetchNotes = async () => {
 };
 
 export const createNoteAction = async (note) => {
+  const session = await getServerSession(authOptions);
+  const userID = session?.user?.id;
   if (!session) {
     return new Response("Unauthorized", { status: 401 });
   }
@@ -84,6 +85,8 @@ export const createNoteAction = async (note) => {
 };
 
 export const NoteUpdateAction = async (type, value, noteUUIDs, first) => {
+  const session = await getServerSession(authOptions);
+  const userID = session?.user?.id;
   if (!session) {
     return new Response("Unauthorized", { status: 401 });
   }
@@ -157,6 +160,8 @@ export const NoteUpdateAction = async (type, value, noteUUIDs, first) => {
 };
 
 export const batchUpdateAction = async (data) => {
+  const session = await getServerSession(authOptions);
+  const userID = session?.user?.id;
   if (!session) {
     return new Response("Unauthorized", { status: 401 });
   }
@@ -215,6 +220,8 @@ export const batchUpdateAction = async (data) => {
 };
 
 export const NoteTextUpdateAction = async (values, noteUUID) => {
+  const session = await getServerSession(authOptions);
+  const userID = session?.user?.id;
   if (!session) {
     return new Response("Unauthorized", { status: 401 });
   }
@@ -253,6 +260,8 @@ export const NoteImageDeleteAction = async (filePath, noteUUID, imageID) => {
 };
 
 export const DeleteNoteAction = async (noteUUID) => {
+  const session = await getServerSession(authOptions);
+  const userID = session?.user?.id;
   if (!session) {
     return new Response("Unauthorized", { status: 401 });
   }
@@ -307,6 +316,8 @@ export const DeleteNoteAction = async (noteUUID) => {
 };
 
 export const emptyTrashAction = async () => {
+  const session = await getServerSession(authOptions);
+  const userID = session?.user?.id;
   if (!session) {
     return new Response("Unauthorized", { status: 401 });
   }
@@ -371,6 +382,8 @@ export const emptyTrashAction = async () => {
 };
 
 export const updateOrderAction = async (data) => {
+  const session = await getServerSession(authOptions);
+  const userID = session?.user?.id;
   if (!session) {
     return new Response("Unauthorized", { status: 401 });
   }
@@ -399,6 +412,8 @@ export const updateOrderAction = async (data) => {
 };
 
 export const undoAction = async (data) => {
+  const session = await getServerSession(authOptions);
+  const userID = session?.user?.id;
   if (!session) {
     return new Response("Unauthorized", { status: 401 });
   }
@@ -573,6 +588,8 @@ export const undoAction = async (data) => {
 };
 
 export const copyNoteAction = async (data) => {
+  const session = await getServerSession(authOptions);
+  const userID = session?.user?.id;
   if (!session) {
     return new Response("Unauthorized", { status: 401 });
   }
@@ -659,6 +676,8 @@ export const copyNoteAction = async (data) => {
 };
 
 export const batchCopyNoteAction = async (data) => {
+  const session = await getServerSession(authOptions);
+  const userID = session?.user?.id;
   if (!session) {
     return new Response("Unauthorized", { status: 401 });
   }
@@ -737,6 +756,8 @@ export const batchCopyNoteAction = async (data) => {
 };
 
 export const fetchLabelsAction = async () => {
+  const session = await getServerSession(authOptions);
+  const userID = session?.user?.id;
   if (!session) {
     return { success: false, message: "Unauthorized", status: 401 };
   }
@@ -746,7 +767,7 @@ export const fetchLabelsAction = async () => {
     const user = await User.findById(userID);
     const labels = JSON.parse(JSON.stringify(user?.labels));
 
-    console.log('labels', labels)
+    console.log("labels", labels);
 
     return {
       success: true,
@@ -760,6 +781,8 @@ export const fetchLabelsAction = async () => {
 };
 
 export const createLabelAction = async (newUUID, newLabel) => {
+  const session = await getServerSession(authOptions);
+  const userID = session?.user?.id;
   if (!session) {
     return new Response("Unauthorized", { status: 401 });
   }
@@ -799,6 +822,8 @@ export const createLabelAction = async (newUUID, newLabel) => {
 };
 
 export const createLabelForNotesAction = async (data) => {
+  const session = await getServerSession(authOptions);
+  const userID = session?.user?.id;
   if (!session) {
     return new Response("Unauthorized", { status: 401 });
   }
@@ -826,6 +851,8 @@ export const createLabelForNotesAction = async (data) => {
 };
 
 export const addLabelAction = async (data) => {
+  const session = await getServerSession(authOptions);
+  const userID = session?.user?.id;
   if (!session) {
     return new Response("Unauthorized", { status: 401 });
   }
@@ -843,6 +870,8 @@ export const addLabelAction = async (data) => {
 };
 
 export const removeLabelAction = async (data) => {
+  const session = await getServerSession(authOptions);
+  const userID = session?.user?.id;
   if (!session) {
     return new Response("Unauthorized", { status: 401 });
   }
@@ -860,6 +889,8 @@ export const removeLabelAction = async (data) => {
 };
 
 export const updateLabelAction = async (data) => {
+  const session = await getServerSession(authOptions);
+  const userID = session?.user?.id;
   if (!session) {
     return { success: false, message: "Unauthorized", status: 401 };
   }
@@ -967,6 +998,8 @@ export const updateLabelAction = async (data) => {
 };
 
 export const deleteLabelAction = async (data) => {
+  const session = await getServerSession(authOptions);
+  const userID = session?.user?.id;
   if (!session) {
     return { success: false, message: "Unauthorized", status: 401 };
   }
@@ -1004,6 +1037,8 @@ export const deleteLabelAction = async (data) => {
 };
 
 export const batchDeleteNotes = async (data) => {
+  const session = await getServerSession(authOptions);
+  const userID = session?.user?.id;
   if (!session) {
     return new Response("Unauthorized", { status: 401 });
   }
@@ -1073,6 +1108,8 @@ export const batchDeleteNotes = async (data) => {
 };
 
 export const editLabelCountAction = async (data) => {
+  const session = await getServerSession(authOptions);
+  const userID = session?.user?.id;
   if (!session) {
     return new Response("Unauthorized", { status: 401 });
   }

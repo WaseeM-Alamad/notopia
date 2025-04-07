@@ -1876,8 +1876,8 @@ img {
 }
 
 .filter-color {
-  width: 3rem;
-  height: 3rem;
+  width: 60%;
+  height: 60%;
   margin: auto;
   cursor: pointer;
   border-radius: 50%;

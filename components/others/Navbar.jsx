@@ -19,6 +19,7 @@ const Navbar = ({ user }) => {
   const [UpToDatetrigger, setUpToDateTrigger] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   // const isDarkMode = document.documentElement.classList.contains("dark-mode");
   const [menuPosition, setMenuPosition] = useState({
     top: 100,
@@ -29,6 +30,10 @@ const Navbar = ({ user }) => {
   const firstRun = useRef(true);
   const imageRef = useRef(null);
   const menuRef = useRef(null);
+
+  useEffect(()=> {
+    setIsClient(true);
+  }, [])
 
   useEffect(() => {
     const startLoading = () => {
@@ -145,7 +150,7 @@ const Navbar = ({ user }) => {
     setIsMenuOpen((prev) => !prev);
   };
 
-  if (window.location.hash === null) return;
+  if (!isClient) return;
 
   return (
     <>
