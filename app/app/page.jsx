@@ -597,6 +597,7 @@ const page = () => {
   });
   const [unloadWarn, setUnloadWarn] = useState(false);
   const undoFunction = useRef(() => {});
+  const redoFunction = useRef(() => {});
   const onCloseFunction = useRef(() => {});
   const closeRef = useRef(null);
 
@@ -623,6 +624,9 @@ const page = () => {
         });
         if (data.snackOnUndo !== undefined) {
           undoFunction.current = data.snackOnUndo;
+        }
+        if (data.snackRedo !== undefined) {
+          redoFunction.current = data.snackRedo;
         }
         if (data.snackOnClose !== undefined) {
           onCloseFunction.current = data.snackOnClose;
@@ -738,6 +742,42 @@ const page = () => {
       data.noteRef.current.offsetHeight;
       data.noteRef.current.classList.add("fade-out");
 
+      const redoArchive = async () => {
+        const timeOut = setTimeout(() => {
+          dispatchNotes({
+            type: "ARCHIVE_NOTE",
+            note: data.note,
+          });
+        }, 210);
+
+        const handler = (e) => {
+          if (e.propertyName === "opacity") {
+            data.noteRef.current.removeEventListener("transitionend", handler);
+
+            clearTimeout(timeOut);
+
+            dispatchNotes({
+              type: "ARCHIVE_NOTE",
+              note: data.note,
+            });
+          }
+        };
+
+        data.noteRef.current.addEventListener("transitionend", handler);
+        data.noteRef.current.offsetHeight;
+        data.noteRef.current.classList.add("fade-out");
+
+        const first = data.index === 0;
+        window.dispatchEvent(new Event("loadingStart"));
+        await NoteUpdateAction(
+          "isArchived",
+          !data.note.isArchived,
+          [data.note.uuid],
+          first
+        );
+        window.dispatchEvent(new Event("loadingEnd"));
+      };
+
       const undoArchive = async () => {
         dispatchNotes({
           type: "UNDO_ARCHIVE",
@@ -764,6 +804,7 @@ const page = () => {
             : "Note Archived"
         }`,
         snackOnUndo: undoArchive,
+        snackRedo: redoArchive,
       });
       const first = data.index === 0;
       window.dispatchEvent(new Event("loadingStart"));
@@ -1046,7 +1087,9 @@ const page = () => {
       setTooltipAnchor(null);
       openSnackFunction({ close: true });
       const hash = window.location.hash.replace("#", "");
-      if (hash.startsWith("search")) {
+      if (hash.trim() === "") {
+        setCurrent("Home");
+      } else if (hash.startsWith("search")) {
         setCurrent("Search");
       }
     };
@@ -1092,7 +1135,6 @@ const page = () => {
           });
 
           colorsSetRef.current = colorSet;
-          console.log(colorsSetRef.current);
 
           if (colorsSetRef.current.size > 1) {
             window.location.hash = "search";
@@ -1201,6 +1243,7 @@ const page = () => {
       setSelectedNotesIDs((prev) =>
         prev.filter((noteData) => noteData.uuid !== data.uuid)
       );
+      selectedNotesRef.current.delete(data.uuid);
     } else {
       data.setSelected(true);
       setSelectedNotesIDs((prev) => [
@@ -1226,9 +1269,21 @@ const page = () => {
   }, [selectedNotesIDs.length]);
 
   const ctrlDownRef = useRef(false);
+  const batchArchiveRef = useRef(() => {});
+  const batchPinRef = useRef(() => {});
+  const batchDeleteRef = useRef(() => {});
 
   useEffect(() => {
     const handleKeyDown = (event) => {
+      const target = event.target;
+
+      const isTyping =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable;
+
+      if (isTyping) return;
+
       if (event.ctrlKey && !ctrlDownRef.current) {
         ctrlDownRef.current = true;
       }
@@ -1238,6 +1293,80 @@ const page = () => {
           setSelectedNotesIDs([]);
           window.dispatchEvent(new Event("topMenuClose"));
         }
+      }
+
+      if (event.ctrlKey && event.key.toLowerCase() === "a") {
+        event.preventDefault();
+        const selectedNotes = [];
+        notesStateRef.current.order.forEach((uuid, index) => {
+          const note = notesStateRef.current.notes.get(uuid);
+          if (note.isTrash || note.isArchived) {
+            return;
+          }
+
+          const noteData = {
+            uuid: note.uuid,
+            index: index,
+            isPinned: note.isPinned,
+          };
+          selectedNotes.push(noteData);
+          selectedNotesRef.current.add(note.uuid);
+        });
+        setSelectedNotesIDs(selectedNotes);
+        window.dispatchEvent(new Event("selectAllNotes"));
+      }
+
+      if (event.key.toLowerCase() === "e") {
+        const hash = window.location.hash.replace("#", "");
+        if (selectedNotesRef.current.size > 0 && !hash.startsWith("trash")) {
+          batchArchiveRef.current();
+        }
+      }
+
+      if (event.key.toLowerCase() === "delete") {
+        const hash = window.location.hash.replace("#", "");
+        if (selectedNotesRef.current.size > 0 && !hash.startsWith("trash")) {
+          batchDeleteRef.current();
+        }
+      }
+
+      if (event.key.toLowerCase() === "f") {
+        const hash = window.location.hash.replace("#", "");
+        if (selectedNotesRef.current.size > 0 && !hash.startsWith("trash")) {
+          batchPinRef.current();
+        }
+      }
+
+      if (event.ctrlKey && event.key.toLowerCase() === "z") {
+        undoFunction.current();
+        setSnackbarState((prev) => ({
+          ...prev,
+          snackOpen: false,
+        }));
+
+        setTimeout(() => {
+          setSnackbarState({
+            message: "Action undone",
+            showUndo: false,
+            snackOpen: true,
+          });
+        }, 80);
+      }
+
+      if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === "z") {
+        redoFunction.current();
+        setSnackbarState((prev) => ({
+          ...prev,
+          snackOpen: false,
+        }));
+
+        setTimeout(() => {
+          setSnackbarState({
+            message: "Action redone",
+            showUndo: false,
+            snackOpen: true,
+          });
+        }, 80);
       }
     };
 
@@ -1337,6 +1466,10 @@ const page = () => {
   };
 
   const handleMouseDown = (e) => {
+    if (e.button !== 0) {
+      return;
+    }
+
     const parent = rootContainerRef.current;
     const container =
       rootContainerRef.current?.querySelector(".section-container");
@@ -1426,6 +1559,7 @@ const page = () => {
 
       <TopMenu
         notes={notesState.notes}
+        functionRefs={{ batchArchiveRef, batchPinRef, batchDeleteRef }}
         dispatchNotes={dispatchNotes}
         openSnackFunction={openSnackFunction}
         setFadingNotes={setFadingNotes}

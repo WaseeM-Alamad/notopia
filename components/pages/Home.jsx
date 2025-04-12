@@ -61,6 +61,10 @@ const NoteWrapper = memo(
     let startX, startY;
 
     const handleMouseDown = (e) => {
+      if (e.button !== 0) {
+        return;
+      }
+
       startX = e.clientX;
       startY = e.clientY;
       const targetElement = e.currentTarget;
@@ -96,7 +100,7 @@ const NoteWrapper = memo(
         data-position={index}
         onMouseDown={handleMouseDown}
         onClick={(e) => handleNoteClick(e, note, index)}
-        className={`grid-item ${fadingNotes.has(note.uuid) ? "fade-out": ""}`}
+        className={`grid-item ${fadingNotes.has(note.uuid) ? "fade-out" : ""}`}
         style={{
           width: `${COLUMN_WIDTH}px`,
           marginBottom: `${GUTTER}px`,
@@ -152,6 +156,7 @@ const Home = memo(
     const containerRef = useRef(null);
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
+    const [layoutReady, setLayoutReady] = useState(false);
     const isFirstRender = useRef(true);
 
     const [unpinnedNotesNumber, setUnpinnedNotesNumber] = useState(null);
@@ -238,6 +243,7 @@ const Home = memo(
         setPinnedNotesNumber(pinnedItems.length);
         setPinnedHeight(pinnedHeight);
         container.style.height = `${unpinnedHeight}px`;
+        setLayoutReady(true);
       });
     }, []);
 
@@ -445,6 +451,7 @@ const Home = memo(
           <div
             ref={containerRef}
             className="section-container"
+            style={{ opacity: !layoutReady && "0" }}
             onMouseMove={handleMouseMove}
           >
             <p

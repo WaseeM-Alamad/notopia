@@ -25,6 +25,7 @@ const TopMenuHome = ({
   setTooltipAnchor,
   isDraggingRef,
   rootContainerRef,
+  functionRefs,
 }) => {
   const { batchNoteCount } = useAppContext();
   const { data: session } = useSession();
@@ -48,6 +49,13 @@ const TopMenuHome = ({
     setColorMenuOpen(false);
     window.dispatchEvent(new Event("topMenuClose"));
   };
+
+  useEffect(() => {
+    const { batchArchiveRef, batchPinRef, batchDeleteRef } = functionRefs;
+    batchArchiveRef.current = handleArchive;
+    batchPinRef.current = handlePin;
+    batchDeleteRef.current = handleTrashNotes;
+  }, [selectedNotesIDs]);
 
   useEffect(() => {
     if (
@@ -474,10 +482,10 @@ const TopMenuHome = ({
     window.dispatchEvent(new Event("loadingEnd"));
   };
 
-  const handleLabels = ()=> {
+  const handleLabels = () => {
     setMoreMenuOpen(false);
     setLabelsOpen(true);
-  }
+  };
 
   const menuItems = [
     {

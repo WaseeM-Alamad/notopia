@@ -8,6 +8,7 @@ import TopMenuHome from "../others/topMenu/TopMenu";
 import { emptyTrashAction } from "@/utils/actions";
 import DeleteModal from "../others/DeleteModal";
 import { useAppContext } from "@/context/AppContext";
+import { useSearch } from "@/context/SearchContext";
 
 const COLUMN_WIDTH = 240;
 const GUTTER = 15;
@@ -42,7 +43,6 @@ const NoteWrapper = memo(
         style={{
           width: `${COLUMN_WIDTH}px`,
           marginBottom: `${GUTTER}px`,
-          transition: `transform ${mounted ? "0.2s" : "0"} ease`,
         }}
       >
         <Note
@@ -77,8 +77,9 @@ const Home = memo(
     noteActions,
     setFadingNotes,
     fadingNotes,
-    selectedColor,
+    filters,
   }) => {
+    const { searchTerm } = useSearch();
     const containerRef = useRef(null);
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
@@ -168,12 +169,34 @@ const Home = memo(
       }
     }, [notes, calculateLayout]);
 
+    useEffect(() => {
+      calculateLayout();
+    }, [searchTerm]);
+
+    const matchesFilters = (note) => {
+      if (filters.color && note.color !== filters.color) {
+        return false;
+      }
+
+      if (
+        searchTerm &&
+        !(
+          note.title.toLowerCase().includes(searchTerm.toLowerCase().trim()) ||
+          note.content.toLowerCase().includes(searchTerm.toLowerCase().trim())
+        )
+      ) {
+        return false;
+      }
+
+      return true;
+    };
+
     return (
       <>
         <div ref={containerRef} className="section-container">
           {order.map((uuid, index) => {
             const note = notes.get(uuid);
-            if (note.isTrash || note.color !== selectedColor) return;
+            if (!matchesFilters(note)) return;
             return (
               <NoteWrapper
                 key={note.uuid}

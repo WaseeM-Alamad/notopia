@@ -94,6 +94,10 @@ const Note = memo(
     }, [note, index]);
 
     useEffect(() => {
+      const handleSelectAllNotes = () => {
+        setSelected(true);
+      };
+
       const handleSelect = (e) => {
         const receivedUUID = e.detail.uuid;
         if (noteDataRef.current.uuid === receivedUUID) {
@@ -120,10 +124,12 @@ const Note = memo(
         }
       };
 
+      window.addEventListener("selectAllNotes", handleSelectAllNotes);
       window.addEventListener("selectNote", handleSelect);
       window.addEventListener("deselectNote", handleDeselect);
 
       return () => {
+        window.removeEventListener("selectAllNotes", handleSelectAllNotes);
         window.removeEventListener("selectNote", handleSelect);
         window.removeEventListener("deselectNote", handleDeselect);
       };

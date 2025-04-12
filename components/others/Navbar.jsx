@@ -1,5 +1,5 @@
 "use client";
-import React, { memo, useEffect, useRef, useState } from "react";
+import React, { memo, useEffect, useMemo, useRef, useState } from "react";
 import "@/assets/styles/navbar.css";
 import { signOut } from "next-auth/react";
 import RefreshIcon from "../icons/RefreshIcon";
@@ -7,14 +7,17 @@ import SettingsIcon from "../icons/SettingsIcon";
 import GridIcon from "../icons/GridIcon";
 import { CircularProgress } from "@mui/material";
 import { usePathname } from "next/navigation";
-import { Box, margin } from "@mui/system";
+import { Box, margin, width } from "@mui/system";
 import CloudIcon from "../icons/CloudIcon";
 import { AnimatePresence, motion } from "framer-motion";
 import Button from "../Tools/Button";
 import Logo from "../icons/Logo";
 import ProfileMenu from "./ProfileMenu";
+import { useSearch } from "@/context/SearchContext";
+import { debounce } from "lodash";
 
 const Navbar = ({ user }) => {
+  const { searchTerm, setSearchTerm, searchRef, isTypingRef } = useSearch();
   const [isLoading, setIsLoading] = useState(0);
   const [UpToDatetrigger, setUpToDateTrigger] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -28,12 +31,13 @@ const Navbar = ({ user }) => {
   const image = user?.image;
   const pathName = usePathname();
   const firstRun = useRef(true);
+  const firstRun2 = useRef(true);
   const imageRef = useRef(null);
   const menuRef = useRef(null);
 
-  useEffect(()=> {
+  useEffect(() => {
     setIsClient(true);
-  }, [])
+  }, []);
 
   useEffect(() => {
     const startLoading = () => {
@@ -136,6 +140,70 @@ const Navbar = ({ user }) => {
     };
   }, [isMenuOpen]);
 
+  const [showClearBtn, setShowClearBtn] = useState(false);
+
+  const tripleEncode = (str) => {
+    return encodeURIComponent(encodeURIComponent(encodeURIComponent(str)));
+  };
+
+  const doubleEncode = (str) => {
+    return encodeURIComponent(encodeURIComponent(str));
+  };
+
+  const tripleDecode = (str) => {
+    return decodeURIComponent(decodeURIComponent(decodeURIComponent(str)));
+  };
+
+  const doubleDecode = (str) => {
+    return decodeURIComponent(decodeURIComponent(str));
+  };
+
+  const [inputPlaceHolder, setInputPlaceHolder] = useState("Search");
+
+  useEffect(() => {
+    const handler = () => {
+      const hash = window.location.hash.replace("#", "");
+
+      const decodedHash = doubleDecode(hash.replace("search/", ""));
+
+      if (hash.startsWith("search/")) {
+        const filters = decodedHash.split("&");
+
+        filters.forEach((filter, index) => {
+          if (index > 1) {
+            return;
+          }
+          if (filter.includes("text")) {
+            return;
+          }
+          const decodedFilter = decodeURIComponent(filter);
+          const within = decodedFilter.split(/=(.+)/)[1];
+          setInputPlaceHolder(
+            `Search within "${
+              within.charAt(0).toUpperCase() + within.slice(1)
+            }"`
+          );
+        });
+      } else {
+        setInputPlaceHolder("Search");
+      }
+
+      if (hash.startsWith("search") || hash.startsWith("search/")) {
+        setShowClearBtn(true);
+        return;
+      }
+
+      setShowClearBtn(false);
+    };
+
+    handler();
+
+    window.addEventListener("hashchange", handler);
+    return () => {
+      window.removeEventListener("hashchange", handler);
+    };
+  }, []);
+
   const handleRefresh = () => {
     if (!isLoading && UpToDatetrigger)
       window.dispatchEvent(new Event("refresh"));
@@ -149,6 +217,37 @@ const Navbar = ({ user }) => {
     });
     setIsMenuOpen((prev) => !prev);
   };
+
+  const inputClick = () => {
+    const currentHash = window.location.hash.replace("#", "");
+    if (currentHash.startsWith("search")) {
+      return;
+    }
+    const hash = "search";
+    const event = new CustomEvent("sectionChange", {
+      detail: { hash },
+    });
+    window.dispatchEvent(event);
+  };
+
+  const handleClearSearch = () => {
+    const hash = window.location.hash.replace("#", "");
+
+    if (hash.startsWith("search/")) {
+      window.location.hash = "search";
+    } else {
+      window.location.hash = "home";
+    }
+  };
+
+  const debouncedHandleInputOnChange = useMemo(
+    () =>
+      debounce((e) => {
+        isTypingRef.current = true;
+        setSearchTerm(e.target.value);
+      }, 300),
+    []
+  );
 
   if (!isClient) return;
 
@@ -171,22 +270,29 @@ const Navbar = ({ user }) => {
           {/* <Logo style={{margin: "auto 0"}} /> */}
           {/* <span style={{marginLeft: "0.5rem"}}>notopia</span> */}
           {/* </div> */}
-          <input
-            onClick={() => {
-              const currentHash = window.location.hash.replace("#", "");
-              // if (currentHash.startsWith("search")) {
-              //   return;
-              // }
-              const hash = "search";
-              const event = new CustomEvent("sectionChange", {
-                detail: { hash },
-              });
-              window.dispatchEvent(event);
-            }}
-            className="search"
-            placeholder="Search"
-            spellCheck="false"
-          />
+          <div className="search-wrapper">
+            <Button
+              onClick={handleClearSearch}
+              style={{ display: !showClearBtn && "none" }}
+              // onMouseEnter={(e) => handleMouseEnter(e, "Clear search")}
+              // onMouseLeave={handleMouseLeave}
+              className="clear-search-icon"
+            />
+            <input
+              onClick={inputClick}
+              ref={searchRef}
+              onChange={debouncedHandleInputOnChange}
+              className="search"
+              placeholder={inputPlaceHolder}
+              spellCheck="false"
+            />
+            <Button
+              onClick={inputClick}
+              // onMouseEnter={(e) => handleMouseEnter(e, "Search")}
+              // onMouseLeave={handleMouseLeave}
+              className="nav-search-icon"
+            />
+          </div>
           <div className="top-icons">
             <Button style={{ width: "2.8rem", height: "2.8rem" }}>
               <GridIcon />

@@ -34,7 +34,6 @@ const Snackbar = ({
         setUnloadWarn(false);
       }
       clearTimeout(timeoutRef.current);
-      undo.current = () => {};
       onClose.current = () => {};
     }
   }, [snackbarState.snackOpen]);

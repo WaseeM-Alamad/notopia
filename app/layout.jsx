@@ -6,6 +6,7 @@ import Navbar from "@/components/others/Navbar";
 import Sidebar from "@/components/others/Sidebar";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/utils/authOptions";
+import { SearchProvider } from "@/context/SearchContext";
 
 export const metadata = {
   title: "Notopia",
@@ -28,15 +29,16 @@ const MainLayout = async ({ children }) => {
           <AppProvider>
             <div id="tooltipPortal" />
             <div id="snackbarPortal" />
-            {session && (
-              <>
-                <Navbar user={session?.user} />
-                <Sidebar />
-              </>
-            )}
+            <SearchProvider>
+              {session && (
+                <>
+                  <Navbar user={session?.user} />
+                  <Sidebar />
+                </>
+              )}
 
-            {children}
-
+              {children}
+            </SearchProvider>
             <div id="menu" />
             <div id="modal-portal" />
             <div id="selectionBox" />
