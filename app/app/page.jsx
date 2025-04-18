@@ -28,6 +28,7 @@ import TopMenu from "@/components/others/topMenu/TopMenu";
 import SelectionBox from "@/components/others/SelectionBox";
 import { v4 as uuid } from "uuid";
 import Search from "@/components/pages/Search";
+import { useSearch } from "@/context/SearchContext";
 
 const initialStates = {
   notes: new Map(),
@@ -579,6 +580,11 @@ function notesReducer(state, action) {
 }
 
 const page = () => {
+  const { searchTerm, setSearchTerm, searchRef, isTypingRef } = useSearch();
+  const [filters, setFilters] = useState({
+    color: null,
+    label: null,
+  });
   const { batchNoteCount, removeLabel } = useAppContext();
   const [current, setCurrent] = useState("Home");
   const [tooltipAnchor, setTooltipAnchor] = useState(null);
@@ -599,6 +605,7 @@ const page = () => {
   const undoFunction = useRef(() => {});
   const redoFunction = useRef(() => {});
   const onCloseFunction = useRef(() => {});
+  const firstRun = useRef(true);
   const closeRef = useRef(null);
 
   const openSnackFunction = useCallback((data) => {
@@ -1081,6 +1088,105 @@ const page = () => {
     }
   }, []);
 
+  const emptySearchRef = useRef(false);
+
+  const tripleEncode = (str) => {
+    return encodeURIComponent(encodeURIComponent(encodeURIComponent(str)));
+  };
+
+  const doubleEncode = (str) => {
+    return encodeURIComponent(encodeURIComponent(str));
+  };
+
+  const tripleDecode = (str) => {
+    return decodeURIComponent(decodeURIComponent(decodeURIComponent(str)));
+  };
+
+  const doubleDecode = (str) => {
+    return decodeURIComponent(decodeURIComponent(str));
+  };
+
+  useEffect(() => {
+    if (firstRun.current) {
+      firstRun.current = false;
+      return;
+    }
+
+    if (emptySearchRef.current && !searchTerm.trim()) {
+      emptySearchRef.current = false;
+      return;
+    } else {
+      emptySearchRef.current = false;
+    }
+
+    const hash = window.location.hash.replace("#", "");
+    let encodedNewHash = "";
+    let filteredRest = [];
+    if (hash.startsWith("search/")) {
+      const decodedHash = doubleDecode(hash.replace("search/", ""));
+      const filters = decodedHash.split("&");
+
+      filters.forEach((filter) => {
+        if (filter.includes("text")) {
+          return;
+        }
+        filteredRest.push(decodeURIComponent(filter));
+      });
+
+      if (!searchTerm.trim()) {
+        if (filteredRest.length === 0) {
+          encodedNewHash = "search";
+        } else {
+          //searchTerm  not-encoded
+          //filteredRest not-encoded
+          const and = doubleEncode("&");
+          const eq = doubleEncode("=");
+          const encodedFilters = filteredRest.map((filter) => {
+            const parts = filter.split(/=(.+)/);
+
+            const updatedFilter = parts[0] + eq + tripleEncode(parts[1]);
+
+            return updatedFilter;
+          });
+
+          const joinedFilters = encodedFilters.join(and);
+          encodedNewHash = "search/" + joinedFilters;
+        }
+      } else {
+        const encodedTerm = tripleEncode(searchTerm.toLowerCase().trim());
+
+        if (filteredRest.length === 0) {
+          encodedNewHash = "search/" + doubleEncode("text=") + encodedTerm;
+        } else {
+          const and = doubleEncode("&");
+          const eq = doubleEncode("=");
+
+          const encodedFilters = filteredRest.map((filter) => {
+            const parts = filter.split(/=(.+)/);
+
+            const updatedFilter = parts[0] + eq + tripleEncode(parts[1]);
+
+            return updatedFilter;
+          });
+
+          const joinedFilters = encodedFilters.join(and);
+          encodedNewHash =
+            "search/" +
+            doubleEncode("text=") +
+            encodedTerm +
+            and +
+            joinedFilters;
+        }
+      }
+    } else {
+      const encodedTerm = tripleEncode(searchTerm.toLowerCase().trim());
+
+      encodedNewHash = "search/" + doubleEncode("text=") + encodedTerm;
+    }
+
+    window.location.hash = encodedNewHash;
+  }, [searchTerm]);
+
   useEffect(() => {
     const handleHashChange = (e) => {
       setSelectedNotesIDs([]);
@@ -1091,6 +1197,47 @@ const page = () => {
         setCurrent("Home");
       } else if (hash.startsWith("search")) {
         setCurrent("Search");
+      }
+
+      if (isTypingRef.current) {
+        isTypingRef.current = false;
+        return;
+      }
+
+      const decodedHash = doubleDecode(hash.replace("search/", ""));
+      if (hash.startsWith("search/")) {
+        let dataObj = {};
+        const filters = decodedHash.split("&");
+        filters.forEach((filter) => {
+          if (filter.includes("color")) {
+            const decodedColor = decodeURIComponent(filter);
+            let color = decodedColor.split(/=(.+)/)[1];
+            dataObj.color = color?.charAt(0)?.toUpperCase() + color?.slice(1);
+          }
+          if (filter.includes("text")) {
+            const decodedText = decodeURIComponent(filter);
+            const text = decodedText.split(/=(.+)/)[1];
+            dataObj.text = text;
+          }
+        });
+
+        setFilters((prev) => ({ ...prev, color: dataObj.color ?? null }));
+        const text = dataObj.text ?? "";
+        setSearchTerm(text);
+        requestAnimationFrame(() => {
+          searchRef.current.value = text;
+        });
+      }
+      if (hash === "search") {
+        emptySearchRef.current = true;
+        setFilters({
+          color: null,
+          label: null,
+        });
+        setSearchTerm("");
+        requestAnimationFrame(() => {
+          searchRef.current.value = "";
+        });
       }
     };
 
@@ -1149,6 +1296,12 @@ const page = () => {
     window.addEventListener("sectionChange", handler);
     return () => window.removeEventListener("sectionChange", handler);
   }, []);
+
+  useEffect(() => {
+    if (searchTerm.trim() !== "" && current !== "Search") {
+      setCurrent("Search");
+    }
+  }, [searchTerm]);
 
   const components = {
     Home,
@@ -1574,6 +1727,8 @@ const page = () => {
         dispatchNotes={dispatchNotes}
         notes={notesState.notes}
         order={notesState.order}
+        setFilters={setFilters}
+        filters={filters}
         setTooltipAnchor={setTooltipAnchor}
         openSnackFunction={openSnackFunction}
         handleNoteClick={handleNoteClick}

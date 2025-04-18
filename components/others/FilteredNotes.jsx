@@ -1,14 +1,9 @@
 "use client";
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import "@/assets/styles/home.css";
-import Note from "../others/Note";
-import AddNoteModal from "../others/AddNoteModal";
 import { AnimatePresence, motion } from "framer-motion";
-import TopMenuHome from "../others/topMenu/TopMenu";
-import { emptyTrashAction } from "@/utils/actions";
-import DeleteModal from "../others/DeleteModal";
-import { useAppContext } from "@/context/AppContext";
 import { useSearch } from "@/context/SearchContext";
+import FilteredNote from "./FilteredNote";
 
 const COLUMN_WIDTH = 240;
 const GUTTER = 15;
@@ -31,9 +26,8 @@ const NoteWrapper = memo(
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-      setTimeout(() => {
-        setMounted(true);
-      }, 100);
+      // Remove timeout to prevent layout delay
+      setMounted(true);
     }, []);
 
     return (
@@ -43,9 +37,10 @@ const NoteWrapper = memo(
         style={{
           width: `${COLUMN_WIDTH}px`,
           marginBottom: `${GUTTER}px`,
+          visibility: mounted ? "visible" : "hidden", // Hide until ready
         }}
       >
-        <Note
+        <FilteredNote
           note={note}
           noteActions={noteActions}
           setSelectedNotesIDs={setSelectedNotesIDs}
@@ -69,6 +64,8 @@ const Home = memo(
   ({
     notes,
     order,
+    filteredNotes,
+    setNoMatchingNotes,
     dispatchNotes,
     setTooltipAnchor,
     openSnackFunction,
@@ -83,6 +80,7 @@ const Home = memo(
     const containerRef = useRef(null);
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
+    const [layoutReady, setLayoutReady] = useState(false); // New state to track layout completion
 
     const calculateLayout = useCallback(() => {
       if (layoutFrameRef.current) {
@@ -135,6 +133,9 @@ const Home = memo(
 
         const totalHeight = positionItems(Array.from(items));
         container.style.height = `${totalHeight}px`;
+
+        // Set layout as ready after calculations
+        setLayoutReady(true);
       });
     }, []);
 
@@ -147,7 +148,10 @@ const Home = memo(
       }, 100);
     }, [calculateLayout]);
 
+    // Initialize layout on component mount
     useEffect(() => {
+      // Set layoutReady to false before any new calculations
+      setLayoutReady(false);
       calculateLayout();
       window.addEventListener("resize", debouncedCalculateLayout);
 
@@ -162,41 +166,44 @@ const Home = memo(
       };
     }, [calculateLayout, debouncedCalculateLayout, notes]);
 
+    // Run additional layout calculation after initial render
     useEffect(() => {
       if (notes.length > 0) {
-        const timer = setTimeout(calculateLayout, 50);
-        return () => clearTimeout(timer);
+        setLayoutReady(false); // Reset layout state
+        // Use multiple timing attempts to ensure layout is calculated properly
+        const immediateTimer = requestAnimationFrame(calculateLayout);
+        const backupTimer = setTimeout(calculateLayout, 50);
+        const finalTimer = setTimeout(calculateLayout, 150);
+
+        return () => {
+          cancelAnimationFrame(immediateTimer);
+          clearTimeout(backupTimer);
+          clearTimeout(finalTimer);
+        };
       }
     }, [notes, calculateLayout]);
 
     useEffect(() => {
+      setLayoutReady(false);
       calculateLayout();
-    }, [searchTerm]);
+    }, [searchTerm, calculateLayout]);
 
-    const matchesFilters = (note) => {
-      if (filters.color && note.color !== filters.color) {
-        return false;
+    // Add CSS class for fade-in effect
+    useEffect(() => {
+      if (containerRef.current && layoutReady) {
+        containerRef.current.classList.add("layout-ready");
+      } else if (containerRef.current) {
+        containerRef.current.classList.remove("layout-ready");
       }
+    }, [layoutReady]);
 
-      if (
-        searchTerm &&
-        !(
-          note.title.toLowerCase().includes(searchTerm.toLowerCase().trim()) ||
-          note.content.toLowerCase().includes(searchTerm.toLowerCase().trim())
-        )
-      ) {
-        return false;
-      }
-
-      return true;
-    };
+    
 
     return (
       <>
         <div ref={containerRef} className="section-container">
-          {order.map((uuid, index) => {
+          {filteredNotes.map((uuid, index) => {
             const note = notes.get(uuid);
-            if (!matchesFilters(note)) return;
             return (
               <NoteWrapper
                 key={note.uuid}

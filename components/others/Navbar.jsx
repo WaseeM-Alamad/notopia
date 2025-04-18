@@ -173,14 +173,18 @@ const Navbar = ({ user }) => {
           if (index > 1) {
             return;
           }
-          if (filter.includes("text")) {
+          if (filter.startsWith("text")) {
             return;
           }
           const decodedFilter = decodeURIComponent(filter);
-          const within = decodedFilter.split(/=(.+)/)[1];
+          const parts = decodedFilter.split(/=(.+)/);
+          const type = parts[0];
+          const within = parts[1];
           setInputPlaceHolder(
             `Search within "${
-              within.charAt(0).toUpperCase() + within.slice(1)
+              type === "color"
+                ? within.charAt(0).toUpperCase() + within.slice(1)
+                : within
             }"`
           );
         });
