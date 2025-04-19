@@ -1,7 +1,13 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import React, { createContext, useContext, useEffect, useRef } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   fetchLabelsAction,
   createLabelAction,
@@ -15,6 +21,7 @@ const AppContext = createContext();
 
 export function AppProvider({ children }) {
   const { data: session, status } = useSession();
+  const [labelsReady, setLabelsReady] = useState(false);
   const userID = session?.user?.id;
 
   const labelsRef = useRef(new Map());
@@ -29,11 +36,12 @@ export function AppProvider({ children }) {
         return [mapLabel.uuid, mapLabel];
       })
     );
+    setLabelsReady(true);
   };
 
   useEffect(() => {
-    window.addEventListener("loadLables", getLabels);
-    return () => window.removeEventListener("loadLables", getLabels);
+    window.addEventListener("loadLabels", getLabels);
+    return () => window.removeEventListener("loadLabels", getLabels);
   }, []);
 
   const createLabel = async (uuid, label, createdAt) => {
@@ -60,9 +68,8 @@ export function AppProvider({ children }) {
       color: "Default",
     });
 
-    
-labelsRef.current = updatedLabels;
-  }
+    labelsRef.current = updatedLabels;
+  };
 
   const updateLabelColor = async (uuid, newColor) => {
     const newLabel = { ...labelsRef.current.get(uuid), color: newColor };
@@ -237,6 +244,7 @@ labelsRef.current = updatedLabels;
   return (
     <AppContext.Provider
       value={{
+        labelsReady,
         createLabel,
         createLabelForNotes,
         removeLabel,

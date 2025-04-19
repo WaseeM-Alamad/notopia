@@ -26,8 +26,10 @@ const NoteWrapper = memo(
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-      // Remove timeout to prevent layout delay
-      setMounted(true);
+      setTimeout(() => {
+        setMounted(true);
+      }, 100);
+      
     }, []);
 
     return (
@@ -38,6 +40,9 @@ const NoteWrapper = memo(
           width: `${COLUMN_WIDTH}px`,
           marginBottom: `${GUTTER}px`,
           visibility: mounted ? "visible" : "hidden", // Hide until ready
+          transition: `transform ${
+            mounted ? "0.22s" : "0"
+          } cubic-bezier(0.5, 0.2, 0.3, 1), opacity 0s`,
         }}
       >
         <FilteredNote

@@ -7,8 +7,6 @@ import { useAppContext } from "@/context/AppContext";
 const Search = ({
   notes,
   order,
-  filters,
-  setFilters,
   dispatchNotes,
   setTooltipAnchor,
   openSnackFunction,
@@ -21,29 +19,38 @@ const Search = ({
   noteActions,
   notesReady,
 }) => {
-  const { searchTerm, setSearchTerm, searchRef, isTypingRef } = useSearch();
+  const { searchTerm, filters, setFilters, skipHashChangeRef } = useSearch();
   const { labelsRef } = useAppContext();
   const [colorsSet, setColorsSet] = useState(new Set());
   const [labelsSet, setLabelsSet] = useState(new Set());
+  const [typesSet, setTypesSet] = useState(new Set());
   const [noMatchingNotes, setNoMatchingNotes] = useState(false);
   const firstRun = useRef(true);
 
   useEffect(() => {
     const colors = new Set();
     const labels = new Set();
+    const types = new Set();
     order.forEach((order) => {
       const note = notes.get(order);
       if (note.isTrash) return;
       colors.add(note.color);
-      note.labels.forEach((labelUUID) => {
-        labels.add(labelUUID);
-      });
+      note.labels.forEach((labelUUID) => labels.add(labelUUID));
+      note.images.length > 0 && types.add("Images");
     });
     setColorsSet(colors);
     setLabelsSet(labels);
+    setTypesSet(types);
   }, [notesReady]);
 
+  const typeClick = (type) => {
+    const title = type.toLowerCase().slice(0, type.length - 1);
+    window.location.hash = `search/${title}`;
+    setFilters((prev) => ({ ...prev, image: true }));
+  };
+
   const colorClick = (color) => {
+    skipHashChangeRef.current = true;
     const encodedColor =
       "color" + doubleEncode("=") + tripleEncode(color.toLowerCase());
     window.location.hash = `search/${encodedColor}`;
@@ -51,14 +58,13 @@ const Search = ({
   };
 
   const labelClick = (labelUUID) => {
+    skipHashChangeRef.current = true;
     const label = labelsRef.current.get(labelUUID).label;
     const encodedColor =
       "label" + doubleEncode("=") + tripleEncode(label.toLowerCase());
     window.location.hash = `search/${encodedColor}`;
     setFilters((prev) => ({ ...prev, label: labelUUID }));
   };
-
-  // const emptySearchRef = useRef(false);
 
   const tripleEncode = (str) => {
     return encodeURIComponent(encodeURIComponent(encodeURIComponent(str)));
@@ -76,136 +82,24 @@ const Search = ({
     return decodeURIComponent(decodeURIComponent(str));
   };
 
-  // useEffect(() => {
-  //   if (firstRun.current) {
-  //     firstRun.current = false;
-  //     return;
-  //   }
+  const closeToolTip = () => {
+    setTooltipAnchor((prev) => ({
+      anchor: null,
+      text: prev?.text,
+    }));
+  };
 
-  //   if (emptySearchRef.current && !searchTerm.trim()) {
-  //     emptySearchRef.current = false;
-  //     return;
-  //   } else {
-  //     emptySearchRef.current = false;
-  //   }
+  const handleMouseEnter = (e, text) => {
+    const target = e.currentTarget;
+    setTooltipAnchor({ anchor: target, text: text, display: true });
+  };
 
-  //   const hash = window.location.hash.replace("#", "");
-  //   let encodedNewHash = "";
-  //   let filteredRest = [];
-  //   if (hash.startsWith("search/")) {
-  //     const decodedHash = doubleDecode(hash.replace("search/", ""));
-  //     const filters = decodedHash.split("&");
-
-  //     filters.forEach((filter) => {
-  //       if (filter.includes("text")) {
-  //         return;
-  //       }
-  //       filteredRest.push(decodeURIComponent(filter));
-  //     });
-
-  //     if (!searchTerm.trim()) {
-  //       if (filteredRest.length === 0) {
-  //         encodedNewHash = "search";
-  //       } else {
-  //         //searchTerm  not-encoded
-  //         //filteredRest not-encoded
-  //         const and = doubleEncode("&");
-  //         const eq = doubleEncode("=");
-  //         const encodedFilters = filteredRest.map((filter) => {
-  //           const parts = filter.split(/=(.+)/);
-
-  //           const updatedFilter = parts[0] + eq + tripleEncode(parts[1]);
-
-  //           return updatedFilter;
-  //         });
-
-  //         const joinedFilters = encodedFilters.join(and);
-  //         encodedNewHash = "search/" + joinedFilters;
-  //       }
-  //     } else {
-  //       const encodedTerm = tripleEncode(searchTerm.toLowerCase().trim());
-
-  //       if (filteredRest.length === 0) {
-  //         encodedNewHash = "search/" + doubleEncode("text=") + encodedTerm;
-  //       } else {
-  //         const and = doubleEncode("&");
-  //         const eq = doubleEncode("=");
-
-  //         const encodedFilters = filteredRest.map((filter) => {
-  //           const parts = filter.split(/=(.+)/);
-
-  //           const updatedFilter = parts[0] + eq + tripleEncode(parts[1]);
-
-  //           return updatedFilter;
-  //         });
-
-  //         const joinedFilters = encodedFilters.join(and);
-  //         encodedNewHash =
-  //           "search/" +
-  //           doubleEncode("text=") +
-  //           encodedTerm +
-  //           and +
-  //           joinedFilters;
-  //       }
-  //     }
-  //   } else {
-  //     const encodedTerm = tripleEncode(searchTerm.toLowerCase().trim());
-
-  //     encodedNewHash = "search/" + doubleEncode("text=") + encodedTerm;
-  //   }
-
-  //   window.location.hash = encodedNewHash;
-  // }, [searchTerm]);
-
-  useEffect(() => {
-    const handleHashChange = () => {
-      // if (isTypingRef.current) {
-      //   isTypingRef.current = false;
-      //   return;
-      // }
-
-      // const hash = window.location.hash.replace("#", "");
-      // const decodedHash = doubleDecode(hash.replace("search/", ""));
-      // if (hash.startsWith("search/")) {
-      //   let dataObj = {};
-      //   const filters = decodedHash.split("&");
-      //   filters.forEach((filter) => {
-      //     if (filter.includes("color")) {
-      //       const decodedColor = decodeURIComponent(filter);
-      //       let color = decodedColor.split(/=(.+)/)[1];
-      //       dataObj.color = color?.charAt(0)?.toUpperCase() + color?.slice(1);
-      //     }
-      //     if (filter.includes("text")) {
-      //       const decodedText = decodeURIComponent(filter);
-      //       const text = decodedText.split(/=(.+)/)[1];
-      //       dataObj.text = text;
-      //     }
-      //   });
-
-      //   setFilters((prev) => ({ ...prev, color: dataObj.color ?? null }));
-      //   const text = dataObj.text ?? "";
-      //   setSearchTerm(text);
-      //   searchRef.current.value = text;
-      // }
-      // if (hash === "search") {
-      //   emptySearchRef.current = true;
-      //   setFilters({
-      //     color: null,
-      //     label: null,
-      //   });
-      //   setSearchTerm("");
-      //   searchRef.current.value = "";
-      // }
-    };
-
-    handleHashChange();
-
-    window.addEventListener("hashchange", handleHashChange);
-
-    return () => {
-      window.removeEventListener("hashchange", handleHashChange);
-    };
-  }, []);
+  const handleMouseLeave = () => {
+    setTooltipAnchor((prev) => ({
+      ...prev,
+      display: false,
+    }));
+  };
 
   const filtersExist = () => {
     return (
@@ -229,11 +123,13 @@ const Search = ({
       return false;
     }
 
-    if (filters.label && !note.labels.includes(filters.label)) 
-    {
+    if (filters.label && !note.labels.includes(filters.label)) {
       return false;
     }
 
+    if (filters.image && note.images.length === 0) {
+      return false;
+    }
 
     return true;
   };
@@ -248,6 +144,7 @@ const Search = ({
   }, [filteredNotes]);
 
   const filtersToRender = [
+    { title: "Types", function: typeClick, set: typesSet },
     { title: "Labels", function: labelClick, set: labelsSet },
     { title: "Colors", function: colorClick, set: colorsSet },
   ];
@@ -265,7 +162,12 @@ const Search = ({
               </div>
             )}
             {filtersToRender.map((item) => {
-              if (item.set.size === 0) {
+              if (
+                item.set.size === 0 ||
+                (item.title === "Colors" &&
+                  item.set.size === 1 &&
+                  item.set.has("Default"))
+              ) {
                 return;
               }
               return (
@@ -288,11 +190,18 @@ const Search = ({
                       let ariaLabel = "";
                       if (item.title === "Labels") {
                         ariaLabel = labelsRef.current.get(setItem).label;
+                      } else if (item.title === "Types") {
+                        ariaLabel = setItem;
                       }
                       return (
                         <div
                           className="filter-item-wrapper"
                           onClick={() => item.function(setItem)}
+                          onMouseEnter={(e) => {
+                            if (item.title !== "Colors") return;
+                            handleMouseEnter(e, setItem);
+                          }}
+                          onMouseLeave={handleMouseLeave}
                           key={setItem}
                         >
                           <div
@@ -301,6 +210,8 @@ const Search = ({
                                 ? setItem + " filter-color"
                                 : item.title === "Labels"
                                 ? "filter-label"
+                                : item.title === "Types"
+                                ? "filter-" + setItem.toLowerCase()
                                 : ""
                             }`}
                             aria-label={ariaLabel}

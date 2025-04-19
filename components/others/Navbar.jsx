@@ -15,11 +15,20 @@ import Logo from "../icons/Logo";
 import ProfileMenu from "./ProfileMenu";
 import { useSearch } from "@/context/SearchContext";
 import { debounce } from "lodash";
+import { useAppContext } from "@/context/AppContext";
+import Tooltip from "../Tools/Tooltip";
 
 const Navbar = ({ user }) => {
-  const { searchTerm, setSearchTerm, searchRef, isTypingRef } = useSearch();
+  const {
+    setSearchTerm,
+    searchRef,
+    skipHashChangeRef,
+    filters: searchFilters,
+  } = useSearch();
+  const { labelsRef, labelsReady } = useAppContext();
   const [isLoading, setIsLoading] = useState(0);
   const [UpToDatetrigger, setUpToDateTrigger] = useState(true);
+  const [tooltipAnchor, setTooltipAnchor] = useState(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isClient, setIsClient] = useState(false);
@@ -180,13 +189,18 @@ const Navbar = ({ user }) => {
           const parts = decodedFilter.split(/=(.+)/);
           const type = parts[0];
           const within = parts[1];
-          setInputPlaceHolder(
-            `Search within "${
-              type === "color"
-                ? within.charAt(0).toUpperCase() + within.slice(1)
-                : within
-            }"`
-          );
+          if (type === "color") {
+            setInputPlaceHolder(
+              `Search within "${
+                within.charAt(0).toUpperCase() + within.slice(1)
+              }"`
+            );
+          } else if (type === "label") {
+            if (!labelsReady || !searchFilters.label) return;
+            const labelUUID = searchFilters.label;
+            const label = labelsRef.current.get(labelUUID).label;
+            setInputPlaceHolder("Search within " + label);
+          }
         });
       } else {
         setInputPlaceHolder("Search");
@@ -202,18 +216,21 @@ const Navbar = ({ user }) => {
 
     handler();
 
+    window.removeEventListener("hashchange", handler);
     window.addEventListener("hashchange", handler);
     return () => {
       window.removeEventListener("hashchange", handler);
     };
-  }, []);
+  }, [labelsReady, searchFilters]);
 
   const handleRefresh = () => {
+    closeToolTip();
     if (!isLoading && UpToDatetrigger)
       window.dispatchEvent(new Event("refresh"));
   };
 
   const handleProfileOpen = () => {
+    closeToolTip();
     const rect = imageRef.current?.getBoundingClientRect();
     setMenuPosition({
       top: rect.top,
@@ -223,6 +240,7 @@ const Navbar = ({ user }) => {
   };
 
   const inputClick = () => {
+    closeToolTip();
     const currentHash = window.location.hash.replace("#", "");
     if (currentHash.startsWith("search")) {
       return;
@@ -235,6 +253,7 @@ const Navbar = ({ user }) => {
   };
 
   const handleClearSearch = () => {
+    closeToolTip();
     const hash = window.location.hash.replace("#", "");
 
     if (hash.startsWith("search/")) {
@@ -247,16 +266,36 @@ const Navbar = ({ user }) => {
   const debouncedHandleInputOnChange = useMemo(
     () =>
       debounce((e) => {
-        isTypingRef.current = true;
+        skipHashChangeRef.current = true;
         setSearchTerm(e.target.value);
       }, 300),
     []
   );
 
+  const closeToolTip = () => {
+    setTooltipAnchor((prev) => ({
+      anchor: null,
+      text: prev?.text,
+    }));
+  };
+
+  const handleMouseEnter = (e, text) => {
+    const target = e.currentTarget;
+    setTooltipAnchor({ anchor: target, text: text, display: true });
+  };
+
+  const handleMouseLeave = () => {
+    setTooltipAnchor((prev) => ({
+      ...prev,
+      display: false,
+    }));
+  };
+
   if (!isClient) return;
 
   return (
     <>
+      {tooltipAnchor?.display && <Tooltip anchorEl={tooltipAnchor} />}
       <ProfileMenu
         user={user}
         ref={menuRef}
@@ -281,6 +320,8 @@ const Navbar = ({ user }) => {
               // onMouseEnter={(e) => handleMouseEnter(e, "Clear search")}
               // onMouseLeave={handleMouseLeave}
               className="clear-search-icon"
+              onMouseEnter={(e) => handleMouseEnter(e, "Clear search")}
+              onMouseLeave={handleMouseLeave}
             />
             <input
               onClick={inputClick}
@@ -292,8 +333,8 @@ const Navbar = ({ user }) => {
             />
             <Button
               onClick={inputClick}
-              // onMouseEnter={(e) => handleMouseEnter(e, "Search")}
-              // onMouseLeave={handleMouseLeave}
+              onMouseEnter={(e) => handleMouseEnter(e, "Search")}
+              onMouseLeave={handleMouseLeave}
               className="nav-search-icon"
             />
           </div>
@@ -304,6 +345,8 @@ const Navbar = ({ user }) => {
             <Button
               onClick={handleRefresh}
               style={{ width: "2.8rem", height: "2.8rem" }}
+              onMouseEnter={(e) => handleMouseEnter(e, "Refresh")}
+              onMouseLeave={handleMouseLeave}
             >
               <AnimatePresence>
                 {!isLoading && UpToDatetrigger && (
@@ -365,6 +408,20 @@ const Navbar = ({ user }) => {
             style={{ marginRight: "2.3rem", padding: "8px" }}
             className="btn"
             onClick={handleProfileOpen}
+            onMouseEnter={(e) =>
+              handleMouseEnter(
+                e,
+                <>
+                  <span style={{ fontSize: "0.85rem" }}>Notopia account</span>
+                  <div style={{ opacity: "0.7", paddingTop: "0.2rem" }}>
+                    {user.name}
+                    <br />
+                    {user.email}
+                  </div>
+                </>
+              )
+            }
+            onMouseLeave={handleMouseLeave}
             ref={imageRef}
           >
             <img
@@ -374,7 +431,6 @@ const Navbar = ({ user }) => {
               alt="pfp"
             />
           </div>
-          {/* <button onClick={signOut}>s</button> */}
         </nav>
       )}
     </>

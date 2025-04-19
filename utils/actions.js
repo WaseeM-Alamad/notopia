@@ -239,6 +239,8 @@ export const NoteTextUpdateAction = async (values, noteUUID) => {
 };
 
 export const NoteImageDeleteAction = async (filePath, noteUUID, imageID) => {
+  const session = await getServerSession(authOptions);
+  const userID = session?.user?.id;
   if (!session) {
     return new Response("Unauthorized", { status: 401 });
   }
@@ -766,8 +768,6 @@ export const fetchLabelsAction = async () => {
 
     const user = await User.findById(userID);
     const labels = JSON.parse(JSON.stringify(user?.labels));
-
-    console.log("labels", labels);
 
     return {
       success: true,

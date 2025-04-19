@@ -580,12 +580,16 @@ function notesReducer(state, action) {
 }
 
 const page = () => {
-  const { searchTerm, setSearchTerm, searchRef, isTypingRef } = useSearch();
-  const [filters, setFilters] = useState({
-    color: null,
-    label: null,
-  });
-  const { batchNoteCount, removeLabel } = useAppContext();
+  const {
+    searchTerm,
+    setSearchTerm,
+    searchRef,
+    skipHashChangeRef,
+    filters,
+    setFilters,
+  } = useSearch();
+  const { batchNoteCount, removeLabel, labelsRef, labelsReady } =
+    useAppContext();
   const [current, setCurrent] = useState("Home");
   const [tooltipAnchor, setTooltipAnchor] = useState(null);
   const [notesState, dispatchNotes] = useReducer(notesReducer, initialStates);
@@ -673,7 +677,7 @@ const page = () => {
   const getNotes = async () => {
     requestAnimationFrame(async () => {
       window.dispatchEvent(new Event("loadingStart"));
-      window.dispatchEvent(new Event("loadLables"));
+      window.dispatchEvent(new Event("loadLabels"));
       const fetchedNotes = await fetchNotes();
       window.dispatchEvent(new Event("loadingEnd"));
 
@@ -1127,7 +1131,7 @@ const page = () => {
       const filters = decodedHash.split("&");
 
       filters.forEach((filter) => {
-        if (filter.includes("text")) {
+        if (filter.startsWith("text")) {
           return;
         }
         filteredRest.push(decodeURIComponent(filter));
@@ -1144,7 +1148,14 @@ const page = () => {
           const encodedFilters = filteredRest.map((filter) => {
             const parts = filter.split(/=(.+)/);
 
-            const updatedFilter = parts[0] + eq + tripleEncode(parts[1]);
+            let updatedFilter = '';
+            
+            if (parts[0] === "image"){
+              updatedFilter = parts[0];
+            }
+            else {
+              updatedFilter = parts[0] + eq + tripleEncode(parts[1]);
+            }
 
             return updatedFilter;
           });
@@ -1164,7 +1175,14 @@ const page = () => {
           const encodedFilters = filteredRest.map((filter) => {
             const parts = filter.split(/=(.+)/);
 
-            const updatedFilter = parts[0] + eq + tripleEncode(parts[1]);
+            let updatedFilter = '';
+
+            if (parts[0] === "image"){
+              updatedFilter = parts[0];
+            }
+            else {
+              updatedFilter = parts[0] + eq + tripleEncode(parts[1]);
+            }
 
             return updatedFilter;
           });
@@ -1187,68 +1205,89 @@ const page = () => {
     window.location.hash = encodedNewHash;
   }, [searchTerm]);
 
+  const handleHashChange = useCallback(() => {
+    setSelectedNotesIDs([]);
+    setTooltipAnchor(null);
+    openSnackFunction({ close: true });
+    const hash = window.location.hash.replace("#", "");
+    if (hash.trim() === "") {
+      setCurrent("Home");
+    } else if (hash.startsWith("search")) {
+      setCurrent("Search");
+    }
+
+    if (skipHashChangeRef.current) {
+      skipHashChangeRef.current = false;
+      return;
+    }
+
+    console.log("DIDN'T SKIPP");
+    const decodedHash = doubleDecode(hash.replace("search/", ""));
+    if (hash.startsWith("search/")) {
+      let dataObj = {};
+      const filters = decodedHash.split("&");
+      filters.forEach((filter) => {
+        if (filter.startsWith("color")) {
+          const color = decodeURIComponent(filter);
+          let decodedColor = color.split(/=(.+)/)[1];
+          dataObj.color =
+            decodedColor?.charAt(0)?.toUpperCase() + decodedColor?.slice(1);
+        } else if (filter.startsWith("text")) {
+          const text = decodeURIComponent(filter);
+          const decodedText = text.split(/=(.+)/)[1];
+          dataObj.text = decodedText;
+        } else if (filter.startsWith("label")) {
+          if (!labelsReady) return;
+          const label = decodeURIComponent(filter);
+          const decodedLabel = label.split(/=(.+)/)[1];
+          let labelUUID = "";
+          for (const [key, object] of labelsRef.current) {
+            if (object.label.toLowerCase() === decodedLabel) {
+              labelUUID = key;
+            }
+          }
+          dataObj.label = labelUUID;
+        } else if (filter === "image") {
+          dataObj.image = true;
+        }
+      });
+
+      setFilters((prev) => ({
+        ...prev,
+        color: dataObj.color ?? null,
+        label: dataObj.label ?? null,
+        image: dataObj.image ?? null,
+      }));
+      const text = dataObj.text ?? "";
+      setSearchTerm(text);
+      requestAnimationFrame(() => {
+        searchRef.current.value = text;
+      });
+    }
+    if (hash === "search") {
+      emptySearchRef.current = true;
+      setFilters({
+        color: null,
+        label: null,
+        image: null,
+      });
+      setSearchTerm("");
+      requestAnimationFrame(() => {
+        searchRef.current.value = "";
+      });
+    }
+  }, [labelsReady]);
+
   useEffect(() => {
-    const handleHashChange = (e) => {
-      setSelectedNotesIDs([]);
-      setTooltipAnchor(null);
-      openSnackFunction({ close: true });
-      const hash = window.location.hash.replace("#", "");
-      if (hash.trim() === "") {
-        setCurrent("Home");
-      } else if (hash.startsWith("search")) {
-        setCurrent("Search");
-      }
-
-      if (isTypingRef.current) {
-        isTypingRef.current = false;
-        return;
-      }
-
-      const decodedHash = doubleDecode(hash.replace("search/", ""));
-      if (hash.startsWith("search/")) {
-        let dataObj = {};
-        const filters = decodedHash.split("&");
-        filters.forEach((filter) => {
-          if (filter.includes("color")) {
-            const decodedColor = decodeURIComponent(filter);
-            let color = decodedColor.split(/=(.+)/)[1];
-            dataObj.color = color?.charAt(0)?.toUpperCase() + color?.slice(1);
-          }
-          if (filter.includes("text")) {
-            const decodedText = decodeURIComponent(filter);
-            const text = decodedText.split(/=(.+)/)[1];
-            dataObj.text = text;
-          }
-        });
-
-        setFilters((prev) => ({ ...prev, color: dataObj.color ?? null }));
-        const text = dataObj.text ?? "";
-        setSearchTerm(text);
-        requestAnimationFrame(() => {
-          searchRef.current.value = text;
-        });
-      }
-      if (hash === "search") {
-        emptySearchRef.current = true;
-        setFilters({
-          color: null,
-          label: null,
-        });
-        setSearchTerm("");
-        requestAnimationFrame(() => {
-          searchRef.current.value = "";
-        });
-      }
-    };
-
     handleHashChange();
 
+    window.removeEventListener("hashchange", handleHashChange);
     window.addEventListener("hashchange", handleHashChange);
 
     return () => {
       window.removeEventListener("hashchange", handleHashChange);
     };
-  }, []);
+  }, [labelsReady]);
 
   useEffect(() => {
     const hash = window.location.hash.replace("#", "");
@@ -1263,8 +1302,6 @@ const page = () => {
     }
   }, [notesReady]);
 
-  const colorsSetRef = useRef(new Set());
-
   useEffect(() => {
     const handler = (e) => {
       if (!e.detail?.hash) return;
@@ -1275,15 +1312,37 @@ const page = () => {
 
         if (selected === "search") {
           const colorSet = new Set();
+          const labelSet = new Set();
+          const typeSet = new Set();
           notesStateRef.current.order.forEach((order) => {
             const note = notesStateRef.current.notes.get(order);
             if (note.isTrash) return;
             colorSet.add(note.color);
+            note.labels.forEach((label) => labelSet.add(label));
+            note.images.length > 0 && typeSet.add("images");
           });
+          let filtersNum = 0;
 
-          colorsSetRef.current = colorSet;
+          if (colorSet.size > 0) {
+            ++filtersNum;
+          }
 
-          if (colorsSetRef.current.size > 1) {
+          if (labelSet.size > 0) {
+            ++filtersNum;
+          }
+
+          if (typeSet.size > 0) {
+            ++filtersNum;
+          }
+
+          if (filtersNum > 2) {
+            window.location.hash = "search";
+            setCurrent(captialized(selected));
+          } else if (
+            colorSet.size > 1 ||
+            labelSet.size > 1 ||
+            typeSet.size > 1
+          ) {
             window.location.hash = "search";
             setCurrent(captialized(selected));
           }
@@ -1448,7 +1507,7 @@ const page = () => {
         }
       }
 
-      if (event.ctrlKey && event.key.toLowerCase() === "a") {
+      if (event.ctrlKey && event.code === "KeyA") {
         event.preventDefault();
         const selectedNotes = [];
         notesStateRef.current.order.forEach((uuid, index) => {
@@ -1469,7 +1528,7 @@ const page = () => {
         window.dispatchEvent(new Event("selectAllNotes"));
       }
 
-      if (event.key.toLowerCase() === "e") {
+      if (event.code === "KeyE") {
         const hash = window.location.hash.replace("#", "");
         if (selectedNotesRef.current.size > 0 && !hash.startsWith("trash")) {
           batchArchiveRef.current();
@@ -1483,14 +1542,14 @@ const page = () => {
         }
       }
 
-      if (event.key.toLowerCase() === "f") {
+      if (event.code === "KeyF") {
         const hash = window.location.hash.replace("#", "");
         if (selectedNotesRef.current.size > 0 && !hash.startsWith("trash")) {
           batchPinRef.current();
         }
       }
 
-      if (event.ctrlKey && event.key.toLowerCase() === "z") {
+      if (event.ctrlKey && event.code === "KeyZ") {
         undoFunction.current();
         setSnackbarState((prev) => ({
           ...prev,
@@ -1506,7 +1565,7 @@ const page = () => {
         }, 80);
       }
 
-      if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === "z") {
+      if (event.ctrlKey && event.shiftKey && event.code === "KeyZ") {
         redoFunction.current();
         setSnackbarState((prev) => ({
           ...prev,
