@@ -26,6 +26,7 @@ export function AppProvider({ children }) {
 
   const labelsRef = useRef(new Map());
   const labelLookUPRef = useRef(new Map());
+  const ignoreKeysRef = useRef(null);
 
   const getLabels = async () => {
     const fetchedLables = await fetchLabelsAction();
@@ -257,6 +258,7 @@ export function AppProvider({ children }) {
         labelLookUPRef,
         batchNoteCount,
         handleLabelsTop,
+        ignoreKeysRef,
       }}
     >
       {children}

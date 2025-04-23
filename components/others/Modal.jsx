@@ -22,6 +22,7 @@ const Modal = ({
   note,
   noteActions,
   initialStyle,
+  setInitialStyle,
   isOpen,
   setIsOpen,
   setTooltipAnchor,
@@ -47,7 +48,6 @@ const Modal = ({
     ? getNoteFormattedDate(note?.createdAt)
     : null;
 
-  
   const { data: session } = useSession();
   const userID = session?.user?.id;
   const titleTextRef = useRef(null);
@@ -127,12 +127,13 @@ const Modal = ({
         handleTrash();
       }, 20);
     }
-    if ((!archiveRef.current || !trashRef.current) && initialStyle ) {
+    if ((!archiveRef.current || !trashRef.current) && initialStyle) {
       initialStyle.element.style.opacity = "1";
     }
 
     archiveRef.current = false;
     trashRef.current = false;
+    setInitialStyle(null);
   };
 
   useEffect(() => {
@@ -143,11 +144,24 @@ const Modal = ({
   }, [isOpen]);
 
   useEffect(() => {
+    const handler = () => {
+      const hash = window.location.hash.replace("#", "");
+      if (!hash.toLowerCase().startsWith("note/")) {
+        prevHash.current = window.location.hash.replace("#", "");
+      }
+    };
+
+    handler();
+
+    window.addEventListener("hashchange", handler);
+    return () => window.removeEventListener("hashchange", handler);
+  }, []);
+
+  useEffect(() => {
     if (!modalRef.current) return;
     const overlay = document.getElementById("n-overlay");
 
     if (isOpen) {
-      prevHash.current = window.location.hash.replace("#", "");
       window.location.hash = `NOTE/${note?.uuid}`;
 
       archiveRef.current = false;
@@ -193,8 +207,12 @@ const Modal = ({
       return () =>
         modalRef.current.removeEventListener("transitionend", handler);
     } else {
-      // window.location.hash = prevHash.current || "home";
-      window.location.hash = current.toLowerCase();
+      if (!prevHash.current) {
+        window.location.hash = current.toLowerCase();
+      } else {
+        window.location.hash = prevHash.current;
+      }
+
       modalRef.current.style.transition =
         "all 0.22s cubic-bezier(0.35, 0.9, 0.25, 1), opacity 0.13s";
       modalRef.current.offsetHeight;
@@ -219,9 +237,12 @@ const Modal = ({
       if (initialStyle) {
         modalRef.current.removeEventListener("transitionend", handleModalClose); // Remove before adding
         modalRef.current.addEventListener("transitionend", handleModalClose);
-      }
-      else {
-        closeModal();
+      } else {
+        modalRef.current.style.transition = "opacity 0.09s";
+        modalRef.current.style.opacity = 0;
+        setTimeout(() => {
+          closeModal();
+        }, 90);
       }
 
       return () =>

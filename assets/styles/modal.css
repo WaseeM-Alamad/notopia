@@ -9,7 +9,7 @@
   height: 100%;
   z-index: 200;
   transition: all 0.3s ease;
-  background-color: rgba(0,0,0,0.5);
+  background-color: rgba(0, 0, 0, 0.5);
 }
 
 .modal-container {
@@ -19,7 +19,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 100;
+  z-index: 150;
   transition: all 0.3s ease;
 }
 
@@ -57,14 +57,13 @@
     opacity 0.1s;
 }
 
-
 .modall {
   display: none;
   flex-direction: column;
   position: fixed;
   overflow: hidden;
   max-width: 37.5rem;
-  width: 100%;
+  width: 90%;
   max-height: 90vh;
   /* min-height: 11.5625rem; */
   will-change: left, top, transform, opacity;
@@ -165,7 +164,7 @@
   box-sizing: border-box;
   overflow-x: hidden;
   background-size: cover;
-  transition: all .25s ease, opacity 0.218s ease-in;
+  transition: all 0.25s ease, opacity 0.218s ease-in;
 }
 
 .modal-inputs-container::-webkit-scrollbar {
@@ -290,9 +289,10 @@
   width: 100%;
   max-width: 360px;
   min-height: 180px;
-  box-shadow: 0 1px 3px 0 rgba(60,64,67,0.3),0 4px 8px 3px rgba(60,64,67,0.15);
+  box-shadow: 0 1px 3px 0 rgba(60, 64, 67, 0.3),
+    0 4px 8px 3px rgba(60, 64, 67, 0.15);
   background-color: white;
-  border-radius: .9rem;
+  border-radius: 0.9rem;
   left: 50%;
   top: 40%;
 }
@@ -333,3 +333,20 @@
   min-height: 2rem;
 }
 
+.settings-modal {
+  position: relative;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+  border-radius: 1rem;
+  width: 422px;
+  box-sizing: border-box;
+  padding: 24px;
+  position: fixed;
+  z-index: 150;
+  background-color: #ffffff;
+  left: 50%;
+  top: 40%;
+}
+
+.dark-mode .settings-modal {
+  background-color: rgb(32, 33, 36);
+}

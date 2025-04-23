@@ -27,7 +27,7 @@ const Search = ({
   const [noMatchingNotes, setNoMatchingNotes] = useState(false);
   const firstRun = useRef(true);
 
-  useEffect(() => {
+  const getFilters = () => {
     const colors = new Set();
     const labels = new Set();
     const types = new Set();
@@ -41,7 +41,23 @@ const Search = ({
     setColorsSet(colors);
     setLabelsSet(labels);
     setTypesSet(types);
+  };
+
+  useEffect(() => {
+    getFilters();
   }, [notesReady]);
+
+  useEffect(() => {
+    if (firstRun.current) {
+      firstRun.current = false;
+      return;
+    }
+
+    if (noMatchingNotes && filtersExist()) {
+      console.log("NICE WW");
+      getFilters();
+    }
+  }, [noMatchingNotes]);
 
   const typeClick = (type) => {
     const title = type.toLowerCase().slice(0, type.length - 1);
@@ -134,13 +150,15 @@ const Search = ({
     return true;
   };
 
-  const filteredNotes = order.filter((uuid) => {
-    const note = notes.get(uuid);
-    return note && matchesFilters(note) && filtersExist();
-  });
+  const filteredNotes = new Set(
+    order.filter((uuid) => {
+      const note = notes.get(uuid);
+      return note && matchesFilters(note) && filtersExist();
+    })
+  );
 
   useEffect(() => {
-    setNoMatchingNotes(filteredNotes.length === 0);
+    setNoMatchingNotes(filteredNotes.size === 0);
   }, [filteredNotes]);
 
   const filtersToRender = [
@@ -157,7 +175,9 @@ const Search = ({
         {!filtersExist() || noMatchingNotes ? (
           <div className="search-section">
             {noMatchingNotes && filtersExist() && (
-              <div style={{ padding: "2rem", fontSize: "0.9rem" }}>
+              <div
+                style={{ padding: "1rem 2rem 2rem 2rem", fontSize: "0.9rem" }}
+              >
                 No matching results.
               </div>
             )}
@@ -234,6 +254,7 @@ const Search = ({
             setTooltipAnchor={setTooltipAnchor}
             openSnackFunction={openSnackFunction}
             setSelectedNotesIDs={setSelectedNotesIDs}
+            handleNoteClick={handleNoteClick}
             handleSelectNote={handleSelectNote}
             noteActions={noteActions}
             setFadingNotes={setFadingNotes}

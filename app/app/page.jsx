@@ -588,7 +588,7 @@ const page = () => {
     filters,
     setFilters,
   } = useSearch();
-  const { batchNoteCount, removeLabel, labelsRef, labelsReady } =
+  const { batchNoteCount, removeLabel, labelsRef, labelsReady, ignoreKeysRef } =
     useAppContext();
   const [current, setCurrent] = useState("Home");
   const [tooltipAnchor, setTooltipAnchor] = useState(null);
@@ -1148,12 +1148,11 @@ const page = () => {
           const encodedFilters = filteredRest.map((filter) => {
             const parts = filter.split(/=(.+)/);
 
-            let updatedFilter = '';
-            
-            if (parts[0] === "image"){
+            let updatedFilter = "";
+
+            if (parts[0] === "image") {
               updatedFilter = parts[0];
-            }
-            else {
+            } else {
               updatedFilter = parts[0] + eq + tripleEncode(parts[1]);
             }
 
@@ -1175,12 +1174,11 @@ const page = () => {
           const encodedFilters = filteredRest.map((filter) => {
             const parts = filter.split(/=(.+)/);
 
-            let updatedFilter = '';
+            let updatedFilter = "";
 
-            if (parts[0] === "image"){
+            if (parts[0] === "image") {
               updatedFilter = parts[0];
-            }
-            else {
+            } else {
               updatedFilter = parts[0] + eq + tripleEncode(parts[1]);
             }
 
@@ -1216,12 +1214,23 @@ const page = () => {
       setCurrent("Search");
     }
 
+    if (hash.toLocaleLowerCase().startsWith("note")) {
+      const parts = hash.split("/");
+      const noteUUID = parts[1];
+      const note = notesStateRef.current.notes.get(noteUUID);
+      setSelectedNote(note);
+      if (note !== undefined) {
+        setIsModalOpen(true);
+      }
+    } else {
+      setIsModalOpen(false);
+    }
+
     if (skipHashChangeRef.current) {
       skipHashChangeRef.current = false;
       return;
     }
 
-    console.log("DIDN'T SKIPP");
     const decodedHash = doubleDecode(hash.replace("search/", ""));
     if (hash.startsWith("search/")) {
       let dataObj = {};
@@ -1508,6 +1517,9 @@ const page = () => {
       }
 
       if (event.ctrlKey && event.code === "KeyA") {
+        if (ignoreKeysRef.current) {
+          return;
+        }
         event.preventDefault();
         const selectedNotes = [];
         notesStateRef.current.order.forEach((uuid, index) => {
@@ -1529,6 +1541,9 @@ const page = () => {
       }
 
       if (event.code === "KeyE") {
+        if (ignoreKeysRef.current) {
+          return;
+        }
         const hash = window.location.hash.replace("#", "");
         if (selectedNotesRef.current.size > 0 && !hash.startsWith("trash")) {
           batchArchiveRef.current();
@@ -1536,6 +1551,9 @@ const page = () => {
       }
 
       if (event.key.toLowerCase() === "delete") {
+        if (ignoreKeysRef.current) {
+          return;
+        }
         const hash = window.location.hash.replace("#", "");
         if (selectedNotesRef.current.size > 0 && !hash.startsWith("trash")) {
           batchDeleteRef.current();
@@ -1543,6 +1561,9 @@ const page = () => {
       }
 
       if (event.code === "KeyF") {
+        if (ignoreKeysRef.current) {
+          return;
+        }
         const hash = window.location.hash.replace("#", "");
         if (selectedNotesRef.current.size > 0 && !hash.startsWith("trash")) {
           batchPinRef.current();
@@ -1550,6 +1571,9 @@ const page = () => {
       }
 
       if (event.ctrlKey && event.code === "KeyZ") {
+        if (ignoreKeysRef.current) {
+          return;
+        }
         undoFunction.current();
         setSnackbarState((prev) => ({
           ...prev,
@@ -1566,6 +1590,9 @@ const page = () => {
       }
 
       if (event.ctrlKey && event.shiftKey && event.code === "KeyZ") {
+        if (ignoreKeysRef.current) {
+          return;
+        }
         redoFunction.current();
         setSnackbarState((prev) => ({
           ...prev,
@@ -1747,6 +1774,7 @@ const page = () => {
         setNote={setSelectedNote}
         dispatchNotes={dispatchNotes}
         initialStyle={modalStyle}
+        setInitialStyle={setModalStyle}
         onClose={() => setSelectedNote(null)}
         setTooltipAnchor={setTooltipAnchor}
         closeRef={closeRef}

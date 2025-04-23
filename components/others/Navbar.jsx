@@ -17,6 +17,7 @@ import { useSearch } from "@/context/SearchContext";
 import { debounce } from "lodash";
 import { useAppContext } from "@/context/AppContext";
 import Tooltip from "../Tools/Tooltip";
+import AccountSettings from "./AccountSettings";
 
 const Navbar = ({ user }) => {
   const {
@@ -25,12 +26,13 @@ const Navbar = ({ user }) => {
     skipHashChangeRef,
     filters: searchFilters,
   } = useSearch();
-  const { labelsRef, labelsReady } = useAppContext();
+  const { labelsRef, labelsReady, ignoreKeysRef } = useAppContext();
   const [isLoading, setIsLoading] = useState(0);
   const [UpToDatetrigger, setUpToDateTrigger] = useState(true);
   const [tooltipAnchor, setTooltipAnchor] = useState(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(true);
   const [isClient, setIsClient] = useState(false);
   // const isDarkMode = document.documentElement.classList.contains("dark-mode");
   const [menuPosition, setMenuPosition] = useState({
@@ -43,9 +45,53 @@ const Navbar = ({ user }) => {
   const firstRun2 = useRef(true);
   const imageRef = useRef(null);
   const menuRef = useRef(null);
+  const settingsRef = useRef(null);
 
   useEffect(() => {
     setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    ignoreKeysRef.current = settingsOpen;
+    const nav = document.querySelector("nav");
+    const scrollbarWidth =
+      window.innerWidth - document.documentElement.clientWidth;
+
+    console.log(scrollbarWidth);
+
+    if (settingsOpen) {
+      document.body.style.overflow = "hidden";
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+      if (nav) nav.style.paddingRight = `${scrollbarWidth}px`;
+    } else {
+      document.body.style.overflow = "auto";
+      document.body.style.paddingRight = "";
+      if (nav) nav.style.paddingRight = "0px";
+
+      if (settingsRef.current) {
+        settingsRef.current.style.marginLeft = `${scrollbarWidth / 2}px`;
+      }
+    }
+
+    return () => {
+      document.body.style.overflow = "auto";
+      document.body.style.paddingRight = "";
+      if (nav) nav.style.paddingRight = "0px";
+    };
+  }, [settingsOpen]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        setSettingsOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, []);
 
   useEffect(() => {
@@ -200,6 +246,8 @@ const Navbar = ({ user }) => {
             const labelUUID = searchFilters.label;
             const label = labelsRef.current.get(labelUUID).label;
             setInputPlaceHolder("Search within " + label);
+          } else if (type === "image") {
+            setInputPlaceHolder(`Search within "Images"`);
           }
         });
       } else {
@@ -296,13 +344,6 @@ const Navbar = ({ user }) => {
   return (
     <>
       {tooltipAnchor?.display && <Tooltip anchorEl={tooltipAnchor} />}
-      <ProfileMenu
-        user={user}
-        ref={menuRef}
-        menuPosition={menuPosition}
-        isOpen={isMenuOpen}
-        setIsOpen={setIsMenuOpen}
-      />
       {pathName !== "/" && (
         <nav
           style={{
@@ -433,6 +474,24 @@ const Navbar = ({ user }) => {
           </div>
         </nav>
       )}
+      <ProfileMenu
+        user={user}
+        ref={menuRef}
+        menuPosition={menuPosition}
+        isOpen={isMenuOpen}
+        setIsOpen={setIsMenuOpen}
+        setSettingsOpen={setSettingsOpen}
+      />
+
+      <AnimatePresence>
+        {settingsOpen && (
+          <AccountSettings
+            settingsRef={settingsRef}
+            setIsOpen={setSettingsOpen}
+            user={user}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 };

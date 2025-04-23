@@ -34,7 +34,7 @@ const DeleteModal = ({ setIsOpen, handleDelete, title, message }) => {
         },
       }}
       onClick={(e) => {
-        if (e.target.classList.contains("modal-container")) setIsOpen(false);
+        if (e.target === containerRef.current) setIsOpen(false);
       }}
     >
       <motion.div
@@ -43,7 +43,7 @@ const DeleteModal = ({ setIsOpen, handleDelete, title, message }) => {
           transform:
             "translate(-50%, -40%) scale(0.97) rotateX(00deg) rotateY(15deg)",
           opacity: 0,
-          filter: "blur(5px)"
+          filter: "blur(5px)",
         }}
         animate={{
           transform:

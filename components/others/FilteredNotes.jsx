@@ -19,6 +19,7 @@ const NoteWrapper = memo(
     index,
     setTooltipAnchor,
     openSnackFunction,
+    handleNoteClick,
     handleSelectNote,
     calculateLayout,
     fadingNotes,
@@ -29,13 +30,13 @@ const NoteWrapper = memo(
       setTimeout(() => {
         setMounted(true);
       }, 100);
-      
     }, []);
 
     return (
       <motion.div
         ref={ref}
         className={`grid-item ${fadingNotes.has(note.uuid) ? "fade-out" : ""}`}
+        onClick={(e) => handleNoteClick(e, note, index)}
         style={{
           width: `${COLUMN_WIDTH}px`,
           marginBottom: `${GUTTER}px`,
@@ -53,6 +54,7 @@ const NoteWrapper = memo(
           dispatchNotes={dispatchNotes}
           setTooltipAnchor={setTooltipAnchor}
           openSnackFunction={openSnackFunction}
+          handleNoteClick={handleNoteClick}
           handleSelectNote={handleSelectNote}
           index={index}
           calculateLayout={calculateLayout}
@@ -75,6 +77,7 @@ const Home = memo(
     setTooltipAnchor,
     openSnackFunction,
     setSelectedNotesIDs,
+    handleNoteClick,
     handleSelectNote,
     noteActions,
     setFadingNotes,
@@ -201,13 +204,44 @@ const Home = memo(
         containerRef.current.classList.remove("layout-ready");
       }
     }, [layoutReady]);
+    const filtersExist = () => {
+      return (
+        Object.values(filters).some((filter) => filter !== null) ||
+        searchTerm.trim() !== ""
+      );
+    };
 
-    
+    const matchesFilters = (note) => {
+      if (filters.color && note.color !== filters.color) {
+        return false;
+      }
+
+      if (
+        searchTerm &&
+        !(
+          note.title.toLowerCase().includes(searchTerm.toLowerCase().trim()) ||
+          note.content.toLowerCase().includes(searchTerm.toLowerCase().trim())
+        )
+      ) {
+        return false;
+      }
+
+      if (filters.label && !note.labels.includes(filters.label)) {
+        return false;
+      }
+
+      if (filters.image && note.images.length === 0) {
+        return false;
+      }
+
+      return true;
+    };
 
     return (
       <>
         <div ref={containerRef} className="section-container">
-          {filteredNotes.map((uuid, index) => {
+          {order.map((uuid, index) => {
+            if (!filteredNotes.has(uuid)) return;
             const note = notes.get(uuid);
             return (
               <NoteWrapper
@@ -219,6 +253,7 @@ const Home = memo(
                 setSelectedNotesIDs={setSelectedNotesIDs}
                 setTooltipAnchor={setTooltipAnchor}
                 openSnackFunction={openSnackFunction}
+                handleNoteClick={handleNoteClick}
                 handleSelectNote={handleSelectNote}
                 calculateLayout={calculateLayout}
                 fadingNotes={fadingNotes}

@@ -208,7 +208,7 @@ const NoteTools = ({
       function: handleTrashNote,
     },
     {
-      title: "Add label",
+      title: note.labels.length > 0 ? "Change labels" : "Add label",
       function: handleLabels,
     },
     {

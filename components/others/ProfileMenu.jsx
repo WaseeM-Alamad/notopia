@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { Edit } from "../icons/EditIcon";
 
 const ProfileMenu = forwardRef(
-  ({ user, isOpen, setIsOpen, menuPosition }, ref) => {
+  ({ user, isOpen, setIsOpen, menuPosition, setSettingsOpen }, ref) => {
     const [isClient, setIsClient] = useState(false);
     const isDarkModeRef = useRef(false);
 
@@ -62,6 +62,10 @@ const ProfileMenu = forwardRef(
               <div style={{}} className="menu-upper-section">
                 <div style={{ width: "100%", display: "flex" }}>
                   <div
+                    onClick={() => {
+                      setSettingsOpen(true);
+                      setIsOpen(false);
+                    }}
                     className="profile-image-wrapper"
                     style={{
                       position: "relative",
@@ -81,7 +85,13 @@ const ProfileMenu = forwardRef(
                 </div>
               </div>
               <div className="menu-buttons">
-                <div className="menu-btn">
+                <div
+                  onClick={() => {
+                    setSettingsOpen(true);
+                    setIsOpen(false);
+                  }}
+                  className="menu-btn"
+                >
                   <div className="profile-icon" />
                   Account Settings
                 </div>
