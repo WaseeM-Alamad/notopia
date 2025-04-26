@@ -14,7 +14,6 @@ import { useAppContext } from "@/context/AppContext";
 import ManageLabelsMenu from "./ManageLabelsMenu";
 
 const NoteTools = ({
-  images,
   index,
   note = {},
   dispatchNotes,
@@ -221,7 +220,7 @@ const NoteTools = ({
     <div
       onClick={containerClick}
       style={{
-        opacity: images ? "0.8" : "1",
+        opacity: note.images.length > 0 ? "0.8" : "1",
         transition: "all 0.3s ease",
       }}
     >
@@ -229,7 +228,14 @@ const NoteTools = ({
         style={{
           opacity: (colorMenuOpen || moreMenuOpen) && "1",
         }}
-        className={`note-bottom ${images && note.color}`}
+        className={`note-bottom ${
+          note.images.length > 0 &&
+          note.labels.length === 0 &&
+          !note.title.trim() &&
+          !note.content.trim()
+            ? note.color
+            : ""
+        }`}
       >
         {/* <p className="date">{FormattedDate}</p> */}
         <div className="note-bottom-icons">

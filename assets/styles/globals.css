@@ -14,12 +14,8 @@ body {
 }
 
 button:disabled {
+  pointer-events: none;
   opacity: 0.35 !important;
-}
-
-button:disabled:hover {
-  background-color: transparent !important;
-  cursor: not-allowed;
 }
 
 input {
@@ -2113,6 +2109,8 @@ img {
   width: 100%;
   min-height: 30px;
   font-size: 0.85rem;
+  background-color: inherit;
+  color: inherit;
   outline: solid 1px #dddddd;
   border-radius: 0.2rem;
   border: none;
@@ -2138,9 +2136,23 @@ img {
   outline: none;
   border: none;
   background-color: #18181b;
-  color: white;
+  color: #ffffff;
   margin: 0.3rem 0;
   border-radius: 0.5rem;
+}
+
+.dark-mode .acc-btn {
+  background-color: #e2e2e2;
+  color: #000000;
+}
+
+.acc-btn:disabled {
+  pointer-events: none;
+  opacity: 0.5 !important;
+}
+
+.acc-btn:hover {
+  opacity: 1;
 }
 
 .acc-close-icon {
@@ -2176,6 +2188,7 @@ img {
 
 .dark-mode .acc-edit {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='20px' viewBox='0 -960 960 960' width='20px' fill='%23ffffff'%3E%3Cpath d='M216-216h51l375-375-51-51-375 375v51Zm-72 72v-153l498-498q11-11 23.84-16 12.83-5 27-5 14.16 0 27.16 5t24 16l51 51q11 11 16 24t5 26.54q0 14.45-5.02 27.54T795-642L297-144H144Zm600-549-51-51 51 51Zm-127.95 76.95L591-642l51 51-25.95-25.05Z'/%3E%3C/svg%3E");
+  opacity: 0.7;
 }
 
 .acc-edit:hover {

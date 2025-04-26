@@ -32,7 +32,7 @@ const Navbar = ({ user }) => {
   const [tooltipAnchor, setTooltipAnchor] = useState(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(true);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [isClient, setIsClient] = useState(false);
   // const isDarkMode = document.documentElement.classList.contains("dark-mode");
   const [menuPosition, setMenuPosition] = useState({
@@ -219,6 +219,10 @@ const Navbar = ({ user }) => {
     const handler = () => {
       const hash = window.location.hash.replace("#", "");
 
+      if (hash.toLowerCase().startsWith("note/")) {
+        return;
+      }
+
       const decodedHash = doubleDecode(hash.replace("search/", ""));
 
       if (hash.startsWith("search/")) {
@@ -380,10 +384,15 @@ const Navbar = ({ user }) => {
             />
           </div>
           <div className="top-icons">
-            <Button style={{ width: "2.8rem", height: "2.8rem" }}>
+            <Button
+              className="nav-btn"
+              style={{ width: "2.8rem", height: "2.8rem" }}
+            >
               <GridIcon />
             </Button>
             <Button
+              disabled={(isLoading && UpToDatetrigger) || !UpToDatetrigger}
+              className="nav-btn"
               onClick={handleRefresh}
               style={{ width: "2.8rem", height: "2.8rem" }}
               onMouseEnter={(e) => handleMouseEnter(e, "Refresh")}
@@ -417,8 +426,8 @@ const Navbar = ({ user }) => {
                           color: document.documentElement.classList.contains(
                             "dark-mode"
                           )
-                            ? "#ADADAD"
-                            : "#7A7A7A",
+                            ? "#dfdfdf"
+                            : "#292929",
                         }}
                         size={20}
                         thickness={5}

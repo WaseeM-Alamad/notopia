@@ -352,7 +352,6 @@ const Note = memo(
             moreMenuOpen={moreMenuOpen}
             setFadingNotes={setFadingNotes}
             setMoreMenuOpen={setMoreMenuOpen}
-            images={note.images.length !== 0}
             note={note}
             dispatchNotes={dispatchNotes}
             setIsLoadingImages={setIsLoadingImages}

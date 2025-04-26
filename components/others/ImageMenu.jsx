@@ -46,7 +46,7 @@ const ImageMenu = ({ isOpen, setIsOpen, anchorEl, menuItems }) => {
         open={isOpen}
         anchorEl={anchorEl}
         style={{ zIndex: "999" }}
-        placement="bottom"
+        placement="right"
         modifiers={[
           {
             name: "offset",
@@ -66,11 +66,11 @@ const ImageMenu = ({ isOpen, setIsOpen, anchorEl, menuItems }) => {
           <div className="img-menu">
             <motion.div
               onClick={containerClick}
-              initial={{ opacity: 0, y: -5 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -2 }}
+              initial={{ opacity: 0, x: -5 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -2 }}
               transition={{
-                y: {
+                x: {
                   type: "spring",
                   stiffness: 700,
                   damping: 50,

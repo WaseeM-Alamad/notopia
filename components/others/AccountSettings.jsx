@@ -170,7 +170,9 @@ const AccountSettings = ({ settingsRef, setIsOpen, user }) => {
           </div>
 
           <div>
-            <button className="acc-btn">Save Changes</button>
+            <button disabled className="acc-btn">
+              Save Changes
+            </button>
           </div>
         </motion.div>
       </motion.div>

@@ -606,8 +606,10 @@ const page = () => {
     message: "",
   });
   const [unloadWarn, setUnloadWarn] = useState(false);
-  const undoFunction = useRef(() => {});
-  const redoFunction = useRef(() => {});
+  const undoFunction = useRef(null);
+  const redoFunction = useRef(null);
+  const allowUndoRef = useRef(true);
+  const allowRedoRef = useRef(null);
   const onCloseFunction = useRef(() => {});
   const firstRun = useRef(true);
   const closeRef = useRef(null);
@@ -634,6 +636,8 @@ const page = () => {
           snackOpen: true,
         });
         if (data.snackOnUndo !== undefined) {
+          allowUndoRef.current = true;
+          allowRedoRef.current = false;
           undoFunction.current = data.snackOnUndo;
         }
         if (data.snackRedo !== undefined) {
@@ -749,7 +753,10 @@ const page = () => {
         }
       };
 
-      data.noteRef.current.addEventListener("transitionend", handler);
+      if (data.noteRef.current) {
+        data.noteRef.current.addEventListener("transitionend", handler);
+      }
+
       data.noteRef.current.offsetHeight;
       data.noteRef.current.classList.add("fade-out");
 
@@ -1207,6 +1214,10 @@ const page = () => {
     setSelectedNotesIDs([]);
     setTooltipAnchor(null);
     openSnackFunction({ close: true });
+    undoFunction.current = null;
+    allowUndoRef.current = true;
+    allowRedoRef.current = false;
+
     const hash = window.location.hash.replace("#", "");
     if (hash.trim() === "") {
       setCurrent("Home");
@@ -1570,8 +1581,12 @@ const page = () => {
         }
       }
 
-      if (event.ctrlKey && event.code === "KeyZ") {
-        if (ignoreKeysRef.current) {
+      if (event.ctrlKey && !event.shiftKey && event.code === "KeyZ") {
+        if (ignoreKeysRef.current || !allowUndoRef.current) {
+          return;
+        }
+
+        if (!undoFunction.current) {
           return;
         }
         undoFunction.current();
@@ -1587,10 +1602,12 @@ const page = () => {
             snackOpen: true,
           });
         }, 80);
+        allowRedoRef.current = true;
+        allowUndoRef.current = false;
       }
 
       if (event.ctrlKey && event.shiftKey && event.code === "KeyZ") {
-        if (ignoreKeysRef.current) {
+        if (ignoreKeysRef.current || !allowRedoRef.current) {
           return;
         }
         redoFunction.current();
@@ -1606,6 +1623,8 @@ const page = () => {
             snackOpen: true,
           });
         }, 80);
+        allowRedoRef.current = false;
+        allowUndoRef.current = true;
       }
     };
 
