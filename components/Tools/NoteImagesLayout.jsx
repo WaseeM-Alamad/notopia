@@ -154,6 +154,7 @@ const NoteImagesLayout = ({
                 key={item.src}
               >
                 <img
+                  loading="lazy"
                   src={item.src}
                   draggable={false}
                   alt={`Grid item ${item.src}`}

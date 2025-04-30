@@ -130,11 +130,12 @@ const NoteTools = ({
       [note.uuid]
     );
     await UploadImageAction({ file: file, id: newUUID }, note.uuid);
-    // dispatchNotes({
-    //   type: "UPDATE_IMAGES",
-    //   note: note,
-    //   newImages: updatedImages,
-    // });
+    dispatchNotes({
+      type: "UPDATE_IMAGES",
+      note: note,
+      newImages: updatedImages,
+    });
+    console.log(updatedImages)
     setIsLoadingImages((prev) => prev.filter((id) => id !== newUUID));
     window.dispatchEvent(new Event("loadingEnd"));
   };

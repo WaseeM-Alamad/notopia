@@ -38,6 +38,7 @@ const TopMenuHome = ({
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedBG, setSelectedBG] = useState(null);
   const [pinNotes, setPinNotes] = useState(false);
+  const [archiveNotes, setArchiveNotes] = useState(false);
   const [selectedColor, setSelectedColor] = useState();
   const topMenuRef = useRef(null);
 
@@ -102,21 +103,23 @@ const TopMenuHome = ({
       let sharedColor = new Set();
       let sharedBG = new Set();
       let pinned = null;
+      let archived = null;
       selectedNotesIDs.forEach((noteData) => {
         const note = notes.get(noteData.uuid);
         const color = note.color;
         const bg = note.background;
+
         if (pinned !== false) {
-          if (note.isPinned) {
-            pinned = true;
-          } else {
-            pinned = false;
-          }
+          pinned = note.isPinned ? true : false;
+        }
+        if (archived !== false) {
+          archived = note.isArchived ? true : false;
         }
         sharedColor.add(color);
         sharedBG.add(bg);
       });
       setPinNotes(pinned);
+      setArchiveNotes(!archived);
       if (sharedColor.size === 1) {
         setSelectedColor([...sharedColor][0]);
       } else {
@@ -537,25 +540,44 @@ const TopMenuHome = ({
               {!inTrash ? (
                 <>
                   <Button
+                    onMouseEnter={(e) =>
+                      handleMouseEnter(e, pinNotes ? "Unpin" : "Pin")
+                    }
+                    onMouseLeave={handleMouseLeave}
                     onClick={handlePin}
                     className={pinNotes ? "top-pinned-icon" : "top-pin-icon"}
                     style={{ width: "45px", height: "45px" }}
                   />
                   <Button
+                    onMouseEnter={(e) => handleMouseEnter(e, "Remind me")}
+                    onMouseLeave={handleMouseLeave}
                     className="top-reminder-icon"
                     style={{ width: "45px", height: "45px" }}
                   />
                   <Button
+                    onMouseEnter={(e) =>
+                      handleMouseEnter(
+                        e,
+                        archiveNotes ? "Archive" : "Unarchive"
+                      )
+                    }
+                    onMouseLeave={handleMouseLeave}
                     onClick={handleArchive}
                     className="top-archive-icon"
                     style={{ width: "45px", height: "45px" }}
                   />
                   <Button
+                    onMouseEnter={(e) =>
+                      handleMouseEnter(e, "Background options")
+                    }
+                    onMouseLeave={handleMouseLeave}
                     onClick={handleOpenColor}
                     className="top-color-icon"
                     style={{ width: "45px", height: "45px" }}
                   />
                   <Button
+                    onMouseEnter={(e) => handleMouseEnter(e, "More")}
+                    onMouseLeave={handleMouseLeave}
                     onClick={handleOpenMenu}
                     className="top-more-icon"
                     style={{ width: "45px", height: "45px" }}

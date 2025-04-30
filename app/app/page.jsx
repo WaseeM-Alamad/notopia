@@ -1832,6 +1832,7 @@ const page = () => {
       <Page
         dispatchNotes={dispatchNotes}
         notes={notesState.notes}
+        notesStateRef={notesStateRef}
         order={notesState.order}
         setFilters={setFilters}
         filters={filters}

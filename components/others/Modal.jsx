@@ -196,7 +196,7 @@ const Modal = ({
         if (e.propertyName === "top") {
           modalRef.current.removeEventListener("transitionend", handler);
           modalRef.current.style.transition =
-            "all .25s ease-in-out, left 0s, top .13s, opacity 0.13s, background-color 0.25s ease-in-out";
+            "top .13s, opacity 0.13s, background-color 0.25s ease-in-out";
         }
       };
 
@@ -792,6 +792,7 @@ const Modal = ({
           modalLabels={modalLabels}
           setModalLabels={setModalLabels}
           dispatchNotes={dispatchNotes}
+          isOpen={isOpen}
           setIsOpen={setIsOpen}
           setModalStyle={setModalStyle}
           imagesChangedRef={imagesChangedRef}
