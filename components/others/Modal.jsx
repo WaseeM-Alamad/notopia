@@ -16,7 +16,8 @@ import Tools from "./Tools";
 import NoteImagesLayout from "../Tools/NoteImagesLayout";
 import { useSession } from "next-auth/react";
 import { useAppContext } from "@/context/AppContext";
-import ModalMenu from "./ModalMenu";
+import { v4 as uuid } from "uuid";
+import ListItem from "./ListItem";
 
 const Modal = ({
   note,
@@ -31,15 +32,18 @@ const Modal = ({
   setModalStyle,
   current,
 }) => {
-  const { handleLabelNoteCount, labelsRef } = useAppContext();
+  const { handleLabelNoteCount, labelsRef, ignoreKeysRef } = useAppContext();
   const [isMounted, setIsMounted] = useState(false);
-  const [selectedColor, setSelectedColor] = useState(null);
-  const [selectedBG, setSelectedBG] = useState(null);
-  const [modalIsPinned, setModalIsPinned] = useState(false);
-  const [modalLabels, setModalLabels] = useState([]);
-  const [localImages, setLocalImages] = useState([]);
+  const [localNote, setLocalNote] = useState(null);
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
+  const renderCBdivider =
+    localNote?.checkboxes.some((cb) => cb.isCompleted) &&
+    localNote?.checkboxes.some((cb) => !cb.isCompleted);
+  const completedItemsCount = localNote?.checkboxes.reduce((acc, cb) => {
+    return cb.isCompleted ? acc + 1 : acc;
+  }, 0);
+
   const formattedEditedDate = isOpen
     ? getNoteFormattedDate(note?.updatedAt)
     : null;
@@ -52,6 +56,8 @@ const Modal = ({
   const userID = session?.user?.id;
   const titleTextRef = useRef(null);
   const contentTextRef = useRef(null);
+  const addListItemRef = useRef(null);
+  const lastListItemRef = useRef(null);
   const titleRef = useRef(null);
   const contentRef = useRef(null);
   const modalRef = useRef(null);
@@ -94,11 +100,7 @@ const Modal = ({
   };
 
   const reset = () => {
-    setSelectedColor(null);
-    setSelectedBG(null);
-    setModalIsPinned(false);
-    setLocalImages([]);
-    setModalLabels([]);
+    setLocalNote(null);
     setRedoStack([]);
     setUndoStack([]);
   };
@@ -110,7 +112,14 @@ const Modal = ({
 
     reset();
 
-    if (modalIsPinned !== note?.isPinned) {
+    const { ref: _, ...cleanLocalNote } = localNote;
+    const { ref: __, ...cleanNote } = note;
+
+    if (JSON.stringify(cleanLocalNote) !== JSON.stringify(cleanNote)) {
+      dispatchNotes({ type: "SET_NOTE", note: localNote });
+    }
+
+    if (localNote?.isPinned !== note?.isPinned) {
       setTimeout(() => {
         dispatchNotes({
           type: "PIN_NOTE",
@@ -163,14 +172,10 @@ const Modal = ({
 
     if (isOpen) {
       window.location.hash = `NOTE/${note?.uuid}`;
-
+      ignoreKeysRef.current = true;
       archiveRef.current = false;
       trashRef.current = false;
-      setLocalImages(note?.images);
-      setSelectedBG(note?.background || "DefaultBG");
-      setSelectedColor(note?.color);
-      setModalIsPinned(note?.isPinned);
-      setModalLabels(note?.labels);
+      setLocalNote(note);
       titleTextRef.current = note?.title;
       contentTextRef.current = note?.content;
 
@@ -207,6 +212,7 @@ const Modal = ({
       return () =>
         modalRef.current.removeEventListener("transitionend", handler);
     } else {
+      ignoreKeysRef.current = false;
       if (!prevHash.current) {
         window.location.hash = current.toLowerCase();
       } else {
@@ -319,7 +325,7 @@ const Modal = ({
       snackMessage: `${
         note.isArchived
           ? "Note unarchived"
-          : modalIsPinned
+          : localNote?.isPinned
           ? "Note unpinned and archived"
           : "Note Archived"
       }`,
@@ -327,7 +333,12 @@ const Modal = ({
     });
     const first = initialStyle.index === 0;
     window.dispatchEvent(new Event("loadingStart"));
-    await NoteUpdateAction("isArchived", !note.isArchived, [note.uuid], first);
+    await NoteUpdateAction({
+      type: "isArchived",
+      value: !note.isArchived,
+      noteUUIDs: [note.uuid],
+      first: first,
+    });
     window.dispatchEvent(new Event("loadingEnd"));
 
     archiveRef.current = false;
@@ -349,14 +360,18 @@ const Modal = ({
 
     const onClose = async () => {
       window.dispatchEvent(new Event("loadingStart"));
-      await NoteUpdateAction("isTrash", true, [note.uuid]);
+      await NoteUpdateAction({
+        type: "isTrash",
+        value: true,
+        noteUUIDs: [note.uuid],
+      });
       window.dispatchEvent(new Event("loadingEnd"));
     };
 
     if (!note.isTrash) {
       openSnackFunction({
         snackMessage: `${
-          modalIsPinned ? "Note unpinned and trashed" : "Note trashed"
+          localNote?.isPinned ? "Note unpinned and trashed" : "Note trashed"
         }`,
         snackOnUndo: undoTrash,
         snackOnClose: onClose,
@@ -367,10 +382,14 @@ const Modal = ({
   };
 
   const handlePinClick = async () => {
-    setModalIsPinned((prev) => !prev);
+    setLocalNote((prev) => ({ ...prev, isPinned: !prev.isPinned }));
     window.dispatchEvent(new Event("loadingStart"));
     try {
-      await NoteUpdateAction("isPinned", !modalIsPinned, [note.uuid]);
+      await NoteUpdateAction({
+        type: "isPinned",
+        value: !localNote?.isPinned,
+        noteUUIDs: [note.uuid],
+      });
     } finally {
       window.dispatchEvent(new Event("loadingEnd"));
     }
@@ -381,26 +400,45 @@ const Modal = ({
       const imageObject = { url: imageURL, uuid: imageUUID };
       let imageIndex;
 
-      setLocalImages((prev) => {
-        const filteredImages = prev.reduce((acc, image, index) => {
+      // setLocalImages((prev) => {
+      //   const filteredImages = prev.reduce((acc, image, index) => {
+      //     if (image.uuid === imageUUID) {
+      //       imageIndex = index;
+      //       return acc;
+      //     }
+      //     acc.push(image);
+      //     return acc;
+      //   }, []);
+      //   return filteredImages;
+      // });
+
+      setLocalNote((prev) => ({
+        ...prev,
+        images: prev.images.reduce((acc, image, index) => {
           if (image.uuid === imageUUID) {
             imageIndex = index;
             return acc;
           }
           acc.push(image);
           return acc;
-        }, []);
-        return filteredImages;
-      });
+        }, []),
+      }));
 
       imagesChangedRef.current = true;
 
       const undo = async () => {
-        setLocalImages((prev) => {
-          const updatedImages = [...prev];
+        // setLocalImages((prev) => {
+        //   const updatedImages = [...prev];
+        //   updatedImages.splice(imageIndex, 0, imageObject);
+        //   return updatedImages;
+        // });
+
+        setLocalNote((prev) => {
+          const updatedImages = [...prev.images];
           updatedImages.splice(imageIndex, 0, imageObject);
-          return updatedImages;
+          return { ...prev, images: updatedImages };
         });
+
         imagesChangedRef.current = false;
       };
 
@@ -437,6 +475,21 @@ const Modal = ({
       window.dispatchEvent(new Event("loadingEnd"));
     }, 600),
     [note?.uuid] // Dependencies array, make sure it's updated when `note.uuid` changes
+  );
+
+  const updateListItemContent = useCallback(
+    debounce(async (text, cbUUID) => {
+      window.dispatchEvent(new Event("loadingStart"));
+      await NoteUpdateAction({
+        type: "checkboxes",
+        operation: "UPDATE_CONTENT",
+        value: text,
+        checkboxUUID: cbUUID,
+        noteUUIDs: [note.uuid],
+      });
+      window.dispatchEvent(new Event("loadingEnd"));
+    }, 600),
+    [note?.uuid]
   );
 
   const titleDebouncedSetUndo = useCallback(
@@ -541,6 +594,57 @@ const Modal = ({
     [note?.content, note?.title, undoStack]
   );
 
+  function placeCursorAtEnd(el) {
+    if (!el) return;
+    const range = document.createRange();
+    const sel = window.getSelection();
+    range.selectNodeContents(el);
+    range.collapse(false); // false = move to end
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+
+  const addListItem = async (text) => {
+    const newUUID = uuid();
+    const checkbox = {
+      uuid: newUUID,
+      content: text,
+      isCompleted: false,
+      parent: null,
+      children: [],
+    };
+
+    setLocalNote((prev) => ({
+      ...prev,
+      checkboxes: [...prev.checkboxes, checkbox],
+    }));
+
+    requestAnimationFrame(() => {
+      lastListItemRef.current.innerText = text;
+      lastListItemRef.current.focus();
+      placeCursorAtEnd(lastListItemRef.current);
+    });
+
+    window.dispatchEvent(new Event("loadingStart"));
+    await NoteUpdateAction({
+      type: "checkboxes",
+      operation: "ADD",
+      value: checkbox,
+      noteUUIDs: [note.uuid],
+    });
+    window.dispatchEvent(new Event("loadingEnd"));
+  };
+
+  const handleNewListItemInput = (e) => {
+    if (e.target.innerText.trim() === "") {
+      e.target.innerText = "";
+      return;
+    }
+    const text = e.target.innerText.trim();
+    addListItem(text);
+    e.target.innerText = "";
+  };
+
   const checkForChanges = () => {
     if (
       titleTextRef.current !== note?.title ||
@@ -558,16 +662,16 @@ const Modal = ({
       dispatchNotes({
         type: "UPDATE_IMAGES",
         note: note,
-        newImages: localImages,
+        newImages: localNote?.images,
       });
     }
     const labelsChange =
-      JSON.stringify(modalLabels) === JSON.stringify(note?.labels);
+      JSON.stringify(localNote?.labels) === JSON.stringify(note?.labels);
     if (!labelsChange) {
       dispatchNotes({
         type: "UPDATE_NOTE_LABELS",
         note: note,
-        newLabels: modalLabels,
+        newLabels: localNote?.labels,
       });
     }
   };
@@ -592,10 +696,10 @@ const Modal = ({
   };
 
   const removeLabel = async (labelUUID) => {
-    const newLabels = modalLabels.filter(
+    const newLabels = localNote?.labels.filter(
       (noteLabelUUID) => noteLabelUUID !== labelUUID
     );
-    setModalLabels(newLabels);
+    setLocalNote((prev) => ({ ...prev, labels: newLabels }));
     handleLabelNoteCount(labelUUID, "decrement");
     window.dispatchEvent(new Event("loadingStart"));
     await removeLabelAction({
@@ -604,6 +708,44 @@ const Modal = ({
     });
     window.dispatchEvent(new Event("loadingEnd"));
   };
+
+  const handleExpand = async () => {
+    const val = !localNote?.expandCompleted;
+    setLocalNote((prev) => ({
+      ...prev,
+      expandCompleted: val,
+    }));
+
+    window.dispatchEvent(new Event("loadingStart"));
+    await NoteUpdateAction({
+      type: "expandCompleted",
+      value: val,
+      noteUUIDs: [note.uuid],
+    });
+    window.dispatchEvent(new Event("loadingEnd"));
+  };
+
+  const handleCheckboxClick = useCallback(
+    async (e, checkboxUUID, value) => {
+      e.stopPropagation();
+      setLocalNote((prev) => ({
+        ...prev,
+        checkboxes: prev.checkboxes.map((cb) => {
+          return cb.uuid === checkboxUUID ? { ...cb, isCompleted: value } : cb;
+        }),
+      }));
+      window.dispatchEvent(new Event("loadingStart"));
+      await NoteUpdateAction({
+        type: "checkboxes",
+        operation: "MANAGE_COMPLETED",
+        value: value,
+        checkboxUUID: checkboxUUID,
+        noteUUIDs: [note.uuid],
+      });
+      window.dispatchEvent(new Event("loadingEnd"));
+    },
+    [note?.uuid]
+  );
 
   useEffect(() => {
     if (!isOpen) return;
@@ -624,9 +766,11 @@ const Modal = ({
         ref={modalRef}
         className={[
           "modall",
-          selectedColor,
+          localNote?.color,
           isOpen && "modal-shadow",
-          selectedColor === "Default" ? "default-border" : "transparent-border",
+          localNote?.color === "Default"
+            ? "default-border"
+            : "transparent-border",
         ]
           .filter(Boolean)
           .join(" ")}
@@ -634,18 +778,20 @@ const Modal = ({
       >
         <div
           style={{ overflowY: !isOpen && "hidden" }}
-          className={`modal-inputs-container ${"n-bg-" + selectedBG}`}
+          className={`modal-inputs-container ${
+            "n-bg-" + localNote?.background
+          }`}
         >
-          {localImages.length === 0 && (
+          {localNote?.images.length === 0 && (
             <div className={isOpen ? `modal-corner` : `corner`} />
           )}
           <div style={{ opacity: !isOpen && "0" }} className="modal-pin">
             <Button onClick={handlePinClick} disabled={!isOpen}>
               <PinIcon
-                isPinned={modalIsPinned}
+                isPinned={localNote?.isPinned}
                 opacity={0.8}
-                rotation={modalIsPinned ? "-45deg" : "-5deg"}
-                images={localImages.length !== 0}
+                rotation={localNote?.isPinned ? "-45deg" : "-5deg"}
+                images={localNote?.images.length !== 0}
               />
             </Button>
           </div>
@@ -657,7 +803,7 @@ const Modal = ({
             }}
           >
             <NoteImagesLayout
-              images={localImages}
+              images={localNote?.images}
               // isLoadingImages={isLoadingImages}
               deleteSource="note"
               noteImageDelete={noteImageDelete}
@@ -666,9 +812,11 @@ const Modal = ({
             {/* {isLoading && <div className="linear-loader" />} */}
           </div>
           {!isOpen &&
-            note?.images.length === 0 &&
+            localNote?.images.length === 0 &&
             !titleTextRef.current?.trim() &&
-            !contentTextRef.current?.trim() && (
+            !contentTextRef.current?.trim() &&
+            (localNote?.checkboxes.length === 0 ||
+              !localNote?.showCheckboxes) && (
               <div className="empty-note" aria-label="Empty note" />
             )}
           <div
@@ -719,12 +867,108 @@ const Modal = ({
             spellCheck="false"
           />
 
-          {modalLabels.length > 0 && (
+          {localNote?.checkboxes?.length > 0 && localNote?.showCheckboxes && (
+            <div
+              style={{
+                paddingBottom: "1.2rem",
+              }}
+            >
+              {localNote?.checkboxes.map((checkbox, index) => {
+                if (checkbox.isCompleted) return null;
+                return (
+                  <ListItem
+                    key={checkbox.uuid}
+                    handleCheckboxClick={handleCheckboxClick}
+                    updateListItemContent={updateListItemContent}
+                    checkbox={checkbox}
+                    lastListItemRef={lastListItemRef}
+                    modalOpen={isOpen}
+                    setLocalNote={setLocalNote}
+                    index={index}
+                  />
+                );
+              })}
+              <div style={{ position: "relative" }}>
+                <div className="add-item-icon" />
+                <div
+                  contentEditable
+                  aria-multiline="true"
+                  onInput={handleNewListItemInput}
+                  suppressContentEditableWarning
+                  onPaste={handlePaste}
+                  className="add-list-item"
+                  aria-label="List item"
+                />
+              </div>
+              <div style={{ display: "flex", justifyContent: "center" }}>
+                {renderCBdivider && (
+                  <div
+                    className="checkboxes-divider"
+                    style={{ width: "90%" }}
+                  />
+                )}
+              </div>
+              {completedItemsCount > 0 && (
+                <div
+                  onClick={handleExpand}
+                  className="completed-items"
+                  aria-label={`${completedItemsCount} Completed items`}
+                >
+                  <div
+                    className={`completed-collapsed ${
+                      localNote?.expandCompleted ? "completed-expanded" : ""
+                    }`}
+                  />
+                </div>
+              )}
+              {localNote?.expandCompleted &&
+                localNote?.checkboxes.map((checkbox) => {
+                  if (!checkbox.isCompleted) return null;
+                  return (
+                    <div
+                      key={checkbox.uuid}
+                      className="checkbox-wrapper note-checkbox-wrapper"
+                      style={{
+                        wordBreak: "break-all",
+                        paddingLeft: "1.7rem",
+                      }}
+                    >
+                      <div
+                        onClick={(e) =>
+                          handleCheckboxClick(
+                            e,
+                            checkbox.uuid,
+                            !checkbox.isCompleted
+                          )
+                        }
+                        className={`note-checkbox checkbox-unchecked ${
+                          checkbox.isCompleted ? "checkbox-checked" : ""
+                        }`}
+                      />
+                      <div
+                        style={{
+                          width: "100%",
+                          paddingLeft: "0.5rem",
+                          fontSize: "1rem",
+                        }}
+                        className={
+                          checkbox.isCompleted ? "checked-content" : ""
+                        }
+                      >
+                        {checkbox.content}
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          )}
+
+          {localNote?.labels.length > 0 && (
             <div
               style={{ paddingBottom: "0.8rem" }}
               className="note-labels-container"
             >
-              {modalLabels
+              {localNote?.labels
                 .sort((a, b) => {
                   const labelsMap = labelsRef.current;
                   const labelA = labelsMap.get(a)?.label || "";
@@ -781,22 +1025,17 @@ const Modal = ({
           trigger={isOpen}
           archiveRef={archiveRef}
           trashRef={trashRef}
-          selectedColor={selectedColor}
-          setSelectedColor={setSelectedColor}
-          selectedBG={selectedBG}
-          setSelectedBG={setSelectedBG}
+          setLocalNote={setLocalNote}
+          localNote={localNote}
           setTooltipAnchor={setTooltipAnchor}
           openSnackFunction={openSnackFunction}
           note={note}
           noteActions={noteActions}
-          modalLabels={modalLabels}
-          setModalLabels={setModalLabels}
           dispatchNotes={dispatchNotes}
           isOpen={isOpen}
           setIsOpen={setIsOpen}
           setModalStyle={setModalStyle}
           imagesChangedRef={imagesChangedRef}
-          setLocalImages={setLocalImages}
           undoStack={undoStack}
           redoStack={redoStack}
           handleUndo={handleUndo}

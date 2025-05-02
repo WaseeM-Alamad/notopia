@@ -3,7 +3,7 @@ import ImageTrashIcon from "../icons/ImageTrashIcon";
 import "@/assets/styles/LinearLoader.css";
 
 const NoteImagesLayout = ({
-  images,
+  images = [],
   calculateMasonryLayout,
   isLoadingImages = [],
   modalOpen,

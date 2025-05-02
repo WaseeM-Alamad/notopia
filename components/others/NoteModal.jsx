@@ -61,8 +61,7 @@ const NoteModal = ({
       containerRef.current === e.target ||
       e.key === "Escape"
     ) {
-
-      openSnackFunction({close: true});
+      openSnackFunction({ close: true });
 
       if (
         titleTextRef.current !== note.title ||
@@ -196,7 +195,11 @@ const NoteModal = ({
     setIsPinned((prev) => !prev);
     window.dispatchEvent(new Event("loadingStart"));
     try {
-      await NoteUpdateAction("isPinned", !note.isPinned, [note.uuid]);
+      await NoteUpdateAction({
+        type: "isPinned",
+        value: !note.isPinned,
+        noteUUIDs: [note.uuid],
+      });
     } finally {
       window.dispatchEvent(new Event("loadingEnd"));
     }

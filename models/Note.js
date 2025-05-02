@@ -34,6 +34,28 @@ const NoteSchema = new Schema(
         type: String,
       },
     ],
+    checkboxes: [
+      {
+        _id: false,
+        uuid: String,
+        content: String,
+        isCompleted: Boolean,
+        parent: String,
+        children: [
+          {
+            type: String,
+          },
+        ],
+      },
+    ],
+    showCheckboxes: {
+      type: Boolean,
+      default: true,
+    },
+    expandCompleted: {
+      type: Boolean,
+      default: true,
+    },
     isPinned: {
       type: Boolean,
       default: false,

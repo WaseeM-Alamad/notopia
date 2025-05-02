@@ -88,20 +88,25 @@ const MoreMenu = ({
             className="menu not-draggable"
           >
             <div className="menu-buttons not-draggable">
-              {menuItems.map((item, index) => (
-                <div
-                  key={index}
-                  style={{
-                    padding: "0.6rem 2rem 0.6rem 1rem",
-                    fontSize: "0.9rem",
-                    color: "#3c4043",
-                  }}
-                  className="menu-btn n-menu-btn not-draggable"
-                  onClick={item.function}
-                >
-                  {item.title}
-                </div>
-              ))}
+              {menuItems.map((item, index) => {
+                if (!item?.title?.trim()) {
+                  return;
+                }
+                return (
+                  <div
+                    key={index}
+                    style={{
+                      padding: "0.5rem 1.1rem 0.5rem 1rem",
+                      fontSize: "0.9rem",
+                      color: "#3c4043",
+                    }}
+                    className="menu-btn n-menu-btn not-draggable"
+                    onClick={item.function}
+                  >
+                    {item.title}
+                  </div>
+                );
+              })}
             </div>
           </motion.div>
         )}

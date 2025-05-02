@@ -19,15 +19,10 @@ import ManageModalLabels from "./ManageModalLabels";
 
 const NoteModalTools = ({
   trigger,
-  setLocalImages,
-  selectedColor,
-  setSelectedColor,
-  selectedBG,
-  setSelectedBG,
+  localNote,
+  setLocalNote,
   openSnackFunction,
   dispatchNotes,
-  modalLabels,
-  setModalLabels,
   note,
   noteActions,
   setTooltipAnchor,
@@ -52,35 +47,43 @@ const NoteModalTools = ({
   const inputRef = useRef(null);
 
   const handleColorClick = useCallback(async (color) => {
-    if (color === selectedColor) return;
-    setSelectedColor(color);
-    dispatchNotes({
-      type: "UPDATE_COLOR",
-      note: note,
-      newColor: color,
-    });
+    if (color === localNote?.color) return;
+    setLocalNote((prev) => ({ ...prev, color: color }));
+    // dispatchNotes({
+    //   type: "UPDATE_COLOR",
+    //   note: note,
+    //   newColor: color,
+    // });
     window.dispatchEvent(new Event("loadingStart"));
-    await NoteUpdateAction("color", color, [note.uuid]);
+    await NoteUpdateAction({
+      type: "color",
+      value: color,
+      noteUUIDs: [note.uuid],
+    });
     window.dispatchEvent(new Event("loadingEnd"));
   });
 
   const handleBackground = useCallback(
     async (newBG) => {
       closeToolTip();
-      if (selectedBG === newBG) return;
-      setSelectedBG(newBG);
+      if (localNote?.background === newBG) return;
+      setLocalNote(prev => ({...prev, background: newBG}));
 
-      dispatchNotes({
-        type: "UPDATE_BG",
-        note: note,
-        newBG: newBG,
-      });
+      // dispatchNotes({
+      //   type: "UPDATE_BG",
+      //   note: note,
+      //   newBG: newBG,
+      // });
       console.log("yes");
       window.dispatchEvent(new Event("loadingStart"));
-      await NoteUpdateAction("background", newBG, [note.uuid]);
+      await NoteUpdateAction({
+        type: "background",
+        value: newBG,
+        noteUUIDs: [note.uuid],
+      });
       window.dispatchEvent(new Event("loadingEnd"));
     },
-    [selectedBG]
+    [localNote?.background]
   );
 
   const UploadImageAction = async (image) => {
@@ -113,18 +116,18 @@ const NoteModalTools = ({
     const imageURL = URL.createObjectURL(file);
     const newUUID = uuid();
 
-    setLocalImages((prev) => [...prev, { url: imageURL, uuid: newUUID }]);
+    setLocalNote(prev => ({...prev, images: [...prev.images, {url: imageURL, uuid: newUUID} ]}));
     inputRef.current.value = "";
     window.dispatchEvent(new Event("loadingStart"));
     const starter =
       "https://fopkycgspstkfctmhyyq.supabase.co/storage/v1/object/public/notopia";
     const path = `${starter}/${userID}/${note.uuid}/${newUUID}`;
     // setIsLoadingImages((prev) => [...prev, newUUID]);
-    const updatedImages = await NoteUpdateAction(
-      "images",
-      { url: path, uuid: newUUID },
-      [note.uuid]
-    );
+    const updatedImages = await NoteUpdateAction({
+      type: "images",
+      value: { url: path, uuid: newUUID },
+      noteUUIDs: [note.uuid],
+    });
 
     await UploadImageAction({ file: file, id: newUUID }, note.uuid);
     // setIsLoadingImages((prev) => prev.filter((id) => id !== newUUID));
@@ -205,9 +208,8 @@ const NoteModalTools = ({
                 handleColorClick={handleColorClick}
                 handleBackground={handleBackground}
                 anchorEl={colorAnchorEl}
-                selectedColor={selectedColor}
-                selectedBG={selectedBG}
-                setSelectedBG={setSelectedBG}
+                selectedColor={localNote?.color}
+                selectedBG={localNote?.background}
                 setTooltipAnchor={setTooltipAnchor}
                 isOpen={colorMenuOpen}
                 setIsOpen={setColorMenuOpen}
@@ -247,7 +249,6 @@ const NoteModalTools = ({
           <ModalMenu
             setIsOpen={setMoreMenuOpen}
             setModalOpen={setIsOpen}
-            dispatchNotes={dispatchNotes}
             anchorEl={anchorEl}
             trashRef={trashRef}
             isOpen={moreMenuOpen}
@@ -261,12 +262,11 @@ const NoteModalTools = ({
       <AnimatePresence>
         {labelsOpen && (
           <ManageModalLabels
-            dispatchNotes={dispatchNotes}
             note={note}
+            localNote={localNote}
+            setLocalNote={setLocalNote}
             isOpen={labelsOpen}
             setIsOpen={setLabelsOpen}
-            modalLabels={modalLabels}
-            setModalLabels={setModalLabels}
             anchorEl={anchorEl}
           />
         )}

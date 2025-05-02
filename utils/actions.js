@@ -84,7 +84,7 @@ export const createNoteAction = async (note) => {
   }
 };
 
-export const NoteUpdateAction = async (type, value, noteUUIDs, first) => {
+export const NoteUpdateAction = async (data) => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
   if (!session) {
@@ -92,65 +92,116 @@ export const NoteUpdateAction = async (type, value, noteUUIDs, first) => {
   }
   try {
     await connectDB();
-    if (type === "images") {
+    if (data.type === "images") {
       const updatedImages = await Note.findOneAndUpdate(
-        { uuid: noteUUIDs[0], creator: userID },
-        { $push: { images: value } },
+        { uuid: data.noteUUIDs[0], creator: userID },
+        { $push: { images: data.value } },
         { returnDocument: "after" }
       );
       return JSON.parse(JSON.stringify(updatedImages.images));
-    } else if (type === "isArchived") {
+    } else if (data.type === "isArchived") {
       await Note.updateOne(
-        { uuid: noteUUIDs[0], creator: userID },
-        { $set: { [type]: value, isPinned: false } }
+        { uuid: data.noteUUIDs[0], creator: userID },
+        { $set: { [data.type]: data.value, isPinned: false } }
       );
-      if (!first) {
+      if (!data.first) {
         const user = await User.findById(userID);
         const { notesOrder } = user;
-        const order = notesOrder.filter((uuid) => uuid !== noteUUIDs[0]);
-        const updatedOrder = [noteUUIDs[0], ...order];
+        const order = notesOrder.filter((uuid) => uuid !== data.noteUUIDs[0]);
+        const updatedOrder = [data.noteUUIDs[0], ...order];
         user.notesOrder = updatedOrder;
         await user.save();
       }
-    } else if (type === "pinArchived") {
+    } else if (data.type === "pinArchived") {
       await Note.updateOne(
-        { uuid: noteUUIDs[0], creator: userID },
-        { $set: { isPinned: value, isArchived: false } }
+        { uuid: data.noteUUIDs[0], creator: userID },
+        { $set: { isPinned: data.value, isArchived: false } }
       );
       const user = await User.findById(userID);
       const { notesOrder } = user;
-      const order = notesOrder.filter((uuid) => uuid !== noteUUIDs[0]);
-      const updatedOrder = [noteUUIDs[0], ...order];
+      const order = notesOrder.filter((uuid) => uuid !== data.noteUUIDs[0]);
+      const updatedOrder = [data.noteUUIDs[0], ...order];
       user.notesOrder = updatedOrder;
       await user.save();
-    } else if (type === "isPinned") {
+    } else if (data.type === "isPinned") {
       await Note.updateOne(
-        { uuid: noteUUIDs[0], creator: userID },
-        { $set: { [type]: value } }
+        { uuid: data.noteUUIDs[0], creator: userID },
+        { $set: { [data.type]: data.value } }
       );
-      if (!first) {
+      if (!data.first) {
         const user = await User.findById(userID);
         const { notesOrder } = user;
-        const order = notesOrder.filter((uuid) => uuid !== noteUUIDs[0]);
-        const updatedOrder = [noteUUIDs[0], ...order];
+        const order = notesOrder.filter((uuid) => uuid !== data.noteUUIDs[0]);
+        const updatedOrder = [data.noteUUIDs[0], ...order];
         user.notesOrder = updatedOrder;
         await user.save();
       }
-    } else if (type === "isTrash") {
+    } else if (data.type === "isTrash") {
       await Note.updateOne(
-        { uuid: noteUUIDs[0], creator: userID },
-        { $set: { [type]: value, isPinned: false } }
+        { uuid: data.noteUUIDs[0], creator: userID },
+        { $set: { [data.type]: data.value, isPinned: false } }
       );
       const user = await User.findById(userID);
       const { notesOrder } = user;
-      const order = notesOrder.filter((uuid) => uuid !== noteUUIDs[0]);
-      const updatedOrder = [noteUUIDs[0], ...order];
+      const order = notesOrder.filter((uuid) => uuid !== data.noteUUIDs[0]);
+      const updatedOrder = [data.noteUUIDs[0], ...order];
       user.notesOrder = updatedOrder;
       await user.save();
+    } else if (data.type === "checkboxes") {
+      switch (data.operation) {
+        case "ADD": {
+          const checkbox = {
+            ...data.value,
+            content: data.value.content.trim(),
+          };
+          await Note.updateOne(
+            { uuid: data.noteUUIDs[0], creator: userID },
+            { $push: { checkboxes: checkbox } }
+          );
+          break;
+        }
+        case "MANAGE_COMPLETED": {
+          await Note.updateOne(
+            {
+              uuid: data.noteUUIDs[0],
+              "checkboxes.uuid": data.checkboxUUID,
+              creator: userID,
+            },
+            { $set: { "checkboxes.$.isCompleted": data.value } }
+          );
+          break;
+        }
+        case "DELETE_CHECKED": {
+          await Note.updateOne(
+            { uuid: data.noteUUIDs[0], creator: userID },
+            { $pull: { checkboxes: { isCompleted: true } } }
+          );
+          break;
+        }
+        case "UNCHECK_ALL": {
+          await Note.updateMany(
+            { uuid: data.noteUUIDs[0], creator: userID },
+            { $set: { "checkboxes.$[elem].isCompleted": false } },
+            { arrayFilters: [{ "elem.isCompleted": true }] }
+          );
+          break;
+        }
+        case "UPDATE_CONTENT": {
+          await Note.updateOne(
+            {
+              uuid: data.noteUUIDs[0],
+              "checkboxes.uuid": data.checkboxUUID,
+              creator: userID,
+            },
+            { $set: { "checkboxes.$.content": data.value } }
+          );
+          break;
+        }
+      }
     } else {
       await Note.updateMany(
-        { uuid: { $in: noteUUIDs }, creator: userID },
-        { $set: { [type]: value } }
+        { uuid: { $in: data.noteUUIDs }, creator: userID },
+        { $set: { [data.type]: data.value } }
       );
     }
   } catch (error) {
@@ -603,10 +654,7 @@ export const copyNoteAction = async (data) => {
       process.env.NEXT_SUPABASE_SERVICE_ROLE_KEY
     );
     await connectDB();
-    const copiedNote = await Note.findOne({
-      uuid: data.originalNoteUUID,
-      creator: userID,
-    });
+    const copiedNote = data.note;
     const sourceFolder = `${userID}/${data.originalNoteUUID}`;
     const destinationFolder = `${userID}/${data.newNoteUUID}`;
     let copiedImages = [];
@@ -636,6 +684,9 @@ export const copyNoteAction = async (data) => {
       color: copiedNote.color,
       background: copiedNote.background,
       labels: copiedNote.labels,
+      checkboxes: copiedNote.checkboxes,
+      showCheckboxes: copiedNote.showCheckboxes,
+      expandCompleted: copiedNote.expandCompleted,
       isPinned: false,
       isArchived: false,
       isTrash: copiedNote.isTrash,

@@ -26,6 +26,9 @@ const AddNoteModall = ({
     content: "",
     color: "Default",
     labels: [],
+    checkboxes: [],
+    showCheckboxes: true,
+    expandCompleted: true,
     isPinned: false,
     isArchived: false,
     isTrash: false,
@@ -123,6 +126,9 @@ const AddNoteModall = ({
       labels: note.labels,
       isPinned: note.isPinned,
       isArchived: note.isArchived,
+      checkboxes: note.checkboxes,
+      showCheckboxes: note.showCheckboxes,
+      expandCompleted: note.expandCompleted,
       isTrash: note.isTrash,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -409,30 +415,29 @@ const AddNoteModall = ({
   };
 
   const insert = async () => {
-      for (let i = 0; i < 20; i++) {
-        const newNote = {
-          uuid: uuid(),
-          title: note.title,
-          content: note.content,
-          color: note.color,
-          background: "DefaultBG",
-          labels: note.labels,
-          isPinned: note.isPinned,
-          isArchived: note.isArchived,
-          isTrash: note.isTrash,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          images: note.images,
-        };
-        createNoteAction(newNote);
-      }
-    };
+    for (let i = 0; i < 20; i++) {
+      const newNote = {
+        uuid: uuid(),
+        title: note.title,
+        content: note.content,
+        color: note.color,
+        background: "DefaultBG",
+        labels: note.labels,
+        isPinned: note.isPinned,
+        isArchived: note.isArchived,
+        isTrash: note.isTrash,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        images: note.images,
+      };
+      createNoteAction(newNote);
+    }
+  };
 
   if (!isClient) return;
 
   return createPortal(
     <>
-      
       <div
         ref={modalRef}
         className={[

@@ -570,6 +570,101 @@ function notesReducer(state, action) {
       };
     }
 
+    case "ADD_CHECKBOX": {
+      const updatedNotes = new Map(state.notes);
+      const note = updatedNotes.get(action.noteUUID);
+      updatedNotes.set(action.noteUUID, {
+        ...note,
+        checkboxes: [...note.checkboxes, action.checkbox],
+      });
+
+      return {
+        ...state,
+        notes: updatedNotes,
+      };
+    }
+
+    case "CHECKBOX_VIS": {
+      const updatedNotes = new Map(state.notes);
+      const note = updatedNotes.get(action.noteUUID);
+      updatedNotes.set(action.noteUUID, {
+        ...note,
+        showCheckboxes: !note.showCheckboxes,
+      });
+
+      return {
+        ...state,
+        notes: updatedNotes,
+      };
+    }
+
+    case "CHECKBOX_STATE": {
+      const updatedNotes = new Map(state.notes);
+      const note = updatedNotes.get(action.noteUUID);
+      const newCheckboxArr = note.checkboxes.map((checkbox) => {
+        if (checkbox.uuid !== action.checkboxUUID) return checkbox;
+        return { ...checkbox, isCompleted: action.value };
+      });
+      updatedNotes.set(action.noteUUID, {
+        ...note,
+        checkboxes: newCheckboxArr,
+      });
+
+      return {
+        ...state,
+        notes: updatedNotes,
+      };
+    }
+
+    case "DELETE_CHECKED": {
+      const updatedNotes = new Map(state.notes);
+      const note = updatedNotes.get(action.noteUUID);
+      const newCheckboxArr = note.checkboxes.filter(
+        (checkbox) => !checkbox.isCompleted
+      );
+      updatedNotes.set(action.noteUUID, {
+        ...note,
+        checkboxes: newCheckboxArr,
+      });
+
+      return {
+        ...state,
+        notes: updatedNotes,
+      };
+    }
+
+    case "UNCHECK_ALL": {
+      const updatedNotes = new Map(state.notes);
+      const note = updatedNotes.get(action.noteUUID);
+      const newCheckboxArr = note.checkboxes.map((checkbox) => {
+        if (!checkbox.isCompleted) return checkbox;
+        return { ...checkbox, isCompleted: false };
+      });
+      updatedNotes.set(action.noteUUID, {
+        ...note,
+        checkboxes: newCheckboxArr,
+      });
+
+      return {
+        ...state,
+        notes: updatedNotes,
+      };
+    }
+
+    case "EXPAND_ITEMS": {
+      const updatedNotes = new Map(state.notes);
+      const note = updatedNotes.get(action.noteUUID);
+      updatedNotes.set(action.noteUUID, {
+        ...note,
+        expandCompleted: !note.expandCompleted,
+      });
+
+      return {
+        ...state,
+        notes: updatedNotes,
+      };
+    }
+
     case "DND": {
       return {
         ...state,
@@ -787,12 +882,12 @@ const page = () => {
 
         const first = data.index === 0;
         window.dispatchEvent(new Event("loadingStart"));
-        await NoteUpdateAction(
-          "isArchived",
-          !data.note.isArchived,
-          [data.note.uuid],
-          first
-        );
+        await NoteUpdateAction({
+          type: "isArchived",
+          value: !data.note.isArchived,
+          noteUUIDs: [data.note.uuid],
+          first: first,
+        });
         window.dispatchEvent(new Event("loadingEnd"));
       };
 
@@ -826,12 +921,12 @@ const page = () => {
       });
       const first = data.index === 0;
       window.dispatchEvent(new Event("loadingStart"));
-      await NoteUpdateAction(
-        "isArchived",
-        !data.note.isArchived,
-        [data.note.uuid],
-        first
-      );
+      await NoteUpdateAction({
+        type: "isArchived",
+        value: !data.note.isArchived,
+        noteUUIDs: [data.note.uuid],
+        first: first,
+      });
       window.dispatchEvent(new Event("loadingEnd"));
     } else if (data.type === "TRASH_NOTE") {
       const timeOut = setTimeout(() => {
@@ -880,7 +975,11 @@ const page = () => {
       });
 
       window.dispatchEvent(new Event("loadingStart"));
-      await NoteUpdateAction("isTrash", false, [data.note.uuid]);
+      await NoteUpdateAction({
+        type: "isTrash",
+        value: false,
+        noteUUIDs: [data.note.uuid],
+      });
       window.dispatchEvent(new Event("loadingEnd"));
     } else if (data.type === "RESTORE_NOTE") {
       const timeOut = setTimeout(() => {
@@ -915,7 +1014,11 @@ const page = () => {
 
       const onClose = async () => {
         window.dispatchEvent(new Event("loadingStart"));
-        await NoteUpdateAction("isTrash", true, [data.note.uuid]);
+        await NoteUpdateAction({
+          type: "isTrash",
+          value: true,
+          noteUUIDs: [data.note.uuid],
+        });
         window.dispatchEvent(new Event("loadingEnd"));
       };
 
@@ -1004,7 +1107,11 @@ const page = () => {
       });
 
       try {
-        await NoteUpdateAction("pinArchived", true, [data.note.uuid]);
+        await NoteUpdateAction({
+          type: "pinArchived",
+          value: true,
+          noteUUIDs: [data.note.uuid],
+        });
       } finally {
         window.dispatchEvent(new Event("loadingEnd"));
       }
@@ -1019,18 +1126,47 @@ const page = () => {
       });
 
       window.dispatchEvent(new Event("loadingStart"));
-      await NoteUpdateAction("color", data.newColor, [data.note.uuid]);
+      await NoteUpdateAction({
+        type: "color",
+        value: data.newColor,
+        noteUUIDs: [data.note.uuid],
+      });
       window.dispatchEvent(new Event("loadingEnd"));
     } else if (data.type === "COPY_NOTE") {
       const newUUID = uuid();
       const note = data.note;
       const newImages = [];
+      const newCheckboxes = [];
+      const oldToNewCBMap = new Map();
 
       if (note.images.length > 0) {
         note.images.forEach((image) => {
           const newUUID = uuid();
           const newImage = { uuid: newUUID, url: image.url };
           newImages.push(newImage);
+        });
+      }
+
+      if (note.checkboxes.length > 0) {
+        const copiedCheckboxes = note.checkboxes.map((checkbox) => {
+          const newUUID = uuid();
+          oldToNewCBMap.set(checkbox.uuid, newUUID);
+          const newCheckbox = {
+            ...checkbox,
+            uuid: newUUID,
+          };
+          return newCheckbox;
+        });
+
+        copiedCheckboxes.forEach((checkbox) => {
+          const newChildren = checkbox.children.map((childUUID) =>
+            oldToNewCBMap.get(childUUID)
+          );
+          const finalCheckbox = {
+            ...checkbox,
+            children: newChildren,
+          };
+          newCheckboxes.push(finalCheckbox);
         });
       }
 
@@ -1041,6 +1177,9 @@ const page = () => {
         color: note.color,
         background: note.background,
         labels: note.labels,
+        checkboxes: newCheckboxes,
+        showCheckboxes: true,
+        expandCompleted: note.expandCompleted,
         isPinned: false,
         isArchived: false,
         isTrash: note.isTrash,
@@ -1091,6 +1230,7 @@ const page = () => {
         originalNoteUUID: note.uuid,
         newNoteUUID: newUUID,
         newImages: newImages,
+        note: newNote,
       });
       const receivedNote = received.note;
       window.dispatchEvent(new Event("loadingEnd"));
@@ -1507,6 +1647,14 @@ const page = () => {
 
   useEffect(() => {
     const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setIsModalOpen(false);
+        if (selectedNotesRef.current.size > 0) {
+          setSelectedNotesIDs([]);
+          window.dispatchEvent(new Event("topMenuClose"));
+        }
+      }
+
       const target = event.target;
 
       const isTyping =
@@ -1518,13 +1666,6 @@ const page = () => {
 
       if (event.ctrlKey && !ctrlDownRef.current) {
         ctrlDownRef.current = true;
-      }
-      if (event.key === "Escape") {
-        setIsModalOpen(false);
-        if (selectedNotesRef.current.size > 0) {
-          setSelectedNotesIDs([]);
-          window.dispatchEvent(new Event("topMenuClose"));
-        }
       }
 
       if (event.ctrlKey && event.code === "KeyA") {

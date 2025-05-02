@@ -56,12 +56,12 @@ const FilteredNote = memo(
 
         try {
           const first = index === 0;
-          await NoteUpdateAction(
-            "isPinned",
-            !note.isPinned,
-            [note.uuid],
-            first
-          );
+          await NoteUpdateAction({
+            type: "isPinned",
+            value: !note.isPinned,
+            noteUUIDs: [note.uuid],
+            first: first,
+          });
         } finally {
           window.dispatchEvent(new Event("loadingEnd"));
         }
@@ -172,22 +172,22 @@ const FilteredNote = memo(
     };
 
     function highlightMatch(text) {
-        if (!searchTerm) return text;
-      
-        const regex = new RegExp(`(${searchTerm.toLowerCase().trim()})`, "ig");
-      
-        const parts = text.split(regex);
-      
-        return parts.map((part, index) =>
-          regex.test(part) ? (
-            <span key={index} className="highlight">
-              {part}
-            </span>
-          ) : (
-            part
-          )
-        );
-      }
+      if (!searchTerm) return text;
+
+      const regex = new RegExp(`(${searchTerm.toLowerCase().trim()})`, "ig");
+
+      const parts = text.split(regex);
+
+      return parts.map((part, index) =>
+        regex.test(part) ? (
+          <span key={index} className="highlight">
+            {part}
+          </span>
+        ) : (
+          part
+        )
+      );
+    }
 
     return (
       <>

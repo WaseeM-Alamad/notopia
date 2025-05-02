@@ -173,11 +173,7 @@ const ManageLabelsMenu = ({
         className="menu not-draggable"
       >
         <div style={{ width: "14.0625rem" }}>
-          <div
-            className="label-note"
-          >
-            Label note
-          </div>
+          <div className="label-note">Label note</div>
           <div
             style={{
               padding: "0.55rem 0.8rem 0.8rem 0.8rem",
@@ -215,14 +211,14 @@ const ManageLabelsMenu = ({
                   <div
                     key={index}
                     onClick={() => addLabel(uuid, labelData.label)}
-                    className="label-item"
+                    className="checkbox-wrapper"
                     style={{
                       wordBreak: "break-all",
                     }}
                   >
                     <div
-                      className={`label-checkmark ${
-                        noteLabels.has(uuid) && "label-added"
+                      className={`checkbox-unchecked ${
+                        noteLabels.has(uuid) && "checkbox-checked"
                       }`}
                     />
                     <div style={{ width: "100%", paddingLeft: "0.5rem" }}>

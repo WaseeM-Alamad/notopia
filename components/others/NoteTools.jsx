@@ -61,7 +61,11 @@ const NoteTools = ({
         newBG: newBG,
       });
       window.dispatchEvent(new Event("loadingStart"));
-      await NoteUpdateAction("background", newBG, [note.uuid]);
+      await NoteUpdateAction({
+        type: "background",
+        value: newBG,
+        noteUUIDs: [note.uuid],
+      });
       window.dispatchEvent(new Event("loadingEnd"));
     },
     [selectedBG]
@@ -124,18 +128,18 @@ const NoteTools = ({
     const path = `${starter}/${userID}/${note.uuid}/${newUUID}`;
     setIsLoadingImages((prev) => [...prev, newUUID]);
 
-    const updatedImages = await NoteUpdateAction(
-      "images",
-      { url: path, uuid: newUUID },
-      [note.uuid]
-    );
+    const updatedImages = await NoteUpdateAction({
+      type: "images",
+      value: { url: path, uuid: newUUID },
+      noteUUIDs: [note.uuid],
+    });
     await UploadImageAction({ file: file, id: newUUID }, note.uuid);
     dispatchNotes({
       type: "UPDATE_IMAGES",
       note: note,
       newImages: updatedImages,
     });
-    console.log(updatedImages)
+    console.log(updatedImages);
     setIsLoadingImages((prev) => prev.filter((id) => id !== newUUID));
     window.dispatchEvent(new Event("loadingEnd"));
   };
@@ -202,6 +206,77 @@ const NoteTools = ({
     setMoreMenuOpen(false);
   };
 
+  const handleAddCheckboxes = async () => {
+    const newUUID = uuid();
+    const checkbox = {
+      uuid: newUUID,
+      content: "List item",
+      isCompleted: false,
+      parent: null,
+      children: [],
+    };
+    dispatchNotes({
+      type: "ADD_CHECKBOX",
+      noteUUID: note.uuid,
+      checkbox: checkbox,
+    });
+    setMoreMenuOpen(false);
+
+    window.dispatchEvent(new Event("loadingStart"));
+    await NoteUpdateAction({
+      type: "checkboxes",
+      operation: "ADD",
+      value: checkbox,
+      noteUUIDs: [note.uuid],
+    });
+    window.dispatchEvent(new Event("loadingEnd"));
+  };
+
+  const handleCheckboxVis = async () => {
+    dispatchNotes({
+      type: "CHECKBOX_VIS",
+      noteUUID: note.uuid,
+    });
+    setMoreMenuOpen(false);
+    window.dispatchEvent(new Event("loadingStart"));
+    await NoteUpdateAction({
+      type: "showCheckboxes",
+      value: !note.showCheckboxes,
+      noteUUIDs: [note.uuid],
+    });
+    window.dispatchEvent(new Event("loadingEnd"));
+  };
+
+  const uncheckAllitems = async () => {
+    dispatchNotes({
+      type: "UNCHECK_ALL",
+      noteUUID: note.uuid,
+    });
+    setMoreMenuOpen(false);
+    window.dispatchEvent(new Event("loadingStart"));
+    await NoteUpdateAction({
+      type: "checkboxes",
+      operation: "UNCHECK_ALL",
+      noteUUIDs: [note.uuid],
+    });
+    window.dispatchEvent(new Event("loadingEnd"));
+  };
+
+  const deleteCheckedItems = async () => {
+    dispatchNotes({
+      type: "DELETE_CHECKED",
+      noteUUID: note.uuid,
+    });
+    setMoreMenuOpen(false);
+    window.dispatchEvent(new Event("loadingStart"));
+    await NoteUpdateAction({
+      type: "checkboxes",
+      operation: "DELETE_CHECKED",
+      noteUUIDs: [note.uuid],
+    });
+    window.dispatchEvent(new Event("loadingEnd"));
+  };
+
   const menuItems = [
     {
       title: "Delete note",
@@ -211,6 +286,32 @@ const NoteTools = ({
       title: note.labels.length > 0 ? "Change labels" : "Add label",
       function: handleLabels,
     },
+    {
+      title: note.checkboxes.some((checkbox) => checkbox.isCompleted)
+        ? "Uncheck all items"
+        : "",
+      function: uncheckAllitems,
+    },
+    {
+      title: note.checkboxes.some((checkbox) => checkbox.isCompleted)
+        ? "Delete checked items"
+        : "",
+      function: deleteCheckedItems,
+    },
+    {
+      title:
+        note.checkboxes.length > 0
+          ? note.showCheckboxes
+            ? "Hide checkboxes"
+            : "Show checkboxes"
+          : "",
+      function: handleCheckboxVis,
+    },
+    {
+      title: note.checkboxes.length === 0 ? "Add checkboxes" : "",
+      function: handleAddCheckboxes,
+    },
+
     {
       title: "Make a copy",
       function: handleMakeCopy,
@@ -233,7 +334,8 @@ const NoteTools = ({
           note.images.length > 0 &&
           note.labels.length === 0 &&
           !note.title.trim() &&
-          !note.content.trim()
+          !note.content.trim() &&
+          (note.checkboxes.length === 0 || !note.showCheckboxes)
             ? note.color
             : ""
         }`}

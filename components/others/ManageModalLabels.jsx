@@ -7,12 +7,11 @@ import { Popper } from "@mui/material";
 import { v4 as generateUUID } from "uuid";
 
 const ManageModalLabels = ({
-  dispatchNotes,
   note,
   isOpen,
   setIsOpen,
-  modalLabels,
-  setModalLabels,
+  localNote,
+  setLocalNote,
   anchorEl,
 }) => {
   const { createLabel, handleLabelNoteCount, labelsRef } = useAppContext();
@@ -60,10 +59,10 @@ const ManageModalLabels = ({
     if (!isOpen) return;
 
     const labelsMap = new Map(
-      modalLabels.map((noteLabel) => [noteLabel, true])
+      localNote?.labels.map((noteLabel) => [noteLabel, true])
     );
     setNoteLabels(labelsMap);
-  }, [isOpen, modalLabels, isClient]);
+  }, [isOpen, localNote?.labels, isClient]);
 
   const handleInputKeyDown = (e) => {
     let temp;
@@ -96,12 +95,11 @@ const ManageModalLabels = ({
 
   const addLabel = async (uuid, label) => {
     if (noteLabels.has(uuid)) {
-      setModalLabels((prev) => {
-        const newLabels = prev.filter(
-          (noteLabelUUID) => noteLabelUUID !== uuid
-        );
-        return newLabels;
-      });
+      setLocalNote((prev) => ({
+        ...prev,
+        labels: prev.labels.filter((noteLabelUUID) => noteLabelUUID !== uuid),
+      }));
+
       handleLabelNoteCount(uuid, "decrement");
 
       window.dispatchEvent(new Event("loadingStart"));
@@ -111,7 +109,7 @@ const ManageModalLabels = ({
       });
       window.dispatchEvent(new Event("loadingEnd"));
     } else {
-      setModalLabels((prev) => [...prev, uuid]);
+      setLocalNote((prev) => ({ ...prev, labels: [...prev.labels, uuid] }));
       handleLabelNoteCount(uuid);
 
       window.dispatchEvent(new Event("loadingStart"));
@@ -209,14 +207,14 @@ const ManageModalLabels = ({
                   <div
                     key={index}
                     onClick={() => addLabel(uuid, labelData.label)}
-                    className="label-item"
+                    className="checkbox-wrapper"
                     style={{
                       wordBreak: "break-all",
                     }}
                   >
                     <div
-                      className={`label-checkmark ${
-                        noteLabels.has(uuid) && "label-added"
+                      className={`checkbox-unchecked ${
+                        noteLabels.has(uuid) && "checkbox-checked"
                       }`}
                     />
                     <div style={{ width: "100%", paddingLeft: "0.5rem" }}>

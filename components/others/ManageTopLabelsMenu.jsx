@@ -199,7 +199,7 @@ const ManageTopLabelsMenu = ({
   const getSelectionClass = (uuid) => {
     if (notesLabels.has(uuid)) {
       if (notesLabels.get(uuid) === selectedNotesIDs.length) {
-        return "label-added";
+        return "checkbox-checked";
       } else {
         return "label-not-shared";
       }
@@ -291,13 +291,13 @@ const ManageTopLabelsMenu = ({
                   <div
                     key={index}
                     onClick={() => addLabel(uuid, labelData.label)}
-                    className="label-item"
+                    className="checkbox-wrapper"
                     style={{
                       wordBreak: "break-all",
                     }}
                   >
                     <div
-                      className={`label-checkmark ${getSelectionClass(uuid)}`}
+                      className={`checkbox-unchecked ${getSelectionClass(uuid)}`}
                     />
                     <div style={{ width: "100%", paddingLeft: "0.5rem" }}>
                       {labelData.label}

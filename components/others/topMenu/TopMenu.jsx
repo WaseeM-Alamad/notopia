@@ -169,7 +169,11 @@ const TopMenuHome = ({
     setSelectedColor(newColor);
     const UUIDS = selectedNotesIDs.map((data) => data.uuid);
     window.dispatchEvent(new Event("loadingStart"));
-    await NoteUpdateAction("color", newColor, UUIDS);
+    await NoteUpdateAction({
+      type: "color",
+      value: newColor,
+      noteUUIDs: UUIDS,
+    });
     window.dispatchEvent(new Event("loadingEnd"));
   };
 
@@ -183,7 +187,11 @@ const TopMenuHome = ({
     setSelectedBG(newBG);
     const UUIDS = selectedNotesIDs.map((data) => data.uuid);
     window.dispatchEvent(new Event("loadingStart"));
-    await NoteUpdateAction("background", newBG, UUIDS);
+    await NoteUpdateAction({
+      type: "background",
+      value: newBG,
+      noteUUIDs: UUIDS,
+    });
     window.dispatchEvent(new Event("loadingEnd"));
   };
 
@@ -413,6 +421,8 @@ const TopMenuHome = ({
       const note = notes.get(noteUUID);
       const newNoteUUID = uuid();
       const newImages = [];
+      const newCheckboxes = [];
+      const oldToNewCBMap = new Map();
 
       if (note.images.length > 0) {
         note.images.forEach((image) => {
@@ -424,6 +434,29 @@ const TopMenuHome = ({
         });
       }
 
+      if (note.checkboxes.length > 0) {
+        const copiedCheckboxes = note.checkboxes.map((checkbox) => {
+          const newUUID = uuid();
+          oldToNewCBMap.set(checkbox.uuid, newUUID);
+          const newCheckbox = {
+            ...checkbox,
+            uuid: newUUID,
+          };
+          return newCheckbox;
+        });
+
+        copiedCheckboxes.forEach((checkbox) => {
+          const newChildren = checkbox.children.map((childUUID) =>
+            oldToNewCBMap.get(childUUID)
+          );
+          const finalCheckbox = {
+            ...checkbox,
+            children: newChildren,
+          };
+          newCheckboxes.push(finalCheckbox);
+        });
+      }
+
       const newNote = {
         uuid: newNoteUUID,
         title: note?.title,
@@ -431,6 +464,9 @@ const TopMenuHome = ({
         color: note.color,
         background: note.background,
         labels: note.labels,
+        checkboxes: newCheckboxes,
+        showCheckboxes: true,
+        expandCompleted: note.expandCompleted,
         isPinned: false,
         isArchived: false,
         isTrash: note.isTrash,

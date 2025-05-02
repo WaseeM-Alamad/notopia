@@ -13,8 +13,6 @@ const ModalMenu = ({
   trashRef,
   note,
   noteActions,
-  dispatchNotes,
-  openSnackFunction,
 }) => {
   const [isClient, setIsClient] = useState();
 
