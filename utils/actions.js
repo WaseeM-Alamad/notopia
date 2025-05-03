@@ -171,6 +171,17 @@ export const NoteUpdateAction = async (data) => {
           );
           break;
         }
+        case "DELETE_CHECKBOX": {
+          await Note.updateOne(
+            {
+              uuid: data.noteUUIDs[0],
+              "checkboxes.uuid": data.checkboxUUID,
+              creator: userID,
+            },
+            { $pull: { checkboxes: { uuid: data.checkboxUUID } } }
+          );
+          break;
+        }
         case "DELETE_CHECKED": {
           await Note.updateOne(
             { uuid: data.noteUUIDs[0], creator: userID },

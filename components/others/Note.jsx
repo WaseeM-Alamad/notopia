@@ -36,6 +36,9 @@ const Note = memo(
     const renderCBdivider =
       note.checkboxes.some((cb) => cb.isCompleted) &&
       note.checkboxes.some((cb) => !cb.isCompleted);
+    const completedItemsCount = note?.checkboxes.reduce((acc, cb) => {
+      return cb.isCompleted ? acc + 1 : acc;
+    }, 0);
     const isLoading = isLoadingImagesAddNote.includes(note.uuid);
     const noteDataRef = useRef(null);
     const inputsRef = useRef(null);
@@ -186,6 +189,23 @@ const Note = memo(
         operation: "MANAGE_COMPLETED",
         value: value,
         checkboxUUID: checkboxUUID,
+        noteUUIDs: [note.uuid],
+      });
+      window.dispatchEvent(new Event("loadingEnd"));
+    };
+
+    const handleExpand = async (e) => {
+      e.stopPropagation();
+      const val = !note?.expandCompleted;
+      dispatchNotes({
+        type: "EXPAND_ITEMS",
+        noteUUID: note.uuid,
+      });
+
+      window.dispatchEvent(new Event("loadingStart"));
+      await NoteUpdateAction({
+        type: "expandCompleted",
+        value: val,
         noteUUIDs: [note.uuid],
       });
       window.dispatchEvent(new Event("loadingEnd"));
@@ -364,47 +384,65 @@ const Note = memo(
                       </div>
                     );
                   })}
-                  <div style={{ display: "flex", justifyContent: "center" }}>
+                  <div
+                    onClick={handleExpand}
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      cursor: "pointer",
+                    }}
+                  >
                     {renderCBdivider && <div className="checkboxes-divider" />}
                   </div>
-                  {note.checkboxes.map((checkbox) => {
-                    if (!checkbox.isCompleted) return null;
-                    return (
-                      <div
-                        key={checkbox.uuid}
-                        className="checkbox-wrapper note-checkbox-wrapper"
-                        style={{
-                          wordBreak: "break-all",
-                          paddingLeft: "0.7rem",
-                        }}
-                      >
+
+                  {completedItemsCount > 0 && !note.expandCompleted && (
+                    <div
+                      className="completed-items completed-items-note"
+                      aria-label={`${completedItemsCount} Completed item${
+                        completedItemsCount === 1 ? "" : "s"
+                      }`}
+                    />
+                  )}
+
+                  {note.expandCompleted &&
+                    note.checkboxes.map((checkbox) => {
+                      if (!checkbox.isCompleted) return null;
+                      return (
                         <div
-                          onClick={(e) =>
-                            handleCheckboxClick(
-                              e,
-                              checkbox.uuid,
-                              !checkbox.isCompleted
-                            )
-                          }
-                          className={`note-checkbox checkbox-unchecked ${
-                            checkbox.isCompleted ? "checkbox-checked" : ""
-                          }`}
-                        />
-                        <div
+                          key={checkbox.uuid}
+                          className="checkbox-wrapper note-checkbox-wrapper"
                           style={{
-                            width: "100%",
-                            paddingLeft: "0.5rem",
-                            fontSize: ".875rem",
+                            wordBreak: "break-all",
+                            paddingLeft: "0.7rem",
                           }}
-                          className={
-                            checkbox.isCompleted ? "checked-content" : ""
-                          }
                         >
-                          {checkbox.content}
+                          <div
+                            onClick={(e) =>
+                              handleCheckboxClick(
+                                e,
+                                checkbox.uuid,
+                                !checkbox.isCompleted
+                              )
+                            }
+                            className={`note-checkbox checkbox-unchecked ${
+                              checkbox.isCompleted ? "checkbox-checked" : ""
+                            }`}
+                          />
+                          <div
+                            style={{
+                              width: "100%",
+                              paddingLeft: "0.5rem",
+                              fontSize: ".875rem",
+                            }}
+                            className={
+                              checkbox.isCompleted ? "checked-content" : ""
+                            }
+                          >
+                            {checkbox.content}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
                 </div>
               )}
               {note.labels.length !== 0 && (

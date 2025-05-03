@@ -3,24 +3,27 @@ import Button from "../Tools/Button";
 import { NoteUpdateAction } from "@/utils/actions";
 
 const ListItem = ({
+  draggedID,
   handleCheckboxClick,
   updateListItemContent,
   bgColor,
   noteUUID,
+  getItemTransform,
   checkbox,
+  cbRefs,
+  lastItemRef,
+  getRef,
   handleDragStart,
-  lastListItemRef,
   setLocalNote,
   modalOpen,
   index,
 }) => {
-  const listItemRef = useRef(null);
-  const containerRef = useRef(null);
   const inputTimeoutRef = useRef(null);
+  const listItemRef = useRef(null);
 
   const setRefs = (element) => {
     listItemRef.current = element;
-    if (lastListItemRef) lastListItemRef.current = element;
+    if (lastItemRef) lastItemRef.current = element;
   };
 
   useEffect(() => {
@@ -96,15 +99,14 @@ const ListItem = ({
 
     startX = e.clientX;
     startY = e.clientY;
-    const targetElement = containerRef.current;
-    const target = e.target;
+    const targetElement = cbRefs.current[checkbox.uuid];
 
     const detectDrag = (event) => {
       const deltaX = Math.abs(event.clientX - startX);
       const deltaY = Math.abs(event.clientY - startY);
 
       if (deltaX > 5 || deltaY > 5) {
-        handleDragStart(e, targetElement, index);
+        handleDragStart(e, targetElement, index, checkbox.uuid, event.clientY);
       }
     };
 
@@ -120,12 +122,17 @@ const ListItem = ({
   return (
     <div
       key={checkbox.uuid}
-      ref={containerRef}
+      ref={getRef(checkbox.uuid)}
       className={`checkbox-wrapper note-checkbox-wrapper ${bgColor}`}
       style={{
+        transform: getItemTransform(checkbox.uuid),
         wordBreak: "break-all",
         padding: "0.4rem 0.8rem 0.4rem 1.7rem",
         lineHeight: "1.3rem",
+        transition:
+               checkbox.uuid === draggedID
+                  ? "none"
+                  : "transform 0.2s ease",
       }}
     >
       <div onMouseDown={handleMouseDown} className="drag-db-area" />

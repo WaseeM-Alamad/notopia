@@ -616,6 +616,23 @@ function notesReducer(state, action) {
       };
     }
 
+    case "DELETE_CHECKBOX": {
+      const updatedNotes = new Map(state.notes);
+      const note = updatedNotes.get(action.noteUUID);
+      const newCheckboxArr = note.checkboxes.filter(
+        (checkbox) => checkbox.uuid !== action.checkboxUUID
+      );
+      updatedNotes.set(action.noteUUID, {
+        ...note,
+        checkboxes: newCheckboxArr,
+      });
+
+      return {
+        ...state,
+        notes: updatedNotes,
+      };
+    }
+
     case "DELETE_CHECKED": {
       const updatedNotes = new Map(state.notes);
       const note = updatedNotes.get(action.noteUUID);

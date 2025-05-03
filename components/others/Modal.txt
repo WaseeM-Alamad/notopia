@@ -53,12 +53,17 @@ const Modal = ({
     : null;
 
   const { data: session } = useSession();
+  const [itemHeights, setItemHeights] = useState({});
+  const [initialPositions, setInitialPositions] = useState({});
+  const ghostElementRef = useRef(null);
+  const isDraggingRef = useRef(false);
+  const cbRefs = useRef({});
+  const lastItemRef = useRef(null);
   const userID = session?.user?.id;
   const titleTextRef = useRef(null);
   const contentTextRef = useRef(null);
   const CBcontainerRef = useRef(null);
   const addListItemRef = useRef(null);
-  const lastListItemRef = useRef(null);
   const titleRef = useRef(null);
   const contentRef = useRef(null);
   const modalRef = useRef(null);
@@ -66,6 +71,22 @@ const Modal = ({
   const trashRef = useRef(false);
   const imagesChangedRef = useRef(false);
   const prevHash = useRef(null);
+
+  useEffect(() => {
+    const heights = {};
+    const positions = {};
+
+    localNote?.checkboxes.forEach((cb) => {
+      const el = cbRefs.current[cb.uuid];
+      if (el) {
+        heights[cb.uuid] = el.offsetHeight;
+        positions[cb.id] = el.getBoundingClientRect().top;
+      }
+    });
+
+    setItemHeights(heights);
+    setInitialPositions(positions);
+  }, [localNote?.checkboxes]);
 
   const centerModal = () => {
     requestAnimationFrame(() => {
@@ -621,9 +642,9 @@ const Modal = ({
     }));
 
     requestAnimationFrame(() => {
-      lastListItemRef.current.innerText = text;
-      lastListItemRef.current.focus();
-      placeCursorAtEnd(lastListItemRef.current);
+      lastItemRef.current.innerText = text;
+      lastItemRef.current.focus();
+      placeCursorAtEnd(lastItemRef.current);
     });
 
     window.dispatchEvent(new Event("loadingStart"));
@@ -759,14 +780,46 @@ const Modal = ({
     return () => observer.disconnect();
   }, [isOpen]);
 
-  const ghostElementRef = useRef(null);
-  const isDraggingRef = useRef(false);
+  const getRef = (uuid) => {
+    if (!cbRefs.current[uuid]) {
+      cbRefs.current[uuid] = { current: null };
+    }
+    return (el) => {
+      cbRefs.current[uuid] = el;
+    };
+  };
 
-  const handleDragStart = (e, targetElement, index) => {
+  const draggedItemUUIDRef = useRef(null);
+  const [draggedOverItemId, setDraggedOverItemId] = useState(null);
+  const [dragStartY, setDragStartY] = useState(0);
+  const [currentDragY, setCurrentDragY] = useState(0);
+  const [draggedID , setDraggedID] = useState(null);
+
+  const handleDragStart = (
+    e,
+    targetElement,
+    index,
+    draggedUUID,
+    dragStartY
+  ) => {
     if (isDraggingRef.current) {
       return;
     }
     isDraggingRef.current = true;
+    draggedItemUUIDRef.current = draggedUUID;
+    setDragStartY(dragStartY);
+    setCurrentDragY(e.clientY);
+    setDraggedID(draggedUUID);
+    const positions = {};
+
+    localNote?.checkboxes.forEach((cb) => {
+      const el = cbRefs.current[cb.uuid];
+      if (el) {
+        positions[cb.uuid] = el.getBoundingClientRect().top;
+      }
+    });
+    setInitialPositions(positions);
+
     ghostElementRef.current = targetElement.cloneNode(true);
     const draggedElement = targetElement;
     draggedElement.style.opacity = "0";
@@ -788,7 +841,7 @@ const Modal = ({
 
     const offsetY = e.clientY - draggedRect.top;
 
-    const updateGhostPosition = (moveEvent) => {
+    const handleMouseMove = (moveEvent) => {
       const mouseY = moveEvent.clientY - offsetY;
       const containerRect = container.getBoundingClientRect();
       const ghostRect = ghostElement.getBoundingClientRect();
@@ -804,17 +857,45 @@ const Modal = ({
         return;
       }
       ghostElement.style.top = `${mouseY}px`;
+
+      setCurrentDragY(mouseY);
+      const cbUUIDs = localNote?.checkboxes.map((cb) => cb.uuid);
+      const dragDistance = mouseY - dragStartY;
+      const draggedElemTop = initialPositions[draggedUUID] + dragDistance;
+      const draggedElemBottom = draggedElemTop + itemHeights[draggedUUID];
+
+      let targetIndex = draggedInitialIndex;
+
+      for (let i = 0; i < localNote?.checkboxes.length; i++) {
+        if (i === draggedInitialIndex) continue;
+  
+        const currentId = cbUUIDs[i];
+        const currentTop = initialPositions[currentId];
+        const currentHeight = itemHeights[currentId];
+        const currentMiddle = currentTop + currentHeight / 2;
+  
+        if (i < draggedInitialIndex && draggedElemTop < currentMiddle) {
+          targetIndex = i;
+          break;
+        } else if (i > draggedInitialIndex && draggedElemBottom > currentMiddle) {
+          targetIndex = i;
+        }
+      }
+
+      if (targetIndex !== draggedInitialIndex) {
+        setDraggedOverItemId(cbUUIDs[targetIndex]);
+      }
+
     };
 
-    document.addEventListener("mousemove", updateGhostPosition);
+    document.addEventListener("mousemove", handleMouseMove);
 
     const handleDragEnd = () => {
       if (ghostElement && document.body.contains(ghostElement)) {
-        ghostElement.classList.remove("ghost-list-item")
+        ghostElement.classList.remove("ghost-list-item");
         ghostElement.classList.add("restore-ghost-list-item");
         const finalDragRect = draggedElement.getBoundingClientRect();
-        ghostElement.style.transition =
-          "all .21s ease";
+        ghostElement.style.transition = "all .21s ease";
         ghostElement.style.boxShadow = "none";
         ghostElement.style.top = `${finalDragRect.top}px`;
         ghostElement.style.transform = "none";
@@ -830,11 +911,44 @@ const Modal = ({
         }
       }
 
-      document.removeEventListener("mousemove", updateGhostPosition);
+      document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleDragEnd);
     };
 
     document.addEventListener("mouseup", handleDragEnd);
+  };
+
+  const getItemTransform = (uuid) => {
+    if (!isDraggingRef.current) return "translateY(0)";
+
+    if (uuid === draggedItemUUIDRef.current) {
+      // Move dragged item with cursor
+      const dragDistance = currentDragY - dragStartY;
+      return `translateY(${dragDistance}px)`;
+    }
+
+    if (draggedItemUUIDRef.current !== null && draggedOverItemId !== null) {
+      const draggedIndex = localNote?.checkboxes.findIndex((cb) => cb.uuid === draggedItemUUIDRef.current);
+      const overIndex = localNote?.checkboxes.findIndex(
+        (cb) => cb.uuid === draggedOverItemId
+      );
+      const currentIndex = localNote?.checkboxes.findIndex((cb) => cb.uuid === uuid);
+
+      // Move items up or down depending on drag direction
+      if (draggedIndex < overIndex) {
+        // Dragging down
+        if (currentIndex > draggedIndex && currentIndex <= overIndex) {
+          return `translateY(-${itemHeights[draggedItemUUIDRef.current] || 0}px)`;
+        }
+      } else if (draggedIndex > overIndex) {
+        // Dragging up
+        if (currentIndex < draggedIndex && currentIndex >= overIndex) {
+          return `translateY(${itemHeights[draggedItemUUIDRef.current] || 0}px)`;
+        }
+      }
+    }
+
+    return "translateY(0)";
   };
 
   if (!isMounted) return;
@@ -958,12 +1072,20 @@ const Modal = ({
                   return (
                     <ListItem
                       key={checkbox.uuid}
+                      draggedID={draggedID}
                       bgColor={localNote?.color}
                       dispatchNotes={dispatchNotes}
                       handleCheckboxClick={handleCheckboxClick}
                       updateListItemContent={updateListItemContent}
                       checkbox={checkbox}
-                      lastListItemRef={lastListItemRef}
+                      getItemTransform={getItemTransform}
+                      cbRefs={cbRefs}
+                      lastItemRef={
+                        index === localNote?.checkboxes.length - 1
+                          ? lastItemRef
+                          : undefined
+                      }
+                      getRef={getRef}
                       handleDragStart={handleDragStart}
                       modalOpen={isOpen}
                       setLocalNote={setLocalNote}
