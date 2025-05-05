@@ -17,7 +17,7 @@ import NoteImagesLayout from "../Tools/NoteImagesLayout";
 import { useSession } from "next-auth/react";
 import { useAppContext } from "@/context/AppContext";
 import { v4 as uuid } from "uuid";
-import ListItem from "./ListItem";
+import ListItemsLayout from "./ListitemsLayout";
 
 const Modal = ({
   note,
@@ -35,15 +35,9 @@ const Modal = ({
   const { handleLabelNoteCount, labelsRef, ignoreKeysRef } = useAppContext();
   const [isMounted, setIsMounted] = useState(false);
   const [localNote, setLocalNote] = useState(null);
+  const [localPinned, setLocalPinned] = useState(null);
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
-  const renderCBdivider =
-    localNote?.checkboxes.some((cb) => cb.isCompleted) &&
-    localNote?.checkboxes.some((cb) => !cb.isCompleted);
-  const completedItemsCount = localNote?.checkboxes.reduce((acc, cb) => {
-    return cb.isCompleted ? acc + 1 : acc;
-  }, 0);
-
   const formattedEditedDate = isOpen
     ? getNoteFormattedDate(note?.updatedAt)
     : null;
@@ -56,9 +50,7 @@ const Modal = ({
   const userID = session?.user?.id;
   const titleTextRef = useRef(null);
   const contentTextRef = useRef(null);
-  const CBcontainerRef = useRef(null);
   const addListItemRef = useRef(null);
-  const lastListItemRef = useRef(null);
   const titleRef = useRef(null);
   const contentRef = useRef(null);
   const modalRef = useRef(null);
@@ -102,6 +94,7 @@ const Modal = ({
 
   const reset = () => {
     setLocalNote(null);
+    setLocalPinned(null);
     setRedoStack([]);
     setUndoStack([]);
   };
@@ -118,9 +111,10 @@ const Modal = ({
 
     if (JSON.stringify(cleanLocalNote) !== JSON.stringify(cleanNote)) {
       dispatchNotes({ type: "SET_NOTE", note: localNote });
+      console.log("change");
     }
 
-    if (localNote?.isPinned !== note?.isPinned) {
+    if (localPinned !== note?.isPinned) {
       setTimeout(() => {
         dispatchNotes({
           type: "PIN_NOTE",
@@ -177,6 +171,7 @@ const Modal = ({
       archiveRef.current = false;
       trashRef.current = false;
       setLocalNote(note);
+      setLocalPinned(note?.isPinned);
       titleTextRef.current = note?.title;
       contentTextRef.current = note?.content;
 
@@ -270,8 +265,6 @@ const Modal = ({
       // modalRef.current.style.marginLeft = `${0}px`;
       if (nav) nav.style.paddingRight = `${scrollbarWidth}px`;
     } else {
-      const scrollbarWidth =
-        window.innerWidth - document.documentElement.clientWidth;
       document.body.style.overflow = "auto";
       document.body.style.paddingRight = ""; // Remove padding
       // if (modalRef.current)
@@ -326,7 +319,7 @@ const Modal = ({
       snackMessage: `${
         note.isArchived
           ? "Note unarchived"
-          : localNote?.isPinned
+          : localPinned
           ? "Note unpinned and archived"
           : "Note Archived"
       }`,
@@ -372,7 +365,7 @@ const Modal = ({
     if (!note.isTrash) {
       openSnackFunction({
         snackMessage: `${
-          localNote?.isPinned ? "Note unpinned and trashed" : "Note trashed"
+          localPinned ? "Note unpinned and trashed" : "Note trashed"
         }`,
         snackOnUndo: undoTrash,
         snackOnClose: onClose,
@@ -383,12 +376,12 @@ const Modal = ({
   };
 
   const handlePinClick = async () => {
-    setLocalNote((prev) => ({ ...prev, isPinned: !prev.isPinned }));
+    setLocalPinned((prev) => !prev);
     window.dispatchEvent(new Event("loadingStart"));
     try {
       await NoteUpdateAction({
         type: "isPinned",
-        value: !localNote?.isPinned,
+        value: !localPinned,
         noteUUIDs: [note.uuid],
       });
     } finally {
@@ -476,21 +469,6 @@ const Modal = ({
       window.dispatchEvent(new Event("loadingEnd"));
     }, 600),
     [note?.uuid] // Dependencies array, make sure it's updated when `note.uuid` changes
-  );
-
-  const updateListItemContent = useCallback(
-    debounce(async (text, cbUUID) => {
-      window.dispatchEvent(new Event("loadingStart"));
-      await NoteUpdateAction({
-        type: "checkboxes",
-        operation: "UPDATE_CONTENT",
-        value: text,
-        checkboxUUID: cbUUID,
-        noteUUIDs: [note.uuid],
-      });
-      window.dispatchEvent(new Event("loadingEnd"));
-    }, 600),
-    [note?.uuid]
   );
 
   const titleDebouncedSetUndo = useCallback(
@@ -595,57 +573,6 @@ const Modal = ({
     [note?.content, note?.title, undoStack]
   );
 
-  function placeCursorAtEnd(el) {
-    if (!el) return;
-    const range = document.createRange();
-    const sel = window.getSelection();
-    range.selectNodeContents(el);
-    range.collapse(false); // false = move to end
-    sel.removeAllRanges();
-    sel.addRange(range);
-  }
-
-  const addListItem = async (text) => {
-    const newUUID = uuid();
-    const checkbox = {
-      uuid: newUUID,
-      content: text,
-      isCompleted: false,
-      parent: null,
-      children: [],
-    };
-
-    setLocalNote((prev) => ({
-      ...prev,
-      checkboxes: [...prev.checkboxes, checkbox],
-    }));
-
-    requestAnimationFrame(() => {
-      lastListItemRef.current.innerText = text;
-      lastListItemRef.current.focus();
-      placeCursorAtEnd(lastListItemRef.current);
-    });
-
-    window.dispatchEvent(new Event("loadingStart"));
-    await NoteUpdateAction({
-      type: "checkboxes",
-      operation: "ADD",
-      value: checkbox,
-      noteUUIDs: [note.uuid],
-    });
-    window.dispatchEvent(new Event("loadingEnd"));
-  };
-
-  const handleNewListItemInput = (e) => {
-    if (e.target.innerText.trim() === "") {
-      e.target.innerText = "";
-      return;
-    }
-    const text = e.target.innerText.trim();
-    addListItem(text);
-    e.target.innerText = "";
-  };
-
   const checkForChanges = () => {
     if (
       titleTextRef.current !== note?.title ||
@@ -710,43 +637,6 @@ const Modal = ({
     window.dispatchEvent(new Event("loadingEnd"));
   };
 
-  const handleExpand = async () => {
-    const val = !localNote?.expandCompleted;
-    setLocalNote((prev) => ({
-      ...prev,
-      expandCompleted: val,
-    }));
-
-    window.dispatchEvent(new Event("loadingStart"));
-    await NoteUpdateAction({
-      type: "expandCompleted",
-      value: val,
-      noteUUIDs: [note.uuid],
-    });
-    window.dispatchEvent(new Event("loadingEnd"));
-  };
-
-  const handleCheckboxClick = useCallback(
-    async (e, checkboxUUID, value) => {
-      e.stopPropagation();
-      setLocalNote((prev) => ({
-        ...prev,
-        checkboxes: prev.checkboxes.map((cb) => {
-          return cb.uuid === checkboxUUID ? { ...cb, isCompleted: value } : cb;
-        }),
-      }));
-      window.dispatchEvent(new Event("loadingStart"));
-      await NoteUpdateAction({
-        type: "checkboxes",
-        operation: "MANAGE_COMPLETED",
-        value: value,
-        checkboxUUID: checkboxUUID,
-        noteUUIDs: [note.uuid],
-      });
-      window.dispatchEvent(new Event("loadingEnd"));
-    },
-    [note?.uuid]
-  );
 
   useEffect(() => {
     if (!isOpen) return;
@@ -758,84 +648,6 @@ const Modal = ({
 
     return () => observer.disconnect();
   }, [isOpen]);
-
-  const ghostElementRef = useRef(null);
-  const isDraggingRef = useRef(false);
-
-  const handleDragStart = (e, targetElement, index) => {
-    if (isDraggingRef.current) {
-      return;
-    }
-    isDraggingRef.current = true;
-    ghostElementRef.current = targetElement.cloneNode(true);
-    const draggedElement = targetElement;
-    draggedElement.style.opacity = "0";
-    const draggedInitialIndex = index;
-    const ghostElement = ghostElementRef.current;
-    const draggedRect = draggedElement.getBoundingClientRect();
-    document.body.appendChild(ghostElement);
-    document.body.classList.add("dragging");
-    ghostElement.style.left = `${draggedRect.left}px`;
-    ghostElement.style.top = `${draggedRect.top}px`;
-    ghostElement.style.width = draggedElement.offsetWidth + "px";
-    ghostElement.classList.add("ghost-list-item");
-    requestAnimationFrame(() => {
-      ghostElement.style.transition = "transform .13s ease";
-      ghostElement.style.transform = "scale(1.03)";
-    });
-
-    const container = CBcontainerRef.current;
-
-    const offsetY = e.clientY - draggedRect.top;
-
-    const updateGhostPosition = (moveEvent) => {
-      const mouseY = moveEvent.clientY - offsetY;
-      const containerRect = container.getBoundingClientRect();
-      const ghostRect = ghostElement.getBoundingClientRect();
-      const containerY = {
-        top: containerRect.top,
-        bottom: containerRect.bottom - ghostRect.height,
-      };
-      const ghostY = { top: ghostRect.top, bottom: ghostRect.bottom };
-      if (
-        (ghostY.top <= containerY.top && mouseY <= containerY.top) ||
-        (ghostY.bottom >= containerY.bottom && mouseY >= containerY.bottom)
-      ) {
-        return;
-      }
-      ghostElement.style.top = `${mouseY}px`;
-    };
-
-    document.addEventListener("mousemove", updateGhostPosition);
-
-    const handleDragEnd = () => {
-      if (ghostElement && document.body.contains(ghostElement)) {
-        ghostElement.classList.remove("ghost-list-item")
-        ghostElement.classList.add("restore-ghost-list-item");
-        const finalDragRect = draggedElement.getBoundingClientRect();
-        ghostElement.style.transition =
-          "all .21s ease";
-        ghostElement.style.boxShadow = "none";
-        ghostElement.style.top = `${finalDragRect.top}px`;
-        ghostElement.style.transform = "none";
-
-        setTimeout(() => {
-          draggedElement.style.opacity = "1";
-          document.body.removeChild(ghostElement);
-        }, 250);
-
-        isDraggingRef.current = false;
-        if (document.body.classList.contains("dragging")) {
-          document.body.classList.remove("dragging");
-        }
-      }
-
-      document.removeEventListener("mousemove", updateGhostPosition);
-      document.removeEventListener("mouseup", handleDragEnd);
-    };
-
-    document.addEventListener("mouseup", handleDragEnd);
-  };
 
   if (!isMounted) return;
 
@@ -867,9 +679,9 @@ const Modal = ({
           <div style={{ opacity: !isOpen && "0" }} className="modal-pin">
             <Button onClick={handlePinClick} disabled={!isOpen}>
               <PinIcon
-                isPinned={localNote?.isPinned}
+                isPinned={localPinned}
                 opacity={0.8}
-                rotation={localNote?.isPinned ? "-45deg" : "-5deg"}
+                rotation={localPinned ? "-45deg" : "-5deg"}
                 images={localNote?.images.length !== 0}
               />
             </Button>
@@ -946,110 +758,12 @@ const Modal = ({
             spellCheck="false"
           />
 
-          {localNote?.checkboxes?.length > 0 && localNote?.showCheckboxes && (
-            <div
-              style={{
-                paddingBottom: "1.2rem",
-              }}
-            >
-              <div ref={CBcontainerRef}>
-                {localNote?.checkboxes.map((checkbox, index) => {
-                  if (checkbox.isCompleted) return null;
-                  return (
-                    <ListItem
-                      key={checkbox.uuid}
-                      bgColor={localNote?.color}
-                      dispatchNotes={dispatchNotes}
-                      handleCheckboxClick={handleCheckboxClick}
-                      updateListItemContent={updateListItemContent}
-                      checkbox={checkbox}
-                      lastListItemRef={lastListItemRef}
-                      handleDragStart={handleDragStart}
-                      modalOpen={isOpen}
-                      setLocalNote={setLocalNote}
-                      noteUUID={note.uuid}
-                      index={index}
-                    />
-                  );
-                })}
-              </div>
-              <div style={{ position: "relative" }}>
-                <div className="add-item-icon" />
-                <div
-                  contentEditable
-                  aria-multiline="true"
-                  onInput={handleNewListItemInput}
-                  suppressContentEditableWarning
-                  onPaste={handlePaste}
-                  className="add-list-item"
-                  aria-label="List item"
-                />
-              </div>
-              <div style={{ display: "flex", justifyContent: "center" }}>
-                {renderCBdivider && (
-                  <div
-                    className="checkboxes-divider"
-                    style={{ width: "90%" }}
-                  />
-                )}
-              </div>
-              {completedItemsCount > 0 && (
-                <div
-                  onClick={handleExpand}
-                  className="completed-items"
-                  aria-label={`${completedItemsCount} Completed item${
-                    completedItemsCount === 1 ? "" : "s"
-                  }`}
-                >
-                  <div
-                    className={`completed-collapsed ${
-                      localNote?.expandCompleted ? "completed-expanded" : ""
-                    }`}
-                  />
-                </div>
-              )}
-              {localNote?.expandCompleted &&
-                localNote?.checkboxes.map((checkbox) => {
-                  if (!checkbox.isCompleted) return null;
-                  return (
-                    <div
-                      key={checkbox.uuid}
-                      className="checkbox-wrapper note-checkbox-wrapper"
-                      style={{
-                        wordBreak: "break-all",
-                        padding: "0.4rem 0.8rem 0.4rem 1.7rem",
-                        lineHeight: "1.3rem",
-                      }}
-                    >
-                      <div
-                        onClick={(e) =>
-                          handleCheckboxClick(
-                            e,
-                            checkbox.uuid,
-                            !checkbox.isCompleted
-                          )
-                        }
-                        className={`note-checkbox checkbox-unchecked ${
-                          checkbox.isCompleted ? "checkbox-checked" : ""
-                        }`}
-                      />
-                      <div
-                        style={{
-                          width: "100%",
-                          paddingLeft: "0.5rem",
-                          fontSize: "1rem",
-                        }}
-                        className={
-                          checkbox.isCompleted ? "checked-content" : ""
-                        }
-                      >
-                        {checkbox.content}
-                      </div>
-                    </div>
-                  );
-                })}
-            </div>
-          )}
+          <ListItemsLayout
+            localNote={localNote}
+            setLocalNote={setLocalNote}
+            dispatchNotes={dispatchNotes}
+            isOpen={isOpen}
+          />
 
           {localNote?.labels.length > 0 && (
             <div

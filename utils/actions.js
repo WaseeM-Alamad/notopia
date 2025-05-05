@@ -208,6 +208,25 @@ export const NoteUpdateAction = async (data) => {
           );
           break;
         }
+        case "UPDATE_ORDER": {
+          const note = await Note.findOne({
+            uuid: data.noteUUIDs[0],
+            creator: userID,
+          });
+          const checkboxes = note.checkboxes;
+          const updatedList = [...checkboxes];
+          const [draggedItem] = updatedList.splice(data.initialIndex, 1);
+          updatedList.splice(data.endIndex, 0, draggedItem);
+          await Note.updateOne(
+            {
+              uuid: data.noteUUIDs[0],
+              creator: userID,
+            },
+            {
+              $set: { checkboxes: updatedList },
+            }
+          );
+        }
       }
     } else {
       await Note.updateMany(

@@ -5,11 +5,12 @@ import { NoteUpdateAction } from "@/utils/actions";
 const ListItem = ({
   handleCheckboxClick,
   updateListItemContent,
-  bgColor,
   noteUUID,
   checkbox,
   handleDragStart,
+  itemRefs,
   lastListItemRef,
+  overIndexRef,
   setLocalNote,
   modalOpen,
   index,
@@ -40,8 +41,6 @@ const ListItem = ({
 
   useEffect(() => {
     if (!listItemRef.current) return;
-
-    console.log("hihi");
 
     listItemRef.current.innerText = checkbox.content;
   }, []);
@@ -90,13 +89,13 @@ const ListItem = ({
   let startX, startY;
 
   const handleMouseDown = (e) => {
-    if (e.button !== 0) {
+    if (e.button !== 0 || checkbox.isCompleted) {
       return;
     }
 
     startX = e.clientX;
     startY = e.clientY;
-    const targetElement = containerRef.current;
+    const targetElement = itemRefs.current[index];
     const target = e.target;
 
     const detectDrag = (event) => {
@@ -117,18 +116,31 @@ const ListItem = ({
     document.addEventListener("mouseup", handleMouseUp);
   };
 
+  const handleMouseEnter = () => {
+    overIndexRef.current = index;
+  };
+
   return (
     <div
+      onMouseEnter={handleMouseEnter}
       key={checkbox.uuid}
-      ref={containerRef}
-      className={`checkbox-wrapper note-checkbox-wrapper ${bgColor}`}
+      ref={(el) => {
+        if (checkbox.isCompleted) {
+          return;
+        } else {
+          itemRefs.current[index] = el;
+        }
+      }}
+      className={`checkbox-wrapper note-checkbox-wrapper`}
       style={{
         wordBreak: "break-all",
         padding: "0.4rem 0.8rem 0.4rem 1.7rem",
         lineHeight: "1.3rem",
       }}
     >
-      <div onMouseDown={handleMouseDown} className="drag-db-area" />
+      {!checkbox.isCompleted && (
+        <div onMouseDown={handleMouseDown} className="drag-db-area" />
+      )}
       <Button onClick={handleDelete} className="delete-list-item" />
       {/* <div className="clear-icon"/> */}
       <div
@@ -141,6 +153,7 @@ const ListItem = ({
       />
       <div
         contentEditable
+        spellCheck="false"
         style={{
           width: "100%",
           paddingLeft: "0.5rem",

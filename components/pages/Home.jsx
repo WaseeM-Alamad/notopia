@@ -333,7 +333,7 @@ const Home = memo(
         const draggedInitialIndex = index;
         draggedIndexRef.current = index;
         draggedIsPinnedRef.current = isPinned;
-        draggedElement.classList.add("dragged-note");
+        draggedElement.classList.add("dragged-element");
         document.querySelector(".starting-div")?.classList.add("dragging");
 
         const rect = draggedElement.getBoundingClientRect();
@@ -394,7 +394,7 @@ const Home = memo(
                 if (document.body.contains(ghostElement)) {
                   document.body.removeChild(ghostElement);
                 }
-                draggedElement.classList.remove("dragged-note");
+                draggedElement.classList.remove("dragged-element");
                 if (document.body.classList.contains("dragging")) {
                   document.body.classList.remove("dragging");
                 }
@@ -431,7 +431,7 @@ const Home = memo(
       lastSwapRef.current = now;
 
       if (draggedIndexRef.current === null || overIndexRef.current === null)
-        return prevOrder;
+        return null;
       endIndexRef.current = overIndexRef.current;
 
       // Copy notes to avoid mutating state directly

@@ -3,27 +3,24 @@ import Button from "../Tools/Button";
 import { NoteUpdateAction } from "@/utils/actions";
 
 const ListItem = ({
-  draggedID,
   handleCheckboxClick,
   updateListItemContent,
-  bgColor,
   noteUUID,
-  getItemTransform,
   checkbox,
-  cbRefs,
-  lastItemRef,
-  getRef,
   handleDragStart,
+  itemRefs,
+  lastListItemRef,
   setLocalNote,
   modalOpen,
   index,
 }) => {
-  const inputTimeoutRef = useRef(null);
   const listItemRef = useRef(null);
+  const containerRef = useRef(null);
+  const inputTimeoutRef = useRef(null);
 
   const setRefs = (element) => {
     listItemRef.current = element;
-    if (lastItemRef) lastItemRef.current = element;
+    if (lastListItemRef) lastListItemRef.current = element;
   };
 
   useEffect(() => {
@@ -43,8 +40,6 @@ const ListItem = ({
 
   useEffect(() => {
     if (!listItemRef.current) return;
-
-    console.log("hihi");
 
     listItemRef.current.innerText = checkbox.content;
   }, []);
@@ -93,20 +88,21 @@ const ListItem = ({
   let startX, startY;
 
   const handleMouseDown = (e) => {
-    if (e.button !== 0) {
+    if (e.button !== 0 || checkbox.isCompleted) {
       return;
     }
 
     startX = e.clientX;
     startY = e.clientY;
-    const targetElement = cbRefs.current[checkbox.uuid];
+    const targetElement = itemRefs.current[checkbox.uuid];
+    const target = e.target;
 
     const detectDrag = (event) => {
       const deltaX = Math.abs(event.clientX - startX);
       const deltaY = Math.abs(event.clientY - startY);
 
       if (deltaX > 5 || deltaY > 5) {
-        handleDragStart(e, targetElement, index, checkbox.uuid, event.clientY);
+        handleDragStart(e, targetElement, index, checkbox.uuid);
       }
     };
 
@@ -122,20 +118,23 @@ const ListItem = ({
   return (
     <div
       key={checkbox.uuid}
-      ref={getRef(checkbox.uuid)}
-      className={`checkbox-wrapper note-checkbox-wrapper ${bgColor}`}
+      ref={(el) => {
+        if (checkbox.isCompleted) {
+          return;
+        } else {
+          itemRefs.current[checkbox.uuid] = el;
+        }
+      }}
+      className={`checkbox-wrapper note-checkbox-wrapper`}
       style={{
-        transform: getItemTransform(checkbox.uuid),
         wordBreak: "break-all",
         padding: "0.4rem 0.8rem 0.4rem 1.7rem",
         lineHeight: "1.3rem",
-        transition:
-               checkbox.uuid === draggedID
-                  ? "none"
-                  : "transform 0.2s ease",
       }}
     >
-      <div onMouseDown={handleMouseDown} className="drag-db-area" />
+      {!checkbox.isCompleted && (
+        <div onMouseDown={handleMouseDown} className="drag-db-area" />
+      )}
       <Button onClick={handleDelete} className="delete-list-item" />
       {/* <div className="clear-icon"/> */}
       <div
@@ -148,6 +147,7 @@ const ListItem = ({
       />
       <div
         contentEditable
+        spellCheck="false"
         style={{
           width: "100%",
           paddingLeft: "0.5rem",

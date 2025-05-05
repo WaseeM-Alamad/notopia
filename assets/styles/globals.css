@@ -926,6 +926,7 @@ img {
   cursor: move !important;
   box-shadow: none !important;
   transform: none !important;
+  transition: all .21s ease !important;
 }
 
 .restore-ghost-note {
@@ -940,7 +941,7 @@ img {
   transition: all 0.25s cubic-bezier(0.52, 0, 0.18, 1), height 0.1s !important;
 }
 
-.dragged-note {
+.dragged-element {
   opacity: 0 !important;
   transition: none !important;
   pointer-events: none !important;
@@ -1086,6 +1087,7 @@ img {
 
 .note-checkbox-wrapper {
   box-sizing: border-box;
+  width: 100%;
   position: relative;
   cursor: default;
   padding: 0.6rem 0.8rem 0.126rem 0.8rem;
@@ -1109,6 +1111,18 @@ img {
 
 .dark-mode .note-checkbox-wrapper:hover {
   background-color: transparent;
+}
+
+.note-checkbox-wrapper:active {
+  background-color: transparent;
+}
+
+.dark-mode .note-checkbox-wrapper:active {
+  background-color: transparent;
+}
+
+.dragging .note-checkbox-wrapper {
+  transition: transform 0.2s ease;
 }
 
 .checkboxes-divider {
@@ -1190,9 +1204,9 @@ img {
   background: url("data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjE4cHgiIHdpZHRoPSIxOHB4IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCIgZmlsbD0iIzAwMDAwMCI+CiA8cGF0aCBkPSJtNy41IDQuNWwtMS4wNiAxLjA2IDMuNDQgMy40NC0zLjQ0IDMuNDQgMS4wNiAxLjA2IDQuNS00LjV6Ii8+CiA8cGF0aCBkPSJtMCAwaDE4djE4aC0xOHoiIGZpbGw9Im5vbmUiLz4KPC9zdmc+Cg==")
     center center no-repeat;
   position: absolute;
-  left: 1.7rem;
-  bottom: 1px;
+  left: 1.5rem;
   height: 24px;
+  top: .95rem;
   width: 24px;
 }
 
@@ -1208,8 +1222,8 @@ img {
 .completed-items {
   position: relative;
   padding-top: 1rem;
-  padding-left: 4rem;
-  padding-bottom: 3px;
+  padding-left: 3.6rem;
+  padding-bottom: 0.4rem;
   opacity: 0.64;
   cursor: pointer;
   transition: opacity 0.13s ease;
