@@ -117,13 +117,13 @@ const ListItem = ({
   };
 
   const handleMouseEnter = () => {
+    if (checkbox.isCompleted) return;
     overIndexRef.current = index;
   };
 
   return (
     <div
       onMouseEnter={handleMouseEnter}
-      key={checkbox.uuid}
       ref={(el) => {
         if (checkbox.isCompleted) {
           return;
@@ -131,41 +131,46 @@ const ListItem = ({
           itemRefs.current[index] = el;
         }
       }}
-      className={`checkbox-wrapper note-checkbox-wrapper`}
-      style={{
-        wordBreak: "break-all",
-        padding: "0.4rem 0.8rem 0.4rem 1.7rem",
-        lineHeight: "1.3rem",
-      }}
+      className="list-item"
+      style={{paddingLeft: checkbox?.parent && "1.3rem" }}
     >
-      {!checkbox.isCompleted && (
-        <div onMouseDown={handleMouseDown} className="drag-db-area" />
-      )}
-      <Button onClick={handleDelete} className="delete-list-item" />
-      {/* <div className="clear-icon"/> */}
       <div
-        onClick={(e) =>
-          handleCheckboxClick(e, checkbox.uuid, !checkbox.isCompleted)
-        }
-        className={`note-checkbox checkbox-unchecked ${
-          checkbox.isCompleted ? "checkbox-checked" : ""
-        }`}
-      />
-      <div
-        contentEditable
-        spellCheck="false"
+        className={`checkbox-wrapper note-checkbox-wrapper`}
         style={{
-          width: "100%",
-          paddingLeft: "0.5rem",
-          fontSize: "1rem",
+          wordBreak: "break-all",
+          padding: "0.4rem 0.8rem 0.4rem 1.7rem",
+          lineHeight: "1.3rem",
         }}
-        onPaste={handlePaste}
-        onInput={handleListInput}
-        className={`list-item-input ${
-          checkbox.isCompleted ? "checked-content" : ""
-        }`}
-        ref={setRefs}
-      />
+      >
+        {!checkbox.isCompleted && (
+          <div onMouseDown={handleMouseDown} className="drag-db-area" />
+        )}
+        <Button onClick={handleDelete} className="delete-list-item" />
+        {/* <div className="clear-icon"/> */}
+        <div
+          onClick={(e) =>
+            handleCheckboxClick(e, checkbox.uuid, !checkbox.isCompleted)
+          }
+          className={`note-checkbox checkbox-unchecked ${
+            checkbox.isCompleted ? "checkbox-checked" : ""
+          }`}
+        />
+        <div
+          contentEditable
+          spellCheck="false"
+          style={{
+            width: "100%",
+            paddingLeft: "0.5rem",
+            fontSize: "1rem",
+          }}
+          onPaste={handlePaste}
+          onInput={handleListInput}
+          className={`list-item-input ${
+            checkbox.isCompleted ? "checked-content" : ""
+          }`}
+          ref={setRefs}
+        />
+      </div>
     </div>
   );
 };

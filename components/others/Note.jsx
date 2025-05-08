@@ -33,12 +33,8 @@ const Note = memo(
     const [moreMenuOpen, setMoreMenuOpen] = useState(false);
     const [isLoadingImages, setIsLoadingImages] = useState([]);
     const [selected, setSelected] = useState(false);
-    const renderCBdivider =
-      note.checkboxes.some((cb) => cb.isCompleted) &&
-      note.checkboxes.some((cb) => !cb.isCompleted);
-    const completedItemsCount = note?.checkboxes.reduce((acc, cb) => {
-      return cb.isCompleted ? acc + 1 : acc;
-    }, 0);
+    const uncheckedItems = note?.checkboxes.filter((cb) => !cb.isCompleted);
+    const checkedItems = note?.checkboxes.filter((cb) => cb.isCompleted);
     const isLoading = isLoadingImagesAddNote.includes(note.uuid);
     const noteDataRef = useRef(null);
     const inputsRef = useRef(null);
@@ -276,7 +272,17 @@ const Note = memo(
             }
           >
             <div>
-              {note.images.length === 0 && <div className="corner" />}
+              <div
+                style={{
+                  position:
+                    (note.images.length > 0 ||
+                      (note.checkboxes.length > 0 &&
+                        !note.title.trim() &&
+                        !note.content.trim())) &&
+                    "absolute",
+                }}
+                className="corner"
+              />
               <div
                 style={{
                   opacity: colorMenuOpen ? "1" : undefined,
@@ -346,8 +352,7 @@ const Note = memo(
                     paddingBottom: "0.4rem",
                   }}
                 >
-                  {note.checkboxes.map((checkbox) => {
-                    if (checkbox.isCompleted) return null;
+                  {uncheckedItems.map((checkbox, index) => {
                     return (
                       <div
                         key={checkbox.uuid}
@@ -355,6 +360,11 @@ const Note = memo(
                         style={{
                           wordBreak: "break-all",
                           paddingLeft: "0.7rem",
+                          paddingRight:
+                            !note.content.trim() &&
+                            !note.title.trim() &&
+                            index === 0 &&
+                            "2.5rem",
                         }}
                       >
                         <div
@@ -392,21 +402,22 @@ const Note = memo(
                       cursor: "pointer",
                     }}
                   >
-                    {renderCBdivider && <div className="checkboxes-divider" />}
+                    {checkedItems.length > 0 && uncheckedItems.length > 0 && (
+                      <div className="checkboxes-divider" />
+                    )}
                   </div>
 
-                  {completedItemsCount > 0 && !note.expandCompleted && (
+                  {checkedItems.length > 0 && !note.expandCompleted && (
                     <div
                       className="completed-items completed-items-note"
-                      aria-label={`${completedItemsCount} Completed item${
-                        completedItemsCount === 1 ? "" : "s"
+                      aria-label={`${checkedItems.length} Completed item${
+                        checkedItems.length === 1 ? "" : "s"
                       }`}
                     />
                   )}
 
                   {note.expandCompleted &&
-                    note.checkboxes.map((checkbox) => {
-                      if (!checkbox.isCompleted) return null;
+                    checkedItems.map((checkbox) => {
                       return (
                         <div
                           key={checkbox.uuid}

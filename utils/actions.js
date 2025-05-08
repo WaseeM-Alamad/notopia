@@ -226,6 +226,39 @@ export const NoteUpdateAction = async (data) => {
               $set: { checkboxes: updatedList },
             }
           );
+          break;
+        }
+        case "INDENT": {
+          await Note.updateOne(
+            { uuid: data.noteUUIDs[0], creator: userID },
+            {
+              $push: { "checkboxes.$[parentCB].children": data.childUUID },
+              $set: { "checkboxes.$[childCB].parent": data.parentUUID },
+            },
+            {
+              arrayFilters: [
+                { "parentCB.uuid": data.parentUUID },
+                { "childCB.uuid": data.childUUID },
+              ],
+            }
+          );
+          break;
+        }
+        case "UNINDENT": {
+          await Note.updateOne(
+            { uuid: data.noteUUIDs[0], creator: userID },
+            {
+              $pull: { "checkboxes.$[parentCB].children": data.childUUID },
+              $set: { "checkboxes.$[childCB].parent": null },
+            },
+            {
+              arrayFilters: [
+                { "parentCB.uuid": data.parentUUID },
+                { "childCB.uuid": data.childUUID },
+              ],
+            }
+          );
+          break;
         }
       }
     } else {
