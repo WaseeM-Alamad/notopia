@@ -48,7 +48,7 @@ svg {
 ::-webkit-scrollbar-thumb {
   background: #c0c0c0;
 
-  border-radius: 0.3em;
+  /* border-radius: 0.3em; */
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -1109,6 +1109,10 @@ img {
   padding: 0.6rem 0.9375rem 0.126rem 0.8rem;
 }
 
+.note-checkbox-wrapper * {
+  user-select: none;
+}
+
 .note-checkbox-wrapper:hover {
   background-color: transparent;
 }
@@ -1316,6 +1320,18 @@ img {
   border: none;
   outline: none;
   cursor: text;
+}
+
+.list-item-input:empty:before {
+  content: attr(aria-label);
+  color: rgba(32, 33, 36, 0.7);
+  font-weight: 600;
+  text-align: center;
+  margin-top: 9px;
+  letter-spacing: 0.00625em;
+  font-variant-ligatures: none;
+  font-size: 0.9rem;
+  /* line-height: 1.5rem; */
 }
 
 .delete-list-item {

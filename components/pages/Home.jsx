@@ -570,6 +570,7 @@ const Home = memo(
         /> */}
         <AddNoteModall
           dispatchNotes={dispatchNotes}
+          containerRef={containerRef}
           lastAddedNoteRef={lastAddedNoteRef}
           setTooltipAnchor={setTooltipAnchor}
           openSnackFunction={openSnackFunction}

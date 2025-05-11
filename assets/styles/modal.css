@@ -336,6 +336,7 @@
 .settings-modal {
   position: relative;
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+  will-change: transform;
   border-radius: 1rem;
   width: 422px;
   box-sizing: border-box;

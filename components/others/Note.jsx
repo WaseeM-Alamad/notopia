@@ -359,7 +359,7 @@ const Note = memo(
                         className="checkbox-wrapper note-checkbox-wrapper"
                         style={{
                           wordBreak: "break-all",
-                          paddingLeft: "0.7rem",
+                          paddingLeft: checkbox.parent ? "1.8rem" : "0.7rem",
                           paddingRight:
                             !note.content.trim() &&
                             !note.title.trim() &&
@@ -395,15 +395,17 @@ const Note = memo(
                     );
                   })}
                   <div
-                    onClick={handleExpand}
                     style={{
                       display: "flex",
                       justifyContent: "center",
-                      cursor: "pointer",
                     }}
                   >
                     {checkedItems.length > 0 && uncheckedItems.length > 0 && (
-                      <div className="checkboxes-divider" />
+                      <div
+                        onClick={handleExpand}
+                        className="checkboxes-divider"
+                        style={{cursor: "pointer"}}
+                      />
                     )}
                   </div>
 

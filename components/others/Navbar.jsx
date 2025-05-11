@@ -187,10 +187,10 @@ const Navbar = ({ user }) => {
       }
     };
 
-    document.addEventListener("click", handler);
+    document.addEventListener("mousedown", handler);
     window.addEventListener("resize", handleResize);
     return () => {
-      document.removeEventListener("click", handler);
+      document.removeEventListener("mousedown", handler);
       window.removeEventListener("resize", handleResize);
     };
   }, [isMenuOpen]);

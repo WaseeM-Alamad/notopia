@@ -13,6 +13,8 @@ import { debounce } from "lodash";
 const AddNoteModall = ({
   dispatchNotes,
   setTooltipAnchor,
+  containerRef,
+  lastAddedNoteRef,
   openSnackFunction,
 }) => {
   const { data: session } = useSession();
@@ -153,6 +155,9 @@ const AddNoteModall = ({
       content: "",
       color: "Default",
       labels: [],
+      checkboxes: [],
+      showCheckboxes: true,
+      expandCompleted: true,
       isPinned: false,
       isArchived: false,
       isTrash: false,
@@ -252,21 +257,33 @@ const AddNoteModall = ({
       } else {
         handleCreateNote();
 
-        setTimeout(() => {
-          const lastNote = document.body.querySelector('[data-position="0"]');
-          const rect = lastNote.getBoundingClientRect();
-          positionModal(rect);
-          lastNote.style.opacity = "0";
-        }, 50);
+        const observer = new MutationObserver(() => {
+          const lastNote = lastAddedNoteRef.current;
+          if (!lastNote) return;
+          requestAnimationFrame(() => {
+            const rect = lastNote.getBoundingClientRect();
+            positionModal(rect);
+            lastNote.style.opacity = "0";
+          });
+          observer.disconnect(); // Clean up after firing once
+        });
+
+        // Observe the notes container
+        observer.observe(containerRef.current, {
+          childList: true,
+          subtree: false,
+        });
 
         const handler = (e) => {
           if (e.propertyName === "left") {
             modalRef.current.removeEventListener("transitionend", handler);
-            const lastNote = document.body.querySelector('[data-position="0"]');
-            modalRef.current.removeAttribute("style");
-            overlay.removeAttribute("style");
-            lastNote.style.removeProperty("opacity");
-            reset();
+            requestAnimationFrame(() => {
+              const lastNote = lastAddedNoteRef.current;
+              modalRef.current.removeAttribute("style");
+              overlay.removeAttribute("style");
+              lastNote.style.removeProperty("opacity");
+              reset();
+            });
           }
         };
 

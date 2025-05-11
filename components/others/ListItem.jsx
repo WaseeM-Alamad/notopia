@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { memo, useEffect, useRef } from "react";
 import Button from "../Tools/Button";
 import { NoteUpdateAction } from "@/utils/actions";
 
@@ -132,7 +132,7 @@ const ListItem = ({
         }
       }}
       className="list-item"
-      style={{paddingLeft: checkbox?.parent && "1.3rem" }}
+      style={{ paddingLeft: checkbox?.parent && "1.3rem" }}
     >
       <div
         className={`checkbox-wrapper note-checkbox-wrapper`}
@@ -164,6 +164,7 @@ const ListItem = ({
             fontSize: "1rem",
           }}
           onPaste={handlePaste}
+          aria-label="empty"
           onInput={handleListInput}
           className={`list-item-input ${
             checkbox.isCompleted ? "checked-content" : ""
@@ -175,4 +176,4 @@ const ListItem = ({
   );
 };
 
-export default ListItem;
+export default memo(ListItem);
