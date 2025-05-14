@@ -354,16 +354,14 @@ const Navbar = ({ user }) => {
             boxShadow: isScrolled && "0 3px 10px rgba(0, 0, 0, 0.3)",
           }}
         >
-          {/* <div className="logo"> */}
+          <div className="logo" style={{marginLeft: "1.2rem"}}>
           {/* <Logo style={{margin: "auto 0"}} /> */}
-          {/* <span style={{marginLeft: "0.5rem"}}>notopia</span> */}
-          {/* </div> */}
+          <span style={{marginLeft: "0rem"}}>Notopia</span>
+          </div>
           <div className="search-wrapper">
             <Button
               onClick={handleClearSearch}
               style={{ display: !showClearBtn && "none" }}
-              // onMouseEnter={(e) => handleMouseEnter(e, "Clear search")}
-              // onMouseLeave={handleMouseLeave}
               className="clear-search-icon"
               onMouseEnter={(e) => handleMouseEnter(e, "Clear search")}
               onMouseLeave={handleMouseLeave}

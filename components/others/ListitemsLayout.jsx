@@ -14,6 +14,7 @@ import { v4 as uuid } from "uuid";
 const ListItemsLayout = ({
   setLocalNote,
   localNote,
+  ignoreTopRef,
   dispatchNotes,
   isOpen,
 }) => {
@@ -56,8 +57,11 @@ const ListItemsLayout = ({
     });
   }, []);
 
+  const checkboxesRef = useRef(null);
+
   useEffect(() => {
     calculateVerticalLayout();
+    checkboxesRef.current = localNote?.checkboxes;
   }, [localNote?.checkboxes]);
 
   const handlePaste = (e) => {
@@ -173,6 +177,8 @@ const ListItemsLayout = ({
   );
 
   const draggedIndexRef = useRef(null);
+  const childrenElementsRef = useRef([]);
+  const draggedItemRef = useRef(null);
   const overIndexRef = useRef(null);
   const lastSwapRef = useRef(0);
   const endIndexRef = useRef(null);
@@ -182,10 +188,19 @@ const ListItemsLayout = ({
   const initialXRef = useRef(null);
 
   const handleDragStart = useCallback(
-    (e, targetElement, index, itemUUID) => {
+    (e, targetElement, index, draggedItem) => {
       if (isDraggingRef.current) {
         return;
       }
+      checkboxesRef.current.forEach((cb, i)=> {
+        if (cb.parent !== draggedItem.uuid ) return;
+        const ref = itemRefs.current[i];
+        childrenElementsRef.current.push(ref);
+        ref.style.display = "none";
+      })
+      calculateVerticalLayout();
+      draggedItemRef.current = draggedItem;
+      ignoreTopRef.current = true;
       initialXRef.current = e.clientX;
       isDraggingRef.current = true;
       draggedIndexRef.current = index;
@@ -196,7 +211,6 @@ const ListItemsLayout = ({
       const ghostElement = ghostElementRef.current;
       const draggedRect = draggedElement.getBoundingClientRect();
       const container = containerRef.current;
-      const containerRect = container.getBoundingClientRect();
       draggedElement.classList.add("dragged-element");
       document.body.appendChild(ghostElement);
       document.body.classList.add("dragging");
@@ -257,6 +271,7 @@ const ListItemsLayout = ({
             //     console.log(err);
             //   });
           }
+          ignoreTopRef.current = false;
           ghostElement.classList.remove("ghost-list-item");
           ghostElement.classList.add("restore-ghost-list-item");
           const finalDragRect = draggedElement.getBoundingClientRect();
@@ -264,20 +279,26 @@ const ListItemsLayout = ({
           ghostElement.style.top = `${finalDragRect.top}px`;
           ghostElement.style.transform = "none";
           isDraggingRef.current = false;
+          nestingZoneRef.current = "neutral";
           requestAnimationFrame(() => {
             setTimeout(() => {
               setTimeout(() => {
                 draggedElement.classList.remove("dragged-element");
-                draggedElement.style.opacity = "1";
                 document.body.removeChild(ghostElement);
                 if (document.body.classList.contains("dragging")) {
                   document.body.classList.remove("dragging");
                 }
+                calculateVerticalLayout();
+                childrenElementsRef.current.forEach((ref) => {
+                  ref.removeAttribute("style");
+                });
                 draggedIndexRef.current = null;
                 overIndexRef.current = null;
                 endIndexRef.current = null;
                 ghostElementRef.current = null;
                 draggedElementRef.current = null;
+                draggedItemRef.current = null;
+                childrenElementsRef.current = [];
               }, 250);
             }, 50);
           });
@@ -289,8 +310,40 @@ const ListItemsLayout = ({
 
       document.addEventListener("mouseup", handleDragEnd);
     },
-    [localNote.color]
+    [localNote?.color]
   );
+
+  const moveParentGroup = (list, parentIndex, overIndex) => {
+    const parent = list[parentIndex];
+    if (!parent || parent.parent !== null) return list; // only move full parent groups
+
+    const newList = [...list];
+
+    const children = [];
+
+    const filteredList = newList.filter((cb, i) => {
+      if (cb.uuid === parent.uuid) {
+        return false;
+      }
+      if (cb.parent === parent.uuid) {
+        children.push(cb);
+
+        return false;
+      }
+      return true;
+    });
+
+    const itemsToInsert = [parent, ...children];
+    if (overIndex < parentIndex) {
+      filteredList.splice(overIndex, 0, ...itemsToInsert);
+      draggedIndexRef.current = overIndexRef.current;
+    } else {
+      filteredList.splice(overIndex - children.length, 0, ...itemsToInsert);
+      draggedIndexRef.current = overIndexRef.current - children.length;
+    }
+
+    return filteredList;
+  };
 
   const handleDragOver = async () => {
     if (!isDraggingRef.current) return;
@@ -310,55 +363,17 @@ const ListItemsLayout = ({
       if (draggedItem.uuid === overItem.parent) return;
     }
     // Copy notes to avoid mutating state directly
-    const orderedList = [...localNote?.checkboxes];
-    const [draggedItem] = orderedList.splice(draggedIndexRef.current, 1);
-    orderedList.splice(overIndexRef.current, 0, draggedItem);
 
-    overIndexRef.current = draggedIndexRef.current;
-    draggedIndexRef.current = endIndexRef.current;
+    const newList = moveParentGroup(
+      checkboxesRef.current,
+      draggedIndexRef.current,
+      overIndexRef.current
+    );
 
-    // console.log("dragged item", draggedItem.content);
-    // console.log("dragged index", draggedIndexRef.current);
-    // console.log("over item", overItem.content);
-    // console.log("over index", overIndexRef.current);
-
-    if (overItem.parent === draggedItem.parent) {
-      setLocalNote((prev) => ({ ...prev, checkboxes: orderedList }));
-      return;
-    }
-
-    const updatedList = orderedList.map((cb) => {
-      console.log("loop");
-      if (cb.uuid === draggedItem.uuid) {
-        if (draggedItem.parent) {
-          const aboveIndex = draggedIndexRef.current - 1;
-          if (aboveIndex < 0) {
-            ghostElementRef.current.style.paddingLeft = "0rem";
-            return { ...cb, parent: null };
-          }
-          const aboveItem = orderedList[aboveIndex];
-          // console.log("above index", aboveIndex);
-          // console.log("above item", aboveItem);
-
-          if (aboveItem.parent) {
-            return { ...cb, parent: aboveItem.parent };
-          } else {
-            return { ...cb, parent: aboveItem.uuid };
-          }
-        }
-      }
-
-      return cb;
-    });
-    setLocalNote((prev) => ({ ...prev, checkboxes: updatedList }));
+    setLocalNote((prev) => ({ ...prev, checkboxes: newList }));
   };
 
   const nestingZoneRef = useRef("neutral");
-  const indexMap = useMemo(() => {
-    const map = new Map();
-    localNote?.checkboxes.forEach((item, i) => map.set(item.uuid, i));
-    return map;
-  }, [localNote?.checkboxes]);
 
   const handleNesting = (mouseX) => {
     const diff = mouseX - initialXRef.current;
@@ -464,14 +479,13 @@ const ListItemsLayout = ({
       if (!isDraggingRef.current) return;
       const mouseX = e.clientX;
       const mouseY = e.clientY;
-      const overNoteElement = document
+      const overElement = document
         ?.elementFromPoint(mouseX, mouseY)
-        ?.closest(".note-checkbox-wrapper");
+        ?.closest(".list-item");
 
       handleNesting(mouseX);
 
-      if (!overNoteElement || overNoteElement === draggedElementRef.current)
-        return;
+      if (!overElement || overElement === draggedElementRef.current) return;
       handleDragOver();
     };
 
@@ -497,7 +511,7 @@ const ListItemsLayout = ({
             paddingBottom: "1.2rem",
           }}
         >
-          <div ref={containerRef}>
+          <div style={{ transition: "height 0.1s" }} ref={containerRef}>
             {localNote?.checkboxes.map((checkbox, index) => {
               if (checkbox.isCompleted) return null;
               return (

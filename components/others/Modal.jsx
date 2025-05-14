@@ -58,6 +58,7 @@ const Modal = ({
   const trashRef = useRef(false);
   const imagesChangedRef = useRef(false);
   const prevHash = useRef(null);
+  const ignoreTopRef = useRef(false);
 
   const centerModal = () => {
     requestAnimationFrame(() => {
@@ -70,7 +71,9 @@ const Modal = ({
 
       modalRef.current.style.transform = "none";
       modalRef.current.style.left = `${(viewportWidth - modalWidth) / 2}px`;
-      modalRef.current.style.top = `${topPos > 30 ? topPos : 30}px`;
+      if (!ignoreTopRef.current) {
+        modalRef.current.style.top = `${topPos > 30 ? topPos : 30}px`;
+      }
     });
   };
 
@@ -206,7 +209,7 @@ const Modal = ({
       centerModal();
 
       return () =>
-        modalRef.current.removeEventListener("transitionend", handler);
+        modalRef?.current?.removeEventListener("transitionend", handler);
     } else {
       ignoreKeysRef.current = false;
       if (!prevHash.current) {
@@ -637,7 +640,6 @@ const Modal = ({
     window.dispatchEvent(new Event("loadingEnd"));
   };
 
-
   useEffect(() => {
     if (!isOpen) return;
 
@@ -761,6 +763,7 @@ const Modal = ({
           <ListItemsLayout
             localNote={localNote}
             setLocalNote={setLocalNote}
+            ignoreTopRef={ignoreTopRef}
             dispatchNotes={dispatchNotes}
             isOpen={isOpen}
           />

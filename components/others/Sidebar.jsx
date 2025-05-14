@@ -61,6 +61,8 @@ const Sidebar = memo(() => {
 
         const container = containerRef.current;
 
+        if (!container?.children) return;
+
         Array.from(container.children).forEach((btn) => {
           if (btn.id === hash) {
             const prevItem = container.querySelector(".link-btn-selected");

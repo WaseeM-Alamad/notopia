@@ -103,7 +103,7 @@ const ListItem = ({
       const deltaY = Math.abs(event.clientY - startY);
 
       if (deltaX > 5 || deltaY > 5) {
-        handleDragStart(e, targetElement, index);
+        handleDragStart(e, targetElement, index, checkbox);
       }
     };
 
@@ -117,7 +117,7 @@ const ListItem = ({
   };
 
   const handleMouseEnter = () => {
-    if (checkbox.isCompleted) return;
+    // if (checkbox.isCompleted) return;
     overIndexRef.current = index;
   };
 
@@ -131,16 +131,10 @@ const ListItem = ({
           itemRefs.current[index] = el;
         }
       }}
-      className="list-item"
-      style={{ paddingLeft: checkbox?.parent && "1.3rem" }}
+      className={`list-item ${checkbox?.parent ? "child-list-item" : ""}`}
     >
       <div
-        className={`checkbox-wrapper note-checkbox-wrapper`}
-        style={{
-          wordBreak: "break-all",
-          padding: "0.4rem 0.8rem 0.4rem 1.7rem",
-          lineHeight: "1.3rem",
-        }}
+        className={`checkbox-wrapper note-checkbox-wrapper modal-checkbox-wrapper`}
       >
         {!checkbox.isCompleted && (
           <div onMouseDown={handleMouseDown} className="drag-db-area" />
