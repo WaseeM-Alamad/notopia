@@ -10,10 +10,12 @@ import AddButton from "../icons/AddButton";
 import LabelIcon from "../icons/LabelIcon";
 import FolderIcon from "../icons/FolderIcon";
 import { emptyTrashAction } from "@/utils/actions";
+import Tooltip from "../Tools/Tooltip";
 
 const Sidebar = memo(() => {
   const addButtonRef = useRef(null);
   const containerRef = useRef(null);
+  const [tooltipAnchor, setTooltipAnchor] = useState(null);
   const [currentHash, setCurrentHash] = useState(null);
   const ICON_SIZE = 22;
 
@@ -50,7 +52,31 @@ const Sidebar = memo(() => {
   };
 
   const handleIconClick = (hash) => {
+    closeToolTip();
     window.location.hash = hash;
+  };
+
+  const handleMouseEnter = (e, text) => {
+    const target = e.currentTarget;
+    setTooltipAnchor({ anchor: target, text: text, display: true });
+  };
+
+  const handleMouseLeave = () => {
+    setTooltipAnchor((prev) => ({
+      ...prev,
+      display: false,
+    }));
+  };
+
+  const closeToolTip = () => {
+    setTooltipAnchor((prev) => ({
+      anchor: null,
+      text: prev?.text,
+    }));
+  };
+
+  const intCap = (str) => {
+    return str.charAt(0).toUpperCase() + str.slice(1);
   };
 
   useEffect(() => {
@@ -105,6 +131,8 @@ const Sidebar = memo(() => {
       <aside className="sidebar">
         <div style={{ display: "flex", flexDirection: "column" }}>
           <button
+            onMouseEnter={(e) => handleMouseEnter(e, "New note")}
+            onMouseLeave={handleMouseLeave}
             ref={addButtonRef}
             onClick={handleAddNote}
             id="add-btn"
@@ -116,6 +144,8 @@ const Sidebar = memo(() => {
             {navItems.map(({ hash, Icon }) => (
               <button
                 className={`link-btn`}
+                onMouseEnter={(e) => handleMouseEnter(e, intCap(hash))}
+                onMouseLeave={handleMouseLeave}
                 id={hash}
                 key={hash}
                 onClick={() => handleIconClick(hash)}
@@ -128,6 +158,7 @@ const Sidebar = memo(() => {
         </div>
         <span className="copyright-text">&copy; {currentYear}</span>
       </aside>
+      <Tooltip anchorEl={tooltipAnchor} angle="right" />
     </>
   );
 });

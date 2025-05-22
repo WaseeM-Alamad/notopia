@@ -2,7 +2,7 @@ import { Popper } from "@mui/material";
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-const Tooltip = ({ anchorEl }) => {
+const Tooltip = ({ anchorEl, angle = "bottom" }) => {
   const [isMounted, setIsMounted] = useState(false);
   const [display, setDisplay] = useState(false);
   const timeoutRef = useRef(null);
@@ -37,7 +37,7 @@ const Tooltip = ({ anchorEl }) => {
       open={true}
       anchorEl={anchorEl?.anchor}
       style={{ zIndex: "3000" }}
-      placement="bottom"
+      placement={angle}
       modifiers={[
         {
           name: "preventOverflow",
@@ -48,7 +48,7 @@ const Tooltip = ({ anchorEl }) => {
       ]}
     >
       <div
-        className="tooltip"
+        className={`${angle === "bottom" ? "tooltip": "right-tooltip"}`}
         style={{
           display: !display && "none",
         }}

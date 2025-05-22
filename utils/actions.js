@@ -175,10 +175,18 @@ export const NoteUpdateAction = async (data) => {
           await Note.updateOne(
             {
               uuid: data.noteUUIDs[0],
-              "checkboxes.uuid": data.checkboxUUID,
               creator: userID,
             },
-            { $pull: { checkboxes: { uuid: data.checkboxUUID } } }
+            {
+              $pull: {
+                checkboxes: {
+                  $or: [
+                    { uuid: data.checkboxUUID },
+                    { parent: data.checkboxUUID },
+                  ],
+                },
+              },
+            }
           );
           break;
         }
@@ -208,56 +216,72 @@ export const NoteUpdateAction = async (data) => {
           );
           break;
         }
-        case "UPDATE_ORDER": {
+        case "UPDATE_ORDER-FAM": {
           const note = await Note.findOne({
             uuid: data.noteUUIDs[0],
             creator: userID,
           });
           const checkboxes = note.checkboxes;
-          const updatedList = [...checkboxes];
-          const [draggedItem] = updatedList.splice(data.initialIndex, 1);
-          updatedList.splice(data.endIndex, 0, draggedItem);
-          await Note.updateOne(
-            {
-              uuid: data.noteUUIDs[0],
-              creator: userID,
-            },
-            {
-              $set: { checkboxes: updatedList },
+          let filteredList = checkboxes;
+          let parent;
+          const children = [];
+
+          let initialIndex;
+          let overIndex;
+          const overUUID = data.overItemUUID;
+
+          if (data.reOrder) {
+            filteredList = checkboxes.filter((cb, i) => {
+              if (cb.uuid === data.parentUUID) {
+                initialIndex = i;
+                parent = cb;
+                return false;
+              }
+
+              if (cb.uuid === overUUID) {
+                overIndex = i;
+              }
+
+              if (cb.parent === data.parentUUID) {
+                children.push(cb);
+                return false;
+              }
+
+              return true;
+            });
+
+            const itemsToInsert = [parent, ...children];
+
+            if (overIndex < initialIndex) {
+              filteredList.splice(overIndex, 0, ...itemsToInsert);
+            } else {
+              filteredList.splice(
+                overIndex - children.length,
+                0,
+                ...itemsToInsert
+              );
             }
-          );
-          break;
-        }
-        case "INDENT": {
-          await Note.updateOne(
-            { uuid: data.noteUUIDs[0], creator: userID },
-            {
-              $push: { "checkboxes.$[parentCB].children": data.childUUID },
-              $set: { "checkboxes.$[childCB].parent": data.parentUUID },
-            },
-            {
-              arrayFilters: [
-                { "parentCB.uuid": data.parentUUID },
-                { "childCB.uuid": data.childUUID },
-              ],
+          }
+
+          const newList = filteredList.map((currentItem, index) => {
+            if (index === 0) {
+              return { ...currentItem, parent: null };
             }
-          );
-          break;
-        }
-        case "UNINDENT": {
-          await Note.updateOne(
-            { uuid: data.noteUUIDs[0], creator: userID },
-            {
-              $pull: { "checkboxes.$[parentCB].children": data.childUUID },
-              $set: { "checkboxes.$[childCB].parent": null },
-            },
-            {
-              arrayFilters: [
-                { "parentCB.uuid": data.parentUUID },
-                { "childCB.uuid": data.childUUID },
-              ],
+            if (data.updatedItems.has(currentItem.uuid)) {
+              return {
+                ...currentItem,
+                parent: data.updatedItems.get(currentItem.uuid),
+              };
             }
-          );
+
+            return currentItem;
+          });
+
+          console.log(initialIndex, overIndex);
+
+          note.checkboxes = newList;
+          await note.save();
+
           break;
         }
       }

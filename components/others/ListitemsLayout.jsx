@@ -21,9 +21,8 @@ const ListItemsLayout = ({
   const renderCBdivider =
     localNote?.checkboxes.some((cb) => cb.isCompleted) &&
     localNote?.checkboxes.some((cb) => !cb.isCompleted);
-  const completedItemsCount = localNote?.checkboxes.reduce((acc, cb) => {
-    return cb.isCompleted ? acc + 1 : acc;
-  }, 0);
+  const activeItems = localNote?.checkboxes.filter((cb) => !cb.isCompleted);
+  const completedItems = localNote?.checkboxes.filter((cb) => cb.isCompleted);
   const layoutFrameRef = useRef(null);
   const itemRefs = useRef({});
   const containerRef = useRef(null);
@@ -145,7 +144,9 @@ const ListItemsLayout = ({
       setLocalNote((prev) => ({
         ...prev,
         checkboxes: prev.checkboxes.map((cb) => {
-          return cb.uuid === checkboxUUID ? { ...cb, isCompleted: value } : cb;
+          return cb.uuid === checkboxUUID || cb.parent === checkboxUUID
+            ? { ...cb, isCompleted: value }
+            : cb;
         }),
       }));
       window.dispatchEvent(new Event("loadingStart"));
@@ -177,8 +178,9 @@ const ListItemsLayout = ({
   );
 
   const draggedIndexRef = useRef(null);
-  const childrenElementsRef = useRef([]);
   const draggedItemRef = useRef(null);
+  const childrenUUIDRef = useRef([]);
+  const childrenRef = useRef([]);
   const overIndexRef = useRef(null);
   const lastSwapRef = useRef(0);
   const endIndexRef = useRef(null);
@@ -192,12 +194,18 @@ const ListItemsLayout = ({
       if (isDraggingRef.current) {
         return;
       }
-      checkboxesRef.current.forEach((cb, i)=> {
-        if (cb.parent !== draggedItem.uuid ) return;
+      const childrenElements = [];
+      const initialState = draggedItem.parent ? "right" : "left";
+      nestingZoneRef.current = initialState;
+      childrenUUIDRef.current = [];
+      checkboxesRef.current.forEach((cb, i) => {
+        if (cb.isCompleted || cb.parent !== draggedItem.uuid) return;
+        childrenUUIDRef.current.push(cb.uuid);
+        childrenRef.current.push(cb);
         const ref = itemRefs.current[i];
-        childrenElementsRef.current.push(ref);
+        childrenElements.push(ref);
         ref.style.display = "none";
-      })
+      });
       calculateVerticalLayout();
       draggedItemRef.current = draggedItem;
       ignoreTopRef.current = true;
@@ -206,7 +214,6 @@ const ListItemsLayout = ({
       draggedIndexRef.current = index;
       ghostElementRef.current = targetElement.cloneNode(true);
       draggedElementRef.current = targetElement;
-      const draggedInitialIndex = index;
       const draggedElement = targetElement;
       const ghostElement = ghostElementRef.current;
       const draggedRect = draggedElement.getBoundingClientRect();
@@ -214,6 +221,7 @@ const ListItemsLayout = ({
       draggedElement.classList.add("dragged-element");
       document.body.appendChild(ghostElement);
       document.body.classList.add("dragging");
+      container.classList.add("items-container-transition");
       ghostElement.classList.add("ghost-list-item");
       const grip = ghostElement.querySelector(".drag-db-area");
       if (grip) {
@@ -253,10 +261,7 @@ const ListItemsLayout = ({
 
       const handleDragEnd = () => {
         if (ghostElement && document.body.contains(ghostElement)) {
-          if (
-            endIndexRef.current !== null &&
-            endIndexRef.current !== draggedInitialIndex
-          ) {
+          if (endIndexRef.current !== null && endIndexRef.current !== index) {
             // window.dispatchEvent(new Event("loadingStart"));
             // NoteUpdateAction({
             //   type: "checkboxes",
@@ -271,6 +276,7 @@ const ListItemsLayout = ({
             //     console.log(err);
             //   });
           }
+          calculateOnEnd(initialState, index, draggedItem);
           ignoreTopRef.current = false;
           ghostElement.classList.remove("ghost-list-item");
           ghostElement.classList.add("restore-ghost-list-item");
@@ -279,7 +285,7 @@ const ListItemsLayout = ({
           ghostElement.style.top = `${finalDragRect.top}px`;
           ghostElement.style.transform = "none";
           isDraggingRef.current = false;
-          nestingZoneRef.current = "neutral";
+          childrenRef.current = [];
           requestAnimationFrame(() => {
             setTimeout(() => {
               setTimeout(() => {
@@ -288,8 +294,12 @@ const ListItemsLayout = ({
                 if (document.body.classList.contains("dragging")) {
                   document.body.classList.remove("dragging");
                 }
+                setTimeout(() => {
+                  container.classList.remove("items-container-transition");
+                }, 100);
+
                 calculateVerticalLayout();
-                childrenElementsRef.current.forEach((ref) => {
+                childrenElements.forEach((ref) => {
                   ref.removeAttribute("style");
                 });
                 draggedIndexRef.current = null;
@@ -298,7 +308,7 @@ const ListItemsLayout = ({
                 ghostElementRef.current = null;
                 draggedElementRef.current = null;
                 draggedItemRef.current = null;
-                childrenElementsRef.current = [];
+                overItemRef.current = null;
               }, 250);
             }, 50);
           });
@@ -313,40 +323,149 @@ const ListItemsLayout = ({
     [localNote?.color]
   );
 
+  const calculateOnEnd = async (initialState, initialIndex, draggedItem) => {
+    if (!checkboxesRef.current || checkboxesRef.current.length < 1) return;
+    let draggedNewParent = null;
+    let draggedOldParent = null;
+    let prevItem = null;
+
+    const updatedItems = new Map();
+    const indexData = [];
+
+    const updatePrev = (updatedItem) => {
+      updatedItems.set(updatedItem.uuid, updatedItem.parent);
+      prevItem = updatedItem;
+      return updatedItem;
+    };
+
+    const oldList = checkboxesRef.current;
+    const newList = oldList.map((currentItem, index) => {
+      if (
+        initialIndex !== index &&
+        currentItem.uuid === draggedItem.uuid &&
+        (currentItem.uuid === draggedItem.uuid ||
+          currentItem.parent === draggedItem.uuid)
+      ) {
+        indexData.push({ uuid: currentItem.uuid, index: index });
+      }
+
+      const prevIndex = index - 1;
+
+      if (prevIndex < 0) {
+        const updatedItem = { ...currentItem, parent: null };
+        prevItem = updatedItem;
+        return updatedItem;
+      }
+
+      if (nestingZoneRef.current !== initialState) {
+        if (nestingZoneRef.current === "right") {
+          if (currentItem.uuid === draggedItem.uuid) {
+            const parent = prevItem.parent || prevItem.uuid;
+            draggedNewParent = parent;
+            const updatedItem = { ...currentItem, parent: parent };
+            return updatePrev(updatedItem);
+          } else if (
+            currentItem.parent === draggedItem.uuid &&
+            !currentItem.isCompleted &&
+            draggedNewParent
+          ) {
+            const updatedItem = { ...currentItem, parent: draggedNewParent };
+            return updatePrev(updatedItem);
+          }
+        } else {
+          if (currentItem.uuid === draggedItem.uuid) {
+            draggedOldParent = draggedItem.parent;
+            const updatedItem = { ...currentItem, parent: null };
+            return updatePrev(updatedItem);
+          } else if (
+            currentItem.parent === draggedOldParent &&
+            draggedOldParent
+          ) {
+            const updatedItem = { ...currentItem, parent: draggedItem.uuid };
+            return updatePrev(updatedItem);
+          }
+        }
+      }
+
+      if (currentItem.parent && !currentItem.isCompleted ) {
+        const parent = prevItem.parent || prevItem.uuid;
+        if (currentItem.parent !== parent) {
+          const updatedItem = { ...currentItem, parent: parent };
+          return updatePrev(updatedItem);
+        }
+      }
+
+      prevItem = currentItem;
+      return currentItem;
+    });
+    setLocalNote((prev) => ({ ...prev, checkboxes: newList }));
+
+    console.log(initialIndex, draggedIndexRef.current);
+    console.log(overItemRef?.current?.content);
+
+    const reOrder =
+      initialIndex !== draggedIndexRef.current && overItemRef?.current?.uuid;
+
+    if (initialIndex !== draggedIndexRef.current || updatedItems.size > 0) {
+      window.dispatchEvent(new Event("loadingStart"));
+      await NoteUpdateAction({
+        type: "checkboxes",
+        operation: "UPDATE_ORDER-FAM",
+        overItemUUID: overItemRef?.current?.uuid,
+        reOrder: reOrder,
+        parentUUID: draggedItem.uuid,
+        updatedItems: updatedItems,
+        noteUUIDs: [localNote?.uuid],
+      });
+      window.dispatchEvent(new Event("loadingEnd"));
+    }
+  };
+
+  const overItemRef = useRef(null);
+
   const moveParentGroup = (list, parentIndex, overIndex) => {
     const parent = list[parentIndex];
-    if (!parent || parent.parent !== null) return list; // only move full parent groups
+    if (!parent) return list; // only move full parent groups
+
+    overItemRef.current = list[overIndex];
 
     const newList = [...list];
-
-    const children = [];
 
     const filteredList = newList.filter((cb, i) => {
       if (cb.uuid === parent.uuid) {
         return false;
       }
-      if (cb.parent === parent.uuid) {
-        children.push(cb);
-
+      if (childrenUUIDRef.current.includes(cb.uuid)) {
         return false;
       }
       return true;
     });
 
-    const itemsToInsert = [parent, ...children];
+    const itemsToInsert = [parent, ...childrenRef.current];
     if (overIndex < parentIndex) {
       filteredList.splice(overIndex, 0, ...itemsToInsert);
       draggedIndexRef.current = overIndexRef.current;
     } else {
-      filteredList.splice(overIndex - children.length, 0, ...itemsToInsert);
-      draggedIndexRef.current = overIndexRef.current - children.length;
+      filteredList.splice(
+        overIndex - childrenRef.current.length,
+        0,
+        ...itemsToInsert
+      );
+      draggedIndexRef.current =
+        overIndexRef.current - childrenRef.current.length;
     }
 
     return filteredList;
   };
 
   const handleDragOver = async () => {
-    if (!isDraggingRef.current) return;
+    if (
+      !isDraggingRef.current ||
+      draggedIndexRef.current == null ||
+      overIndexRef.current == null
+    ) {
+      return;
+    }
 
     const now = Date.now();
     if (now - lastSwapRef.current < 150) return;
@@ -357,12 +476,14 @@ const ListItemsLayout = ({
       return;
     endIndexRef.current = overIndexRef.current;
 
-    const overItem = localNote.checkboxes[overIndexRef.current];
-    {
-      const draggedItem = localNote.checkboxes[draggedIndexRef.current];
-      if (draggedItem.uuid === overItem.parent) return;
-    }
+    // const overItem = checkboxesRef.current[overIndexRef.current];
+    // {
+    //   console.log("overitem", overItem.parent);
+    //   console.log("draggedItem", draggedItemRef.current.uuid);
+    //   if (draggedItemRef.current.uuid === overItem.parent) return;
+    // }
     // Copy notes to avoid mutating state directly
+    console.log("OVERR");
 
     const newList = moveParentGroup(
       checkboxesRef.current,
@@ -373,103 +494,17 @@ const ListItemsLayout = ({
     setLocalNote((prev) => ({ ...prev, checkboxes: newList }));
   };
 
-  const nestingZoneRef = useRef("neutral");
+  const nestingZoneRef = useRef("left");
 
   const handleNesting = (mouseX) => {
     const diff = mouseX - initialXRef.current;
     if (draggedIndexRef.current) {
-      const draggedItem = localNote?.checkboxes[draggedIndexRef.current];
       if (diff > 23 && nestingZoneRef.current !== "right") {
         nestingZoneRef.current = "right";
-        let aboveIndex;
-        for (let i = draggedIndexRef.current - 1; i >= 0; i--) {
-          const cb = localNote?.checkboxes[i];
-          if (cb.parent) continue;
-          aboveIndex = i;
-          break;
-        }
-
-        if (aboveIndex < 0 || aboveIndex === null) {
-          return;
-        }
-        const aboveItem = localNote?.checkboxes[aboveIndex];
-
-        if (!aboveItem) return;
-
-        if (!draggedItem?.parent) {
-          console.log("RIGHT");
-          // window.dispatchEvent(new Event("loadingStart"));
-          // NoteUpdateAction({
-          //   type: "checkboxes",
-          //   operation: "INDENT",
-          //   parentUUID: aboveItem.uuid,
-          //   childUUID: draggedItem.uuid,
-          //   noteUUIDs: [localNote?.uuid],
-          // })
-          //   .then(() => window.dispatchEvent(new Event("loadingEnd")))
-          //   .catch((er) => {
-          //     window.dispatchEvent(new Event("loadingEnd"));
-          //   });
-          const updatedList = localNote?.checkboxes.map((cb, index) => {
-            if (draggedItem.uuid === cb.uuid) {
-              const updatedCB = { ...cb, parent: aboveItem.uuid };
-              return updatedCB;
-            }
-
-            if (
-              index > draggedIndexRef.current &&
-              cb.parent === draggedItem.uuid
-            ) {
-              const updatedCB = { ...cb, parent: aboveItem.uuid };
-              return updatedCB;
-            }
-
-            return cb;
-          });
-          ghostElementRef.current.style.paddingLeft = "1.3rem";
-          setLocalNote((prev) => ({ ...prev, checkboxes: updatedList }));
-        }
+        ghostElementRef.current.style.paddingLeft = "1.3rem";
       } else if (diff < -2 && nestingZoneRef.current !== "left") {
         nestingZoneRef.current = "left";
-        if (draggedItem?.parent) {
-          // console.log("LEFT");
-          // window.dispatchEvent(new Event("loadingStart"));
-          // NoteUpdateAction({
-          //   type: "checkboxes",
-          //   operation: "UNINDENT",
-          //   parentUUID: draggedItem.parent,
-          //   childUUID: draggedItem.uuid,
-          //   noteUUIDs: [localNote?.uuid],
-          // })
-          //   .then(() => window.dispatchEvent(new Event("loadingEnd")))
-          //   .catch((er) => {
-          //     window.dispatchEvent(new Event("loadingEnd"));
-          //   });
-          ghostElementRef.current.style.paddingLeft = "0rem";
-          const updatedList = localNote?.checkboxes.map((cb, index) => {
-            if (draggedItem.uuid === cb.uuid) {
-              const updatedCB = { ...cb, parent: null };
-              return updatedCB;
-            }
-
-            if (
-              index > draggedIndexRef.current &&
-              cb.parent === draggedItem.parent
-            ) {
-              const updatedCB = { ...cb, parent: draggedItem.uuid };
-              return updatedCB;
-            }
-
-            return cb;
-          });
-          setLocalNote((prev) => ({ ...prev, checkboxes: updatedList }));
-        }
-      } else if (
-        diff >= -23 &&
-        diff <= 23 &&
-        nestingZoneRef.current !== "neutral"
-      ) {
-        nestingZoneRef.current = "neutral";
+        ghostElementRef.current.style.paddingLeft = "0rem";
       }
     }
   };
@@ -493,6 +528,20 @@ const ListItemsLayout = ({
     return () => document.removeEventListener("mousemove", handleMouseMove);
   }, [localNote]);
 
+  const activeParentItems = activeItems?.filter((item) => item.parent === null);
+
+  const completedParentItems = completedItems?.filter(
+    (item) => item.parent === null
+  );
+
+  const getCompletedChildren = (parentUUID) => {
+    return completedItems?.filter((item) => item.parent === parentUUID);
+  };
+
+  const getCompletedChildrenForActiveParent = (parentUUID) => {
+    return completedItems?.filter((item) => item.parent === parentUUID);
+  };
+
   return (
     <>
       <button
@@ -511,7 +560,7 @@ const ListItemsLayout = ({
             paddingBottom: "1.2rem",
           }}
         >
-          <div style={{ transition: "height 0.1s" }} ref={containerRef}>
+          <div ref={containerRef}>
             {localNote?.checkboxes.map((checkbox, index) => {
               if (checkbox.isCompleted) return null;
               return (
@@ -551,12 +600,12 @@ const ListItemsLayout = ({
               <div className="checkboxes-divider" style={{ width: "90%" }} />
             )}
           </div>
-          {completedItemsCount > 0 && (
+          {completedItems.length > 0 && (
             <div
               onClick={handleExpand}
               className="completed-items"
-              aria-label={`${completedItemsCount} Completed item${
-                completedItemsCount === 1 ? "" : "s"
+              aria-label={`${completedItems.length} Completed item${
+                completedItems.length === 1 ? "" : "s"
               }`}
             >
               <div
@@ -567,23 +616,82 @@ const ListItemsLayout = ({
             </div>
           )}
           {localNote?.expandCompleted &&
-            localNote?.checkboxes.map((checkbox, index) => {
-              if (!checkbox.isCompleted) return null;
-              return (
+            completedParentItems.map((parent, index) => (
+              <div key={`completed-parent-item-${parent.uuid}`}>
                 <ListItem
-                  key={checkbox.uuid}
+                  no={true}
                   dispatchNotes={dispatchNotes}
                   handleCheckboxClick={handleCheckboxClick}
                   updateListItemContent={updateListItemContent}
-                  checkbox={checkbox}
+                  checkbox={parent}
+                  itemRefs={itemRefs}
                   handleDragStart={handleDragStart}
                   modalOpen={isOpen}
                   setLocalNote={setLocalNote}
                   noteUUID={localNote?.uuid}
                   index={index}
                 />
-              );
-            })}
+
+                {getCompletedChildren(parent.uuid).map((child, childIndex) => (
+                  <ListItem
+                    key={child.uuid}
+                    no={true}
+                    dispatchNotes={dispatchNotes}
+                    handleCheckboxClick={handleCheckboxClick}
+                    updateListItemContent={updateListItemContent}
+                    checkbox={child}
+                    itemRefs={itemRefs}
+                    handleDragStart={handleDragStart}
+                    modalOpen={isOpen}
+                    setLocalNote={setLocalNote}
+                    noteUUID={localNote?.uuid}
+                    index={childIndex}
+                  />
+                ))}
+              </div>
+            ))}
+
+          {activeParentItems.map((parent, index) => {
+            const completedChildren = getCompletedChildrenForActiveParent(
+              parent.uuid
+            );
+            if (completedChildren.length === 0) return null;
+
+            return (
+              <div key={`active-parent-item-${parent.uuid}`}>
+                <ListItem
+                  no={true}
+                  dispatchNotes={dispatchNotes}
+                  handleCheckboxClick={handleCheckboxClick}
+                  updateListItemContent={updateListItemContent}
+                  checkbox={parent}
+                  itemRefs={itemRefs}
+                  handleDragStart={handleDragStart}
+                  modalOpen={isOpen}
+                  setLocalNote={setLocalNote}
+                  noteUUID={localNote?.uuid}
+                  index={index}
+                />
+
+                {completedChildren.map((child, childIndex) => (
+                  <ListItem
+                    key={child.uuid}
+                    no={true}
+                    dispatchNotes={dispatchNotes}
+                    handleCheckboxClick={handleCheckboxClick}
+                    updateListItemContent={updateListItemContent}
+                    checkbox={child}
+                    itemRefs={itemRefs}
+                    handleDragStart={handleDragStart}
+                    modalOpen={isOpen}
+                    setLocalNote={setLocalNote}
+                    noteUUID={localNote?.uuid}
+                    index={childIndex}
+                  />
+                ))}
+              </div>
+            );
+          })}
         </div>
       )}
     </>

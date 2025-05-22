@@ -3,6 +3,7 @@ import Button from "../Tools/Button";
 import { NoteUpdateAction } from "@/utils/actions";
 
 const ListItem = ({
+  no = false,
   handleCheckboxClick,
   updateListItemContent,
   noteUUID,
@@ -74,7 +75,13 @@ const ListItem = ({
   const handleDelete = async () => {
     setLocalNote((prev) => ({
       ...prev,
-      checkboxes: prev.checkboxes.filter((cb) => cb.uuid !== checkbox.uuid),
+      checkboxes: prev.checkboxes.filter((cb) => {
+        if (cb.uuid === checkbox.uuid) return false;
+
+        if (cb.parent === checkbox.uuid) return false;
+
+        return true;
+      }),
     }));
     window.dispatchEvent(new Event("loadingStart"));
     await NoteUpdateAction({
@@ -117,7 +124,7 @@ const ListItem = ({
   };
 
   const handleMouseEnter = () => {
-    // if (checkbox.isCompleted) return;
+    if (no) return;
     overIndexRef.current = index;
   };
 
@@ -125,7 +132,7 @@ const ListItem = ({
     <div
       onMouseEnter={handleMouseEnter}
       ref={(el) => {
-        if (checkbox.isCompleted) {
+        if (no) {
           return;
         } else {
           itemRefs.current[index] = el;
@@ -136,7 +143,7 @@ const ListItem = ({
       <div
         className={`checkbox-wrapper note-checkbox-wrapper modal-checkbox-wrapper`}
       >
-        {!checkbox.isCompleted && (
+        {!no && (
           <div onMouseDown={handleMouseDown} className="drag-db-area" />
         )}
         <Button onClick={handleDelete} className="delete-list-item" />
