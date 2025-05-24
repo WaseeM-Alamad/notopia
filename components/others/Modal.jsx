@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import "@/assets/styles/modal.css";
 import Button from "../Tools/Button";
@@ -852,4 +852,4 @@ const Modal = ({
   );
 };
 
-export default Modal;
+export default memo(Modal);

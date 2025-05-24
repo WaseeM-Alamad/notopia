@@ -9,7 +9,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import AddButton from "../icons/AddButton";
 import LabelIcon from "../icons/LabelIcon";
 import FolderIcon from "../icons/FolderIcon";
-import { emptyTrashAction } from "@/utils/actions";
 import Tooltip from "../Tools/Tooltip";
 import { useAppContext } from "@/context/AppContext";
 
@@ -129,6 +128,7 @@ const Sidebar = memo(() => {
             }
 
             if (hash.startsWith("label/")) {
+              console.log("hash");
               const event = new CustomEvent("sectionChange", {
                 detail: { hash: hash },
               });

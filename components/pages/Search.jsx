@@ -126,6 +126,8 @@ const Search = ({
   };
 
   const matchesFilters = (note) => {
+    if (note.isTrash) return false;
+
     if (filters.color && note.color !== filters.color) {
       return false;
     }

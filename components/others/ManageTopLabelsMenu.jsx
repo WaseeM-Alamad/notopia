@@ -2,7 +2,7 @@ import { useAppContext } from "@/context/AppContext";
 import { createLabelForNotesAction } from "@/utils/actions";
 import { Popper } from "@mui/material";
 import { motion } from "framer-motion";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import { v4 as generateUUID } from "uuid";
 
 const ManageTopLabelsMenu = ({
@@ -297,7 +297,9 @@ const ManageTopLabelsMenu = ({
                     }}
                   >
                     <div
-                      className={`checkbox-unchecked ${getSelectionClass(uuid)}`}
+                      className={`checkbox-unchecked ${getSelectionClass(
+                        uuid
+                      )}`}
                     />
                     <div style={{ width: "100%", paddingLeft: "0.5rem" }}>
                       {labelData.label}
@@ -332,4 +334,4 @@ const ManageTopLabelsMenu = ({
   );
 };
 
-export default ManageTopLabelsMenu;
+export default memo(ManageTopLabelsMenu);

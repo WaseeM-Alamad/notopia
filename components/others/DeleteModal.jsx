@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { memo, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import "@/assets/styles/note.css";
 import "@/assets/styles/modal.css";
@@ -96,4 +96,4 @@ const DeleteModal = ({ setIsOpen, handleDelete, title, message }) => {
   );
 };
 
-export default DeleteModal;
+export default memo(DeleteModal);

@@ -200,18 +200,32 @@ const TopMenuHome = ({
     const val = notes.get(firstItem.uuid).isArchived;
     const length = selectedNotesIDs.length;
 
-    window.dispatchEvent(new Event("loadingStart"));
-
-    batchUpdateAction({
-      type: "BATCH_ARCHIVE/TRASH",
-      selectedNotes: selectedNotesIDs,
-      property: "isArchived",
-      val: val,
-    }).then(() => window.dispatchEvent(new Event("loadingEnd")));
-
     const selectedUUIDs = selectedNotesIDs.map(({ uuid }) => uuid);
 
-    setFadingNotes(new Set(selectedUUIDs));
+    const redo = async () => {
+      setFadingNotes(new Set(selectedUUIDs));
+
+      setTimeout(() => {
+        dispatchNotes({
+          type: "BATCH_ARCHIVE/TRASH",
+          selectedNotes: selectedNotesIDs,
+          property: "isArchived",
+          val: val,
+        });
+        setFadingNotes(new Set());
+      }, 250);
+
+      window.dispatchEvent(new Event("loadingStart"));
+
+      batchUpdateAction({
+        type: "BATCH_ARCHIVE/TRASH",
+        selectedNotes: selectedNotesIDs,
+        property: "isArchived",
+        val: val,
+      }).then(() => window.dispatchEvent(new Event("loadingEnd")));
+    };
+
+    redo();
 
     const undo = () => {
       window.dispatchEvent(new Event("loadingStart"));
@@ -238,19 +252,10 @@ const TopMenuHome = ({
     openSnackFunction({
       snackMessage: snackMessage,
       snackOnUndo: undo,
+      snackRedo: redo,
     });
 
     handleClose();
-
-    setTimeout(() => {
-      dispatchNotes({
-        type: "BATCH_ARCHIVE/TRASH",
-        selectedNotes: selectedNotesIDs,
-        property: "isArchived",
-        val: val,
-      });
-      setFadingNotes(new Set());
-    }, 250);
   };
 
   const handlePin = () => {
@@ -320,18 +325,32 @@ const TopMenuHome = ({
     const val = notes.get(firstItem.uuid).isTrash;
     const length = selectedNotesIDs.length;
 
-    window.dispatchEvent(new Event("loadingStart"));
-
-    batchUpdateAction({
-      type: "BATCH_ARCHIVE/TRASH",
-      selectedNotes: selectedNotesIDs,
-      property: "isTrash",
-      val: val,
-    }).then(() => window.dispatchEvent(new Event("loadingEnd")));
-
     const selectedUUIDs = selectedNotesIDs.map(({ uuid }) => uuid);
 
-    setFadingNotes(new Set(selectedUUIDs));
+    const redo = async () => {
+      setFadingNotes((prev) => new Set([...prev, ...selectedUUIDs]));
+
+      setTimeout(() => {
+        dispatchNotes({
+          type: "BATCH_ARCHIVE/TRASH",
+          selectedNotes: selectedNotesIDs,
+          property: "isTrash",
+          val: val,
+        });
+        setFadingNotes(new Set());
+      }, 250);
+
+      window.dispatchEvent(new Event("loadingStart"));
+
+      batchUpdateAction({
+        type: "BATCH_ARCHIVE/TRASH",
+        selectedNotes: selectedNotesIDs,
+        property: "isTrash",
+        val: val,
+      }).then(() => window.dispatchEvent(new Event("loadingEnd")));
+    };
+
+    redo();
 
     const undo = () => {
       window.dispatchEvent(new Event("loadingStart"));
@@ -360,19 +379,10 @@ const TopMenuHome = ({
     openSnackFunction({
       snackMessage: snackMessage,
       snackOnUndo: undo,
+      snackRedo: redo,
     });
 
     handleClose();
-
-    setTimeout(() => {
-      dispatchNotes({
-        type: "BATCH_ARCHIVE/TRASH",
-        selectedNotes: selectedNotesIDs,
-        property: "isTrash",
-        val: val,
-      });
-      setFadingNotes(new Set());
-    }, 250);
   };
 
   const handleDeleteNotes = async () => {
@@ -482,12 +492,21 @@ const TopMenuHome = ({
     });
 
     setMoreMenuOpen(false);
-    batchNoteCount(labelsUUIDs, "inc");
 
-    dispatchNotes({
-      type: "BATCH_COPY_NOTE",
-      newNotes: newNotes,
-    });
+    const redo = async () => {
+      batchNoteCount(labelsUUIDs, "inc");
+
+      dispatchNotes({
+        type: "BATCH_COPY_NOTE",
+        newNotes: newNotes,
+      });
+
+      window.dispatchEvent(new Event("loadingStart"));
+      await batchCopyNoteAction({ newNotes: newNotes, imagesMap: imagesMap });
+      window.dispatchEvent(new Event("loadingEnd"));
+    };
+
+    redo();
 
     const undo = async () => {
       setFadingNotes(new Set(newUUIDs));
@@ -515,10 +534,8 @@ const TopMenuHome = ({
         length === 1 ? "Note created" : length + " notes created"
       }`,
       snackOnUndo: undo,
+      snackRedo: redo,
     });
-    window.dispatchEvent(new Event("loadingStart"));
-    await batchCopyNoteAction({ newNotes: newNotes, imagesMap: imagesMap });
-    window.dispatchEvent(new Event("loadingEnd"));
   };
 
   const handleLabels = () => {

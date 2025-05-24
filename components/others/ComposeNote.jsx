@@ -1,5 +1,5 @@
 import { useSession } from "next-auth/react";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Button from "../Tools/Button";
 import PinIcon from "../icons/PinIcon";
@@ -567,4 +567,4 @@ const AddNoteModall = ({
   );
 };
 
-export default AddNoteModall;
+export default memo(AddNoteModall);

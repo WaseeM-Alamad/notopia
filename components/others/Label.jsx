@@ -284,7 +284,7 @@ const Label = ({
               </AnimatePresence>
             </div>
           )}
-          <div style={{ padding: "0.8rem 1.1rem 0.8rem 1.1rem" }}>
+          <div style={{ padding: "0.8rem .7rem" }}>
             <AnimatePresence>
               {isFocused && (
                 <motion.div

@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { signOut } from "next-auth/react";
-import React, { forwardRef, useEffect, useRef, useState } from "react";
+import React, { forwardRef, memo, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Edit } from "../icons/EditIcon";
 
@@ -116,4 +116,4 @@ const ProfileMenu = forwardRef(
   }
 );
 
-export default ProfileMenu;
+export default memo(ProfileMenu);

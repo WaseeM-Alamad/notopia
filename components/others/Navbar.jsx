@@ -351,7 +351,7 @@ const Navbar = ({ user }) => {
       {pathName !== "/" && (
         <nav
           style={{
-            boxShadow: isScrolled && "0 3px 10px rgba(0, 0, 0, 0.3)",
+            boxShadow: isScrolled && " rgba(67, 71, 85, 0.27) 0px 0px 0.25em, rgba(90, 125, 188, 0.05) 0px 0.25em 1em",
           }}
         >
           <div className="logo" style={{marginLeft: "1.2rem"}}>

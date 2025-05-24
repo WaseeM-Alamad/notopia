@@ -1,6 +1,6 @@
 import { Popper } from "@mui/material";
 import { motion } from "framer-motion";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import { v4 as generateUUID } from "uuid";
 import ManageLabelsMenu from "./ManageLabelsMenu";
 
@@ -149,4 +149,4 @@ const ModalMenu = ({
   );
 };
 
-export default ModalMenu;
+export default memo(ModalMenu);

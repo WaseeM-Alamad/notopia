@@ -3,7 +3,7 @@ import React, { memo } from "react";
 const HomeIcon = ({ size = 30 }) => {
   return (
     <svg
-      style={{ opacity: "0.65" }}
+      opacity=".65"
       width="25"
       height="25"
       viewBox="0 0 25 25"

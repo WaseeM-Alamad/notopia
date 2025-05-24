@@ -1486,6 +1486,7 @@ const page = () => {
             setCurrent(captialized(selected));
           }
         } else if (selected.startsWith("label/")) {
+          console.log("labell man");
           setCurrent("DynamicLabel");
         } else {
           setCurrent(captialized(selected));
@@ -1628,6 +1629,8 @@ const page = () => {
   const batchDeleteRef = useRef(() => {});
 
   const matchesFilters = (note) => {
+    if (note.isTrash) return false;
+
     if (filters.color && note.color !== filters.color) {
       return false;
     }
@@ -1649,7 +1652,6 @@ const page = () => {
     if (filters.image && note.images.length === 0) {
       return false;
     }
-
     return true;
   };
 
@@ -1682,11 +1684,53 @@ const page = () => {
         }
         event.preventDefault();
         const selectedNotes = [];
+
+        const filter = (note) => {
+          switch (current) {
+            case "Home": {
+              if (note.isTrash || note.isArchived) return false;
+              break;
+            }
+            case "Reminders": {
+              return false;
+              break;
+            }
+            case "Archive": {
+              if (!note.isArchived || note.isTrash) return false;
+              break;
+            }
+            case "Trash": {
+              if (!note.isTrash) return false;
+              break;
+            }
+            case "Search": {
+              return matchesFilters(note);
+              break;
+            }
+            case "DynamicLabel": {
+              const hash = window.location.hash.replace("#label/", "");
+              const decodedHash = decodeURIComponent(hash);
+              let targetedLabel = null;
+              labelsRef.current.forEach((labelData) => {
+                if (
+                  labelData.label.toLowerCase() === decodedHash.toLowerCase()
+                ) {
+                  targetedLabel = labelData;
+                }
+              });
+
+              if (!note.labels.includes(targetedLabel?.uuid) || note.isTrash)
+                return false;
+              break;
+            }
+          }
+
+          return true;
+        };
+
         notesStateRef.current.order.forEach((uuid, index) => {
           const note = notesStateRef.current.notes.get(uuid);
-          if (note.isTrash || note.isArchived) {
-            return;
-          }
+          if (!filter(note)) return;
 
           const noteData = {
             uuid: note.uuid,
@@ -1798,7 +1842,7 @@ const page = () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
     };
-  }, [searchTerm, filters]);
+  }, [searchTerm, filters, current]);
 
   const dragStartRef = useRef({ x: 0, y: 0 });
   const isDraggingRef = useRef(false);

@@ -1,7 +1,7 @@
 import { copyNoteAction, undoAction } from "@/utils/actions";
 import { Popper } from "@mui/material";
 import { motion } from "framer-motion";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import { v4 as generateUUID } from "uuid";
 import ManageLabelsMenu from "./ManageLabelsMenu";
 
@@ -115,4 +115,4 @@ const MoreMenu = ({
   );
 };
 
-export default MoreMenu;
+export default memo(MoreMenu);

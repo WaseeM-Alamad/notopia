@@ -1,6 +1,6 @@
 import { useAppContext } from "@/context/AppContext";
 import { motion } from "framer-motion";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import { addLabelAction, removeLabelAction } from "@/utils/actions";
 import { createPortal } from "react-dom";
 import { Popper } from "@mui/material";
@@ -255,4 +255,4 @@ const ManageLabelsMenu = ({
   );
 };
 
-export default ManageLabelsMenu;
+export default memo(ManageLabelsMenu);
