@@ -5,27 +5,32 @@ import HomeIcon from "../icons/HomeIcon";
 import BellIcon from "../icons/BellIcon";
 import SideArchiveIcon from "../icons/SideArchiveIcon";
 import TrashIcon from "../icons/TrashIcon";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import AddButton from "../icons/AddButton";
 import LabelIcon from "../icons/LabelIcon";
 import FolderIcon from "../icons/FolderIcon";
 import { emptyTrashAction } from "@/utils/actions";
 import Tooltip from "../Tools/Tooltip";
+import { useAppContext } from "@/context/AppContext";
 
 const Sidebar = memo(() => {
+  const { labelsRef, labelsReady } = useAppContext();
   const addButtonRef = useRef(null);
   const containerRef = useRef(null);
   const [tooltipAnchor, setTooltipAnchor] = useState(null);
   const [currentHash, setCurrentHash] = useState(null);
+  const [trans, setTrans] = useState(false);
   const ICON_SIZE = 22;
 
-  const navItems = [
-    { hash: "home", Icon: HomeIcon },
-    { hash: "labels", Icon: FolderIcon },
-    { hash: "reminders", Icon: BellIcon },
-    { hash: "archive", Icon: SideArchiveIcon },
-    { hash: "trash", Icon: TrashIcon },
+  const items = [
+    { name: "Home", hash: "home", Icon: HomeIcon },
+    { name: "Labels", hash: "labels", Icon: FolderIcon },
+    { name: "Reminders", hash: "reminders", Icon: BellIcon },
+    { name: "Archive", hash: "archive", Icon: SideArchiveIcon },
+    { name: "Trash", hash: "trash", Icon: TrashIcon },
   ];
+
+  const [navItems, setNavitems] = useState(items);
 
   const currentYear = useMemo(() => new Date().getFullYear(), []);
 
@@ -33,6 +38,36 @@ const Sidebar = memo(() => {
     const hash = window.location.hash.replace("#", "");
     setCurrentHash(hash); // Set hash after hydration
   }, []);
+
+  useEffect(() => {
+    const handler = () => {
+      const labelItems = [];
+      labelsRef.current.forEach((labelData) => {
+        if (labelData?.isPinned) {
+          labelItems.push({
+            name: labelData.label,
+            hash: encodeLabel(labelData.label),
+            Icon: LabelIcon,
+            uuid: labelData.uuid,
+          });
+        }
+      });
+
+      setNavitems([...items, ...labelItems]);
+    };
+
+    handler();
+
+    window.addEventListener("refreshPinnedLabels", handler);
+
+    return () => {
+      window.removeEventListener("refreshPinnedLabels", handler);
+    };
+  }, [labelsReady]);
+
+  const encodeLabel = (label) => {
+    return "label/" + encodeURIComponent(label.toLowerCase());
+  };
 
   const handleAddNote = async () => {
     addButtonRef.current.classList.remove("animate");
@@ -75,10 +110,6 @@ const Sidebar = memo(() => {
     }));
   };
 
-  const intCap = (str) => {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-  };
-
   useEffect(() => {
     const handleHashChange = () => {
       requestAnimationFrame(() => {
@@ -96,10 +127,19 @@ const Sidebar = memo(() => {
               prevItem?.classList.remove("link-btn-selected");
               prevItem.children[0].style.opacity = "0.75";
             }
-            const event = new CustomEvent("sectionChange", {
-              detail: { hash },
-            });
-            window.dispatchEvent(event);
+
+            if (hash.startsWith("label/")) {
+              const event = new CustomEvent("sectionChange", {
+                detail: { hash: hash },
+              });
+              window.dispatchEvent(event);
+            } else {
+              const event = new CustomEvent("sectionChange", {
+                detail: { hash: hash },
+              });
+              window.dispatchEvent(event);
+            }
+
             btn.classList.add("link-btn-selected");
             btn.children[0].style.opacity = "1";
           }
@@ -122,14 +162,23 @@ const Sidebar = memo(() => {
     return () => {
       window.removeEventListener("hashchange", handleHashChange);
     };
-  }, []);
+  }, [labelsReady]);
+
+  useEffect(() => {
+    if (!labelsReady) return;
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        setTrans(true);
+      }, 10);
+    });
+  }, [labelsReady]);
 
   if (currentHash === null) return;
 
   return (
     <>
       <aside className="sidebar">
-        <div style={{ display: "flex", flexDirection: "column" }}>
+        <div className="sidebar-container">
           <button
             onMouseEnter={(e) => handleMouseEnter(e, "New note")}
             onMouseLeave={handleMouseLeave}
@@ -141,19 +190,30 @@ const Sidebar = memo(() => {
             <AddButton />
           </button>
           <div ref={containerRef} className="sidebar-icons-container">
-            {navItems.map(({ hash, Icon }) => (
-              <button
-                className={`link-btn`}
-                onMouseEnter={(e) => handleMouseEnter(e, intCap(hash))}
-                onMouseLeave={handleMouseLeave}
-                id={hash}
-                key={hash}
-                onClick={() => handleIconClick(hash)}
-                style={{ zIndex: "9" }}
-              >
-                <Icon size={ICON_SIZE} />
-              </button>
-            ))}
+            <AnimatePresence>
+              {navItems.map(({ name, hash, Icon }) => (
+                <motion.button
+                  key={hash}
+                  initial={{ x: trans ? -100 : 0 }}
+                  animate={{ x: 0 }}
+                  exit={{ x: -100 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 700,
+                    damping: 50,
+                    mass: 1,
+                  }}
+                  className={`link-btn`}
+                  onMouseEnter={(e) => handleMouseEnter(e, name)}
+                  onMouseLeave={handleMouseLeave}
+                  id={hash}
+                  onClick={() => handleIconClick(hash)}
+                  style={{ zIndex: "9" }}
+                >
+                  <Icon size={ICON_SIZE} />
+                </motion.button>
+              ))}
+            </AnimatePresence>
           </div>
         </div>
         <span className="copyright-text">&copy; {currentYear}</span>

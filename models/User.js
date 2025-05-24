@@ -11,6 +11,7 @@ const LabelSchema = new Schema(
       unique: [true, "Label already exists!"],
     },
     color: { type: String, default: "Default" },
+    isPinned: { type: Boolean, default: false },
     image: { type: String },
     noteCount: { type: Number },
   },

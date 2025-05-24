@@ -1129,6 +1129,21 @@ export const updateLabelAction = async (data) => {
         status: 201,
       };
     }
+
+    else if (data.type === "label_pin"){
+      await User.findOneAndUpdate(
+        { _id: userID, "labels.uuid": data.uuid },
+        { $set: { "labels.$.isPinned": data.value } }
+      );
+
+      return {
+        success: true,
+        message: "Label pinned state updated successfully!",
+        status: 201,
+      };
+    }
+
+
   } catch (error) {
     console.log(error);
     return { message: "Failed to update label", status: 500 };

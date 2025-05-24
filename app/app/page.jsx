@@ -29,6 +29,7 @@ import SelectionBox from "@/components/others/SelectionBox";
 import { v4 as uuid } from "uuid";
 import Search from "@/components/pages/Search";
 import { useSearch } from "@/context/SearchContext";
+import DynamicLabel from "@/components/pages/DynamicLabel";
 
 const initialStates = {
   notes: new Map(),
@@ -726,6 +727,8 @@ const page = () => {
   const firstRun = useRef(true);
   const closeRef = useRef(null);
 
+  const fadeNote = current !== "DynamicLabel" && current !== "Search";
+
   const openSnackFunction = useCallback((data) => {
     const showUndo = data.showUndo ?? true;
     if (data.close) {
@@ -841,420 +844,379 @@ const page = () => {
     });
   }, []);
 
-  const noteActions = useCallback(async (data) => {
-    if (data.type === "archive") {
-      const initialIndex = data.index;
+  const noteActions = useCallback(
+    async (data) => {
+      if (data.type === "archive") {
+        const initialIndex = data.index;
 
-      const timeOut = setTimeout(() => {
-        dispatchNotes({
-          type: "ARCHIVE_NOTE",
-          note: data.note,
-        });
-      }, 210);
-
-      const handler = (e) => {
-        if (e.propertyName === "opacity") {
-          data.noteRef.current.removeEventListener("transitionend", handler);
-
-          clearTimeout(timeOut);
-
-          dispatchNotes({
-            type: "ARCHIVE_NOTE",
-            note: data.note,
-          });
-        }
-      };
-
-      if (data.noteRef.current) {
-        data.noteRef.current.addEventListener("transitionend", handler);
-      }
-
-      data.noteRef.current.offsetHeight;
-      data.noteRef.current.classList.add("fade-out");
-
-      const redoArchive = async () => {
-        const timeOut = setTimeout(() => {
-          dispatchNotes({
-            type: "ARCHIVE_NOTE",
-            note: data.note,
-          });
-        }, 210);
-
-        const handler = (e) => {
-          if (e.propertyName === "opacity") {
-            data.noteRef.current.removeEventListener("transitionend", handler);
-
-            clearTimeout(timeOut);
-
-            dispatchNotes({
-              type: "ARCHIVE_NOTE",
-              note: data.note,
-            });
+        const redo = async () => {
+          if (fadeNote) {
+            setFadingNotes((prev) => new Set(prev).add(data.note.uuid));
           }
+          setTimeout(
+            () => {
+              dispatchNotes({
+                type: "ARCHIVE_NOTE",
+                note: data.note,
+              });
+              setFadingNotes((prev) => {
+                const newSet = new Set(prev);
+                newSet.delete(data.note.uuid);
+                return newSet;
+              });
+            },
+            fadeNote ? 250 : 0
+          );
+
+          const first = data.index === 0;
+          window.dispatchEvent(new Event("loadingStart"));
+          await NoteUpdateAction({
+            type: "isArchived",
+            value: !data.note.isArchived,
+            noteUUIDs: [data.note.uuid],
+            first: first,
+          });
+          window.dispatchEvent(new Event("loadingEnd"));
         };
 
-        data.noteRef.current.addEventListener("transitionend", handler);
-        data.noteRef.current.offsetHeight;
-        data.noteRef.current.classList.add("fade-out");
+        redo();
 
-        const first = data.index === 0;
-        window.dispatchEvent(new Event("loadingStart"));
-        await NoteUpdateAction({
-          type: "isArchived",
-          value: !data.note.isArchived,
-          noteUUIDs: [data.note.uuid],
-          first: first,
-        });
-        window.dispatchEvent(new Event("loadingEnd"));
-      };
-
-      const undoArchive = async () => {
-        dispatchNotes({
-          type: "UNDO_ARCHIVE",
-          note: data.note,
-          initialIndex: initialIndex,
-        });
-        window.dispatchEvent(new Event("loadingStart"));
-        await undoAction({
-          type: "UNDO_ARCHIVE",
-          noteUUID: data.note.uuid,
-          value: data.note.isArchived,
-          pin: data.note.isPinned,
-          initialIndex: initialIndex,
-          endIndex: 0,
-        });
-        window.dispatchEvent(new Event("loadingEnd"));
-      };
-      openSnackFunction({
-        snackMessage: `${
-          data.note.isArchived
-            ? "Note unarchived"
-            : data.note.isPinned
-            ? "Note unpinned and archived"
-            : "Note Archived"
-        }`,
-        snackOnUndo: undoArchive,
-        snackRedo: redoArchive,
-      });
-      const first = data.index === 0;
-      window.dispatchEvent(new Event("loadingStart"));
-      await NoteUpdateAction({
-        type: "isArchived",
-        value: !data.note.isArchived,
-        noteUUIDs: [data.note.uuid],
-        first: first,
-      });
-      window.dispatchEvent(new Event("loadingEnd"));
-    } else if (data.type === "TRASH_NOTE") {
-      const timeOut = setTimeout(() => {
-        dispatchNotes({
-          type: "TRASH_NOTE",
-          note: data.note,
-        });
-      }, 210);
-
-      const handler = (e) => {
-        if (e.propertyName === "opacity") {
-          data.noteRef.current.removeEventListener("transitionend", handler);
-          clearTimeout(timeOut);
+        const undoArchive = async () => {
           dispatchNotes({
-            type: "TRASH_NOTE",
+            type: "UNDO_ARCHIVE",
             note: data.note,
+            initialIndex: initialIndex,
           });
-        }
-      };
-
-      data.noteRef.current.addEventListener("transitionend", handler);
-      data.noteRef.current.classList.add("fade-out");
-
-      const initialIndex = data.index;
-      const undoTrash = async () => {
-        dispatchNotes({
-          type: "UNDO_TRASH",
-          note: data.note,
-          initialIndex: initialIndex,
-        });
-
-        window.dispatchEvent(new Event("loadingStart"));
-        await undoAction({
-          type: "UNDO_TRASH",
-          noteUUID: data.note.uuid,
-          value: true,
-          initialIndex: data.initialIndex,
-          endIndex: 0,
-        });
-        window.dispatchEvent(new Event("loadingEnd"));
-      };
-
-      openSnackFunction({
-        snackMessage: "Note restored",
-        snackOnUndo: undoTrash,
-      });
-
-      window.dispatchEvent(new Event("loadingStart"));
-      await NoteUpdateAction({
-        type: "isTrash",
-        value: false,
-        noteUUIDs: [data.note.uuid],
-      });
-      window.dispatchEvent(new Event("loadingEnd"));
-    } else if (data.type === "RESTORE_NOTE") {
-      const timeOut = setTimeout(() => {
-        dispatchNotes({
-          type: "TRASH_NOTE",
-          note: data.note,
-        });
-      }, 210);
-
-      const handler = (e) => {
-        if (e.propertyName === "opacity") {
-          data.noteRef.current.removeEventListener("transitionend", handler);
-          clearTimeout(timeOut);
-          dispatchNotes({
-            type: "TRASH_NOTE",
-            note: data.note,
+          window.dispatchEvent(new Event("loadingStart"));
+          await undoAction({
+            type: "UNDO_ARCHIVE",
+            noteUUID: data.note.uuid,
+            value: data.note.isArchived,
+            pin: data.note.isPinned,
+            initialIndex: initialIndex,
+            endIndex: 0,
           });
-        }
-      };
-
-      data.noteRef.current.addEventListener("transitionend", handler);
-      data.noteRef.current.classList.add("fade-out");
-
-      const initialIndex = data.index;
-      const undoTrash = async () => {
-        dispatchNotes({
-          type: "UNDO_TRASH",
-          note: data.note,
-          initialIndex: initialIndex,
-        });
-      };
-
-      const onClose = async () => {
-        window.dispatchEvent(new Event("loadingStart"));
-        await NoteUpdateAction({
-          type: "isTrash",
-          value: true,
-          noteUUIDs: [data.note.uuid],
-        });
-        window.dispatchEvent(new Event("loadingEnd"));
-      };
-
-      if (!data.note.isTrash) {
+          window.dispatchEvent(new Event("loadingEnd"));
+        };
         openSnackFunction({
           snackMessage: `${
-            data.note.isPinned ? "Note unpinned and trashed" : "Note trashed"
+            data.note.isArchived
+              ? "Note unarchived"
+              : data.note.isPinned
+              ? "Note unpinned and archived"
+              : "Note Archived"
           }`,
+          snackOnUndo: undoArchive,
+          snackRedo: redo,
+        });
+      } else if (data.type === "RESTORE_NOTE") {
+        const initialIndex = data.index;
+
+        const redo = async () => {
+          setFadingNotes((prev) => new Set(prev).add(data.note.uuid));
+
+          setTimeout(() => {
+            dispatchNotes({
+              type: "TRASH_NOTE",
+              note: data.note,
+            });
+            setFadingNotes((prev) => {
+              const newSet = new Set(prev);
+              newSet.delete(data.note.uuid);
+              return newSet;
+            });
+          }, 250);
+
+          window.dispatchEvent(new Event("loadingStart"));
+          await NoteUpdateAction({
+            type: "isTrash",
+            value: false,
+            noteUUIDs: [data.note.uuid],
+          });
+          window.dispatchEvent(new Event("loadingEnd"));
+        };
+
+        redo();
+
+        const undoTrash = async () => {
+          dispatchNotes({
+            type: "UNDO_TRASH",
+            note: data.note,
+            initialIndex: initialIndex,
+          });
+
+          window.dispatchEvent(new Event("loadingStart"));
+          await undoAction({
+            type: "UNDO_TRASH",
+            noteUUID: data.note.uuid,
+            value: true,
+            initialIndex: data.initialIndex,
+            endIndex: 0,
+          });
+          window.dispatchEvent(new Event("loadingEnd"));
+        };
+
+        openSnackFunction({
+          snackMessage: "Note restored",
           snackOnUndo: undoTrash,
-          snackOnClose: onClose,
-          unloadWarn: true,
+          snackRedo: redo,
         });
-      }
-      data.setIsOpen(false);
-    } else if (data.type === "DELETE_NOTE") {
-      batchNoteCount(data.note.labels);
+      } else if (data.type === "TRASH_NOTE") {
+        const initialIndex = data.index;
 
-      const timeOut = setTimeout(() => {
-        dispatchNotes({
-          type: "DELETE_NOTE",
-          note: data.note,
-        });
-      }, 210);
+        const redo = async () => {
+          setFadingNotes((prev) => new Set(prev).add(data.note.uuid));
 
-      const handler = (e) => {
-        if (e.propertyName === "opacity") {
-          data.noteRef.current.removeEventListener("transitionend", handler);
-          clearTimeout(timeOut);
+          setTimeout(() => {
+            dispatchNotes({
+              type: "TRASH_NOTE",
+              note: data.note,
+            });
+            setFadingNotes((prev) => {
+              const newSet = new Set(prev);
+              newSet.delete(data.note.uuid);
+              return newSet;
+            });
+          }, 250);
+        };
+
+        redo();
+
+        const undoTrash = async () => {
+          dispatchNotes({
+            type: "UNDO_TRASH",
+            note: data.note,
+            initialIndex: initialIndex,
+          });
+        };
+
+        const onClose = async () => {
+          window.dispatchEvent(new Event("loadingStart"));
+          await NoteUpdateAction({
+            type: "isTrash",
+            value: true,
+            noteUUIDs: [data.note.uuid],
+          });
+          window.dispatchEvent(new Event("loadingEnd"));
+        };
+
+        if (!data.note.isTrash) {
+          openSnackFunction({
+            snackMessage: `${
+              data.note.isPinned ? "Note unpinned and trashed" : "Note trashed"
+            }`,
+            snackOnUndo: undoTrash,
+            snackOnClose: onClose,
+            snackRedo: redo,
+            unloadWarn: true,
+          });
+        }
+        data.setIsOpen(false);
+      } else if (data.type === "DELETE_NOTE") {
+        batchNoteCount(data.note.labels);
+        setFadingNotes((prev) => new Set(prev).add(data.note.uuid));
+
+        setTimeout(() => {
           dispatchNotes({
             type: "DELETE_NOTE",
             note: data.note,
           });
-        }
-      };
-
-      data.noteRef.current.addEventListener("transitionend", handler);
-      data.noteRef.current.classList.add("fade-out");
-
-      window.dispatchEvent(new Event("loadingStart"));
-      await DeleteNoteAction(data.note.uuid);
-      window.dispatchEvent(new Event("loadingEnd"));
-    } else if (data.type === "PIN_ARCHIVED_NOTE") {
-      const timeOut = setTimeout(() => {
-        dispatchNotes({
-          type: "PIN_ARCHIVED_NOTE",
-          note: data.note,
-        });
-      }, 210);
-      const handler = (e) => {
-        if (e.propertyName === "opacity") {
-          data.noteRef.current.removeEventListener("transitionend", handler);
-          clearTimeout(timeOut);
-          dispatchNotes({
-            type: "PIN_ARCHIVED_NOTE",
-            note: data.note,
+          setFadingNotes((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(data.note.uuid);
+            return newSet;
           });
-        }
-      };
+        }, 250);
 
-      data.noteRef.current.addEventListener("transitionend", handler);
-      data.noteRef.current.classList.add("fade-out");
+        window.dispatchEvent(new Event("loadingStart"));
+        await DeleteNoteAction(data.note.uuid);
+        window.dispatchEvent(new Event("loadingEnd"));
+      } else if (data.type === "PIN_ARCHIVED_NOTE") {
+        const initialIndex = data.index;
 
-      window.dispatchEvent(new Event("loadingStart"));
-      const initialIndex = data.index;
+        const redo = async () => {
+          if (fadeNote) {
+            setFadingNotes((prev) => new Set(prev).add(data.note.uuid));
+          }
 
-      const undoPinArchived = async () => {
+          setTimeout(
+            () => {
+              dispatchNotes({
+                type: "PIN_ARCHIVED_NOTE",
+                note: data.note,
+              });
+
+              setFadingNotes((prev) => {
+                const newSet = new Set(prev);
+                newSet.delete(data.note.uuid);
+                return newSet;
+              });
+            },
+            fadeNote ? 250 : 0
+          );
+
+          window.dispatchEvent(new Event("loadingStart"));
+          await NoteUpdateAction({
+            type: "pinArchived",
+            value: true,
+            noteUUIDs: [data.note.uuid],
+          });
+          window.dispatchEvent(new Event("loadingEnd"));
+        };
+
+        redo();
+
+        const undoPinArchived = async () => {
+          dispatchNotes({
+            type: "UNDO_PIN_ARCHIVED",
+            note: data.note,
+            initialIndex: initialIndex,
+          });
+
+          window.dispatchEvent(new Event("loadingStart"));
+          await undoAction({
+            type: "UNDO_PIN_ARCHIVED",
+            noteUUID: data.note.uuid,
+            initialIndex: initialIndex,
+            endIndex: 0,
+          });
+          window.dispatchEvent(new Event("loadingEnd"));
+        };
+
+        openSnackFunction({
+          snackMessage: "Note unarchived and pinned",
+          snackOnUndo: undoPinArchived,
+          snackRedo: redo,
+        });
+      } else if (data.type === "UPDATE_COLOR") {
+        if (data.newColor === data.selectedColor) return;
+        data.setSelectedColor(data.newColor);
+
         dispatchNotes({
-          type: "UNDO_PIN_ARCHIVED",
+          type: "UPDATE_COLOR",
           note: data.note,
-          initialIndex: initialIndex,
+          newColor: data.newColor,
         });
 
         window.dispatchEvent(new Event("loadingStart"));
-        await undoAction({
-          type: "UNDO_PIN_ARCHIVED",
-          noteUUID: data.note.uuid,
-          initialIndex: initialIndex,
-          endIndex: 0,
-        });
-        window.dispatchEvent(new Event("loadingEnd"));
-      };
-
-      openSnackFunction({
-        snackMessage: "Note unarchived and pinned",
-        snackOnUndo: undoPinArchived,
-      });
-
-      try {
         await NoteUpdateAction({
-          type: "pinArchived",
-          value: true,
+          type: "color",
+          value: data.newColor,
           noteUUIDs: [data.note.uuid],
         });
-      } finally {
         window.dispatchEvent(new Event("loadingEnd"));
-      }
-    } else if (data.type === "UPDATE_COLOR") {
-      if (data.newColor === data.selectedColor) return;
-      data.setSelectedColor(data.newColor);
+      } else if (data.type === "COPY_NOTE") {
+        const newUUID = uuid();
+        const note = data.note;
+        const newImages = [];
+        const newCheckboxes = [];
+        const oldToNewCBMap = new Map();
 
-      dispatchNotes({
-        type: "UPDATE_COLOR",
-        note: data.note,
-        newColor: data.newColor,
-      });
-
-      window.dispatchEvent(new Event("loadingStart"));
-      await NoteUpdateAction({
-        type: "color",
-        value: data.newColor,
-        noteUUIDs: [data.note.uuid],
-      });
-      window.dispatchEvent(new Event("loadingEnd"));
-    } else if (data.type === "COPY_NOTE") {
-      const newUUID = uuid();
-      const note = data.note;
-      const newImages = [];
-      const newCheckboxes = [];
-      const oldToNewCBMap = new Map();
-
-      if (note.images.length > 0) {
-        note.images.forEach((image) => {
-          const newUUID = uuid();
-          const newImage = { uuid: newUUID, url: image.url };
-          newImages.push(newImage);
-        });
-      }
-
-      if (note.checkboxes.length > 0) {
-        const copiedCheckboxes = note.checkboxes.map((checkbox) => {
-          const newUUID = uuid();
-          oldToNewCBMap.set(checkbox.uuid, newUUID);
-          const newCheckbox = {
-            ...checkbox,
-            uuid: newUUID,
-          };
-          return newCheckbox;
-        });
-
-        copiedCheckboxes.forEach((checkbox) => {
-          const newChildren = checkbox.children.map((childUUID) =>
-            oldToNewCBMap.get(childUUID)
-          );
-          const finalCheckbox = {
-            ...checkbox,
-            children: newChildren,
-          };
-          newCheckboxes.push(finalCheckbox);
-        });
-      }
-
-      const newNote = {
-        uuid: newUUID,
-        title: note.title,
-        content: note.content,
-        color: note.color,
-        background: note.background,
-        labels: note.labels,
-        checkboxes: newCheckboxes,
-        showCheckboxes: true,
-        expandCompleted: note.expandCompleted,
-        isPinned: false,
-        isArchived: false,
-        isTrash: note.isTrash,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        images: newImages,
-      };
-
-      const labelsUUIDs = [];
-
-      note.labels.forEach((labelUUID) => {
-        labelsUUIDs.push(labelUUID);
-      });
-
-      batchNoteCount(labelsUUIDs, "inc");
-
-      dispatchNotes({
-        type: "ADD_NOTE",
-        newNote: newNote,
-      });
-
-      const undoCopy = async () => {
-        setFadingNotes(new Set([newUUID]));
-        batchNoteCount(labelsUUIDs);
-        setTimeout(async () => {
-          dispatchNotes({
-            type: "UNDO_COPY",
-            noteUUID: newNote.uuid,
+        if (note.images.length > 0) {
+          note.images.forEach((image) => {
+            const newUUID = uuid();
+            const newImage = { uuid: newUUID, url: image.url };
+            newImages.push(newImage);
           });
-          setFadingNotes(new Set());
-          window.dispatchEvent(new Event("loadingStart"));
-          await undoAction({
-            type: "UNDO_COPY",
-            noteUUID: newNote.uuid,
-            isImages: note.images.length,
+        }
+
+        if (note.checkboxes.length > 0) {
+          const copiedCheckboxes = note.checkboxes.map((checkbox) => {
+            const newUUID = uuid();
+            oldToNewCBMap.set(checkbox.uuid, newUUID);
+            const newCheckbox = {
+              ...checkbox,
+              uuid: newUUID,
+            };
+            return newCheckbox;
           });
-          window.dispatchEvent(new Event("loadingEnd"));
-        }, 250);
-      };
-      openSnackFunction({
-        snackMessage: "Note created",
-        snackOnUndo: undoCopy,
-      });
-      data.setMoreMenuOpen(false);
 
-      window.dispatchEvent(new Event("loadingStart"));
-      const received = await copyNoteAction({
-        originalNoteUUID: note.uuid,
-        newNoteUUID: newUUID,
-        newImages: newImages,
-        note: newNote,
-      });
-      const receivedNote = received.note;
-      window.dispatchEvent(new Event("loadingEnd"));
+          copiedCheckboxes.forEach((checkbox) => {
+            const newChildren = checkbox.children.map((childUUID) =>
+              oldToNewCBMap.get(childUUID)
+            );
+            const finalCheckbox = {
+              ...checkbox,
+              children: newChildren,
+            };
+            newCheckboxes.push(finalCheckbox);
+          });
+        }
 
-      dispatchNotes({ type: "SET_NOTE", note: receivedNote });
-    }
-  }, []);
+        const newNote = {
+          uuid: newUUID,
+          title: note.title,
+          content: note.content,
+          color: note.color,
+          background: note.background,
+          labels: note.labels,
+          checkboxes: newCheckboxes,
+          showCheckboxes: true,
+          expandCompleted: note.expandCompleted,
+          isPinned: false,
+          isArchived: false,
+          isTrash: note.isTrash,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          images: newImages,
+        };
+
+        const labelsUUIDs = [];
+
+        note.labels.forEach((labelUUID) => {
+          labelsUUIDs.push(labelUUID);
+        });
+
+        batchNoteCount(labelsUUIDs, "inc");
+
+        dispatchNotes({
+          type: "ADD_NOTE",
+          newNote: newNote,
+        });
+
+        const undoCopy = async () => {
+          setFadingNotes((prev) => new Set(prev).add(newUUID));
+          batchNoteCount(labelsUUIDs);
+          setTimeout(async () => {
+            dispatchNotes({
+              type: "UNDO_COPY",
+              noteUUID: newNote.uuid,
+            });
+            setFadingNotes((prev) => {
+              const newSet = new Set(prev);
+              newSet.delete(newUUID);
+              return newSet;
+            });
+            window.dispatchEvent(new Event("loadingStart"));
+            await undoAction({
+              type: "UNDO_COPY",
+              noteUUID: newNote.uuid,
+              isImages: note.images.length,
+            });
+            window.dispatchEvent(new Event("loadingEnd"));
+          }, 250);
+        };
+        openSnackFunction({
+          snackMessage: "Note created",
+          snackOnUndo: undoCopy,
+        });
+        data.setMoreMenuOpen(false);
+
+        window.dispatchEvent(new Event("loadingStart"));
+        const received = await copyNoteAction({
+          originalNoteUUID: note.uuid,
+          newNoteUUID: newUUID,
+          newImages: newImages,
+          note: newNote,
+        });
+        const receivedNote = received.note;
+        window.dispatchEvent(new Event("loadingEnd"));
+
+        dispatchNotes({ type: "SET_NOTE", note: receivedNote });
+      }
+    },
+    [current]
+  );
 
   const emptySearchRef = useRef(false);
 
@@ -1523,6 +1485,8 @@ const page = () => {
             window.location.hash = "search";
             setCurrent(captialized(selected));
           }
+        } else if (selected.startsWith("label/")) {
+          setCurrent("DynamicLabel");
         } else {
           setCurrent(captialized(selected));
         }
@@ -1546,6 +1510,7 @@ const page = () => {
     Archive,
     Trash,
     Search,
+    DynamicLabel,
   };
 
   const Page = components[current];
@@ -1661,6 +1626,32 @@ const page = () => {
   const batchArchiveRef = useRef(() => {});
   const batchPinRef = useRef(() => {});
   const batchDeleteRef = useRef(() => {});
+
+  const matchesFilters = (note) => {
+    if (filters.color && note.color !== filters.color) {
+      return false;
+    }
+
+    if (
+      searchTerm &&
+      !(
+        note.title.toLowerCase().includes(searchTerm.toLowerCase().trim()) ||
+        note.content.toLowerCase().includes(searchTerm.toLowerCase().trim())
+      )
+    ) {
+      return false;
+    }
+
+    if (filters.label && !note.labels.includes(filters.label)) {
+      return false;
+    }
+
+    if (filters.image && note.images.length === 0) {
+      return false;
+    }
+
+    return true;
+  };
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -1784,6 +1775,12 @@ const page = () => {
         allowRedoRef.current = false;
         allowUndoRef.current = true;
       }
+
+      if (event.code === "Slash") {
+        event.preventDefault();
+        searchRef.current.click();
+        searchRef.current.focus();
+      }
     };
 
     const handleKeyUp = (event) => {
@@ -1801,7 +1798,7 @@ const page = () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
     };
-  }, []);
+  }, [searchTerm, filters]);
 
   const dragStartRef = useRef({ x: 0, y: 0 });
   const isDraggingRef = useRef(false);

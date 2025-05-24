@@ -1930,6 +1930,26 @@ img {
   margin-bottom: 1.375rem;
 }
 
+.empty-page-dynamic-label {
+  background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7V17C3 18.1 3.9 18.99 5 18.99L16 19C16.67 19 17.27 18.67 17.63 18.16L22 12L17.63 5.84ZM16 17H5V7H16L19.55 12L16 17Z' fill='%23E5E5E5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: 120px 120px;
+  background-position: center;
+  width: 120px;
+  height: 120px;
+  margin-bottom: 0.8rem;
+}
+
+.dark-mode .empty-page-dynamic-label {
+  background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7V17C3 18.1 3.9 18.99 5 18.99L16 19C16.67 19 17.27 18.67 17.63 18.16L22 12L17.63 5.84ZM16 17H5V7H16L19.55 12L16 17Z' fill='%235f6368'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: 120px 120px;
+  background-position: center;
+  width: 120px;
+  height: 120px;
+  margin-bottom: 0.8rem;
+}
+
 .empty-page-home {
   background: url('data:image/svg+xml,<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7.50742 19.201V9.28394C7.50742 8.78922 7.68732 8.36945 8.04712 8.02464C8.40693 7.67983 8.83419 7.50742 9.32892 7.50742H19.201C19.6957 7.50742 20.1192 7.68357 20.4715 8.03588C20.8238 8.38819 21 8.8117 21 9.30643V16.5025L16.5025 21H9.30643C8.8117 21 8.38819 20.8238 8.03588 20.4715C7.68357 20.1192 7.50742 19.6957 7.50742 19.201ZM3.03238 6.83279C2.94243 6.33806 3.03988 5.89206 3.32472 5.49478C3.60956 5.0975 3.99935 4.85388 4.49408 4.76393L14.2537 3.03238C14.7484 2.94243 15.1944 3.03988 15.5917 3.32472C15.989 3.60956 16.2326 3.99935 16.3226 4.49408L16.5474 5.70841H14.7035L14.546 4.80891L4.80891 6.54045L5.70841 11.6227V17.8967C5.46854 17.7618 5.26241 17.5819 5.09 17.357C4.9176 17.1321 4.80891 16.8773 4.76393 16.5924L3.03238 6.83279ZM9.30643 9.30643V19.201H15.603V15.603H19.201V9.30643H9.30643Z" fill="%23E5E5E5"/></svg>');
   background-repeat: no-repeat;

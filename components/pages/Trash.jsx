@@ -82,10 +82,15 @@ const Home = memo(
   }) => {
     const { batchNoteCount } = useAppContext();
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-    const [notesExist, setNotesExist] = useState(false);
     const containerRef = useRef(null);
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
+
+    const notesExist = !order.some((uuid) => {
+      const note = notes.get(uuid);
+      if (!note.isTrash) return false;
+      return true;
+    });
 
     const calculateLayout = useCallback(() => {
       if (layoutFrameRef.current) {
@@ -116,7 +121,6 @@ const Home = memo(
         container.style.transform = "translateX(-50%)";
 
         const items = container.children;
-        setNotesExist(items.length > 0);
 
         const positionItems = (itemList) => {
           const columnHeights = new Array(columns).fill(0);
@@ -245,7 +249,7 @@ const Home = memo(
             })}
           </div>
           <div className="empty-page">
-            {notesReady && !notesExist && (
+            {notesReady && notesExist && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}

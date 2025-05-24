@@ -5,6 +5,7 @@ import { useSearch } from "@/context/SearchContext";
 import { useAppContext } from "@/context/AppContext";
 
 const Search = ({
+  notesStateRef,
   notes,
   order,
   dispatchNotes,
@@ -76,9 +77,9 @@ const Search = ({
   const labelClick = (labelUUID) => {
     skipHashChangeRef.current = true;
     const label = labelsRef.current.get(labelUUID).label;
-    const encodedColor =
+    const encodedLabel =
       "label" + doubleEncode("=") + tripleEncode(label.toLowerCase());
-    window.location.hash = `search/${encodedColor}`;
+    window.location.hash = `search/${encodedLabel}`;
     setFilters((prev) => ({ ...prev, label: labelUUID }));
   };
 
@@ -247,6 +248,7 @@ const Search = ({
         ) : (
           <FilteredNotes
             setNoMatchingNotes={setNoMatchingNotes}
+            notesStateRef={notesStateRef}
             filteredNotes={filteredNotes}
             notes={notes}
             order={order}

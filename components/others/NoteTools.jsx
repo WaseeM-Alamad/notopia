@@ -160,7 +160,7 @@ const NoteTools = ({
 
   const handleRestoreNote = () => {
     noteActions({
-      type: "TRASH_NOTE",
+      type: "RESTORE_NOTE",
       note: note,
       noteRef: note.ref,
       index: index,
@@ -185,7 +185,7 @@ const NoteTools = ({
 
   const handleTrashNote = async (e) => {
     noteActions({
-      type: "RESTORE_NOTE",
+      type: "TRASH_NOTE",
       note: note,
       index: index,
       noteRef: note.ref,

@@ -88,10 +88,15 @@ const Archive = memo(
     noteActions,
     notesReady,
   }) => {
-    const [notesExist, setNotesExist] = useState(false);
     const containerRef = useRef(null);
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
+
+    const notesExist = !order.some((uuid) => {
+      const note = notes.get(uuid);
+      if (!note.isArchived || note.isTrash) return false;
+      return true;
+    });
 
     const calculateLayout = useCallback(() => {
       if (layoutFrameRef.current) {
@@ -123,7 +128,6 @@ const Archive = memo(
 
         const items = container.children;
 
-        setNotesExist(items.length > 0);
 
         const positionItems = (itemList) => {
           const columnHeights = new Array(columns).fill(0);
@@ -180,6 +184,8 @@ const Archive = memo(
       }
     }, [notes, calculateLayout]);
 
+    
+
     return (
       <>
         <div ref={rootContainerRef} className="starting-div">
@@ -210,7 +216,7 @@ const Archive = memo(
             })}
           </div>
           <div className="empty-page">
-            {notesReady && !notesExist && (
+            {notesReady && notesExist && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}

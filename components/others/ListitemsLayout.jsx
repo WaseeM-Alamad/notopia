@@ -387,7 +387,7 @@ const ListItemsLayout = ({
         }
       }
 
-      if (currentItem.parent && !currentItem.isCompleted ) {
+      if (currentItem.parent && !currentItem.isCompleted) {
         const parent = prevItem.parent || prevItem.uuid;
         if (currentItem.parent !== parent) {
           const updatedItem = { ...currentItem, parent: parent };

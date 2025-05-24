@@ -17,8 +17,7 @@ const LabelMenu = ({
   setIsImageLoading,
   openSnackFunction,
 }) => {
-  const { updateLabelColor, updateLabelImage, deleteLabelImage, removeLabel } =
-    useAppContext();
+  const { handlePin, updateLabelImage, deleteLabelImage } = useAppContext();
   const menuRef = useRef(null);
   const inputRef = useRef(null);
   const [isMounted, setIsMounted] = useState(false);
@@ -91,6 +90,12 @@ const LabelMenu = ({
     });
   };
 
+  const handleLabelPin = () => {
+    setIsOpen(false);
+    handlePin(labelData.uuid);
+    window.dispatchEvent(new Event("refreshPinnedLabels"));
+  };
+
   const containerClick = useCallback((e) => {
     e.stopPropagation();
   }, []);
@@ -136,6 +141,12 @@ const LabelMenu = ({
           className="menu not-draggable"
         >
           <div className="menu-buttons not-draggable">
+            <div
+              className="menu-btn label-menu-btn not-draggable"
+              onClick={handleLabelPin}
+            >
+              {labelData.isPinned ? "Unpin from sidebar" : "Pin to sidebar"}
+            </div>
             <div
               className="menu-btn label-menu-btn not-draggable"
               onClick={() => {

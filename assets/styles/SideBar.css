@@ -17,6 +17,13 @@ aside {
   background-color: rgb(32, 33, 36);
 }
 
+.sidebar-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow-y: auto;
+}
+
 .sidebar-icons-container {
   display: flex;
   flex-direction: column;

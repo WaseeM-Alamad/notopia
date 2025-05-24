@@ -18,7 +18,7 @@ import {
   undoAction,
   updateOrderAction,
 } from "@/utils/actions";
-import AddNoteModall from "../others/AddNoteModall";
+import ComposeNote from "../others/ComposeNote";
 
 const COLUMN_WIDTH = 240;
 const GUTTER = 15;
@@ -38,11 +38,9 @@ const NoteWrapper = memo(
     calculateLayout,
     isLoadingImages,
     setSelectedNotesIDs,
-    selectedNotes,
     handleDragStart,
     index,
     handleSelectNote,
-    isDragging,
     setTooltipAnchor,
     handleNoteClick,
   }) => {
@@ -126,9 +124,7 @@ const NoteWrapper = memo(
           setFadingNotes={setFadingNotes}
           isLoadingImagesAddNote={isLoadingImages}
           setSelectedNotesIDs={setSelectedNotesIDs}
-          selectedNotes={selectedNotes}
           handleSelectNote={handleSelectNote}
-          isDragging={isDragging}
           openSnackFunction={openSnackFunction}
           index={index}
         />
@@ -166,8 +162,14 @@ const Home = memo(
     const [layoutReady, setLayoutReady] = useState(false);
     const isFirstRender = useRef(true);
 
-    const [unpinnedNotesNumber, setUnpinnedNotesNumber] = useState(null);
-    const [pinnedNotesNumber, setPinnedNotesNumber] = useState(null);
+    const [hasUnpinnedNotes, setHasUnpinnedNotes] = useState(false);
+    const [hasPinnedNotes, setHasPinnedNotes] = useState(false);
+
+    const notesExist = !order.some((uuid) => {
+      const note = notes.get(uuid);
+      if (note.isArchived || note.isTrash) return false;
+      return true;
+    });
 
     const calculateLayout = useCallback(() => {
       if (layoutFrameRef.current) {
@@ -211,9 +213,11 @@ const Home = memo(
 
         // Filter out pinned and unpinned items
         const pinnedItems = sortedItems.filter((item) => {
+          if (item.isTrash || item.isArchived) return false;
           return item.isPinned === true;
         });
         const unpinnedItems = sortedItems.filter((item) => {
+          if (item.isTrash || item.isArchived) return false;
           return item.isPinned === false;
         });
 
@@ -254,8 +258,10 @@ const Home = memo(
           pinnedHeight + gapBetweenSections
         );
 
-        setUnpinnedNotesNumber(unpinnedItems.length);
-        setPinnedNotesNumber(pinnedItems.length);
+        setHasUnpinnedNotes(!!unpinnedItems.length);
+
+        setHasPinnedNotes(!!pinnedItems.length);
+
         setPinnedHeight(pinnedHeight);
         container.style.height = `${unpinnedHeight}px`;
         setLayoutReady(true);
@@ -477,7 +483,7 @@ const Home = memo(
               className="section-label"
               style={{
                 // top: "33px",
-                opacity: pinnedNotesNumber > 0 ? "1" : "0",
+                opacity: hasPinnedNotes ? "1" : "0",
               }}
             >
               PINNED
@@ -486,8 +492,7 @@ const Home = memo(
               className="section-label"
               style={{
                 top: `${pinnedHeight + GAP_BETWEEN_SECTIONS + 2}px`,
-                opacity:
-                  pinnedNotesNumber > 0 && unpinnedNotesNumber > 0 ? "1" : "0",
+                opacity: hasPinnedNotes && hasUnpinnedNotes ? "1" : "0",
               }}
             >
               OTHERS
@@ -508,7 +513,6 @@ const Home = memo(
                     index={index}
                     noteActions={noteActions}
                     dispatchNotes={dispatchNotes}
-                    isDragging={isDragging}
                     setTooltipAnchor={setTooltipAnchor}
                     handleDragStart={handleDragStart}
                     openSnackFunction={openSnackFunction}
@@ -525,24 +529,22 @@ const Home = memo(
             })}
           </div>
           <div className="empty-page">
-            {notesReady &&
-              pinnedNotesNumber === 0 &&
-              unpinnedNotesNumber === 0 && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 800,
-                    damping: 50,
-                    mass: 1,
-                  }}
-                  className="empty-page-box"
-                >
-                  <div className="empty-page-home" />
-                  Notes you add appear here
-                </motion.div>
-              )}
+            {notesReady && notesExist && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 800,
+                  damping: 50,
+                  mass: 1,
+                }}
+                className="empty-page-box"
+              >
+                <div className="empty-page-home" />
+                Notes you add appear here
+              </motion.div>
+            )}
             {!notesReady && (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -568,7 +570,7 @@ const Home = memo(
           setTooltipAnchor={setTooltipAnchor}
           openSnackFunction={openSnackFunction}
         /> */}
-        <AddNoteModall
+        <ComposeNote
           dispatchNotes={dispatchNotes}
           containerRef={containerRef}
           lastAddedNoteRef={lastAddedNoteRef}

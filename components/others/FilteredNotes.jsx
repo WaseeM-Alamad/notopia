@@ -7,6 +7,7 @@ import FilteredNote from "./FilteredNote";
 
 const COLUMN_WIDTH = 240;
 const GUTTER = 15;
+const GAP_BETWEEN_SECTIONS = 88;
 
 const NoteWrapper = memo(
   ({
@@ -69,10 +70,10 @@ NoteWrapper.displayName = "NoteWrapper";
 
 const Home = memo(
   ({
+    notesStateRef,
     notes,
     order,
     filteredNotes,
-    setNoMatchingNotes,
     dispatchNotes,
     setTooltipAnchor,
     openSnackFunction,
@@ -80,7 +81,6 @@ const Home = memo(
     handleNoteClick,
     handleSelectNote,
     noteActions,
-    setFadingNotes,
     fadingNotes,
     filters,
   }) => {
@@ -89,6 +89,17 @@ const Home = memo(
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
     const [layoutReady, setLayoutReady] = useState(false); // New state to track layout completion
+    const [unarchivedHeight, setUnarchivedHeight] = useState(null);
+    const [hasUnpinnedNotes, setHasUnpinnedNotes] = useState(false);
+    const [hasArchivedNotes, setHasArchivedNotes] = useState(false);
+
+    const filteredNotesRef = useRef(null);
+
+    useEffect(() => {
+      filteredNotesRef.current = filteredNotes;
+    }, [filteredNotes]);
+
+    // if (!filteredNotes.has(uuid)) return;
 
     const calculateLayout = useCallback(() => {
       if (layoutFrameRef.current) {
@@ -118,31 +129,69 @@ const Home = memo(
         container.style.left = "50%";
         container.style.transform = "translateX(-50%)";
 
-        const items = container.children;
+        // Get all the items in the container
+        // const items = Array.from(container.children);
+        const items = notesStateRef.current.order.map((uuid, index) => {
+          const note = notesStateRef.current.notes.get(uuid);
+          return { ...note, index: index };
+        });
 
-        const positionItems = (itemList) => {
-          const columnHeights = new Array(columns).fill(0);
+        // Sort items based on their position value (ascending order)
+        const sortedItems = items.sort((a, b) => {
+          return a.index - b.index; // Ascending order
+        });
+
+        // Filter out pinned and unpinned items
+        const unarchivedItems = sortedItems.filter((item) => {
+          if (!filteredNotesRef.current.has(item.uuid)) return false;
+          return item.isArchived === false;
+        });
+        const archivedItems = sortedItems.filter((item) => {
+          if (!filteredNotesRef.current.has(item.uuid)) return false;
+          return item.isArchived === true;
+        });
+
+        const positionItems = (itemList, startY = 0) => {
+          const columnHeights = new Array(columns).fill(startY);
 
           itemList.forEach((item) => {
+            const wrapper = item.ref?.current?.parentElement;
+
+            if (!wrapper) {
+              return;
+            }
+
             const minColumnIndex = columnHeights.indexOf(
               Math.min(...columnHeights)
             );
             const x = minColumnIndex * (COLUMN_WIDTH + GUTTER);
             const y = columnHeights[minColumnIndex];
 
-            item.style.transform = `translate(${x}px, ${y}px)`;
-            item.style.position = "absolute";
+            wrapper.style.transform = `translate(${x}px, ${y}px)`;
+            wrapper.style.position = "absolute";
 
-            columnHeights[minColumnIndex] += item.offsetHeight + GUTTER;
+            columnHeights[minColumnIndex] += wrapper.offsetHeight + GUTTER;
           });
 
           return Math.max(...columnHeights);
         };
 
-        const totalHeight = positionItems(Array.from(items));
-        container.style.height = `${totalHeight}px`;
+        // Gap between pinned and unpinned sections
+        const gapBetweenSections =
+          unarchivedItems.length > 0 ? GAP_BETWEEN_SECTIONS : 0;
 
-        // Set layout as ready after calculations
+        const unarchivedHeight = positionItems(unarchivedItems, 0);
+        const archivedHeight = positionItems(
+          archivedItems,
+          unarchivedHeight + gapBetweenSections
+        );
+
+        setHasUnpinnedNotes(!!unarchivedItems.length);
+
+        setHasArchivedNotes(!!archivedItems.length);
+
+        setUnarchivedHeight(unarchivedHeight);
+        container.style.height = `${archivedHeight}px`;
         setLayoutReady(true);
       });
     }, []);
@@ -204,42 +253,19 @@ const Home = memo(
         containerRef.current.classList.remove("layout-ready");
       }
     }, [layoutReady]);
-    const filtersExist = () => {
-      return (
-        Object.values(filters).some((filter) => filter !== null) ||
-        searchTerm.trim() !== ""
-      );
-    };
-
-    const matchesFilters = (note) => {
-      if (filters.color && note.color !== filters.color) {
-        return false;
-      }
-
-      if (
-        searchTerm &&
-        !(
-          note.title.toLowerCase().includes(searchTerm.toLowerCase().trim()) ||
-          note.content.toLowerCase().includes(searchTerm.toLowerCase().trim())
-        )
-      ) {
-        return false;
-      }
-
-      if (filters.label && !note.labels.includes(filters.label)) {
-        return false;
-      }
-
-      if (filters.image && note.images.length === 0) {
-        return false;
-      }
-
-      return true;
-    };
 
     return (
       <>
         <div ref={containerRef} className="section-container">
+          <p
+            className="section-label"
+            style={{
+              top: `${unarchivedHeight + GAP_BETWEEN_SECTIONS + 2}px`,
+              opacity: hasArchivedNotes && hasUnpinnedNotes ? "1" : "0",
+            }}
+          >
+            ARCHIVED
+          </p>
           {order.map((uuid, index) => {
             if (!filteredNotes.has(uuid)) return;
             const note = notes.get(uuid);

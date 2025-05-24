@@ -242,6 +242,25 @@ export function AppProvider({ children }) {
     labelLookUPRef.current.delete(label.toLowerCase().trim());
   };
 
+
+  const handlePin = async (uuid) => {
+    const currentLabel = labelsRef.current.get(uuid);
+    const value = !currentLabel.isPinned;
+    const newLabel = {
+      ...currentLabel,
+      isPinned: value,
+    };
+    const labels = new Map(labelsRef.current).set(uuid, newLabel);
+    labelsRef.current = labels;
+    window.dispatchEvent(new Event("loadingStart"));
+    await updateLabelAction({
+      type: "label_pin",
+      uuid: uuid,
+      value: value,
+    });
+    window.dispatchEvent(new Event("loadingEnd"));
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -259,6 +278,7 @@ export function AppProvider({ children }) {
         batchNoteCount,
         handleLabelsTop,
         ignoreKeysRef,
+        handlePin,
       }}
     >
       {children}

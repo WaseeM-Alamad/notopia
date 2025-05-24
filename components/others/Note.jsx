@@ -19,9 +19,7 @@ const Note = memo(
     isLoadingImagesAddNote = [],
     setSelectedNotesIDs,
     setFadingNotes,
-    selectedNotes,
     handleSelectNote,
-    isDragging,
     setTooltipAnchor,
     openSnackFunction,
     index,
@@ -154,6 +152,12 @@ const Note = memo(
         anchor: null,
         text: prev?.text,
       }));
+    };
+
+    const handleLabelClick = (e, label) => {
+      e.stopPropagation();
+      const encodedLabel = encodeURIComponent(label);
+      window.location.hash = `label/${encodedLabel.toLowerCase()}`;
     };
 
     const removeLabel = async (labelUUID) => {
@@ -404,7 +408,7 @@ const Note = memo(
                       <div
                         onClick={handleExpand}
                         className="checkboxes-divider"
-                        style={{cursor: "pointer"}}
+                        style={{ cursor: "pointer" }}
                       />
                     )}
                   </div>
@@ -473,7 +477,7 @@ const Note = memo(
                         const label = labelsRef.current.get(labelUUID)?.label;
                         return (
                           <div
-                            onClick={(e) => e.stopPropagation()}
+                            onClick={(e) => handleLabelClick(e, label)}
                             key={labelUUID}
                             className={[
                               "label-wrapper",
