@@ -67,6 +67,7 @@ NoteWrapper.displayName = "NoteWrapper";
 
 const Home = memo(
   ({
+    notesStateRef,
     notes,
     order,
     dispatchNotes,
@@ -120,22 +121,27 @@ const Home = memo(
         container.style.left = "50%";
         container.style.transform = "translateX(-50%)";
 
-        const items = container.children;
+        const items = notesStateRef.current.order.map((uuid, index) => {
+          const note = notesStateRef.current.notes.get(uuid);
+          return { ...note, index: index };
+        });
 
         const positionItems = (itemList) => {
           const columnHeights = new Array(columns).fill(0);
 
           itemList.forEach((item) => {
+            const wrapper = item.ref?.current?.parentElement;
+            if (!wrapper) return;
             const minColumnIndex = columnHeights.indexOf(
               Math.min(...columnHeights)
             );
             const x = minColumnIndex * (COLUMN_WIDTH + GUTTER);
             const y = columnHeights[minColumnIndex];
 
-            item.style.transform = `translate(${x}px, ${y}px)`;
-            item.style.position = "absolute";
+            wrapper.style.transform = `translate(${x}px, ${y}px)`;
+            wrapper.style.position = "absolute";
 
-            columnHeights[minColumnIndex] += item.offsetHeight + GUTTER;
+            columnHeights[minColumnIndex] += wrapper.offsetHeight + GUTTER;
           });
 
           return Math.max(...columnHeights);

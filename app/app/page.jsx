@@ -150,7 +150,7 @@ function notesReducer(state, action) {
       );
       let sortedUUIDS = [];
       const updatedNotes = new Map(state.notes);
-      const updatedOrder = [...state.order];
+
       sortedNotes.forEach((noteData) => {
         const newNote = {
           ...updatedNotes.get(noteData.uuid),
@@ -158,9 +158,12 @@ function notesReducer(state, action) {
           isPinned: false,
         };
         updatedNotes.set(noteData.uuid, newNote);
-        updatedOrder.splice(noteData.index, 1);
         sortedUUIDS.push(noteData.uuid);
       });
+
+      const updatedOrder = state.order.filter(
+        (uuid) => !sortedUUIDS.includes(uuid)
+      );
 
       updatedOrder.unshift(...sortedUUIDS);
 
@@ -176,8 +179,8 @@ function notesReducer(state, action) {
         (a, b) => b.index - a.index
       );
       const updatedNotes = new Map(state.notes);
-      const updatedOrder = [...state.order];
       let sortedUUIDS = [];
+
       sortedNotes.forEach((noteData) => {
         const newNote = {
           ...updatedNotes.get(noteData.uuid),
@@ -185,9 +188,12 @@ function notesReducer(state, action) {
           isArchived: false,
         };
         updatedNotes.set(noteData.uuid, newNote);
-        updatedOrder.splice(noteData.index, 1);
         sortedUUIDS.push(noteData.uuid);
       });
+
+      const updatedOrder = state.order.filter(
+        (uuid) => !sortedUUIDS.includes(uuid)
+      );
 
       updatedOrder.unshift(...sortedUUIDS);
 
@@ -726,6 +732,20 @@ const page = () => {
   const onCloseFunction = useRef(() => {});
   const firstRun = useRef(true);
   const closeRef = useRef(null);
+  const keyThrottleRef = useRef(false);
+  const emptySearchRef = useRef(false);
+  const areNotesSelectedRef = useRef(false);
+  const ctrlDownRef = useRef(false);
+  const batchArchiveRef = useRef(() => {});
+  const batchPinRef = useRef(() => {});
+  const batchDeleteRef = useRef(() => {});
+  const dragStartRef = useRef({ x: 0, y: 0 });
+  const isDraggingRef = useRef(false);
+  const isMouseDown = useRef(false);
+  const selectionBoxRef = useRef(null);
+  const selectedNotesRef = useRef(new Set());
+  const rootContainerRef = useRef(null);
+  const prevSelectedRef = useRef(null);
 
   const fadeNote = current !== "DynamicLabel" && current !== "Search";
 
@@ -1218,8 +1238,6 @@ const page = () => {
     [current]
   );
 
-  const emptySearchRef = useRef(false);
-
   const tripleEncode = (str) => {
     return encodeURIComponent(encodeURIComponent(encodeURIComponent(str)));
   };
@@ -1544,7 +1562,7 @@ const page = () => {
     });
   }, [current, notesState.order, notesState.notes]);
 
-  const handleDeleteLabel = (data) => {
+  const handleDeleteLabel = useCallback((data) => {
     window.dispatchEvent(new Event("loadingStart"));
     deleteLabelAction({ labelUUID: data.labelData.uuid }).then(() => {
       window.dispatchEvent(new Event("loadingEnd"));
@@ -1574,7 +1592,7 @@ const page = () => {
     };
 
     data.labelRef.current.addEventListener("transitionend", handler);
-  };
+  }, []);
 
   const handleSelectNote = useCallback((data) => {
     if (data.source === "note" && !areNotesSelectedRef.current) {
@@ -1610,8 +1628,6 @@ const page = () => {
     }
   }, []);
 
-  const areNotesSelectedRef = useRef(false);
-
   useEffect(() => {
     const length = selectedNotesIDs.length;
 
@@ -1622,11 +1638,6 @@ const page = () => {
       areNotesSelectedRef.current = true;
     }
   }, [selectedNotesIDs.length]);
-
-  const ctrlDownRef = useRef(false);
-  const batchArchiveRef = useRef(() => {});
-  const batchPinRef = useRef(() => {});
-  const batchDeleteRef = useRef(() => {});
 
   const matchesFilters = (note) => {
     if (note.isTrash) return false;
@@ -1774,50 +1785,62 @@ const page = () => {
         }
       }
 
-      if (event.ctrlKey && !event.shiftKey && event.code === "KeyZ") {
-        if (ignoreKeysRef.current || !allowUndoRef.current) {
-          return;
+      if (event.ctrlKey && event.code === "KeyZ" && !keyThrottleRef.current) {
+        if (!event.shiftKey) {
+          // UNDO
+          if (
+            ignoreKeysRef.current ||
+            !allowUndoRef.current ||
+            !undoFunction.current
+          )
+            return;
+
+          keyThrottleRef.current = true;
+          undoFunction.current();
+          allowRedoRef.current = true;
+          allowUndoRef.current = false;
+
+          setSnackbarState((prev) => ({ ...prev, snackOpen: false }));
+          setTimeout(() => {
+            setSnackbarState({
+              message: "Action undone",
+              showUndo: false,
+              snackOpen: true,
+            });
+          }, 80);
+
+          // Release throttle
+          setTimeout(() => {
+            keyThrottleRef.current = false;
+          }, 300);
+        } else {
+          // REDO
+          if (
+            ignoreKeysRef.current ||
+            !allowRedoRef.current ||
+            !redoFunction.current
+          )
+            return;
+
+          keyThrottleRef.current = true;
+          redoFunction.current();
+          allowUndoRef.current = true;
+          allowRedoRef.current = false;
+
+          setSnackbarState((prev) => ({ ...prev, snackOpen: false }));
+          setTimeout(() => {
+            setSnackbarState({
+              message: "Action redone",
+              showUndo: false,
+              snackOpen: true,
+            });
+          }, 80);
+
+          // Release throttle
+          setTimeout(() => {
+            keyThrottleRef.current = false;
+          }, 300);
         }
-
-        if (!undoFunction.current) {
-          return;
-        }
-        undoFunction.current();
-        setSnackbarState((prev) => ({
-          ...prev,
-          snackOpen: false,
-        }));
-
-        setTimeout(() => {
-          setSnackbarState({
-            message: "Action undone",
-            showUndo: false,
-            snackOpen: true,
-          });
-        }, 80);
-        allowRedoRef.current = true;
-        allowUndoRef.current = false;
-      }
-
-      if (event.ctrlKey && event.shiftKey && event.code === "KeyZ") {
-        if (ignoreKeysRef.current || !allowRedoRef.current) {
-          return;
-        }
-        redoFunction.current();
-        setSnackbarState((prev) => ({
-          ...prev,
-          snackOpen: false,
-        }));
-
-        setTimeout(() => {
-          setSnackbarState({
-            message: "Action redone",
-            showUndo: false,
-            snackOpen: true,
-          });
-        }, 80);
-        allowRedoRef.current = false;
-        allowUndoRef.current = true;
       }
 
       if (event.code === "Slash") {
@@ -1843,14 +1866,6 @@ const page = () => {
       window.removeEventListener("keyup", handleKeyUp);
     };
   }, [searchTerm, filters, current]);
-
-  const dragStartRef = useRef({ x: 0, y: 0 });
-  const isDraggingRef = useRef(false);
-  const isMouseDown = useRef(false);
-  const selectionBoxRef = useRef(null);
-  const selectedNotesRef = useRef(new Set());
-  const rootContainerRef = useRef(null);
-  const prevSelectedRef = useRef(null);
 
   const handleMouseMove = (e) => {
     if (isMouseDown.current) {

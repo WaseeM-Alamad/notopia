@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import React, { memo, useEffect, useState } from "react";
 
-const addButton = () => {
+const AddButton = () => {
   const [currentHash, setCurrentHash] = useState(window.location.hash);
 
   useEffect(() => {
@@ -64,7 +64,7 @@ const addButton = () => {
           stiffness: 500,
           damping: 50,
           mass: 1,
-          delay: 0.05,
+          // delay: 0.05,
         }}
         fillRule="evenodd"
         clipRule="evenodd"
@@ -88,4 +88,4 @@ const addButton = () => {
   );
 };
 
-export default memo(addButton);
+export default memo(AddButton);

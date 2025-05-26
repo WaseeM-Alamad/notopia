@@ -74,6 +74,7 @@ NoteWrapper.displayName = "NoteWrapper";
 
 const Archive = memo(
   ({
+    notesStateRef,
     notes,
     order,
     dispatchNotes,
@@ -126,23 +127,27 @@ const Archive = memo(
         container.style.left = "50%";
         container.style.transform = "translateX(-50%)";
 
-        const items = container.children;
-
+        const items = notesStateRef.current.order.map((uuid, index) => {
+          const note = notesStateRef.current.notes.get(uuid);
+          return { ...note, index: index };
+        });
 
         const positionItems = (itemList) => {
           const columnHeights = new Array(columns).fill(0);
 
           itemList.forEach((item) => {
+            const wrapper = item.ref?.current?.parentElement;
+            if (!wrapper) return;
             const minColumnIndex = columnHeights.indexOf(
               Math.min(...columnHeights)
             );
             const x = minColumnIndex * (COLUMN_WIDTH + GUTTER);
             const y = columnHeights[minColumnIndex];
 
-            item.style.transform = `translate(${x}px, ${y}px)`;
-            item.style.position = "absolute";
+            wrapper.style.transform = `translate(${x}px, ${y}px)`;
+            wrapper.style.position = "absolute";
 
-            columnHeights[minColumnIndex] += item.offsetHeight + GUTTER;
+            columnHeights[minColumnIndex] += wrapper.offsetHeight + GUTTER;
           });
 
           return Math.max(...columnHeights);
@@ -184,15 +189,10 @@ const Archive = memo(
       }
     }, [notes, calculateLayout]);
 
-    
-
     return (
       <>
         <div ref={rootContainerRef} className="starting-div">
-          <div
-            ref={containerRef}
-            className="section-container"
-          >
+          <div ref={containerRef} className="section-container">
             {order.map((uuid, index) => {
               const note = notes.get(uuid);
               if (note.isArchived && !note.isTrash)

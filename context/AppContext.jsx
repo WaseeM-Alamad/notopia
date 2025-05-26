@@ -249,6 +249,7 @@ export function AppProvider({ children }) {
     const newLabel = {
       ...currentLabel,
       isPinned: value,
+      pinDate: new Date(),
     };
     const labels = new Map(labelsRef.current).set(uuid, newLabel);
     labelsRef.current = labels;

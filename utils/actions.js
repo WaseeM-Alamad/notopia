@@ -308,15 +308,18 @@ export const batchUpdateAction = async (data) => {
       await connectDB();
       const user = await User.findById(userID);
       const { notesOrder } = user;
-      const updatedOrder = [...notesOrder];
 
       const sortedNotes = data.selectedNotes.sort((a, b) => b.index - a.index);
       const sortedUUIDs = [];
 
       sortedNotes.forEach((noteData) => {
         sortedUUIDs.push(noteData.uuid);
-        updatedOrder.splice(noteData.index, 1);
+        // updatedOrder.splice(noteData.index, 1);
       });
+
+      const updatedOrder = notesOrder.filter(
+        (uuid) => !sortedUUIDs.includes(uuid)
+      );
 
       updatedOrder.unshift(...sortedUUIDs);
 
@@ -331,15 +334,17 @@ export const batchUpdateAction = async (data) => {
       await connectDB();
       const user = await User.findById(userID);
       const { notesOrder } = user;
-      const updatedOrder = [...notesOrder];
 
       const sortedNotes = data.selectedNotes.sort((a, b) => b.index - a.index);
       const sortedUUIDs = [];
 
       sortedNotes.forEach((noteData) => {
         sortedUUIDs.push(noteData.uuid);
-        updatedOrder.splice(noteData.index, 1);
       });
+
+      const updatedOrder = notesOrder.filter(
+        (uuid) => !sortedUUIDs.includes(uuid)
+      );
 
       updatedOrder.unshift(...sortedUUIDs);
 
@@ -1128,12 +1133,15 @@ export const updateLabelAction = async (data) => {
         message: "Label note count updated successfully!",
         status: 201,
       };
-    }
-
-    else if (data.type === "label_pin"){
+    } else if (data.type === "label_pin") {
       await User.findOneAndUpdate(
         { _id: userID, "labels.uuid": data.uuid },
-        { $set: { "labels.$.isPinned": data.value } }
+        {
+          $set: {
+            "labels.$.isPinned": data.value,
+            "labels.$.pinDate": new Date(),
+          },
+        }
       );
 
       return {
@@ -1142,8 +1150,6 @@ export const updateLabelAction = async (data) => {
         status: 201,
       };
     }
-
-
   } catch (error) {
     console.log(error);
     return { message: "Failed to update label", status: 500 };

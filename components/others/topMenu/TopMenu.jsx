@@ -51,12 +51,6 @@ const TopMenuHome = ({
     window.dispatchEvent(new Event("topMenuClose"));
   };
 
-  useEffect(() => {
-    const { batchArchiveRef, batchPinRef, batchDeleteRef } = functionRefs;
-    batchArchiveRef.current = handleArchive;
-    batchPinRef.current = handlePin;
-    batchDeleteRef.current = handleTrashNotes;
-  }, [selectedNotesIDs]);
 
   useEffect(() => {
     if (
@@ -557,6 +551,13 @@ const TopMenuHome = ({
       function: handleMakeCopy,
     },
   ];
+
+  useEffect(() => {
+    const { batchArchiveRef, batchPinRef, batchDeleteRef } = functionRefs;
+    batchArchiveRef.current = handleArchive;
+    batchPinRef.current = handlePin;
+    batchDeleteRef.current = handleTrashNotes;
+  }, [selectedNotesIDs, handlePin, handleTrashNotes, handleArchive]);
 
   return (
     <>

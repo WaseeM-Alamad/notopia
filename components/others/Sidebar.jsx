@@ -1,6 +1,12 @@
 "use client";
-import React, { memo, useEffect, useMemo, useRef, useState } from "react";
-import "@/assets/styles/sidebar.css";
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import HomeIcon from "../icons/HomeIcon";
 import BellIcon from "../icons/BellIcon";
 import SideArchiveIcon from "../icons/SideArchiveIcon";
@@ -11,6 +17,8 @@ import LabelIcon from "../icons/LabelIcon";
 import FolderIcon from "../icons/FolderIcon";
 import Tooltip from "../Tools/Tooltip";
 import { useAppContext } from "@/context/AppContext";
+import NavBtn from "./NavBtn";
+import RightTooltip from "../Tools/RightTooltip";
 
 const Sidebar = memo(() => {
   const { labelsRef, labelsReady } = useAppContext();
@@ -18,8 +26,7 @@ const Sidebar = memo(() => {
   const containerRef = useRef(null);
   const [tooltipAnchor, setTooltipAnchor] = useState(null);
   const [currentHash, setCurrentHash] = useState(null);
-  const [trans, setTrans] = useState(false);
-  const ICON_SIZE = 22;
+  const layoutFrameRef = useRef(null);
 
   const items = [
     { name: "Home", hash: "home", Icon: HomeIcon },
@@ -35,13 +42,22 @@ const Sidebar = memo(() => {
 
   useEffect(() => {
     const hash = window.location.hash.replace("#", "");
-    setCurrentHash(hash); // Set hash after hydration
+    if (!hash.toLowerCase().startsWith("note/")) {
+      setCurrentHash(hash);
+    } else {
+      setCurrentHash("home");
+    }
   }, []);
 
   useEffect(() => {
     const handler = () => {
       const labelItems = [];
-      labelsRef.current.forEach((labelData) => {
+      const sortedLabels = [...labelsRef.current].sort(
+        ([aUUID, a], [bUUID, b]) =>
+          new Date(b.pinDate).getTime() - new Date(a.pinDate).getTime()
+      );
+      sortedLabels.forEach(([uuid, labelData]) => {
+        console.log(labelData.label, labelData.pinDate);
         if (labelData?.isPinned) {
           labelItems.push({
             name: labelData.label,
@@ -52,7 +68,14 @@ const Sidebar = memo(() => {
         }
       });
 
-      setNavitems([...items, ...labelItems]);
+      setNavitems(() => {
+        const updatedItems = [...items];
+        const lastIndex = updatedItems.length - 1;
+        updatedItems.splice(lastIndex, 0, ...labelItems);
+        return updatedItems;
+      });
+
+      calculateVerticalLayout();
     };
 
     handler();
@@ -64,30 +87,37 @@ const Sidebar = memo(() => {
     };
   }, [labelsReady]);
 
+  useEffect(() => {
+    calculateVerticalLayout();
+  }, [navItems, currentHash]);
+
   const encodeLabel = (label) => {
     return "label/" + encodeURIComponent(label.toLowerCase());
   };
 
   const handleAddNote = async () => {
+    closeToolTip();
     addButtonRef.current.classList.remove("animate");
     void addButtonRef.current.offsetWidth;
     addButtonRef.current.classList.add("animate");
-    const hash = window.location.hash;
-    if (hash.includes("labels")) {
+    const hash = window.location.hash.replace("#", "");
+    if (hash === "labels") {
       window.dispatchEvent(new Event("addLabel"));
       return;
-    } else if (hash === "" || hash.includes("home")) {
+    } else if (!hash || hash === "home") {
       window.dispatchEvent(new Event("openModal"));
       return;
-    } else if (hash.includes("trash")) {
+    } else if (hash === "trash") {
       window.dispatchEvent(new Event("emptyTrash"));
       return;
     }
   };
 
-  const handleIconClick = (hash) => {
-    closeToolTip();
-    window.location.hash = hash;
+  const closeToolTip = () => {
+    setTooltipAnchor((prev) => ({
+      anchor: null,
+      text: prev?.text,
+    }));
   };
 
   const handleMouseEnter = (e, text) => {
@@ -102,54 +132,32 @@ const Sidebar = memo(() => {
     }));
   };
 
-  const closeToolTip = () => {
-    setTooltipAnchor((prev) => ({
-      anchor: null,
-      text: prev?.text,
-    }));
-  };
-
   useEffect(() => {
     const handleHashChange = () => {
       requestAnimationFrame(() => {
         const hash = window.location.hash.replace("#", "");
-        setCurrentHash(hash);
+        const allowedHashes = [
+          "home",
+          "labels",
+          "reminders",
+          "archive",
+          "trash",
+        ];
 
-        const container = containerRef.current;
+        if (
+          allowedHashes.includes(hash.toLocaleLowerCase()) ||
+          hash.startsWith("label/")
+        ) {
+          const event = new CustomEvent("sectionChange", {
+            detail: { hash: hash },
+          });
+          window.dispatchEvent(event);
 
-        if (!container?.children) return;
+          const setHash = hash.replace("label/", "");
 
-        Array.from(container.children).forEach((btn) => {
-          if (btn.id === hash) {
-            const prevItem = container.querySelector(".link-btn-selected");
-            if (prevItem) {
-              prevItem?.classList.remove("link-btn-selected");
-              prevItem.children[0].style.opacity = "0.75";
-            }
-
-            if (hash.startsWith("label/")) {
-              console.log("hash");
-              const event = new CustomEvent("sectionChange", {
-                detail: { hash: hash },
-              });
-              window.dispatchEvent(event);
-            } else {
-              const event = new CustomEvent("sectionChange", {
-                detail: { hash: hash },
-              });
-              window.dispatchEvent(event);
-            }
-
-            btn.classList.add("link-btn-selected");
-            btn.children[0].style.opacity = "1";
-          }
-        });
-
-        if (!container.querySelector(".link-btn-selected")) {
-          const item = container.querySelector("button[id=home]");
-
-          item.classList.add("link-btn-selected");
-          item.children[0].style.opacity = "1";
+          setCurrentHash(setHash);
+        } else if (!hash.toLowerCase().startsWith("note/")) {
+          setCurrentHash("home");
         }
       });
     };
@@ -164,61 +172,92 @@ const Sidebar = memo(() => {
     };
   }, [labelsReady]);
 
+  const GUTTER = 15;
+
+  const calculateVerticalLayout = useCallback(() => {
+    if (layoutFrameRef.current) {
+      cancelAnimationFrame(layoutFrameRef.current);
+    }
+
+    layoutFrameRef.current = requestAnimationFrame(() => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      container.style.position = "relative";
+
+      let y = 0;
+      const items = container.children;
+      Array.from(items).forEach((ref) => {
+        if (!ref) return;
+        ref.style.position = "absolute";
+        ref.style.transform = `translateY(${y}px)`;
+        y += ref.offsetHeight + GUTTER;
+      });
+
+      console.log(y);
+
+      container.style.height = `${0}px`;
+    });
+  }, []);
+
+  const [pageMounted, setPageMounted] = useState(false);
+
   useEffect(() => {
     if (!labelsReady) return;
     requestAnimationFrame(() => {
       setTimeout(() => {
-        setTrans(true);
-      }, 10);
+        setPageMounted(true);
+      }, 50);
     });
   }, [labelsReady]);
+
+  const handleAddTooltip = (e) => {
+    const hash = window.location.hash.replace("#", "").trim();
+    if (!hash || hash === "home") {
+      handleMouseEnter(e, "New note");
+    } else if (hash === "labels") {
+      handleMouseEnter(e, "New label");
+    } else if (hash === "trash") {
+      handleMouseEnter(e, "Empty trash");
+    } else {
+      handleMouseEnter(e, "New note");
+    }
+  };
 
   if (currentHash === null) return;
 
   return (
     <>
       <aside className="sidebar">
-        <div className="sidebar-container">
-          <button
-            onMouseEnter={(e) => handleMouseEnter(e, "New note")}
-            onMouseLeave={handleMouseLeave}
-            ref={addButtonRef}
-            onClick={handleAddNote}
-            id="add-btn"
-            className="add-button-icon pulse-button"
-          >
-            <AddButton />
-          </button>
-          <div ref={containerRef} className="sidebar-icons-container">
-            <AnimatePresence>
-              {navItems.map(({ name, hash, Icon }) => (
-                <motion.button
-                  key={hash}
-                  initial={{ x: trans ? -100 : 0 }}
-                  animate={{ x: 0 }}
-                  exit={{ x: -100 }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 700,
-                    damping: 50,
-                    mass: 1,
-                  }}
-                  className={`link-btn`}
-                  onMouseEnter={(e) => handleMouseEnter(e, name)}
-                  onMouseLeave={handleMouseLeave}
-                  id={hash}
-                  onClick={() => handleIconClick(hash)}
-                  style={{ zIndex: "9" }}
-                >
-                  <Icon size={ICON_SIZE} />
-                </motion.button>
-              ))}
-            </AnimatePresence>
-          </div>
+        <button
+          onMouseEnter={handleAddTooltip}
+          onMouseLeave={handleMouseLeave}
+          ref={addButtonRef}
+          onClick={handleAddNote}
+          id="add-btn"
+          className="add-button-icon pulse-button"
+        >
+          <AddButton />
+        </button>
+        <div ref={containerRef} className="sidebar-icons-container">
+          <AnimatePresence>
+            {navItems.map(({ name, hash, Icon }) => (
+              <NavBtn
+                key={hash}
+                name={name}
+                hash={hash}
+                Icon={Icon}
+                currentHash={currentHash}
+                setTooltipAnchor={setTooltipAnchor}
+                calculateVerticalLayout={calculateVerticalLayout}
+                pageMounted={pageMounted}
+              />
+            ))}
+            {/* <span className="copyright-text">&copy; {currentYear}</span> */}
+          </AnimatePresence>
         </div>
-        <span className="copyright-text">&copy; {currentYear}</span>
       </aside>
-      <Tooltip anchorEl={tooltipAnchor} angle="right" />
+      <RightTooltip anchorEl={tooltipAnchor} />
     </>
   );
 });

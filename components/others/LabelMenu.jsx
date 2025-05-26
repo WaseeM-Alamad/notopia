@@ -94,6 +94,7 @@ const LabelMenu = ({
     setIsOpen(false);
     handlePin(labelData.uuid);
     window.dispatchEvent(new Event("refreshPinnedLabels"));
+    triggerReRender(prev => !prev);
   };
 
   const containerClick = useCallback((e) => {

@@ -59,6 +59,7 @@ const Label = ({
   }, []);
 
   const handleMoreClick = (e) => {
+    e.stopPropagation();
     closeToolTip();
     setAnchorEL(e.currentTarget);
     setIsOpen((prev) => !prev);
@@ -215,9 +216,15 @@ const Label = ({
     }));
   };
 
+  const handleLabelClick = () => {
+    const encodedLabel = encodeURIComponent(labelData.label);
+    window.location.hash = `label/${encodedLabel.toLowerCase()}`;
+  };
+
   return (
     <>
       <div
+        onClick={handleLabelClick}
         ref={labelRef}
         style={{
           transition: `transform ${
@@ -241,9 +248,7 @@ const Label = ({
           <div className="label-more-icon">
             <Button
               onClick={handleMoreClick}
-              onMouseEnter={(e) =>
-                handleMouseEnter(e, "Options")
-              }
+              onMouseEnter={(e) => handleMouseEnter(e, "Options")}
               onMouseLeave={handleMouseLeave}
               ref={moreRef}
               className="btn-hover"
@@ -470,6 +475,7 @@ const Label = ({
       <AnimatePresence>
         {colorMenuOpen && (
           <ColorSelectMenu
+            isLabel={true}
             handleColorClick={handleColorClick}
             anchorEl={anchorEl}
             selectedColor={selectedColor}
