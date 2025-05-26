@@ -1,6 +1,5 @@
 import React, { memo, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import "@/assets/styles/note.css";
 import "@/assets/styles/modal.css";
 import { AnimatePresence, motion } from "framer-motion";
 import Button from "../Tools/Button";
