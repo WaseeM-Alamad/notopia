@@ -43,14 +43,16 @@ export const authOptions = {
     },
     // Modifies the session object
     async session({ session }) {
+      await connectDB(); // ✅ Ensure DB is connected
+    
       const user = await User.findOne({ email: session.user.email });
-
+    
       if (user) {
         session.user.id = user._id.toString();
         session.user.name = user.username;
         session.user.image = user.image;
       }
-
+    
       return session;
     },
   },
