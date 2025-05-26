@@ -23,7 +23,7 @@ input {
 }
 
 .dark-mode body {
-  background-color: rgb(32, 33, 36);
+  background-color: rgb(23, 23, 23);
   color: rgb(232, 234, 237);
 }
 
@@ -84,8 +84,8 @@ svg {
 }
 
 .dark-mode .Default {
-  background-color: rgb(32, 33, 36);
-  fill: rgb(32, 33, 36);
+  background-color: rgb(23, 23, 23);
+  fill: rgb(23, 23, 23);
 }
 
 .Coral {
@@ -439,12 +439,12 @@ aside {
 }
 
 .dark-mode aside {
-  background-color: rgb(32, 33, 36);
+  background-color: rgb(23, 23, 23);
 }
 
 .sidebar-icons-container {
   flex: 1;
-  padding-left: 5px;
+  /* padding-left: 5px; */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -455,7 +455,7 @@ aside {
 }
 
 .sidebar-icons-container::-webkit-scrollbar {
-  width: 5px;
+  width: 0px;
   overflow-x: scroll;
 }
 
@@ -732,6 +732,10 @@ aside {
   padding: 0.3rem 0.5rem;
 }
 
+.dark-mode .tooltip {
+  background-color: rgb(50, 50, 50);
+}
+
 .right-tooltip {
   position: fixed;
   z-index: 1000000;
@@ -762,9 +766,17 @@ aside {
   transform: translateY(-50%);
   width: 0;
   height: 0;
-  border-top: 6px solid transparent;
-  border-bottom: 6px solid transparent;
-  border-right: 8px solid rgba(60, 64, 67, 0.9);
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+  border-right: 7px solid rgba(60, 64, 67, 0.9);
+}
+
+.dark-mode .right-tooltip {
+  background-color: rgb(50, 50, 50);
+}
+
+.dark-mode .right-tooltip::before {
+  border-right: 7px solid rgb(50, 50, 50);
 }
 
 .page-header {
@@ -968,7 +980,7 @@ img {
 }
 
 .dark-mode .menu {
-  background-color: #282a2c;
+  background-color: rgb(30, 30, 30);
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.6), 0 2px 6px 2px rgba(0, 0, 0, 0.3);
 }
 
@@ -1002,11 +1014,10 @@ img {
 
 .menu-btn:hover {
   background-color: rgb(238, 238, 238);
-  /* color: #ffffff; */
 }
 
 .dark-mode .menu-btn:hover {
-  background-color: #303235;
+  background-color: rgb(37, 37, 37);
 }
 
 .dark-mode .n-menu-btn {
@@ -1025,13 +1036,14 @@ img {
 
 .menu-upper-section {
   display: flex;
-  padding: 0.6rem 0.8rem 0.8rem 1.3rem;
+  padding: 0.6rem 1rem 0.8rem 1.3rem;
   justify-content: center;
   font-weight: 600;
   gap: 8px;
 }
 
 .username {
+  width: 100%;
   margin: auto 0;
   color: rgb(56, 56, 56);
 }
@@ -1055,7 +1067,7 @@ img {
 }
 
 .dark-mode .color-menu {
-  background-color: #282a2c;
+  background-color: rgb(30, 30, 30);
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.6), 0 2px 6px 2px rgba(0, 0, 0, 0.3);
 }
 
@@ -2106,6 +2118,7 @@ img {
 
 .empty-page-box {
   position: absolute;
+  pointer-events: none;
   display: flex;
   flex-direction: column;
   font-size: 1.5rem;

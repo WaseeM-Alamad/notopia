@@ -46,7 +46,7 @@ const NavBtn = ({
   const handleIconClick = (e, hash) => {
     e.preventDefault();
     e.stopPropagation();
-    // closeToolTip();
+    closeToolTip();
 
     // Update hash without triggering scroll, but preserve history
     history.pushState(null, null, `#${hash}`);

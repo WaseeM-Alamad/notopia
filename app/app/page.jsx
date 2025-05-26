@@ -1588,6 +1588,7 @@ const page = () => {
         removeLabel(data.labelData.uuid, data.labelData.label);
         data.triggerReRender((prev) => !prev);
         data.labelRef.current.removeEventListener("transitionend", handler);
+        window.dispatchEvent(new Event("refreshPinnedLabels"));
       }
     };
 
@@ -1765,7 +1766,7 @@ const page = () => {
         }
       }
 
-      if (event.key.toLowerCase() === "delete") {
+      if (event.key.toLowerCase() === "delete" || event.key === "#") {
         if (ignoreKeysRef.current) {
           return;
         }

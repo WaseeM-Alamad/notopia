@@ -221,7 +221,10 @@ const ManageLabelsMenu = ({
                         noteLabels.has(uuid) && "checkbox-checked"
                       }`}
                     />
-                    <div style={{ width: "100%", paddingLeft: "0.5rem" }}>
+                    <div
+                      dir="auto"
+                      style={{ width: "100%", paddingLeft: "0.5rem" }}
+                    >
                       {labelData.label}
                     </div>
                   </div>
@@ -237,6 +240,7 @@ const ManageLabelsMenu = ({
               <div className="create-label-box">
                 Create
                 <span
+                  dir="auto"
                   style={{
                     color: "#00000",
                     fontWeight: "bold",

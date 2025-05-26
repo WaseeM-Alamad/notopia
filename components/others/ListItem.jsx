@@ -143,9 +143,7 @@ const ListItem = ({
       <div
         className={`checkbox-wrapper note-checkbox-wrapper modal-checkbox-wrapper`}
       >
-        {!no && (
-          <div onMouseDown={handleMouseDown} className="drag-db-area" />
-        )}
+        {!no && <div onMouseDown={handleMouseDown} className="drag-db-area" />}
         <Button onClick={handleDelete} className="delete-list-item" />
         {/* <div className="clear-icon"/> */}
         <div
@@ -157,6 +155,7 @@ const ListItem = ({
           }`}
         />
         <div
+          dir="auto"
           contentEditable
           spellCheck="false"
           style={{

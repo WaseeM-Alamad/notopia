@@ -372,6 +372,7 @@ const Label = ({
               }}
               onBlur={handleOnBlur}
               ref={labelTitleRef}
+              dir="auto"
               className="label-title-input"
               role="textbox"
               tabIndex="0"

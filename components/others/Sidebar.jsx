@@ -256,6 +256,7 @@ const Sidebar = memo(() => {
             {/* <span className="copyright-text">&copy; {currentYear}</span> */}
           </AnimatePresence>
         </div>
+        <div style={{height: "2rem", width: '2rem'}} />
       </aside>
       <RightTooltip anchorEl={tooltipAnchor} />
     </>

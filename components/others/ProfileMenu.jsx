@@ -81,7 +81,9 @@ const ProfileMenu = forwardRef(
                     />
                     <div className="img-edit-icon" />
                   </div>
-                  <span className="username">{user.name}</span>
+                  <span dir="auto" className="username">
+                    {user.name}
+                  </span>
                 </div>
               </div>
               <div className="menu-buttons">

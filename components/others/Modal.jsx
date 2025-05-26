@@ -640,6 +640,12 @@ const Modal = ({
     window.dispatchEvent(new Event("loadingEnd"));
   };
 
+  const handleLabelClick = (e, label) => {
+    e.stopPropagation();
+    const encodedLabel = encodeURIComponent(label);
+    window.location.hash = `label/${encodedLabel.toLowerCase()}`;
+  };
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -723,6 +729,7 @@ const Modal = ({
                 : "1",
             }}
             contentEditable
+            dir="auto"
             suppressContentEditableWarning
             onInput={handleTitleInput}
             onPaste={handlePaste}
@@ -748,6 +755,7 @@ const Modal = ({
               transition: "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)",
             }}
             contentEditable
+            dir="auto"
             suppressContentEditableWarning
             onInput={handleContentInput}
             onPaste={handlePaste}
@@ -784,7 +792,7 @@ const Modal = ({
                   const label = labelsRef.current.get(labelUUID)?.label;
                   return (
                     <div
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={(e)=> handleLabelClick(e, label)}
                       key={labelUUID}
                       className={[
                         "label-wrapper",

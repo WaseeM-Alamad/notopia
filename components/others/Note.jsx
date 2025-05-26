@@ -338,12 +338,12 @@ const Note = memo(
                 )}
               <div ref={inputsRef}>
                 {note.title?.trim() && (
-                  <div ref={titleRef} className="title">
+                  <div dir="auto" ref={titleRef} className="title">
                     {note.title}
                   </div>
                 )}
                 {note.content?.trim() && (
-                  <div ref={contentRef} className="content">
+                  <div dir="auto" ref={contentRef} className="content">
                     {note.content}
                   </div>
                 )}

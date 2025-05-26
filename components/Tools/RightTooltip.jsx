@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-const RightTooltip = ({ anchorEl}) => {
+const RightTooltip = ({ anchorEl, margin = "20" }) => {
   const [isMounted, setIsMounted] = useState(false);
   const [display, setDisplay] = useState(false);
   const anchor = anchorEl?.anchor;
@@ -55,7 +55,7 @@ const RightTooltip = ({ anchorEl}) => {
         display: display ? "block" : "none",
         left: pos.left,
         top: pos.top,
-        marginLeft: display ? "20px" : "10px",
+        marginLeft: display ? `20px` : "10px",
         opacity: display ? 1 : 0,
       }}
       transition={{
@@ -70,7 +70,7 @@ const RightTooltip = ({ anchorEl}) => {
         display: !display && "none",
       }}
     >
-      <div>{anchorEl?.text}</div>
+      <div dir="auto">{anchorEl?.text}</div>
     </motion.div>,
     document.getElementById("tooltipPortal")
   );

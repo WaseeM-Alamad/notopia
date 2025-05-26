@@ -304,12 +304,12 @@ const FilteredNote = memo(
                 )}
               <div ref={inputsRef}>
                 {note.title?.trim() && (
-                  <div ref={titleRef} className="title">
+                  <div dir="auto" ref={titleRef} className="title">
                     {highlightMatch(note.title)}
                   </div>
                 )}
                 {note.content?.trim() && (
-                  <div ref={contentRef} className="content">
+                  <div dir="auto" ref={contentRef} className="content">
                     {highlightMatch(note.content)}
                   </div>
                 )}

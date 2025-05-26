@@ -369,6 +369,7 @@ const Navbar = ({ user }) => {
             <input
               onClick={inputClick}
               ref={searchRef}
+              dir="auto"
               onChange={debouncedHandleInputOnChange}
               className="search"
               placeholder={inputPlaceHolder}
@@ -448,7 +449,7 @@ const Navbar = ({ user }) => {
                 )}
               </AnimatePresence>
             </Button>
-            <Button style={{ width: "2.8rem", height: "2.8rem" }}>
+            <Button disabled={true} style={{ width: "2.8rem", height: "2.8rem" }}>
               <SettingsIcon />
             </Button>
           </div>

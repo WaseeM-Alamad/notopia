@@ -89,7 +89,7 @@ const DynamicLabel = ({
 
   const notesExist = !order.some((uuid) => {
     const note = notes.get(uuid);
-    if (!note.labels.includes(labelObj?.uuid) || note.isTrash) return false;
+    if (!note?.labels?.includes(labelObj?.uuid) || note.isTrash) return false;
     return true;
   });
 
