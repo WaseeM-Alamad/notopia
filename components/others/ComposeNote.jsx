@@ -27,6 +27,7 @@ const AddNoteModall = ({
     title: "",
     content: "",
     color: "Default",
+    background: "DefaultBG",
     labels: [],
     checkboxes: [],
     showCheckboxes: true,
@@ -125,6 +126,7 @@ const AddNoteModall = ({
       title: note.title,
       content: note.content,
       color: note.color,
+      background: note.background,
       labels: note.labels,
       isPinned: note.isPinned,
       isArchived: note.isArchived,
@@ -469,7 +471,9 @@ const AddNoteModall = ({
         {/* <button onClick={insert}>insert</button> */}
         <div
           style={{ overflowY: !isOpen && "hidden" }}
-          className="modal-inputs-container"
+          className={`modal-inputs-container ${
+            "n-bg-" + note.background
+          }`}
         >
           {note.images.length === 0 ||
             (!note.images && <div className="modal-corner" />)}

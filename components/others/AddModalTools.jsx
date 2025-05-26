@@ -61,6 +61,15 @@ const AddModalTools = ({
     }));
   };
 
+  const handleBackground = useCallback(
+    async (newBG) => {
+      closeToolTip();
+      if (note?.background === newBG) return;
+      setNote((prev) => ({ ...prev, background: newBG }));
+    },
+    [note?.background]
+  );
+
   return (
     <div style={{ opacity: "1" }} className="modal-bottom">
       {/* <p className="date">{FormattedDate}</p> */}
@@ -136,11 +145,13 @@ const AddModalTools = ({
           {colorMenuOpen && (
             <ColorSelectMenu
               handleColorClick={handleColorClick}
+              handleBackground={handleBackground}
               anchorEl={colorAnchorEl}
               setTooltipAnchor={setTooltipAnchor}
               selectedColor={selectedColor}
               isOpen={colorMenuOpen}
               setIsOpen={setColorMenuOpen}
+              selectedBG={note?.background}
             />
           )}
         </AnimatePresence>
@@ -150,13 +161,17 @@ const AddModalTools = ({
           className="more-icon btn-hover"
         />
         <Button onClick={handleUndo} disabled={undoStack.length === 0}>
-              <BackIcon />
-            </Button>
-            <Button onClick={handleRedo} disabled={redoStack.length === 0}>
-              <BackIcon direction="1" />
-            </Button>
+          <BackIcon />
+        </Button>
+        <Button onClick={handleRedo} disabled={redoStack.length === 0}>
+          <BackIcon direction="1" />
+        </Button>
       </div>
-      <button onClick={()=> setIsOpen(false)} ref={closeRef} className="close-btn">
+      <button
+        onClick={() => setIsOpen(false)}
+        ref={closeRef}
+        className="close-btn"
+      >
         Close
       </button>
     </div>
