@@ -1130,6 +1130,7 @@ const page = () => {
         const note = data.note;
         const newImages = [];
         const newCheckboxes = [];
+        const labelsUUIDs = [];
         const oldToNewCBMap = new Map();
 
         if (note.images.length > 0) {
@@ -1137,6 +1138,8 @@ const page = () => {
             const newUUID = uuid();
             const newImage = { uuid: newUUID, url: image.url };
             newImages.push(newImage);
+            console.log("newUUID", newUUID);
+            console.log("oldUUID", image.uuid);
           });
         }
 
@@ -1181,18 +1184,32 @@ const page = () => {
           images: newImages,
         };
 
-        const labelsUUIDs = [];
-
         note.labels.forEach((labelUUID) => {
           labelsUUIDs.push(labelUUID);
         });
 
-        batchNoteCount(labelsUUIDs, "inc");
+        const redo = async () => {
+          batchNoteCount(labelsUUIDs, "inc");
 
-        dispatchNotes({
-          type: "ADD_NOTE",
-          newNote: newNote,
-        });
+          dispatchNotes({
+            type: "ADD_NOTE",
+            newNote: newNote,
+          });
+
+          window.dispatchEvent(new Event("loadingStart"));
+          const received = await copyNoteAction({
+            originalNoteUUID: note.uuid,
+            newNoteUUID: newUUID,
+            newImages: newImages,
+            note: { ...newNote, images: data.note.images },
+          });
+          const receivedNote = received.note;
+          window.dispatchEvent(new Event("loadingEnd"));
+
+          dispatchNotes({ type: "SET_NOTE", note: receivedNote });
+        };
+
+        redo();
 
         const undoCopy = async () => {
           setFadingNotes((prev) => new Set(prev).add(newUUID));
@@ -1219,20 +1236,9 @@ const page = () => {
         openSnackFunction({
           snackMessage: "Note created",
           snackOnUndo: undoCopy,
+          snackRedo: redo,
         });
         data.setMoreMenuOpen(false);
-
-        window.dispatchEvent(new Event("loadingStart"));
-        const received = await copyNoteAction({
-          originalNoteUUID: note.uuid,
-          newNoteUUID: newUUID,
-          newImages: newImages,
-          note: newNote,
-        });
-        const receivedNote = received.note;
-        window.dispatchEvent(new Event("loadingEnd"));
-
-        dispatchNotes({ type: "SET_NOTE", note: receivedNote });
       }
     },
     [current]

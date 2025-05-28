@@ -113,8 +113,6 @@ const NoteWrapper = memo(
           } cubic-bezier(0.5, 0.2, 0.3, 1), opacity 0s`,
         }}
       >
-        {/* <button onClick={()=> console.log(note)}>note</button> */}
-
         <Note
           dispatchNotes={dispatchNotes}
           note={note}

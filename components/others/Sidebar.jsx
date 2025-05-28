@@ -51,6 +51,7 @@ const Sidebar = memo(() => {
 
   useEffect(() => {
     const handler = () => {
+      console.log("kklklkkl")
       const labelItems = [];
       const sortedLabels = [...labelsRef.current].sort(
         ([aUUID, a], [bUUID, b]) =>
@@ -81,9 +82,11 @@ const Sidebar = memo(() => {
     handler();
 
     window.addEventListener("refreshPinnedLabels", handler);
+    // window.addEventListener("loadLabels", handler)
 
     return () => {
       window.removeEventListener("refreshPinnedLabels", handler);
+      // window.removeEventListener("loadLabels", handler);
     };
   }, [labelsReady]);
 

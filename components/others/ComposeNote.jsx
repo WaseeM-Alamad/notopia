@@ -82,12 +82,16 @@ const AddNoteModall = ({
   };
 
   const positionModal = (rect) => {
-    modalRef.current.style.left = `${rect.left}px`;
-    modalRef.current.style.top = `${rect.top}px`;
-    const scale = `scale(${rect.width / modalRef.current.offsetWidth}, ${
-      rect.height / modalRef.current.offsetHeight
-    } )`;
-    modalRef.current.style.transform = scale;
+    const modal = modalRef.current;
+    const modalRect = modal.getBoundingClientRect();
+
+    const translateX = rect.left - modalRect.left;
+    const translateY = rect.top - modalRect.top;
+
+    const scaleX = rect.width / modalRect.width;
+    const scaleY = rect.height / modalRect.height;
+
+    modal.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
   };
 
   const UploadImagesAction = async (images, noteUUID) => {
@@ -277,7 +281,7 @@ const AddNoteModall = ({
         });
 
         const handler = (e) => {
-          if (e.propertyName === "left") {
+          if (e.propertyName === "transform") {
             modalRef.current.removeEventListener("transitionend", handler);
             requestAnimationFrame(() => {
               const lastNote = lastAddedNoteRef.current;
@@ -471,9 +475,7 @@ const AddNoteModall = ({
         {/* <button onClick={insert}>insert</button> */}
         <div
           style={{ overflowY: !isOpen && "hidden" }}
-          className={`modal-inputs-container ${
-            "n-bg-" + note.background
-          }`}
+          className={`modal-inputs-container ${"n-bg-" + note.background}`}
         >
           {note.images.length === 0 ||
             (!note.images && <div className="modal-corner" />)}

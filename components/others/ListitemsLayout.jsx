@@ -544,7 +544,7 @@ const ListItemsLayout = ({
 
   return (
     <>
-      <button
+      {/* <button
         style={{
           padding: "0.8rem",
           backgroundColor: "transparent",
@@ -553,7 +553,7 @@ const ListItemsLayout = ({
         onClick={() => console.log(localNote.checkboxes)}
       >
         log items
-      </button>
+      </button> */}
       {localNote?.checkboxes?.length > 0 && localNote?.showCheckboxes && (
         <div
           style={{

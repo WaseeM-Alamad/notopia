@@ -59,40 +59,57 @@ const Modal = ({
   const imagesChangedRef = useRef(false);
   const prevHash = useRef(null);
   const ignoreTopRef = useRef(false);
+  const inputsContainerRef = useRef(null);
 
   const centerModal = () => {
-    requestAnimationFrame(() => {
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-      const modalWidth = modalRef.current.offsetWidth;
-      const modalHeight = modalRef.current.offsetHeight;
+    if (!modalRef.current || !initialStyle) return;
 
-      const topPos = (viewportHeight - modalHeight) / 3;
+    const modal = modalRef.current;
+    const rect = initialStyle.element.getBoundingClientRect();
+    const modalWidth = modal.offsetWidth;
+    const modalHeight = modal.offsetHeight;
 
-      modalRef.current.style.transform = "none";
-      modalRef.current.style.left = `${(viewportWidth - modalWidth) / 2}px`;
-      if (!ignoreTopRef.current) {
-        modalRef.current.style.top = `${topPos > 30 ? topPos : 30}px`;
-      }
-    });
+    const centerX = (window.innerWidth - modalWidth) / 2;
+    const centerY = (window.innerHeight - modalHeight) / 3;
+
+    const translateX = centerX - rect.left;
+    const translateY = centerY - rect.top;
+
+    // Animate transform only (no left/top changes now)
+    modal.style.transform = `translate(${translateX}px, ${translateY}px) scale(1, 1)`;
   };
 
   const positionModal = () => {
-    if (initialStyle) {
-      const rect = initialStyle.element.getBoundingClientRect();
-      modalRef.current.style.display = "flex";
-      modalRef.current.style.left = `${rect.left}px`;
-      modalRef.current.style.top = `${rect.top}px`;
-      const scale = `scale(${rect.width / modalRef.current.offsetWidth}, ${
-        rect.height / modalRef.current.offsetHeight
-      } )`;
-      modalRef.current.style.transform = scale;
-    } else {
-      modalRef.current.style.display = "flex";
-      modalRef.current.style.left = `50%`;
-      modalRef.current.style.top = `30%`;
-      modalRef.current.style.transform = "translate(50%, 30%)";
-    }
+    if (!modalRef.current || !initialStyle) return;
+
+    const rect = initialStyle.element.getBoundingClientRect();
+    const modal = modalRef.current;
+
+    modal.style.display = "flex";
+    modal.style.position = "fixed";
+    modal.style.left = `${rect.left}px`;
+    modal.style.top = `${rect.top}px`;
+    modal.style.transformOrigin = "top left";
+
+    const scaleX = rect.width / modal.offsetWidth;
+    const scaleY = rect.height / modal.offsetHeight;
+
+    // Set starting scale + no translation (start at note)
+    modal.style.transform = `translate(0px, 0px) scale(${scaleX}, ${scaleY})`;
+  };
+
+  const reverseModalToNote = () => {
+    if (!modalRef.current || !initialStyle) return;
+
+    const modal = modalRef.current;
+    const rect = initialStyle.element.getBoundingClientRect();
+    const modalWidth = modal.offsetWidth;
+    const modalHeight = modal.offsetHeight;
+
+    // Animate back to note
+    modal.style.transform = `translate(0px, 0px) scale(${
+      rect.width / modalWidth
+    }, ${rect.height / modalHeight})`;
   };
 
   const reset = () => {
@@ -192,24 +209,17 @@ const Modal = ({
       overlay.style.opacity = "1";
 
       modalRef.current.offsetHeight;
+      inputsContainerRef.current.style.opacity = "1";
 
       modalRef.current.style.transition =
-        "all 0.22s cubic-bezier(0.35, 0.9, 0.25, 1), opacity 0.13s";
+        "all 0.22s cubic-bezier(0.35, 0.9, 0.25, 1), opacity 0.13s, background-color 0s";
 
-      const handler = (e) => {
-        if (e.propertyName === "top") {
-          modalRef.current.removeEventListener("transitionend", handler);
-          modalRef.current.style.transition =
-            "top .13s, opacity 0.13s, background-color 0.25s ease-in-out";
-        }
-      };
-
-      modalRef.current.addEventListener("transitionend", handler);
+      setTimeout(() => {
+        modalRef.current.style.transition =
+          "top .13s, opacity 0.13s, background-color 0.25s ease-in-out";
+      }, 220);
 
       centerModal();
-
-      return () =>
-        modalRef?.current?.removeEventListener("transitionend", handler);
     } else {
       ignoreKeysRef.current = false;
       if (!prevHash.current) {
@@ -222,26 +232,18 @@ const Modal = ({
         "all 0.22s cubic-bezier(0.35, 0.9, 0.25, 1), opacity 0.13s";
       modalRef.current.offsetHeight;
       overlay.style.opacity = "0";
+      inputsContainerRef.current.style.opacity = "0.15";
       checkForChanges();
       if (initialStyle) {
         setTimeout(() => {
-          positionModal();
+          reverseModalToNote();
         }, 10);
       }
-      const handleModalClose = (e) => {
-        if (e.propertyName === "top") {
-          modalRef.current.removeEventListener(
-            "transitionend",
-            handleModalClose
-          );
-
-          closeModal();
-        }
-      };
 
       if (initialStyle) {
-        modalRef.current.removeEventListener("transitionend", handleModalClose); // Remove before adding
-        modalRef.current.addEventListener("transitionend", handleModalClose);
+        setTimeout(() => {
+          closeModal();
+        }, 220);
       } else {
         modalRef.current.style.transition = "opacity 0.09s";
         modalRef.current.style.opacity = 0;
@@ -249,12 +251,6 @@ const Modal = ({
           closeModal();
         }, 90);
       }
-
-      return () =>
-        modalRef.current?.removeEventListener(
-          "transitionend",
-          handleModalClose
-        );
     }
   }, [isOpen]);
 
@@ -646,17 +642,6 @@ const Modal = ({
     window.location.hash = `label/${encodedLabel.toLowerCase()}`;
   };
 
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const observer = new ResizeObserver(() => centerModal());
-    if (modalRef.current) observer.observe(modalRef.current);
-
-    centerModal();
-
-    return () => observer.disconnect();
-  }, [isOpen]);
-
   if (!isMounted) return;
 
   return createPortal(
@@ -676,7 +661,11 @@ const Modal = ({
         style={{ minHeight: "180px" }}
       >
         <div
-          style={{ overflowY: !isOpen && "hidden" }}
+          ref={inputsContainerRef}
+          style={{
+            overflowY: !isOpen && "hidden",
+            opacity: "0.15"
+          }}
           className={`modal-inputs-container ${
             "n-bg-" + localNote?.background
           }`}
@@ -694,22 +683,14 @@ const Modal = ({
               />
             </Button>
           </div>
-          <div
-            style={{
-              position: "relative",
-              transition: "all 0.2s ease",
-              opacity: isOpen ? "1" : "0.15",
-            }}
-          >
-            <NoteImagesLayout
-              images={localNote?.images}
-              // isLoadingImages={isLoadingImages}
-              deleteSource="note"
-              noteImageDelete={noteImageDelete}
-              modalOpen={isOpen}
-            />
-            {/* {isLoading && <div className="linear-loader" />} */}
-          </div>
+          <NoteImagesLayout
+            images={localNote?.images}
+            // isLoadingImages={isLoadingImages}
+            deleteSource="note"
+            noteImageDelete={noteImageDelete}
+            modalOpen={isOpen}
+          />
+          {/* {isLoading && <div className="linear-loader" />} */}
           {!isOpen &&
             localNote?.images.length === 0 &&
             !titleTextRef.current?.trim() &&
@@ -792,7 +773,7 @@ const Modal = ({
                   const label = labelsRef.current.get(labelUUID)?.label;
                   return (
                     <div
-                      onClick={(e)=> handleLabelClick(e, label)}
+                      onClick={(e) => handleLabelClick(e, label)}
                       key={labelUUID}
                       className={[
                         "label-wrapper",

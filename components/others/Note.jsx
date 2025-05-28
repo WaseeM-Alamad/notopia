@@ -488,7 +488,8 @@ const Note = memo(
                           >
                             <label className="note-label">{label}</label>
                             <div
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 closeToolTip();
                                 removeLabel(labelUUID);
                               }}
