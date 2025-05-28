@@ -1,174 +1,172 @@
 .note {
-    display: flex;
-    position: relative;
-    flex-direction: column;
-    /* width: 15rem; */
-    height: fit-content;
-    min-height: 6.95rem;
-    border-radius: 0.7rem;
-    box-sizing: border-box;
-    font-size: 1rem;
-    border: solid 1px transparent;
-    box-sizing: border-box;
-    font-weight: 400;
-    user-select: none;
-    outline: solid 1px transparent;
-    overflow: hidden;
-    transition: outline-color 0.3s ease, background-image 0.25s ease,
-      background-position-y 0.25s ease, background-position-x 0.25s ease,
-      transform 0.3s ease-in-out, opacity 0s, box-shadow 0.2s ease,
-      background-color 0.25s ease-in-out, border-color 0.3s ease-in-out, height 0s;
-    background-size: cover;
-    will-change: background;
-    overflow-wrap: break-word;
-    word-wrap: break-word;
-    white-space: pre-wrap;
-  }
-  
-  .starting-div.dragging .note-wrapper:hover .note-bottom {
-    opacity: 0;
-    pointer-events: none;
-  }
-  
-  .starting-div.selected-notes .note-wrapper:hover .note-bottom {
-    opacity: 0;
-    pointer-events: none;
-  }
-  
-  .starting-div.dragging .note-wrapper:hover .pin {
-    opacity: 0;
-    pointer-events: none;
-  }
-  
-  .starting-div.dragging .note-wrapper:hover .checkmark {
-    opacity: 0;
-    pointer-events: none;
-  }
-  
-  .starting-div.dragging .note-wrapper:hover {
-    box-shadow: none;
-    pointer-events: none;
-  }
-  
-  .title {
-    padding: 0.8rem 0.8rem 0 0.8rem;
-    font-weight: 500;
-  }
-  
-  .content {
-    padding: 0.6rem 0.8rem 0.8rem 0.8rem;
-    font-size: 1.125rem;
-  }
-  
-  .note-bottom {
-    opacity: 0;
-    position: absolute;
-    overflow: hidden;
-    bottom: 0;
-    gap: 1rem;
-    border-bottom-left-radius: 0.55rem;
-    border-bottom-right-radius: 0.55rem;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: rgba(0, 0, 0, 0.5);
-    font-weight: 600;
-    min-height: 40px;
-    width: 100%;
-    box-sizing: border-box;
-    transition: all 0.3s ease-in-out;
-  }
-  
-  .note-wrapper {
-    border-radius: 0.7rem;
-    background-color: transparent;
-    position: relative;
-    outline: none;
-    transition: box-shadow 0.2s ease;
-  }
-  
-  .note-wrapper:hover .note-bottom,
-  .note-wrapper:focus .note-bottom,
-  .note-wrapper:hover .checkmark,
-  .note-wrapper:focus .checkmark {
-    opacity: 1;
-  }
-  
-  .note-wrapper:hover .pin {
-    opacity: 1;
-  }
-  
-  .pin:focus {
-    opacity: 1 !important;
-  }
-  
-  .checkmark {
-    opacity: 0;
-    position: absolute;
-    display: flex;
-    border-radius: 50%;
-    top: -9px;
-    left: -9px;
-    z-index: 100;
-    cursor: pointer;
-    transition: all 0.3s ease-in-out;
-  }
-  
-  
-  .note-wrapper:hover {
-    -webkit-box-shadow: 2px 3px 4px 0px rgba(0, 0, 0, 0.1);
-    -moz-box-shadow: 2px 3px 4px 0px rgba(0, 0, 0, 0.1);
-    box-shadow: 2px 3px 4px 0px rgba(0, 0, 0, 0.1);
-  }
-  
-  .dark-mode .note-wrapper:hover {
-    -webkit-box-shadow: 2px 3px 4px 0px rgba(0, 0, 0, 0.5);
-    -moz-box-shadow: 2px 3px 4px 0px rgba(0, 0, 0, 0.5);
-    box-shadow: 2px 3px 4px 0px rgba(0, 0, 0, 0.5);
-  }
-  
-  .date {
-    margin-top: 0.1rem;
-    margin-left: 0.2rem;
-    font-size: 0.733rem;
-  }
-  
-  .note-bottom-icons {
-    display: flex;
-    padding-bottom: 3px;
-    width: 100%;
-    padding-left: 0.4rem;
-    gap: 6px;
-  }
-  
-  .pin {
-    position: absolute;
-    z-index: 1;
-    right: 0;
-    opacity: 0;
-    outline: none;
-    padding: 0.3rem 0.4rem 0rem 0rem;
-    transition: all 0.3s ease-in-out;
-  }
-  
-  .empty-note::before {
-    display: flex;
-    position: absolute;
-    content: attr(aria-label);
-    color: rgba(0, 0, 0, 0.55);
-    margin-left: 1.5rem;
-    font-family: "DM Sans";
-    text-align: center;
-    height: fit-content;
-    width: fit-content;
-    margin-top: 2rem;
-    letter-spacing: 0.00625em;
-    font-size: 1.475rem;
-    line-height: 1.5rem;
-    cursor: text;
-  }
-  
-  .dark-mode .empty-note::before {
-    color: rgb(172, 172, 172);
-  }
-  
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  /* width: 15rem; */
+  height: fit-content;
+  min-height: 6.95rem;
+  border-radius: 0.7rem;
+  box-sizing: border-box;
+  font-size: 1rem;
+  border: solid 1px transparent;
+  box-sizing: border-box;
+  font-weight: 400;
+  user-select: none;
+  outline: solid 1px transparent;
+  overflow: hidden;
+  transition: outline-color 0.3s ease, background-image 0.25s ease,
+    background-position-y 0.25s ease, background-position-x 0.25s ease,
+    transform 0.3s ease-in-out, opacity 0s, box-shadow 0.2s ease,
+    background-color 0.25s ease-in-out, border-color 0.3s ease-in-out, height 0s;
+  background-size: cover;
+  will-change: background;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+.starting-div.dragging .note-wrapper:hover .note-bottom {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.starting-div.selected-notes .note-wrapper:hover .note-bottom {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.starting-div.dragging .note-wrapper:hover .pin {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.starting-div.dragging .note-wrapper:hover .checkmark {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.starting-div.dragging .note-wrapper:hover {
+  box-shadow: none;
+  pointer-events: none;
+}
+
+.title {
+  padding: 0.8rem 0.8rem 0 0.8rem;
+  font-weight: 500;
+}
+
+.content {
+  padding: 0.6rem 0.8rem 0.8rem 0.8rem;
+  font-size: 1.125rem;
+}
+
+.note-bottom {
+  opacity: 0;
+  position: absolute;
+  overflow: hidden;
+  bottom: 0;
+  gap: 1rem;
+  border-bottom-left-radius: 0.55rem;
+  border-bottom-right-radius: 0.55rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: rgba(0, 0, 0, 0.5);
+  font-weight: 600;
+  min-height: 40px;
+  width: 100%;
+  box-sizing: border-box;
+  transition: all 0.3s ease-in-out;
+}
+
+.note-wrapper {
+  border-radius: 0.7rem;
+  background-color: transparent;
+  position: relative;
+  outline: none;
+  transition: box-shadow 0.2s ease;
+}
+
+.note-wrapper:hover .note-bottom,
+.note-wrapper:focus .note-bottom,
+.note-wrapper:hover .checkmark,
+.note-wrapper:focus .checkmark {
+  opacity: 1;
+}
+
+.note-wrapper:hover .pin {
+  opacity: 1;
+}
+
+.pin:focus {
+  opacity: 1 !important;
+}
+
+.checkmark {
+  opacity: 0;
+  position: absolute;
+  display: flex;
+  border-radius: 50%;
+  top: -9px;
+  left: -9px;
+  z-index: 100;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+}
+
+.note-wrapper:hover {
+  -webkit-box-shadow: 2px 3px 4px 0px rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: 2px 3px 4px 0px rgba(0, 0, 0, 0.1);
+  box-shadow: 2px 3px 4px 0px rgba(0, 0, 0, 0.1);
+}
+
+.dark-mode .note-wrapper:hover {
+  -webkit-box-shadow: 2px 3px 4px 0px rgba(0, 0, 0, 0.5);
+  -moz-box-shadow: 2px 3px 4px 0px rgba(0, 0, 0, 0.5);
+  box-shadow: 2px 3px 4px 0px rgba(0, 0, 0, 0.5);
+}
+
+.date {
+  margin-top: 0.1rem;
+  margin-left: 0.2rem;
+  font-size: 0.733rem;
+}
+
+.note-bottom-icons {
+  display: flex;
+  padding-bottom: 3px;
+  width: 100%;
+  padding-left: 0.4rem;
+  gap: 6px;
+}
+
+.pin {
+  position: absolute;
+  z-index: 1;
+  right: 0;
+  opacity: 0;
+  outline: none;
+  padding: 0.3rem 0.4rem 0rem 0rem;
+  transition: all 0.3s ease-in-out;
+}
+
+.empty-note::before {
+  display: flex;
+  position: absolute;
+  content: attr(aria-label);
+  color: rgba(0, 0, 0, 0.55);
+  margin-left: 1.5rem;
+  font-family: "DM Sans";
+  text-align: center;
+  height: fit-content;
+  width: fit-content;
+  margin-top: 2rem;
+  letter-spacing: 0.00625em;
+  font-size: 1.475rem;
+  line-height: 1.5rem;
+  cursor: text;
+}
+
+.dark-mode .empty-note::before {
+  color: rgb(172, 172, 172);
+}

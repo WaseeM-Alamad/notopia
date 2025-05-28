@@ -2778,3 +2778,12 @@ img {
 .items-container-transition {
   transition: height 0.1s linear;
 }
+
+.modal-open .grid-item {
+  transition: opacity 0.18s ease !important;
+}
+
+.modal-open .note {
+  transition: background-color 0s !important;
+}
+

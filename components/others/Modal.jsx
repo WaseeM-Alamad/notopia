@@ -26,6 +26,7 @@ const Modal = ({
   setInitialStyle,
   isOpen,
   setIsOpen,
+  rootContainerRef,
   setTooltipAnchor,
   dispatchNotes,
   openSnackFunction,
@@ -60,23 +61,27 @@ const Modal = ({
   const prevHash = useRef(null);
   const ignoreTopRef = useRef(false);
   const inputsContainerRef = useRef(null);
+  const modalOpenRef = useRef(false);
 
   const centerModal = () => {
     if (!modalRef.current || !initialStyle) return;
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        const modal = modalRef.current;
+        const rect = initialStyle.element.getBoundingClientRect();
+        const modalWidth = modal.offsetWidth;
+        const modalHeight = modal.offsetHeight;
 
-    const modal = modalRef.current;
-    const rect = initialStyle.element.getBoundingClientRect();
-    const modalWidth = modal.offsetWidth;
-    const modalHeight = modal.offsetHeight;
+        const centerX = (window.innerWidth - modalWidth) / 2;
+        const centerY = (window.innerHeight - modalHeight) / 3;
 
-    const centerX = (window.innerWidth - modalWidth) / 2;
-    const centerY = (window.innerHeight - modalHeight) / 3;
+        const translateX = centerX - rect.left;
+        const translateY = centerY - rect.top;
 
-    const translateX = centerX - rect.left;
-    const translateY = centerY - rect.top;
-
-    // Animate transform only (no left/top changes now)
-    modal.style.transform = `translate(${translateX}px, ${translateY}px) scale(1, 1)`;
+        // Animate transform only (no left/top changes now)
+        modal.style.transform = `translate(${translateX}px, ${translateY}px) scale(1, 1)`;
+      }, 10);
+    });
   };
 
   const positionModal = () => {
@@ -86,7 +91,6 @@ const Modal = ({
     const modal = modalRef.current;
 
     modal.style.display = "flex";
-    modal.style.position = "fixed";
     modal.style.left = `${rect.left}px`;
     modal.style.top = `${rect.top}px`;
     modal.style.transformOrigin = "top left";
@@ -98,18 +102,46 @@ const Modal = ({
     modal.style.transform = `translate(0px, 0px) scale(${scaleX}, ${scaleY})`;
   };
 
+  const center = () => {
+    modalRef.current.style.transform = "none";
+    const modalWidth = modalRef.current.offsetWidth;
+    const modalHeight = modalRef.current.offsetHeight;
+    const centerLeft = (window.innerWidth - modalWidth) / 2;
+    const centerTop = (window.innerHeight - modalHeight) / 3;
+
+    modalRef.current.style.left = `${centerLeft}px`;
+    modalRef.current.style.top = `${centerTop}px`;
+  };
+
   const reverseModalToNote = () => {
     if (!modalRef.current || !initialStyle) return;
 
+    modalOpenRef.current = false;
     const modal = modalRef.current;
     const rect = initialStyle.element.getBoundingClientRect();
+
     const modalWidth = modal.offsetWidth;
     const modalHeight = modal.offsetHeight;
 
-    // Animate back to note
-    modal.style.transform = `translate(0px, 0px) scale(${
-      rect.width / modalWidth
-    }, ${rect.height / modalHeight})`;
+    const centerLeft = parseFloat(modal.style.left);
+    const centerTop = parseFloat(modal.style.top);
+
+    // Calculate how much to translate *relative to the centered position*
+    const translateX = rect.left - centerLeft;
+    const translateY = rect.top - centerTop;
+
+    // Calculate scale needed to shrink modal to note's size
+    const scaleX = rect.width / modalWidth;
+    const scaleY = rect.height / modalHeight;
+
+    modal.style.transformOrigin = "top left";
+
+    // Animate transform from no transform to scaled + translated (back to note)
+
+    // Trigger the animation:
+    requestAnimationFrame(() => {
+      modal.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
+    });
   };
 
   const reset = () => {
@@ -151,9 +183,12 @@ const Modal = ({
         handleTrash();
       }, 20);
     }
+
     if ((!archiveRef.current || !trashRef.current) && initialStyle) {
       initialStyle.element.style.opacity = "1";
     }
+
+    rootContainerRef.current.classList.remove("modal-open");
 
     archiveRef.current = false;
     trashRef.current = false;
@@ -209,7 +244,14 @@ const Modal = ({
 
       setTimeout(() => {
         modalRef.current.style.transition =
-          "top .13s, opacity 0.13s, background-color 0.25s ease-in-out";
+          "top 0s, opacity 0.13s, background-color 0.25s ease-in-out";
+        modalOpenRef.current = true;
+        center();
+
+        requestAnimationFrame(() => {
+          modalRef.current.style.transition =
+            "top 0.13s, opacity 0.13s, background-color 0.25s ease-in-out";
+        });
       }, 220);
 
       centerModal();
@@ -638,10 +680,26 @@ const Modal = ({
   useEffect(() => {
     if (!isOpen) return;
 
-    const observer = new ResizeObserver(() => centerModal());
-    if (modalRef.current) observer.observe(modalRef.current);
+    const onResize = () => {
+      if (!modalOpenRef.current) return;
+      center();
+    };
 
-    centerModal();
+    window.addEventListener("resize", onResize);
+
+    onResize();
+
+    return () => window.removeEventListener("resize", onResize);
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const observer = new ResizeObserver(() => {
+      if (!modalOpenRef.current) return;
+      center();
+    });
+    if (modalRef.current) observer.observe(modalRef.current);
 
     return () => observer.disconnect();
   }, [isOpen]);
@@ -668,7 +726,7 @@ const Modal = ({
           ref={inputsContainerRef}
           style={{
             overflowY: !isOpen && "hidden",
-            opacity: "0.15"
+            opacity: "0.15",
           }}
           className={`modal-inputs-container ${
             "n-bg-" + localNote?.background

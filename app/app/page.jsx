@@ -858,9 +858,14 @@ const page = () => {
         rect: rect,
       });
 
-      setSelectedNote(note);
-      setIsModalOpen(true);
-      element.style.opacity = "0";
+      rootContainerRef.current.classList.add("modal-open");
+      requestAnimationFrame(() => {
+        element.style.opacity = "0";
+        requestIdleCallback(() => {
+          setSelectedNote(note);
+          setIsModalOpen(true);
+        });
+      });
     });
   }, []);
 
@@ -2021,6 +2026,7 @@ const page = () => {
         current={current}
         isOpen={isModalOpen}
         setIsOpen={setIsModalOpen}
+        rootContainerRef={rootContainerRef}
         openSnackFunction={openSnackFunction}
         closeSnackbar={closeSnackbar}
         setModalStyle={setModalStyle}

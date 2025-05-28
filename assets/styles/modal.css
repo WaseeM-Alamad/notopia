@@ -164,7 +164,7 @@
   box-sizing: border-box;
   overflow-x: hidden;
   background-size: cover;
-  transition: all 0.25s ease, opacity 0.2s ease;
+  transition: all 0.25s ease, opacity 0.218s ease-in;
 }
 
 .modal-inputs-container::-webkit-scrollbar {
