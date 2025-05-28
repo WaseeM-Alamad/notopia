@@ -746,6 +746,7 @@ const page = () => {
   const selectedNotesRef = useRef(new Set());
   const rootContainerRef = useRef(null);
   const prevSelectedRef = useRef(null);
+  const throttleRef = useRef(false);
 
   const fadeNote = current !== "DynamicLabel" && current !== "Search";
 
@@ -845,10 +846,13 @@ const page = () => {
   const handleNoteClick = useCallback((e, note, index) => {
     if (
       e.target.closest("button") ||
-      !e.currentTarget.classList.contains("grid-item")
-    )
+      !e.currentTarget.classList.contains("grid-item") ||
+      throttleRef.current
+    ) {
       return;
+    }
     const element = e.currentTarget;
+    throttleRef.current = true;
 
     requestAnimationFrame(() => {
       const rect = element.getBoundingClientRect();
@@ -864,6 +868,9 @@ const page = () => {
         requestIdleCallback(() => {
           setSelectedNote(note);
           setIsModalOpen(true);
+          setTimeout(() => {
+            throttleRef.current = false;
+          }, 200);
         });
       });
     });
@@ -2011,7 +2018,18 @@ const page = () => {
 
   return (
     <>
-      <div id="n-overlay" className="note-overlay" />
+      <div
+        id="n-overlay"
+        onClick={() => {
+          if (throttleRef.current) return;
+          throttleRef.current = true;
+          setIsModalOpen(false);
+          setTimeout(() => {
+            throttleRef.current = false;
+          }, 200);
+        }}
+        className="note-overlay"
+      />
 
       <Modal
         note={selectedNote}

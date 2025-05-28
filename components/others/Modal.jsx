@@ -23,6 +23,7 @@ const Modal = ({
   note,
   noteActions,
   initialStyle,
+  throttleRef,
   setInitialStyle,
   isOpen,
   setIsOpen,
@@ -248,10 +249,12 @@ const Modal = ({
         modalOpenRef.current = true;
         center();
 
-        requestAnimationFrame(() => {
-          modalRef.current.style.transition =
-            "top 0.13s, opacity 0.13s, background-color 0.25s ease-in-out";
-        });
+        setTimeout(() => {
+          requestAnimationFrame(() => {
+            modalRef.current.style.transition =
+              "top 0.13s, opacity 0.13s, background-color 0.25s ease-in-out";
+          });
+        }, 30);
       }, 220);
 
       centerModal();
@@ -308,17 +311,6 @@ const Modal = ({
       if (nav) nav.style.paddingRight = "0px";
     }
   }, [isOpen]);
-
-  useEffect(() => {
-    const handler = (e) => {
-      if (e.target.id === "n-overlay") {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener("click", handler);
-    return () => document.removeEventListener("click", handler);
-  }, []);
 
   useEffect(() => {
     setIsMounted(true);
