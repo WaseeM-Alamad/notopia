@@ -161,13 +161,6 @@ const Modal = ({
   };
 
   useEffect(() => {
-    if (!isOpen) return;
-
-    window.addEventListener("resize", centerModal);
-    return () => window.removeEventListener("resize", centerModal);
-  }, [isOpen]);
-
-  useEffect(() => {
     const handler = () => {
       const hash = window.location.hash.replace("#", "");
       if (!hash.toLowerCase().startsWith("note/")) {
@@ -641,6 +634,17 @@ const Modal = ({
     const encodedLabel = encodeURIComponent(label);
     window.location.hash = `label/${encodedLabel.toLowerCase()}`;
   };
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const observer = new ResizeObserver(() => centerModal());
+    if (modalRef.current) observer.observe(modalRef.current);
+
+    centerModal();
+
+    return () => observer.disconnect();
+  }, [isOpen]);
 
   if (!isMounted) return;
 
