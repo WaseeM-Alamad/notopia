@@ -21,6 +21,8 @@ import ListItemsLayout from "./ListitemsLayout";
 
 const Modal = ({
   note,
+  localNote,
+  setLocalNote,
   noteActions,
   initialStyle,
   throttleRef,
@@ -36,7 +38,7 @@ const Modal = ({
 }) => {
   const { handleLabelNoteCount, labelsRef, ignoreKeysRef } = useAppContext();
   const [isMounted, setIsMounted] = useState(false);
-  const [localNote, setLocalNote] = useState(null);
+  // const [localNote, setLocalNote] = useState(null);
   const [localPinned, setLocalPinned] = useState(null);
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
@@ -219,7 +221,7 @@ const Modal = ({
       ignoreKeysRef.current = true;
       archiveRef.current = false;
       trashRef.current = false;
-      setLocalNote(note);
+      // setLocalNote(note);
       setLocalPinned(note?.isPinned);
       titleTextRef.current = note?.title;
       contentTextRef.current = note?.content;

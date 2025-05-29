@@ -2032,7 +2032,9 @@ const page = () => {
       />
 
       <Modal
-        note={selectedNote}
+        note={{...selectedNote}}
+        localNote={selectedNote}
+        setLocalNote={setSelectedNote}
         noteActions={noteActions}
         setNote={setSelectedNote}
         dispatchNotes={dispatchNotes}
