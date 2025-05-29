@@ -24,6 +24,7 @@ const NoteWrapper = memo(
     setTooltipAnchor,
     openSnackFunction,
     handleSelectNote,
+    handleNoteClick,
     calculateLayout,
     fadingNotes,
   }) => {
@@ -39,6 +40,7 @@ const NoteWrapper = memo(
       <motion.div
         ref={ref}
         className={`grid-item ${fadingNotes.has(note.uuid) ? "fade-out" : ""}`}
+        onClick={(e) => handleNoteClick(e, note, index)}
         style={{
           width: `${COLUMN_WIDTH}px`,
           marginBottom: `${GUTTER}px`,
@@ -75,6 +77,7 @@ const Home = memo(
     openSnackFunction,
     setSelectedNotesIDs,
     handleSelectNote,
+    handleNoteClick,
     noteActions,
     notesReady,
     rootContainerRef,
@@ -248,6 +251,7 @@ const Home = memo(
                     setTooltipAnchor={setTooltipAnchor}
                     openSnackFunction={openSnackFunction}
                     handleSelectNote={handleSelectNote}
+                    handleNoteClick={handleNoteClick}
                     calculateLayout={calculateLayout}
                     fadingNotes={fadingNotes}
                   />

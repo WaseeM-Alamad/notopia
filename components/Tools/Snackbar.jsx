@@ -9,6 +9,8 @@ const Snackbar = ({
   setSnackbarState,
   undo,
   unloadWarn,
+  noActionUndone,
+  setNoActionUndone,
   setUnloadWarn,
   setTooltipAnchor,
   onClose,
@@ -23,16 +25,14 @@ const Snackbar = ({
             ...prev,
             snackOpen: false,
           }));
-          if (snackbarState.showUndo) {
-            onClose.current();
-          }
+          // if (snackbarState.showUndo) {
+          onClose.current();
+          // }
         },
         snackbarState.showUndo ? 6000 : 4000
       );
     } else {
-      if (unloadWarn) {
-        setUnloadWarn(false);
-      }
+      setUnloadWarn(false);
       clearTimeout(timeoutRef.current);
       onClose.current = () => {};
     }
@@ -95,10 +95,11 @@ const Snackbar = ({
               className="undo-btn"
               onClick={() => {
                 undo.current();
+                if (noActionUndone) return;
                 openActionUndone();
               }}
             >
-              Undo
+              {noActionUndone ? "Restore" : "Undo"}
             </button>
           )}
           <Button
@@ -113,9 +114,9 @@ const Snackbar = ({
                 anchor: null,
                 text: prev?.text,
               }));
-              if (snackbarState.showUndo) {
-                onClose.current();
-              }
+              // if (snackbarState.showUndo) {
+              onClose.current();
+              // }
             }}
           >
             <XIcon color="white" />

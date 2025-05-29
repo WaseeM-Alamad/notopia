@@ -22,6 +22,7 @@ import ListItemsLayout from "./ListitemsLayout";
 const Modal = ({
   localNote,
   setLocalNote,
+  setFadingNotes,
   noteActions,
   initialStyle,
   setInitialStyle,
@@ -169,14 +170,6 @@ const Modal = ({
       console.log("change");
     }
 
-    if (localPinned !== note?.isPinned) {
-      setTimeout(() => {
-        dispatchNotes({
-          type: "PIN_NOTE",
-          note: note,
-        });
-      }, 20);
-    }
     if (archiveRef.current) {
       setTimeout(() => {
         handleArchive();
@@ -184,6 +177,13 @@ const Modal = ({
     } else if (trashRef.current) {
       setTimeout(() => {
         handleTrash();
+      }, 20);
+    } else if (localPinned !== note?.isPinned) {
+      setTimeout(() => {
+        dispatchNotes({
+          type: "PIN_NOTE",
+          note: note,
+        });
       }, 20);
     }
 
@@ -193,10 +193,12 @@ const Modal = ({
 
     rootContainerRef.current.classList.remove("modal-open");
 
-    archiveRef.current = false;
-    trashRef.current = false;
-    setInitialStyle(null);
-    reset();
+    requestAnimationFrame(() => {
+      archiveRef.current = false;
+      trashRef.current = false;
+      setInitialStyle(null);
+      reset();
+    });
   };
 
   useEffect(() => {
@@ -320,51 +322,93 @@ const Modal = ({
   }, []);
 
   const handleArchive = async () => {
+    const passedNote =
+      localPinned && localNote.isArchived
+        ? { ...note, isArchived: !note.isArchived }
+        : note;
     const undoArchive = async () => {
+      if (localPinned && localNote.isArchived) {
+        setFadingNotes((prev) => new Set(prev).add(localNote.uuid));
+      }
       const initialIndex = initialStyle.index;
-      dispatchNotes({
-        type: "UNDO_ARCHIVE",
-        note: note,
-        initialIndex: initialIndex,
-      });
+      setTimeout(
+        () => {
+          dispatchNotes({
+            type: "UNDO_ARCHIVE",
+            note: passedNote,
+            initialIndex: initialIndex,
+          });
+          setFadingNotes((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(localNote.uuid);
+            return newSet;
+          });
+        },
+        localPinned && localNote.isArchived ? 250 : 0
+      );
+
       window.dispatchEvent(new Event("loadingStart"));
       await undoAction({
         type: "UNDO_ARCHIVE",
-        noteUUID: note.uuid,
-        value: note.isArchived,
-        pin: note.isPinned,
+        noteUUID: passedNote.uuid,
+        value: passedNote.isArchived,
+        pin: passedNote.isPinned,
         initialIndex: initialIndex,
         endIndex: 0,
       });
       window.dispatchEvent(new Event("loadingEnd"));
     };
 
-    dispatchNotes({
-      type: "ARCHIVE_NOTE",
-      note: note,
-    });
+    const first = initialStyle.index === 0;
 
+    const redo = async (fadeNote) => {
+      const fade =
+        fadeNote &&
+        ((localNote.isArchived && !localPinned) || !localNote.isArchived);
+      if (fade) {
+        setFadingNotes((prev) => new Set(prev).add(localNote.uuid));
+      }
+
+      setTimeout(
+        () => {
+          dispatchNotes({
+            type: "ARCHIVE_NOTE",
+            note: passedNote,
+          });
+
+          setFadingNotes((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(localNote.uuid);
+            return newSet;
+          });
+        },
+        fade ? 250 : 0
+      );
+
+      window.dispatchEvent(new Event("loadingStart"));
+      await NoteUpdateAction({
+        type: "isArchived",
+        value: !passedNote.isArchived,
+        noteUUIDs: [note.uuid],
+        first: first,
+      });
+      window.dispatchEvent(new Event("loadingEnd"));
+    };
+
+    redo(false);
+
+    archiveRef.current = false;
     openSnackFunction({
       snackMessage: `${
-        note.isArchived
+        passedNote.isArchived
           ? "Note unarchived"
           : localPinned
           ? "Note unpinned and archived"
           : "Note Archived"
       }`,
       snackOnUndo: undoArchive,
+      snackRedo: () => redo(true),
     });
-    const first = initialStyle.index === 0;
-    window.dispatchEvent(new Event("loadingStart"));
-    await NoteUpdateAction({
-      type: "isArchived",
-      value: !note.isArchived,
-      noteUUIDs: [note.uuid],
-      first: first,
-    });
-    window.dispatchEvent(new Event("loadingEnd"));
-
-    archiveRef.current = false;
   };
 
   const handleTrash = () => {
@@ -391,28 +435,73 @@ const Modal = ({
       window.dispatchEvent(new Event("loadingEnd"));
     };
 
-    if (!note.isTrash) {
+    if (!localNote?.isTrash) {
       openSnackFunction({
         snackMessage: `${
           localPinned ? "Note unpinned and trashed" : "Note trashed"
         }`,
-        snackOnUndo: undoTrash,
         snackOnClose: onClose,
         unloadWarn: true,
+        showUndo: false,
       });
     }
     trashRef.current = false;
   };
 
   const handlePinClick = async () => {
+    if (localNote.isTrash) return;
     setLocalPinned((prev) => !prev);
     window.dispatchEvent(new Event("loadingStart"));
     try {
-      await NoteUpdateAction({
-        type: "isPinned",
-        value: !localPinned,
-        noteUUIDs: [note.uuid],
-      });
+      if (!localNote.isArchived) {
+        await NoteUpdateAction({
+          type: "isPinned",
+          value: !localPinned,
+          noteUUIDs: [note.uuid],
+        });
+      } else {
+        const redo = async () => {
+          setLocalPinned(!localPinned);
+          if (!localPinned) {
+            await NoteUpdateAction({
+              type: "pinArchived",
+              value: true,
+              noteUUIDs: [note.uuid],
+            });
+          } else {
+            await undoAction({
+              type: "UNDO_PIN_ARCHIVED",
+              noteUUID: note.uuid,
+              initialIndex: initialStyle.index,
+              endIndex: 0,
+            });
+          }
+        };
+        redo();
+        const undo = async () => {
+          setLocalPinned(false);
+          dispatchNotes({
+            type: "UNDO_PIN_ARCHIVED",
+            note: note,
+            initialIndex: initialStyle.index,
+          });
+
+          window.dispatchEvent(new Event("loadingStart"));
+          await undoAction({
+            type: "UNDO_PIN_ARCHIVED",
+            noteUUID: note.uuid,
+            initialIndex: initialStyle.index,
+            endIndex: 0,
+          });
+          window.dispatchEvent(new Event("loadingEnd"));
+        };
+
+        openSnackFunction({
+          snackMessage: "Note unarchived and pinned",
+          snackOnUndo: undo,
+          snackRedo: redo,
+        });
+      }
     } finally {
       window.dispatchEvent(new Event("loadingEnd"));
     }
@@ -569,6 +658,7 @@ const Modal = ({
 
   const handleTitleInput = useCallback(
     (e) => {
+      if (localNote?.isTrash) return;
       const text = e.target.innerText;
       const t = text === "\n" ? "" : text;
       titleDebouncedSetUndo({ title: t, content: contentTextRef.current });
@@ -581,11 +671,12 @@ const Modal = ({
         e.target.innerText = "";
       }
     },
-    [note?.content, note?.title, undoStack]
+    [note?.content, note?.title, localNote?.isTrash, undoStack]
   );
 
   const handleContentInput = useCallback(
     (e) => {
+      if (localNote?.isTrash) return;
       const text = e.target.innerText;
       const t = text === "\n" ? "" : text;
 
@@ -599,7 +690,7 @@ const Modal = ({
         e.target.innerText = "";
       }
     },
-    [note?.content, note?.title, undoStack]
+    [note?.content, note?.title, localNote?.isTrash, undoStack]
   );
 
   const checkForChanges = () => {
@@ -699,6 +790,43 @@ const Modal = ({
     return () => observer.disconnect();
   }, [isOpen]);
 
+  const inputsContainerClick = () => {
+    if (!localNote?.isTrash) return;
+
+    const undo = async () => {
+      setLocalNote((prev) => ({ ...prev, isTrash: true }));
+      window.dispatchEvent(new Event("loadingStart"));
+      await NoteUpdateAction({
+        type: "isTrash",
+        value: true,
+        noteUUIDs: [localNote.uuid],
+      });
+      window.dispatchEvent(new Event("loadingEnd"));
+    };
+
+    const restore = async () => {
+      setLocalNote((prev) => ({ ...prev, isTrash: false }));
+      window.dispatchEvent(new Event("loadingStart"));
+      openSnackFunction({
+        snackMessage: "Note restored",
+        snackOnUndo: undo,
+        snackRedo: restore,
+      });
+      await NoteUpdateAction({
+        type: "isTrash",
+        value: false,
+        noteUUIDs: [localNote.uuid],
+      });
+      window.dispatchEvent(new Event("loadingEnd"));
+    };
+
+    openSnackFunction({
+      snackMessage: "Can't edit in Trash",
+      snackOnUndo: restore,
+      noActionUndone: true,
+    });
+  };
+
   if (!isMounted) return;
 
   return createPortal(
@@ -718,6 +846,7 @@ const Modal = ({
         style={{ minHeight: "180px" }}
       >
         <div
+          onClick={inputsContainerClick}
           ref={inputsContainerRef}
           style={{
             overflowY: !isOpen && "hidden",
@@ -730,19 +859,22 @@ const Modal = ({
           {localNote?.images.length === 0 && (
             <div className={isOpen ? `modal-corner` : `corner`} />
           )}
-          <div style={{ opacity: !isOpen && "0" }} className="modal-pin">
-            <Button onClick={handlePinClick} disabled={!isOpen}>
-              <PinIcon
-                isPinned={localPinned}
-                opacity={0.8}
-                rotation={localPinned ? "-45deg" : "-5deg"}
-                images={localNote?.images.length !== 0}
-              />
-            </Button>
-          </div>
+          {!localNote?.isTrash && (
+            <div style={{ opacity: !isOpen && "0" }} className="modal-pin">
+              <Button onClick={handlePinClick} disabled={!isOpen}>
+                <PinIcon
+                  isPinned={localPinned}
+                  opacity={0.8}
+                  rotation={localPinned ? "-45deg" : "-5deg"}
+                  images={localNote?.images.length !== 0}
+                />
+              </Button>
+            </div>
+          )}
           <NoteImagesLayout
             images={localNote?.images}
             // isLoadingImages={isLoadingImages}
+            isTrash={localNote?.isTrash}
             deleteSource="note"
             noteImageDelete={noteImageDelete}
             modalOpen={isOpen}
@@ -766,7 +898,7 @@ const Modal = ({
                 ? "0"
                 : "1",
             }}
-            contentEditable
+            contentEditable={!localNote?.isTrash}
             dir="auto"
             suppressContentEditableWarning
             onInput={handleTitleInput}
@@ -777,7 +909,7 @@ const Modal = ({
             role="textbox"
             tabIndex="0"
             aria-multiline="true"
-            aria-label="Title"
+            aria-label={!localNote?.isTrash ? "Title" : ""}
             spellCheck="false"
           />
           <div
@@ -792,7 +924,7 @@ const Modal = ({
               minHeight: "30px",
               transition: "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)",
             }}
-            contentEditable
+            contentEditable={!localNote?.isTrash}
             dir="auto"
             suppressContentEditableWarning
             onInput={handleContentInput}
@@ -802,7 +934,7 @@ const Modal = ({
             role="textbox"
             tabIndex="0"
             aria-multiline="true"
-            aria-label="Note"
+            aria-label={!localNote?.isTrash ? "Note" : ""}
             spellCheck="false"
           />
 
@@ -834,7 +966,7 @@ const Modal = ({
                       key={labelUUID}
                       className={[
                         "label-wrapper",
-                        !note.isTrash && "label-wrapper-h",
+                        !localNote?.isTrash && "label-wrapper-h",
                       ]
                         .filter(Boolean)
                         .join(" ")}
@@ -860,12 +992,18 @@ const Modal = ({
           {isOpen && (
             <div className="modal-date-section">
               <div
+                onClick={(e) => e.stopPropagation()}
                 onMouseEnter={(e) =>
                   handleMouseEnter(e, "Created " + formattedCreatedAtDate)
                 }
                 onMouseLeave={handleMouseLeave}
                 className="edited"
               >
+                {localNote?.isTrash
+                  ? "Note in Trash  •  "
+                  : localNote?.isArchived
+                  ? "Note in Archive  •  "
+                  : ""}
                 Edited
                 {" " + formattedEditedDate}
               </div>

@@ -7,6 +7,7 @@ const NoteImagesLayout = ({
   calculateMasonryLayout,
   isLoadingImages = [],
   modalOpen,
+  isTrash = false,
   deleteSource,
   noteImageDelete,
   AddNoteImageDelete,
@@ -141,7 +142,14 @@ const NoteImagesLayout = ({
   if (images?.length === 0 || !images) return;
 
   return (
-    <div ref={containerRef} style={containerStyle}>
+    <div
+      onClick={(e) => {
+        if (!modalOpen && !isTrash) return;
+        e.stopPropagation();
+      }}
+      ref={containerRef}
+      style={containerStyle}
+    >
       {layout.length > 0 ? (
         layout.map((row, rowIndex) => (
           <div key={rowIndex} style={rowStyle}>
@@ -167,7 +175,7 @@ const NoteImagesLayout = ({
                 {isLoadingImages.includes(item.id) && (
                   <div key={item.src} className="linear-loader" />
                 )}
-                {modalOpen && (
+                {modalOpen && !isTrash && (
                   <div
                     onClick={() => handleImageDeletion(item.id, item.src)}
                     className="img-delete"

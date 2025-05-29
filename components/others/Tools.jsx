@@ -18,11 +18,9 @@ import ManageLabelsMenu from "./ManageLabelsMenu";
 import ManageModalLabels from "./ManageModalLabels";
 
 const NoteModalTools = ({
-  trigger,
   localNote,
   setLocalNote,
   openSnackFunction,
-  dispatchNotes,
   note,
   noteActions,
   setTooltipAnchor,
@@ -67,7 +65,7 @@ const NoteModalTools = ({
     async (newBG) => {
       closeToolTip();
       if (localNote?.background === newBG) return;
-      setLocalNote(prev => ({...prev, background: newBG}));
+      setLocalNote((prev) => ({ ...prev, background: newBG }));
 
       // dispatchNotes({
       //   type: "UPDATE_BG",
@@ -116,7 +114,10 @@ const NoteModalTools = ({
     const imageURL = URL.createObjectURL(file);
     const newUUID = uuid();
 
-    setLocalNote(prev => ({...prev, images: [...prev.images, {url: imageURL, uuid: newUUID} ]}));
+    setLocalNote((prev) => ({
+      ...prev,
+      images: [...prev.images, { url: imageURL, uuid: newUUID }],
+    }));
     inputRef.current.value = "";
     window.dispatchEvent(new Event("loadingStart"));
     const starter =
@@ -172,69 +173,96 @@ const NoteModalTools = ({
       <div style={{ opacity: "1" }} className={`modal-bottom  `}>
         {/* <p className="date">{FormattedDate}</p> */}
         <div className="modal-bottom-icons">
-          <Button className="reminder-icon btn-hover" />
-          <Button className="person-add-icon btn-hover" />
-          <Button
-            className="close archive-icon btn-hover"
-            onClick={handleModalArchive}
-            onMouseEnter={(e) => handleMouseEnter(e, "Archive")}
-            onMouseLeave={handleMouseLeave}
-          />
-          <Button
-            className="image-icon btn-hover"
-            onClick={() => {
-              closeToolTip();
-              inputRef.current.click();
-            }}
-            onMouseEnter={(e) => handleMouseEnter(e, "Add image")}
-            onMouseLeave={handleMouseLeave}
-          >
-            <input
-              ref={inputRef}
-              style={{ display: "none" }}
-              type="file"
-              onChange={handleOnChange}
-            />
-          </Button>
-          <Button
-            className="color-icon btn-hover"
-            onClick={toggleColorMenu}
-            onMouseEnter={(e) => handleMouseEnter(e, "Background options")}
-            onMouseLeave={handleMouseLeave}
-          />
-          <AnimatePresence>
-            {colorMenuOpen && (
-              <ColorSelectMenu
-                handleColorClick={handleColorClick}
-                handleBackground={handleBackground}
-                anchorEl={colorAnchorEl}
-                selectedColor={localNote?.color}
-                selectedBG={localNote?.background}
-                setTooltipAnchor={setTooltipAnchor}
-                isOpen={colorMenuOpen}
-                setIsOpen={setColorMenuOpen}
+          {!localNote?.isTrash ? (
+            <>
+              <Button className="reminder-icon btn-hover" />
+              <Button className="person-add-icon btn-hover" />
+              <Button
+                className="close archive-icon btn-hover"
+                onClick={handleModalArchive}
+                onMouseEnter={(e) => handleMouseEnter(e, "Archive")}
+                onMouseLeave={handleMouseLeave}
               />
-            )}
-          </AnimatePresence>
-          <Button
-            onClick={(e) => {
-              closeToolTip();
-              setAnchorEl(e.currentTarget);
-              setMoreMenuOpen((prev) => !prev);
-              setLabelsOpen(false);
-            }}
-            onMouseEnter={(e) => handleMouseEnter(e, "More")}
-            onMouseLeave={handleMouseLeave}
-            className="more-icon btn-hover"
-          />
-          <>
-            <Button onClick={handleUndo} disabled={undoStack.length === 0}>
-              <BackIcon />
-            </Button>
-            <Button onClick={handleRedo} disabled={redoStack.length === 0}>
-              <BackIcon direction="1" />
-            </Button>
-          </>
+              <Button
+                className="image-icon btn-hover"
+                onClick={() => {
+                  closeToolTip();
+                  inputRef.current.click();
+                }}
+                onMouseEnter={(e) => handleMouseEnter(e, "Add image")}
+                onMouseLeave={handleMouseLeave}
+              >
+                <input
+                  ref={inputRef}
+                  style={{ display: "none" }}
+                  type="file"
+                  onChange={handleOnChange}
+                />
+              </Button>
+              <Button
+                className="color-icon btn-hover"
+                onClick={toggleColorMenu}
+                onMouseEnter={(e) => handleMouseEnter(e, "Background options")}
+                onMouseLeave={handleMouseLeave}
+              />
+              <AnimatePresence>
+                {colorMenuOpen && (
+                  <ColorSelectMenu
+                    handleColorClick={handleColorClick}
+                    handleBackground={handleBackground}
+                    anchorEl={colorAnchorEl}
+                    selectedColor={localNote?.color}
+                    selectedBG={localNote?.background}
+                    setTooltipAnchor={setTooltipAnchor}
+                    isOpen={colorMenuOpen}
+                    setIsOpen={setColorMenuOpen}
+                  />
+                )}
+              </AnimatePresence>
+              <Button
+                onClick={(e) => {
+                  closeToolTip();
+                  setAnchorEl(e.currentTarget);
+                  setMoreMenuOpen((prev) => !prev);
+                  setLabelsOpen(false);
+                }}
+                onMouseEnter={(e) => handleMouseEnter(e, "More")}
+                onMouseLeave={handleMouseLeave}
+                className="more-icon btn-hover"
+              />
+              <>
+                <Button
+                  onClick={handleUndo}
+                  onMouseEnter={(e) => handleMouseEnter(e, "Undo")}
+                  onMouseLeave={handleMouseLeave}
+                  disabled={undoStack.length === 0}
+                >
+                  <BackIcon />
+                </Button>
+                <Button
+                  onClick={handleRedo}
+                  onMouseEnter={(e) => handleMouseEnter(e, "Redo")}
+                  onMouseLeave={handleMouseLeave}
+                  disabled={redoStack.length === 0}
+                >
+                  <BackIcon direction="1" />
+                </Button>
+              </>
+            </>
+          ) : (
+            <>
+              <Button
+                className="note-delete-icon"
+                onMouseEnter={(e) => handleMouseEnter(e, "Delete forever")}
+                onMouseLeave={handleMouseLeave}
+              />
+              <Button
+                className="note-restore-icon"
+                onMouseEnter={(e) => handleMouseEnter(e, "Restore")}
+                onMouseLeave={handleMouseLeave}
+              />
+            </>
+          )}
         </div>
         <button
           ref={closeRef}

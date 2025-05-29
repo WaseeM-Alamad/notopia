@@ -36,7 +36,7 @@ const NoteTools = ({
   const handleColorClick = useCallback(
     async (newColor) => {
       closeToolTip();
-      if (newColor === selectedColor) return;
+      if (newColor === note.color) return;
 
       dispatchNotes({
         type: "UPDATE_COLOR",
@@ -58,8 +58,7 @@ const NoteTools = ({
   const handleBackground = useCallback(
     async (newBG) => {
       closeToolTip();
-      if (selectedBG === newBG) return;
-      setSelectedBG(newBG);
+      if (newBG === note.background) return;
 
       dispatchNotes({
         type: "UPDATE_BG",

@@ -387,7 +387,7 @@ svg {
 }
 
 .n-bg-Celebration {
-  background-image: url("/n-bgs/n-bg-Celebration.svg");
+  background: url("/n-bgs/n-bg-Celebration.svg");
   background-position-x: right;
   background-position-y: bottom;
 }

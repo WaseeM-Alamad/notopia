@@ -98,6 +98,7 @@ function notesReducer(state, action) {
       const newNote = {
         ...state.notes.get(action.note.uuid),
         isPinned: !action.note.isPinned,
+        isArchived: false,
       };
       const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
       const updatedOrder = [...state.order].filter(
@@ -725,6 +726,7 @@ const page = () => {
     message: "",
   });
   const [unloadWarn, setUnloadWarn] = useState(false);
+  const [noActionUndone, setNoActionUndone] = useState(false);
   const undoFunction = useRef(null);
   const redoFunction = useRef(null);
   const allowUndoRef = useRef(true);
@@ -752,6 +754,7 @@ const page = () => {
 
   const openSnackFunction = useCallback((data) => {
     const showUndo = data.showUndo ?? true;
+    const noAction = data.noActionUndone ?? false;
     if (data.close) {
       setSnackbarState((prev) => ({
         ...prev,
@@ -785,6 +788,8 @@ const page = () => {
         if (data.unloadWarn) {
           setUnloadWarn(true);
         }
+
+        setNoActionUndone(noAction);
       }, 80);
     }
   }, []);
@@ -1075,7 +1080,7 @@ const page = () => {
           setTimeout(
             () => {
               dispatchNotes({
-                type: "PIN_ARCHIVED_NOTE",
+                type: "PIN_NOTE",
                 note: data.note,
               });
 
@@ -2018,6 +2023,7 @@ const page = () => {
       <Modal
         localNote={selectedNote}
         setLocalNote={setSelectedNote}
+        setFadingNotes={setFadingNotes}
         noteActions={noteActions}
         dispatchNotes={dispatchNotes}
         initialStyle={modalStyle}
@@ -2041,6 +2047,8 @@ const page = () => {
         undo={undoFunction}
         unloadWarn={unloadWarn}
         setUnloadWarn={setUnloadWarn}
+        noActionUndone={noActionUndone}
+        setNoActionUndone={setNoActionUndone}
         onClose={onCloseFunction}
       />
       <div className="starting-div-header" />

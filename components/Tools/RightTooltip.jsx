@@ -55,7 +55,7 @@ const RightTooltip = ({ anchorEl, margin = "20" }) => {
         display: display ? "block" : "none",
         left: pos.left,
         top: pos.top,
-        marginLeft: display ? `20px` : "10px",
+        marginLeft: display ? `20px` : "13px",
         opacity: display ? 1 : 0,
       }}
       transition={{
