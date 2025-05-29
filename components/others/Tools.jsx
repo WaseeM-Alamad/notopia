@@ -8,7 +8,7 @@ import ColorIcon from "../icons/ColorIcon";
 import MoreVert from "../icons/MoreVert";
 import ColorSelectMenu from "./ColorSelectMenu";
 import BackIcon from "../icons/BackIcon";
-import { NoteUpdateAction } from "@/utils/actions";
+import { DeleteNoteAction, NoteUpdateAction } from "@/utils/actions";
 import { createClient } from "@supabase/supabase-js";
 import { v4 as uuid } from "uuid";
 import { useSession } from "next-auth/react";
@@ -16,6 +16,7 @@ import { AnimatePresence } from "framer-motion";
 import ModalMenu from "./ModalMenu";
 import ManageLabelsMenu from "./ManageLabelsMenu";
 import ManageModalLabels from "./ManageModalLabels";
+import DeleteModal from "./DeleteModal";
 
 const NoteModalTools = ({
   localNote,
@@ -35,6 +36,7 @@ const NoteModalTools = ({
 }) => {
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
   const [colorAnchorEl, setColorAnchorEl] = useState(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [labelsOpen, setLabelsOpen] = useState(false);
@@ -136,6 +138,40 @@ const NoteModalTools = ({
     window.dispatchEvent(new Event("loadingEnd"));
   };
 
+  const restoreNote = async () => {
+    closeToolTip();
+    const undo = async () => {
+      setLocalNote((prev) => ({ ...prev, isTrash: true }));
+      window.dispatchEvent(new Event("loadingStart"));
+      await NoteUpdateAction({
+        type: "isTrash",
+        value: true,
+        noteUUIDs: [localNote.uuid],
+      });
+      window.dispatchEvent(new Event("loadingEnd"));
+    };
+
+    const redo = async () => {
+      setLocalNote((prev) => ({ ...prev, isTrash: false }));
+      window.dispatchEvent(new Event("loadingStart"));
+
+      await NoteUpdateAction({
+        type: "isTrash",
+        value: false,
+        noteUUIDs: [localNote.uuid],
+      });
+      window.dispatchEvent(new Event("loadingEnd"));
+    };
+
+    redo();
+
+    openSnackFunction({
+      snackMessage: "Note restored",
+      snackOnUndo: undo,
+      snackRedo: redo,
+    });
+  };
+
   const handleMouseEnter = (e, text) => {
     const target = e.currentTarget;
     setTooltipAnchor({ anchor: target, text: text, display: true });
@@ -166,6 +202,25 @@ const NoteModalTools = ({
     archiveRef.current = true;
 
     setIsOpen(false);
+  };
+
+  const handleDeleteClick = () => {
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteNote = async () => {
+    setIsOpen(false);
+
+    setTimeout(() => {
+      noteActions({
+        type: "DELETE_NOTE",
+        note: note,
+        noteRef: note.ref,
+      });
+    }, 220);
+    window.dispatchEvent(new Event("loadingStart"));
+    await DeleteNoteAction(localNote.uuid);
+    window.dispatchEvent(new Event("loadingEnd"));
   };
 
   return (
@@ -255,11 +310,13 @@ const NoteModalTools = ({
                 className="note-delete-icon"
                 onMouseEnter={(e) => handleMouseEnter(e, "Delete forever")}
                 onMouseLeave={handleMouseLeave}
+                onClick={handleDeleteClick}
               />
               <Button
                 className="note-restore-icon"
                 onMouseEnter={(e) => handleMouseEnter(e, "Restore")}
                 onMouseLeave={handleMouseLeave}
+                onClick={restoreNote}
               />
             </>
           )}
@@ -296,6 +353,16 @@ const NoteModalTools = ({
             isOpen={labelsOpen}
             setIsOpen={setLabelsOpen}
             anchorEl={anchorEl}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {deleteModalOpen && (
+          <DeleteModal
+            setIsOpen={setDeleteModalOpen}
+            handleDelete={handleDeleteNote}
+            title="Empty trash"
+            message={"All notes in Trash will be permanently deleted."}
           />
         )}
       </AnimatePresence>
