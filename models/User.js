@@ -8,7 +8,6 @@ const LabelSchema = new Schema(
       type: String,
       required: true,
       maxlength: [50],
-      unique: [true, "Label already exists!"],
     },
     color: { type: String, default: "Default" },
     isPinned: { type: Boolean, default: false },
