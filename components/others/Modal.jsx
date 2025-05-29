@@ -20,12 +20,10 @@ import { v4 as uuid } from "uuid";
 import ListItemsLayout from "./ListitemsLayout";
 
 const Modal = ({
-  note,
   localNote,
   setLocalNote,
   noteActions,
   initialStyle,
-  throttleRef,
   setInitialStyle,
   isOpen,
   setIsOpen,
@@ -39,6 +37,7 @@ const Modal = ({
   const { handleLabelNoteCount, labelsRef, ignoreKeysRef } = useAppContext();
   const [isMounted, setIsMounted] = useState(false);
   // const [localNote, setLocalNote] = useState(null);
+  const note = initialStyle?.initialNote;
   const [localPinned, setLocalPinned] = useState(null);
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
@@ -159,10 +158,11 @@ const Modal = ({
     modalRef.current.removeAttribute("style");
     overlay.removeAttribute("style");
 
-    reset();
-
     const { ref: _, ...cleanLocalNote } = localNote;
     const { ref: __, ...cleanNote } = note;
+
+    console.log("clean local", cleanLocalNote);
+    console.log("clean note", note);
 
     if (JSON.stringify(cleanLocalNote) !== JSON.stringify(cleanNote)) {
       dispatchNotes({ type: "SET_NOTE", note: localNote });
@@ -196,6 +196,7 @@ const Modal = ({
     archiveRef.current = false;
     trashRef.current = false;
     setInitialStyle(null);
+    reset();
   };
 
   useEffect(() => {

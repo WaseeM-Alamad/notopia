@@ -860,6 +860,7 @@ const page = () => {
         index: index,
         element: element,
         rect: rect,
+        initialNote: note,
       });
 
       rootContainerRef.current.classList.add("modal-open");
@@ -2032,11 +2033,9 @@ const page = () => {
       />
 
       <Modal
-        note={{...selectedNote}}
         localNote={selectedNote}
         setLocalNote={setSelectedNote}
         noteActions={noteActions}
-        setNote={setSelectedNote}
         dispatchNotes={dispatchNotes}
         initialStyle={modalStyle}
         setInitialStyle={setModalStyle}
