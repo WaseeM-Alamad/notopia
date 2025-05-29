@@ -7,13 +7,13 @@ export async function middleware(req) {
   const url = req.url;
 
   // Redirect unauthenticated users to the login page when trying to access /home
-  if (url.includes("/app") && !token) {
+  if (url.includes("/main") && !token) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
   // Redirect authenticated users away from the login page
   if (url.includes("/login") && token) {
-    return NextResponse.redirect(new URL("/app", req.url));
+    return NextResponse.redirect(new URL("/main", req.url));
   }
 
   // Allow the request to proceed for other routes
@@ -21,5 +21,5 @@ export async function middleware(req) {
 }
 
 export const config = {
-  matcher: ["/app", "/login"], // Apply the middleware to these routes
+  matcher: ["/main", "/login"], // Apply the middleware to these routes
 };
