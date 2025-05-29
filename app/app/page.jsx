@@ -1121,23 +1121,6 @@ const page = () => {
           snackOnUndo: undoPinArchived,
           snackRedo: redo,
         });
-      } else if (data.type === "UPDATE_COLOR") {
-        if (data.newColor === data.selectedColor) return;
-        data.setSelectedColor(data.newColor);
-
-        dispatchNotes({
-          type: "UPDATE_COLOR",
-          note: data.note,
-          newColor: data.newColor,
-        });
-
-        window.dispatchEvent(new Event("loadingStart"));
-        await NoteUpdateAction({
-          type: "color",
-          value: data.newColor,
-          noteUUIDs: [data.note.uuid],
-        });
-        window.dispatchEvent(new Event("loadingEnd"));
       } else if (data.type === "COPY_NOTE") {
         const newUUID = uuid();
         const note = data.note;

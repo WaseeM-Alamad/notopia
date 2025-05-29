@@ -21,16 +21,11 @@ const NoteTools = ({
   setColorMenuOpen,
   moreMenuOpen,
   setMoreMenuOpen,
-  setFadingNotes,
   setIsLoadingImages,
   userID,
   noteActions,
-  setLocalIsTrash,
-  openSnackFunction,
   setTooltipAnchor,
 }) => {
-  const [selectedColor, setSelectedColor] = useState(note.color);
-  const [selectedBG, setSelectedBG] = useState(note.background || "DefaultBG");
   const [anchorEl, setAnchorEl] = useState(null);
   const [colorAnchorEl, setColorAnchorEl] = useState(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -38,16 +33,27 @@ const NoteTools = ({
 
   const inputRef = useRef(null);
 
-  const handleColorClick = useCallback(async (newColor) => {
-    closeToolTip();
-    noteActions({
-      type: "UPDATE_COLOR",
-      selectedColor: selectedColor,
-      setSelectedColor: setSelectedColor,
-      note: note,
-      newColor: newColor,
-    });
-  });
+  const handleColorClick = useCallback(
+    async (newColor) => {
+      closeToolTip();
+      if (newColor === selectedColor) return;
+
+      dispatchNotes({
+        type: "UPDATE_COLOR",
+        note: note,
+        newColor: newColor,
+      });
+
+      window.dispatchEvent(new Event("loadingStart"));
+      await NoteUpdateAction({
+        type: "color",
+        value: newColor,
+        noteUUIDs: [note.uuid],
+      });
+      window.dispatchEvent(new Event("loadingEnd"));
+    },
+    [note.color]
+  );
 
   const handleBackground = useCallback(
     async (newBG) => {
@@ -68,7 +74,7 @@ const NoteTools = ({
       });
       window.dispatchEvent(new Event("loadingEnd"));
     },
-    [selectedBG]
+    [note.background]
   );
 
   const toggleMenu = (e) => {
@@ -404,9 +410,8 @@ const NoteTools = ({
                     handleColorClick={handleColorClick}
                     handleBackground={handleBackground}
                     anchorEl={colorAnchorEl}
-                    selectedColor={selectedColor}
-                    selectedBG={selectedBG}
-                    setSelectedBG={setSelectedBG}
+                    selectedColor={note.color}
+                    selectedBG={note.background}
                     setTooltipAnchor={setTooltipAnchor}
                     isOpen={colorMenuOpen}
                     setIsOpen={setColorMenuOpen}
