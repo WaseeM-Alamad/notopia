@@ -361,8 +361,13 @@ const NoteModalTools = ({
           <DeleteModal
             setIsOpen={setDeleteModalOpen}
             handleDelete={handleDeleteNote}
-            title="Empty trash"
-            message={"All notes in Trash will be permanently deleted."}
+            title="Delete note"
+            message={
+              <>
+                Are you sure you want to delete this note? <br /> this action
+                can't be undone.
+              </>
+            }
           />
         )}
       </AnimatePresence>
