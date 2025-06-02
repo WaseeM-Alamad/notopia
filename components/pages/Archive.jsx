@@ -193,27 +193,27 @@ const Archive = memo(
     return (
       <>
         <div ref={rootContainerRef} className="starting-div">
-          <div style={{ padding: "0 2rem" }} className="page-header">
+          {/* <div style={{ padding: "0 2rem" }} className="page-header"> */}
             {/* <ArchiveIcon size={22} color="#212121" /> */}
-            <div />
-            <h1 className="page-header-title">
-              <span>Archive</span>
-            </h1>
-            <div
+            {/* <div /> */}
+            {/* <h1 className="page-header-title"> */}
+              {/* <span>Archive</span> */}
+            {/* </h1> */}
+            {/* <div
             // animate={{ width: "100%" }}
             // className="page-header-divider"
-            />
-            <div className="divider-tools-container">
-              <div className="divider-tool">
+            /> */}
+            {/* <div className="divider-tools-container"> */}
+              {/* <div className="divider-tool"> */}
                 {/* <SortByIcon /> */}
-                <span className="divider-tool-text">Sort by</span>
-              </div>
-              <div className="divider-tool">
+                {/* <span className="divider-tool-text">Sort by</span> */}
+              {/* </div> */}
+              {/* <div className="divider-tool"> */}
                 {/* <LabelIcon /> */}
-                <span className="divider-tool-text">Labels</span>
-              </div>
-            </div>
-          </div>
+                {/* <span className="divider-tool-text">Labels</span> */}
+              {/* </div> */}
+            {/* </div> */}
+          {/* </div> */}
           <div ref={containerRef} className="section-container">
             {order.map((uuid, index) => {
               const note = notes.get(uuid);
