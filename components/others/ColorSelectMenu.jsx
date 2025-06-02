@@ -32,7 +32,7 @@ const backgrounds = [
 ];
 
 const ColorSelectMenu = ({
-  isLabel,
+  isLabel = false,
   handleColorClick,
   handleBackground,
   selectedColor,
@@ -145,7 +145,7 @@ const ColorSelectMenu = ({
                 key={index}
                 className={`${colorClass} not-draggable menu-color-btn ${
                   index === 0 && "default-color-icon"
-                } ${color} `}
+                } ${isLabel ? "label-" + color : color} `}
               >
                 <AnimatePresence>
                   {color === selectedColor && (

@@ -30,12 +30,6 @@ const MainLayout = async ({ children }) => {
             <div id="tooltipPortal" />
             <div id="snackbarPortal" />
             <SearchProvider>
-              {session && (
-                <>
-                  <Navbar user={session?.user} />
-                  <Sidebar />
-                </>
-              )}
 
               {children}
             </SearchProvider>

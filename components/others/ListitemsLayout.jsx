@@ -400,8 +400,6 @@ const ListItemsLayout = ({
     });
     setLocalNote((prev) => ({ ...prev, checkboxes: newList }));
 
-    console.log(initialIndex, draggedIndexRef.current);
-    console.log(overItemRef?.current?.content);
 
     const reOrder =
       initialIndex !== draggedIndexRef.current && overItemRef?.current?.uuid;
@@ -483,7 +481,6 @@ const ListItemsLayout = ({
     //   if (draggedItemRef.current.uuid === overItem.parent) return;
     // }
     // Copy notes to avoid mutating state directly
-    console.log("OVERR");
 
     const newList = moveParentGroup(
       checkboxesRef.current,

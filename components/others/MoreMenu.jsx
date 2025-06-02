@@ -13,6 +13,7 @@ const MoreMenu = ({
   transformOrigin = "top left",
 }) => {
   const [isClient, setIsClient] = useState();
+  const navTitle = anchorEl?.navTitle ?? null;
 
   const menuRef = useRef(null);
 
@@ -21,25 +22,33 @@ const MoreMenu = ({
   }, []);
 
   useEffect(() => {
-    const handler = (e) => {
-      if (!menuRef.current?.contains(e.target) && !anchorEl.contains(e.target))
-        if (isOpen) {
-          setIsOpen(false);
-        }
+    const handleClickOutside = (e) => {
+      const menuEl = menuRef.current;
+      const anchor = anchorEl?.contains ? anchorEl : null;
+      const btnRef = anchorEl?.btnRef ?? null;
+
+      if (
+        isOpen &&
+        !menuEl?.contains(e.target) &&
+        !(anchor && anchor.contains(e.target)) &&
+        btnRef !== e.target
+      ) {
+        setIsOpen(false);
+      }
     };
 
     const handleResize = () => {
       setIsOpen(false);
     };
 
-    document.addEventListener("click", handler);
+    document.addEventListener("mousedown", handleClickOutside);
     window.addEventListener("resize", handleResize);
 
     return () => {
-      document.removeEventListener("click", handler);
+      document.removeEventListener("mousedown", handleClickOutside);
       window.removeEventListener("resize", handleResize);
     };
-  }, [isOpen]);
+  }, [isOpen, anchorEl]);
 
   const containerClick = useCallback((e) => {
     e.stopPropagation();
@@ -57,7 +66,7 @@ const MoreMenu = ({
           {
             name: "preventOverflow",
             options: {
-              boundariesElement: "window",
+              boundariesElement: "viewport",
             },
           },
         ]}
@@ -80,13 +89,17 @@ const MoreMenu = ({
             style={{
               transformOrigin: transformOrigin,
               width: "fit-content",
-              borderRadius: "0.4rem",
               maxWidth: "14.0625rem",
               maxHeight: "26.96125rem",
+              borderRadius: "0.6rem",
+              border: "1px solid #e5e7eb",
+              boxShadow: "rgba(0, 0, 0, 0.3) 0px 4px 12px",
+              paddingTop: navTitle?.trim() && "0",
             }}
             ref={menuRef}
             className="menu not-draggable"
           >
+            {navTitle?.trim() &&<div className="menu-top-title">{navTitle}</div>}
             <div className="menu-buttons not-draggable">
               {menuItems.map((item, index) => {
                 if (!item?.title?.trim()) {
@@ -96,11 +109,10 @@ const MoreMenu = ({
                   <div
                     key={index}
                     style={{
-                      padding: "0.5rem 1.1rem 0.5rem 1rem",
+                      padding: "0.5rem 1.5rem 0.5rem 2.4rem",
                       fontSize: "0.9rem",
-                      color: "#3c4043",
                     }}
-                    className="menu-btn n-menu-btn not-draggable"
+                    className={`${item.icon || ""} menu-btn n-menu-btn not-draggable`}
                     onClick={item.function}
                   >
                     {item.title}

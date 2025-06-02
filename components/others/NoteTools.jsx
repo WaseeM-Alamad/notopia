@@ -16,6 +16,8 @@ import ManageLabelsMenu from "./ManageLabelsMenu";
 const NoteTools = ({
   index,
   note = {},
+  anchorEl,
+  setAnchorEl,
   dispatchNotes,
   colorMenuOpen,
   setColorMenuOpen,
@@ -26,7 +28,6 @@ const NoteTools = ({
   noteActions,
   setTooltipAnchor,
 }) => {
-  const [anchorEl, setAnchorEl] = useState(null);
   const [colorAnchorEl, setColorAnchorEl] = useState(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [labelsOpen, setLabelsOpen] = useState(false);
@@ -114,7 +115,6 @@ const NoteTools = ({
   };
 
   const handleOnChange = async (event) => {
-    console.log("img", event.target);
     const file = event.target?.files[0];
     const imageURL = URL.createObjectURL(file);
     const newUUID = uuid();
@@ -144,16 +144,35 @@ const NoteTools = ({
       note: note,
       newImages: updatedImages,
     });
-    console.log(updatedImages);
     setIsLoadingImages((prev) => prev.filter((id) => id !== newUUID));
     window.dispatchEvent(new Event("loadingEnd"));
   };
 
-  const handleMoreClick = useCallback((e) => {
+  const handleMoreClick = (e) => {
     closeToolTip();
-    setAnchorEl(e.currentTarget);
+
+    // Get button's rect relative to viewport at click
+    const rect = e.currentTarget.getBoundingClientRect();
+
+    // Convert to absolute page coordinates (scroll + viewport)
+    const pageX = rect.left + window.pageXOffset;
+    const pageY = rect.top + window.pageYOffset;
+
+    const virtualAnchor = {
+      getBoundingClientRect: () =>
+        // Calculate rect relative to viewport on each call by subtracting current scroll
+        new DOMRect(
+          pageX - window.pageXOffset,
+          pageY - window.pageYOffset,
+          rect.width,
+          rect.height
+        ),
+      contextElement: document.body,
+    };
+
+    setAnchorEl({ ...virtualAnchor, btnRef: e.currentTarget });
     setMoreMenuOpen((prev) => !prev);
-  }, []);
+  };
 
   const handleDeleteNote = async () => {
     noteActions({
@@ -170,6 +189,7 @@ const NoteTools = ({
       noteRef: note.ref,
       index: index,
     });
+    setMoreMenuOpen(false);
   };
 
   const handleMouseEnter = (e, text) => {
@@ -284,197 +304,237 @@ const NoteTools = ({
 
   const menuItems = [
     {
-      title: "Delete note",
+      title: !note.isTrash ? "Move to trash" : "",
       function: handleTrashNote,
+      icon: "trash-menu-icon",
     },
     {
-      title: note.labels.length > 0 ? "Change labels" : "Add label",
+      title: !note.isTrash
+        ? note.labels.length > 0
+          ? "Change labels"
+          : "Add label"
+        : "",
       function: handleLabels,
+      icon: "label-menu-icon",
     },
     {
-      title: note.checkboxes.some((checkbox) => checkbox.isCompleted)
-        ? "Uncheck all items"
+      title: !note.isTrash
+        ? note.checkboxes.some((checkbox) => checkbox.isCompleted)
+          ? "Uncheck all items"
+          : ""
         : "",
       function: uncheckAllitems,
+      icon: "uncheck-checkbox-menu-icon",
     },
     {
-      title: note.checkboxes.some((checkbox) => checkbox.isCompleted)
-        ? "Delete checked items"
+      title: !note.isTrash
+        ? note.checkboxes.some((checkbox) => checkbox.isCompleted)
+          ? "Delete checked items"
+          : ""
         : "",
       function: deleteCheckedItems,
+      icon: "delete-checkbox-menu-icon",
     },
     {
-      title:
-        note.checkboxes.length > 0
+      title: !note.isTrash
+        ? note.checkboxes.length > 0
           ? note.showCheckboxes
             ? "Hide checkboxes"
             : "Show checkboxes"
-          : "",
+          : ""
+        : "",
       function: handleCheckboxVis,
+      icon:
+        note.checkboxes.length > 0
+          ? note.showCheckboxes
+            ? "hide-checkbox-menu-icon"
+            : "add-checkbox-menu-icon"
+          : "",
     },
     {
-      title: note.checkboxes.length === 0 ? "Add checkboxes" : "",
+      title: !note.isTrash
+        ? note.checkboxes.length === 0
+          ? "Add checkboxes"
+          : ""
+        : "",
       function: handleAddCheckboxes,
+      icon: "add-checkbox-menu-icon",
     },
 
     {
-      title: "Make a copy",
+      title: !note.isTrash ? "Make a copy" : "",
       function: handleMakeCopy,
+      icon: "copy-menu-icon",
+    },
+    {
+      title: note.isTrash ? "Restore note" : "",
+      function: handleRestoreNote,
+    },
+    {
+      title: note.isTrash ? "Delete note forever" : "",
+      function: () => {
+        setDeleteModalOpen(true);
+        setMoreMenuOpen(false);
+      },
     },
   ];
 
   return (
-    <div
-      onClick={containerClick}
-      style={{
-        opacity: note.images.length > 0 ? "0.8" : "1",
-        transition: "all 0.3s ease",
-      }}
-    >
+    <>
       <div
+        onClick={containerClick}
         style={{
-          opacity: (colorMenuOpen || moreMenuOpen) && "1",
+          opacity: note.images.length > 0 ? "0.8" : "1",
+          transition: "all 0.3s ease",
         }}
-        className={`note-bottom ${
-          note.images.length > 0 &&
-          note.labels.length === 0 &&
-          !note.title.trim() &&
-          !note.content.trim() &&
-          (note.checkboxes.length === 0 || !note.showCheckboxes)
-            ? note.color
-            : ""
-        }`}
       >
-        {/* <p className="date">{FormattedDate}</p> */}
-        <div className="note-bottom-icons">
-          {!note.isTrash ? (
-            <>
-              <Button
-                className="reminder-icon btn-hover"
-                onMouseEnter={(e) => handleMouseEnter(e, "Remind me")}
-                onMouseLeave={handleMouseLeave}
-              />
-              <Button
-                className="person-add-icon btn-hover"
-                onMouseEnter={(e) => handleMouseEnter(e, "Collaborator")}
-                onMouseLeave={handleMouseLeave}
-              />
-              <Button
-                className="archive-icon btn-hover"
-                onClick={() => {
-                  closeToolTip();
-                  noteActions({
-                    type: "archive",
-                    index: index,
-                    note: note,
-                    noteRef: note.ref,
-                  });
-                }}
-                onMouseEnter={(e) =>
-                  handleMouseEnter(
-                    e,
-                    `${note.isArchived ? "Unarchive" : "Archive"}`
-                  )
-                }
-                onMouseLeave={handleMouseLeave}
-              />
-              <Button
-                className="image-icon btn-hover"
-                onClick={() => {
-                  setTooltipAnchor((prev) => ({
-                    ...prev,
-                    display: false,
-                  }));
-                  inputRef.current.click();
-                }}
-                onMouseEnter={(e) => handleMouseEnter(e, "Add image")}
-                onMouseLeave={handleMouseLeave}
-              >
-                <input
-                  ref={inputRef}
-                  style={{ display: "none" }}
-                  type="file"
-                  onChange={handleOnChange}
+        <div
+          style={{
+            opacity: (colorMenuOpen || moreMenuOpen) && "1",
+          }}
+          className={`note-bottom ${
+            note.images.length > 0 &&
+            note.labels.length === 0 &&
+            !note.title.trim() &&
+            !note.content.trim() &&
+            (note.checkboxes.length === 0 || !note.showCheckboxes)
+              ? note.color
+              : ""
+          }`}
+        >
+          {/* <p className="date">{FormattedDate}</p> */}
+          <div className="note-bottom-icons">
+            {!note.isTrash ? (
+              <>
+                <Button
+                  className="reminder-icon btn-hover"
+                  onMouseEnter={(e) => handleMouseEnter(e, "Remind me")}
+                  onMouseLeave={handleMouseLeave}
                 />
-              </Button>
-              <Button
-                className="color-icon btn-hover"
-                onClick={toggleMenu}
-                onMouseEnter={(e) => handleMouseEnter(e, "Background options")}
-                onMouseLeave={handleMouseLeave}
-              />
-              <AnimatePresence>
-                {colorMenuOpen && (
-                  <ColorSelectMenu
-                    handleColorClick={handleColorClick}
-                    handleBackground={handleBackground}
-                    anchorEl={colorAnchorEl}
-                    selectedColor={note.color}
-                    selectedBG={note.background}
-                    setTooltipAnchor={setTooltipAnchor}
-                    isOpen={colorMenuOpen}
-                    setIsOpen={setColorMenuOpen}
+                <Button
+                  className="person-add-icon btn-hover"
+                  onMouseEnter={(e) => handleMouseEnter(e, "Collaborator")}
+                  onMouseLeave={handleMouseLeave}
+                />
+                <Button
+                  className="archive-icon btn-hover"
+                  onClick={() => {
+                    closeToolTip();
+                    noteActions({
+                      type: "archive",
+                      index: index,
+                      note: note,
+                      noteRef: note.ref,
+                    });
+                  }}
+                  onMouseEnter={(e) =>
+                    handleMouseEnter(
+                      e,
+                      `${note.isArchived ? "Unarchive" : "Archive"}`
+                    )
+                  }
+                  onMouseLeave={handleMouseLeave}
+                />
+                <Button
+                  className="image-icon btn-hover"
+                  onClick={() => {
+                    setTooltipAnchor((prev) => ({
+                      ...prev,
+                      display: false,
+                    }));
+                    inputRef.current.click();
+                  }}
+                  onMouseEnter={(e) => handleMouseEnter(e, "Add image")}
+                  onMouseLeave={handleMouseLeave}
+                >
+                  <input
+                    ref={inputRef}
+                    style={{ display: "none" }}
+                    type="file"
+                    onChange={handleOnChange}
                   />
-                )}
-              </AnimatePresence>
-              <Button
-                className="more-icon btn-hover"
-                onClick={handleMoreClick}
-                onMouseEnter={(e) => handleMouseEnter(e, "More")}
-                onMouseLeave={handleMouseLeave}
-              />
-              <AnimatePresence>
-                {moreMenuOpen && !labelsOpen && (
-                  <MoreMenu
-                    setIsOpen={setMoreMenuOpen}
-                    anchorEl={anchorEl}
-                    isOpen={moreMenuOpen}
-                    menuItems={menuItems}
-                  />
-                )}
-              </AnimatePresence>
-              <AnimatePresence>
-                {labelsOpen && (
-                  <ManageLabelsMenu
-                    dispatchNotes={dispatchNotes}
-                    note={note}
-                    isOpen={labelsOpen}
-                    setIsOpen={setLabelsOpen}
-                    anchorEl={anchorEl}
-                  />
-                )}
-              </AnimatePresence>
-            </>
-          ) : (
-            <>
-              <Button
-                className="note-delete-icon"
-                onClick={() => setDeleteModalOpen(true)}
-              />
-              <Button
-                className="note-restore-icon"
-                onClick={handleRestoreNote}
-              />
-              <AnimatePresence>
-                {deleteModalOpen && (
-                  <DeleteModal
-                    setIsOpen={setDeleteModalOpen}
-                    handleDelete={handleDeleteNote}
-                    title="Delete note"
-                    message={
-                      <>
-                        Are you sure you want to delete this note? <br /> this
-                        action can't be undone.
-                      </>
-                    }
-                  />
-                )}
-              </AnimatePresence>
-            </>
-          )}
+                </Button>
+                <Button
+                  className="color-icon btn-hover"
+                  onClick={toggleMenu}
+                  onMouseEnter={(e) =>
+                    handleMouseEnter(e, "Background options")
+                  }
+                  onMouseLeave={handleMouseLeave}
+                />
+                <AnimatePresence>
+                  {colorMenuOpen && (
+                    <ColorSelectMenu
+                      handleColorClick={handleColorClick}
+                      handleBackground={handleBackground}
+                      anchorEl={colorAnchorEl}
+                      selectedColor={note.color}
+                      selectedBG={note.background}
+                      setTooltipAnchor={setTooltipAnchor}
+                      isOpen={colorMenuOpen}
+                      setIsOpen={setColorMenuOpen}
+                    />
+                  )}
+                </AnimatePresence>
+                <Button
+                  className="more-icon btn-hover"
+                  onClick={handleMoreClick}
+                  onMouseEnter={(e) => handleMouseEnter(e, "More")}
+                  onMouseLeave={handleMouseLeave}
+                />
+              </>
+            ) : (
+              <>
+                <Button
+                  className="note-delete-icon"
+                  onClick={() => setDeleteModalOpen(true)}
+                />
+                <Button
+                  className="note-restore-icon"
+                  onClick={handleRestoreNote}
+                />
+                <AnimatePresence>
+                  {deleteModalOpen && (
+                    <DeleteModal
+                      setIsOpen={setDeleteModalOpen}
+                      handleDelete={handleDeleteNote}
+                      title="Delete note"
+                      message={
+                        <>
+                          Are you sure you want to delete this note? <br /> this
+                          action can't be undone.
+                        </>
+                      }
+                    />
+                  )}
+                </AnimatePresence>
+              </>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+      <AnimatePresence>
+        {moreMenuOpen && !labelsOpen && (
+          <MoreMenu
+            setIsOpen={setMoreMenuOpen}
+            anchorEl={anchorEl}
+            isOpen={moreMenuOpen}
+            menuItems={menuItems}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {labelsOpen && (
+          <ManageLabelsMenu
+            dispatchNotes={dispatchNotes}
+            note={note}
+            isOpen={labelsOpen}
+            setIsOpen={setLabelsOpen}
+            anchorEl={anchorEl}
+          />
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 

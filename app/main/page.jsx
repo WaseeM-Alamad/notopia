@@ -1139,8 +1139,6 @@ const page = () => {
             const newUUID = uuid();
             const newImage = { uuid: newUUID, url: image.url };
             newImages.push(newImage);
-            console.log("newUUID", newUUID);
-            console.log("oldUUID", image.uuid);
           });
         }
 
@@ -1511,7 +1509,6 @@ const page = () => {
             setCurrent(captialized(selected));
           }
         } else if (selected.startsWith("label/")) {
-          console.log("labell man");
           setCurrent("DynamicLabel");
         } else {
           setCurrent(captialized(selected));
@@ -1577,7 +1574,6 @@ const page = () => {
     data.labelRef.current.style.opacity = "0";
 
     const timeOut = setTimeout(() => {
-      console.log("timeout");
       dispatchNotes({
         type: "REMOVE_LABEL_FROM_NOTES",
         labelUUID: data.labelData.uuid,

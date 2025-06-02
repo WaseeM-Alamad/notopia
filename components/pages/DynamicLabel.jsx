@@ -2,6 +2,7 @@ import { useAppContext } from "@/context/AppContext";
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import Note from "../others/Note";
 import { motion } from "framer-motion";
+import { getNoteFormattedDate } from "@/utils/noteDateFormatter";
 
 const COLUMN_WIDTH = 240;
 const GUTTER = 15;
@@ -86,6 +87,7 @@ const DynamicLabel = ({
   const containerRef = useRef(null);
   const resizeTimeoutRef = useRef(null);
   const layoutFrameRef = useRef(null);
+  const noteCount = labelObj?.noteCount ?? null;
 
   const notesExist = !order.some((uuid) => {
     const note = notes.get(uuid);
@@ -284,6 +286,46 @@ const DynamicLabel = ({
   return (
     <>
       <div ref={rootContainerRef} className="starting-div">
+        {labelsReady && (
+          <div
+            style={{
+              height: "fit-content",
+              padding: "3rem",
+              display: "flex",
+              gap: "0.6rem",
+            }}
+          >
+            {labelObj?.image && (
+              <img
+                style={{ borderRadius: "0.7rem" }}
+                width="150"
+                src={labelObj?.image}
+              />
+            )}
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <div>
+                <div
+                  style={{
+                    borderRadius: "50%",
+                    width: "0.7rem",
+                    border: "1px #212121 solid",
+                    height: "0.7rem",
+                    display: "inline-block",
+                    marginRight: "0.3rem",
+                  }}
+                  className={`label-${labelObj?.color}`}
+                />
+                <span>{labelObj?.label}</span>
+              </div>
+              <div>
+                {noteCount === null
+                  ? "no notes"
+                  : noteCount + (noteCount > 1 ? " notes" : " note")}
+              </div>
+              <div>{getNoteFormattedDate(labelObj?.createdAt)}</div>
+            </div>
+          </div>
+        )}
         <div
           ref={containerRef}
           className="section-container"

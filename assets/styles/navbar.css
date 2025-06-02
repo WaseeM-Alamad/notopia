@@ -58,6 +58,9 @@ nav {
 }
 
 .profile-image {
+  display: block;
+  object-fit: cover;
+  user-select: none;
   width: 2.5rem;
   height: 2.5rem;
   cursor: pointer;

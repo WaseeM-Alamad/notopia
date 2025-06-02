@@ -76,7 +76,6 @@ const NoteModal = ({
       }
 
       if (imagesChangedRef.current) {
-        console.log("images changed");
         dispatchNotes({
           type: "UPDATE_IMAGES",
           note: note,

@@ -29,6 +29,7 @@ const Note = memo(
     const userID = session?.user?.id;
     const [colorMenuOpen, setColorMenuOpen] = useState(false);
     const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+    const [anchorEl, setAnchorEl] = useState(null);
     const [isLoadingImages, setIsLoadingImages] = useState([]);
     const [selected, setSelected] = useState(false);
     const uncheckedItems = note?.checkboxes.filter((cb) => !cb.isCompleted);
@@ -213,7 +214,28 @@ const Note = memo(
 
     return (
       <>
-        <div className="note-wrapper" ref={note.ref}>
+        <div
+          onContextMenu={(e) => {
+            e.preventDefault();
+            closeToolTip();
+
+            const virtualAnchor = {
+              getBoundingClientRect: () =>
+                new DOMRect(
+                  e.pageX - window.scrollX,
+                  e.pageY - window.scrollY,
+                  0,
+                  0
+                ),
+              contextElement: document.body,
+            };
+
+            setAnchorEl(virtualAnchor);
+            setMoreMenuOpen((prev) => !prev);
+          }}
+          className="note-wrapper"
+          ref={note.ref}
+        >
           {/* <button onClick={()=> console.log(note.images)}>click</button> */}
           <span
             style={{
@@ -520,6 +542,8 @@ const Note = memo(
             setTooltipAnchor={setTooltipAnchor}
             moreMenuOpen={moreMenuOpen}
             setFadingNotes={setFadingNotes}
+            anchorEl={anchorEl}
+            setAnchorEl={setAnchorEl}
             setMoreMenuOpen={setMoreMenuOpen}
             note={note}
             dispatchNotes={dispatchNotes}

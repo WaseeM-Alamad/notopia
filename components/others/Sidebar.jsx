@@ -29,11 +29,11 @@ const Sidebar = memo(() => {
   const layoutFrameRef = useRef(null);
 
   const items = [
-    { name: "Home", hash: "home", Icon: HomeIcon },
-    { name: "Labels", hash: "labels", Icon: FolderIcon },
-    { name: "Reminders", hash: "reminders", Icon: BellIcon },
-    { name: "Archive", hash: "archive", Icon: SideArchiveIcon },
-    { name: "Trash", hash: "trash", Icon: TrashIcon },
+    { type: "nav", name: "Home", hash: "home", Icon: HomeIcon },
+    { type: "nav", name: "Labels", hash: "labels", Icon: FolderIcon },
+    { type: "nav", name: "Reminders", hash: "reminders", Icon: BellIcon },
+    { type: "nav", name: "Archive", hash: "archive", Icon: SideArchiveIcon },
+    { type: "nav", name: "Trash", hash: "trash", Icon: TrashIcon },
   ];
 
   const [navItems, setNavitems] = useState(items);
@@ -51,16 +51,15 @@ const Sidebar = memo(() => {
 
   useEffect(() => {
     const handler = () => {
-      console.log("kklklkkl")
       const labelItems = [];
       const sortedLabels = [...labelsRef.current].sort(
         ([aUUID, a], [bUUID, b]) =>
           new Date(b.pinDate).getTime() - new Date(a.pinDate).getTime()
       );
       sortedLabels.forEach(([uuid, labelData]) => {
-        console.log(labelData.label, labelData.pinDate);
         if (labelData?.isPinned) {
           labelItems.push({
+            type: "label",
             name: labelData.label,
             hash: encodeLabel(labelData.label),
             Icon: LabelIcon,
@@ -197,8 +196,6 @@ const Sidebar = memo(() => {
         y += ref.offsetHeight + GUTTER;
       });
 
-      console.log(y);
-
       container.style.height = `${0}px`;
     });
   }, []);
@@ -244,12 +241,14 @@ const Sidebar = memo(() => {
         </button>
         <div ref={containerRef} className="sidebar-icons-container">
           <AnimatePresence>
-            {navItems.map(({ name, hash, Icon }) => (
+            {navItems.map(({ type, name, hash, Icon, uuid: labelUUID }) => (
               <NavBtn
                 key={hash}
+                type={type}
                 name={name}
                 hash={hash}
                 Icon={Icon}
+                labelUUID={labelUUID}
                 currentHash={currentHash}
                 setTooltipAnchor={setTooltipAnchor}
                 calculateVerticalLayout={calculateVerticalLayout}
@@ -259,7 +258,7 @@ const Sidebar = memo(() => {
             {/* <span className="copyright-text">&copy; {currentYear}</span> */}
           </AnimatePresence>
         </div>
-        <div style={{height: "2rem", width: '2rem'}} />
+        <div style={{ height: "2rem", width: "2rem" }} />
       </aside>
       <RightTooltip anchorEl={tooltipAnchor} />
     </>

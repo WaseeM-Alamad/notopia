@@ -55,7 +55,6 @@ const Search = ({
     }
 
     if (noMatchingNotes && filtersExist()) {
-      console.log("NICE WW");
       getFilters();
     }
   }, [noMatchingNotes]);

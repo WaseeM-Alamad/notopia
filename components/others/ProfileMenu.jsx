@@ -74,7 +74,6 @@ const ProfileMenu = forwardRef(
                     }}
                   >
                     <img
-                      style={{ display: "block", userSelect: "none" }}
                       className="profile-image"
                       src={user?.image}
                       alt="pfp"

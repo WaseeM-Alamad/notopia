@@ -162,12 +162,8 @@ const Modal = ({
     const { ref: _, ...cleanLocalNote } = localNote;
     const { ref: __, ...cleanNote } = note;
 
-    console.log("clean local", cleanLocalNote);
-    console.log("clean note", note);
-
     if (JSON.stringify(cleanLocalNote) !== JSON.stringify(cleanNote)) {
       dispatchNotes({ type: "SET_NOTE", note: localNote });
-      console.log("change");
     }
 
     if (archiveRef.current) {
@@ -266,9 +262,13 @@ const Modal = ({
     } else {
       ignoreKeysRef.current = false;
       if (!prevHash.current) {
-        window.location.hash = current.toLowerCase();
+        history.pushState(null, null, `#${current.toLowerCase()}`);
+
+        window.dispatchEvent(new HashChangeEvent("hashchange"));
       } else {
-        window.location.hash = prevHash.current;
+        history.pushState(null, null, `#${prevHash.current}`);
+
+        window.dispatchEvent(new HashChangeEvent("hashchange"));
       }
 
       modalRef.current.style.transition =
@@ -706,7 +706,6 @@ const Modal = ({
       });
     }
     if (imagesChangedRef.current) {
-      console.log("images changed");
       dispatchNotes({
         type: "UPDATE_IMAGES",
         note: note,
@@ -843,7 +842,6 @@ const Modal = ({
         ]
           .filter(Boolean)
           .join(" ")}
-        style={{ minHeight: "180px" }}
       >
         <div
           onClick={inputsContainerClick}
@@ -991,21 +989,21 @@ const Modal = ({
 
           {isOpen && (
             <div className="modal-date-section">
-              <div
-                onClick={(e) => e.stopPropagation()}
-                onMouseEnter={(e) =>
-                  handleMouseEnter(e, "Created " + formattedCreatedAtDate)
-                }
-                onMouseLeave={handleMouseLeave}
-                className="edited"
-              >
+              <div onClick={(e) => e.stopPropagation()} className="edited">
                 {localNote?.isTrash
                   ? "Note in Trash  •  "
                   : localNote?.isArchived
                   ? "Note in Archive  •  "
                   : ""}
-                Edited
-                {" " + formattedEditedDate}
+                <span
+                  onMouseEnter={(e) =>
+                    handleMouseEnter(e, "Created " + formattedCreatedAtDate)
+                  }
+                  onMouseLeave={handleMouseLeave}
+                >
+                  Edited
+                  {" " + formattedEditedDate}
+                </span>
               </div>
             </div>
           )}

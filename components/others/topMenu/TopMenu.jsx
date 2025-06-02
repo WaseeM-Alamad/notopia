@@ -14,6 +14,7 @@ import { useAppContext } from "@/context/AppContext";
 import { v4 as uuid } from "uuid";
 import { useSession } from "next-auth/react";
 import ManageTopLabelsMenu from "../ManageTopLabelsMenu";
+import DeleteModal from "../DeleteModal";
 
 const TopMenuHome = ({
   notes,
@@ -34,6 +35,7 @@ const TopMenuHome = ({
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [labelsOpen, setLabelsOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [inTrash, setInTrash] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedBG, setSelectedBG] = useState(null);
@@ -41,6 +43,14 @@ const TopMenuHome = ({
   const [archiveNotes, setArchiveNotes] = useState(false);
   const [selectedColor, setSelectedColor] = useState();
   const topMenuRef = useRef(null);
+
+  const hasLabels = () => {
+    const labelsExist = selectedNotesIDs.some((noteData) => {
+      const note = notes.get(noteData.uuid);
+      return !!note.labels.length;
+    });
+    return labelsExist;
+  };
 
   const handleClose = () => {
     closeToolTip();
@@ -50,7 +60,6 @@ const TopMenuHome = ({
     setColorMenuOpen(false);
     window.dispatchEvent(new Event("topMenuClose"));
   };
-
 
   useEffect(() => {
     if (
@@ -539,16 +548,19 @@ const TopMenuHome = ({
 
   const menuItems = [
     {
-      title: "Delete note",
+      title: "Move to trash",
       function: handleTrashNotes,
+      icon: "trash-menu-icon",
     },
     {
-      title: "Add label",
+      title: hasLabels() ? "Change labels" : "Add label",
       function: handleLabels,
+      icon: "label-menu-icon",
     },
     {
       title: "Make a copy",
       function: handleMakeCopy,
+      icon: "copy-menu-icon",
     },
   ];
 
@@ -640,7 +652,7 @@ const TopMenuHome = ({
               ) : (
                 <>
                   <Button
-                    onClick={handleDeleteNotes}
+                    onClick={() => setDeleteModalOpen(true)}
                     className="top-delete-icon"
                     style={{ width: "45px", height: "45px" }}
                   />
@@ -690,6 +702,21 @@ const TopMenuHome = ({
             anchorEl={anchorEl}
             selectedNotesIDs={selectedNotesIDs}
             notes={notes}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {deleteModalOpen && (
+          <DeleteModal
+            setIsOpen={setDeleteModalOpen}
+            handleDelete={handleDeleteNotes}
+            title="Delete note"
+            message={
+              <>
+                Are you sure you want to delete this note? <br /> this action
+                can't be undone.
+              </>
+            }
           />
         )}
       </AnimatePresence>

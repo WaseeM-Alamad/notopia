@@ -224,6 +224,24 @@ const Label = ({
   return (
     <>
       <div
+        onContextMenu={(e) => {
+          e.preventDefault();
+          closeToolTip();
+
+          const virtualAnchor = {
+            getBoundingClientRect: () =>
+              new DOMRect(
+                e.pageX - window.scrollX,
+                e.pageY - window.scrollY,
+                0,
+                0
+              ),
+            contextElement: document.body,
+          };
+
+          setAnchorEL(virtualAnchor);
+          setIsOpen((prev) => !prev);
+        }}
         onClick={handleLabelClick}
         ref={labelRef}
         style={{
@@ -233,7 +251,7 @@ const Label = ({
         }}
       >
         <motion.div
-          className={`label ${labelData.color} ${
+          className={`label label-${labelData.color} ${
             selected
               ? "element-selected"
               : labelData.color === "Default"

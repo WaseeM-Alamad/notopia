@@ -1,10 +1,17 @@
 "use client";
-import React, { memo, useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import "@/assets/styles/home.css";
 import { useAppContext } from "@/context/AppContext";
 import Label from "../others/Label";
 import { v4 as uuid } from "uuid";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 
 const COLUMN_WIDTH = 240;
 const GUTTER = 15;
@@ -17,13 +24,15 @@ const Labels = memo(
     handleDeleteLabel,
     rootContainerRef,
   }) => {
-    const { createLabel, labelsRef } = useAppContext();
+    const { createLabel, labelsRef, labelsReady } = useAppContext();
     const [reRender, triggerReRender] = useState(false);
-    const [labelsExist, setLabelsExist] = useState(false);
-    const [notesReady, setNotesReady] = useState(false);
     const containerRef = useRef(null);
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
+
+    const labelsExist = useMemo(() => {
+      return !!labelsRef.current.size;
+    }, [labelsReady, reRender, labelsRef.current]);
 
     const calculateLayout = useCallback(() => {
       if (layoutFrameRef.current) {
@@ -54,8 +63,6 @@ const Labels = memo(
         container.style.transform = "translateX(-50%)";
 
         const items = container.children;
-
-        setLabelsExist(items.length > 0);
 
         const positionItems = (itemList) => {
           const columnHeights = new Array(columns).fill(0);
@@ -142,10 +149,8 @@ const Labels = memo(
     return (
       <>
         <div ref={rootContainerRef} className="starting-div">
-          <div
-            ref={containerRef}
-            className="section-container"
-          >
+          
+          <div ref={containerRef} className="section-container">
             {/* <NewLabel triggerReRender={triggerReRender} /> */}
             {[...labelsRef.current]
               .reverse()
@@ -165,46 +170,40 @@ const Labels = memo(
                 );
               })}
           </div>
-          {/* <div className="empty-page">
-            <AnimatePresence>
-              {notesReady && !labelsExist && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 800,
-                    damping: 50,
-                    mass: 1,
-                  }}
-                  className="empty-page-box"
-                >
-                  <div className="empty-page-trash" />
-                  No notes in trash
-                </motion.div>
-              )}
-            </AnimatePresence>
-            <AnimatePresence>
-              {!notesReady && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 800,
-                    damping: 50,
-                    mass: 1,
-                  }}
-                  className="empty-page-box"
-                >
-                  <div className="empty-page-loading" />
-                  Loading labels...
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div> */}
+          <div className="empty-page">
+            {labelsReady && !labelsExist && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 800,
+                  damping: 50,
+                  mass: 1,
+                }}
+                className="empty-page-box"
+              >
+                <div className="empty-page-labels" />
+                Labels you add appear here
+              </motion.div>
+            )}
+            {!labelsReady && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 800,
+                  damping: 50,
+                  mass: 1,
+                }}
+                className="empty-page-box"
+              >
+                <div className="empty-page-loading" />
+                Loading labels...
+              </motion.div>
+            )}
+          </div>
         </div>
       </>
     );

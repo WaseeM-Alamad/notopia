@@ -57,8 +57,6 @@ const Navbar = ({ user }) => {
     const scrollbarWidth =
       window.innerWidth - document.documentElement.clientWidth;
 
-    console.log(scrollbarWidth);
-
     if (settingsOpen) {
       document.body.style.overflow = "hidden";
       document.body.style.paddingRight = `${scrollbarWidth}px`;
@@ -348,7 +346,6 @@ const Navbar = ({ user }) => {
   return (
     <>
       {tooltipAnchor?.display && <Tooltip anchorEl={tooltipAnchor} />}
-      {pathName !== "/" && (
         <nav
           style={{
             boxShadow: isScrolled && " rgba(67, 71, 85, 0.27) 0px 0px 0.25em, rgba(90, 125, 188, 0.05) 0px 0.25em 1em",
@@ -474,14 +471,13 @@ const Navbar = ({ user }) => {
             ref={imageRef}
           >
             <img
-              style={{ display: "block", userSelect: "none" }}
               className="profile-image"
+              draggable="false"
               src={image}
               alt="pfp"
             />
           </div>
         </nav>
-      )}
       <ProfileMenu
         user={user}
         ref={menuRef}

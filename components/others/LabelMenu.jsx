@@ -24,25 +24,36 @@ const LabelMenu = ({
 
   useEffect(() => {
     setIsMounted(true);
-    const handler = (e) => {
+    const handleClickOutside = (e) => {
+      const menuEl = menuRef.current;
+      const anchor = anchorEl?.contains ? anchorEl : null;
+      const btnRef = anchorEl?.btnRef ?? null;
+
       if (
-        !menuRef?.current?.contains(e.target) &&
-        !anchorEl?.contains(e.target)
-      )
-        if (isOpen) {
-          setIsOpen(false);
-        }
+        isOpen &&
+        !menuEl?.contains(e.target) &&
+        !(anchor && anchor.contains(e.target)) &&
+        btnRef !== e.target
+      ) {
+        setIsOpen(false);
+      }
     };
 
-    document.addEventListener("click", handler);
+    const handleResize = () => {
+      setIsOpen(false);
+    };
 
-    return () => document.removeEventListener("click", handler);
-  }, [isOpen]);
+    document.addEventListener("mousedown", handleClickOutside);
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [isOpen, anchorEl]);
 
   const handleOnChange = async (event) => {
     const imageFile = event.target?.files[0];
-
-    console.log(imageFile);
 
     inputRef.current.value = "";
     setIsImageLoading(true);
@@ -94,7 +105,7 @@ const LabelMenu = ({
     setIsOpen(false);
     handlePin(labelData.uuid);
     window.dispatchEvent(new Event("refreshPinnedLabels"));
-    triggerReRender(prev => !prev);
+    triggerReRender((prev) => !prev);
   };
 
   const containerClick = useCallback((e) => {

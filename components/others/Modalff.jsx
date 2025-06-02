@@ -148,7 +148,6 @@ const Modal = ({
       titleTextRef.current !== note?.title ||
       contentTextRef.current !== note?.content
     ) {
-      console.log("compare text");
       dispatchNotes({
         type: "UPDATE_TEXT",
         note: note,
