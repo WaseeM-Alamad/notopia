@@ -170,3 +170,9 @@
 .dark-mode .empty-note::before {
   color: rgb(172, 172, 172);
 }
+
+.note-placeholder {
+  background-color: aqua;
+  width: 240px;
+  min-height: 6.95rem;
+}

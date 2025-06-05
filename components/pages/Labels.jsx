@@ -149,7 +149,6 @@ const Labels = memo(
     return (
       <>
         <div ref={rootContainerRef} className="starting-div">
-          
           <div ref={containerRef} className="section-container">
             {/* <NewLabel triggerReRender={triggerReRender} /> */}
             {[...labelsRef.current]

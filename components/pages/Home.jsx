@@ -1,23 +1,9 @@
 "use client";
-import React, {
-  memo,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import "@/assets/styles/home.css";
 import Note from "../others/Note";
-import AddNoteModal from "../others/AddNoteModal";
-import { useAppContext } from "@/context/AppContext";
-import { AnimatePresence, motion } from "framer-motion";
-import TopMenuHome from "../others/topMenu/TopMenu";
-import {
-  NoteUpdateAction,
-  undoAction,
-  updateOrderAction,
-} from "@/utils/actions";
+import { motion } from "framer-motion";
+import { updateOrderAction } from "@/utils/actions";
 import ComposeNote from "../others/ComposeNote";
 
 const COLUMN_WIDTH = 240;
@@ -53,9 +39,9 @@ const NoteWrapper = memo(
     };
 
     useEffect(() => {
-      setTimeout(() => {
+      requestAnimationFrame(() => {
         setMounted(true);
-      }, 100);
+      });
     }, []);
 
     let startX, startY;
@@ -100,33 +86,41 @@ const NoteWrapper = memo(
 
     return (
       <motion.div
-        ref={setRefs}
-        onMouseDown={handleMouseDown}
-        onMouseEnter={handleMouseEnter}
-        onClick={(e) => handleNoteClick(e, note, index)}
-        className={`grid-item ${fadingNotes.has(note.uuid) ? "fade-out" : ""}`}
-        style={{
-          width: `${COLUMN_WIDTH}px`,
-          marginBottom: `${GUTTER}px`,
-          transition: `transform ${
-            mounted ? "0.22s" : "0"
-          } cubic-bezier(0.5, 0.2, 0.3, 1), opacity 0s`,
-        }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.2, type: "tween" }}
       >
-        <Note
-          dispatchNotes={dispatchNotes}
-          note={note}
-          noteActions={noteActions}
-          setTooltipAnchor={setTooltipAnchor}
-          calculateLayout={calculateLayout}
-          setFadingNotes={setFadingNotes}
-          isLoadingImagesAddNote={isLoadingImages}
-          setSelectedNotesIDs={setSelectedNotesIDs}
-          handleSelectNote={handleSelectNote}
-          openSnackFunction={openSnackFunction}
-          index={index}
-        />
-        {/* <p>{index}</p> */}
+        <div
+          ref={setRefs}
+          onMouseDown={handleMouseDown}
+          onMouseEnter={handleMouseEnter}
+          onClick={(e) => handleNoteClick(e, note, index)}
+          className={`grid-item ${
+            fadingNotes.has(note.uuid) ? "fade-out" : ""
+          }`}
+          style={{
+            width: `${COLUMN_WIDTH}px`,
+            marginBottom: `${GUTTER}px`,
+            transition: `transform ${
+              mounted ? "0.22s" : "0"
+            } cubic-bezier(0.5, 0.2, 0.3, 1), opacity 0s`,
+          }}
+        >
+          <Note
+            dispatchNotes={dispatchNotes}
+            note={note}
+            noteActions={noteActions}
+            setTooltipAnchor={setTooltipAnchor}
+            calculateLayout={calculateLayout}
+            setFadingNotes={setFadingNotes}
+            isLoadingImagesAddNote={isLoadingImages}
+            setSelectedNotesIDs={setSelectedNotesIDs}
+            handleSelectNote={handleSelectNote}
+            openSnackFunction={openSnackFunction}
+            index={index}
+          />
+          {/* <p>{index}</p> */}
+        </div>
       </motion.div>
     );
   }
@@ -136,6 +130,8 @@ NoteWrapper.displayName = "NoteWrapper";
 
 const Home = memo(
   ({
+    visibleNotes,
+    setVisibleNotes,
     notes,
     notesStateRef,
     order,
@@ -158,10 +154,18 @@ const Home = memo(
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
     const [layoutReady, setLayoutReady] = useState(false);
-    const isFirstRender = useRef(true);
+    const [columnsNumber, setColumnsNumber] = useState(null);
+    const isFirstRenderRef = useRef(true);
 
-    const [hasUnpinnedNotes, setHasUnpinnedNotes] = useState(false);
-    const [hasPinnedNotes, setHasPinnedNotes] = useState(false);
+    const hasPinned = [...visibleNotes].some((uuid) => {
+      const note = notes.get(uuid);
+      return note.isPinned;
+    });
+
+    const hasUnpinned = [...visibleNotes].some((uuid) => {
+      const note = notes.get(uuid);
+      return !note.isPinned;
+    });
 
     const notesExist = !order.some((uuid) => {
       const note = notes.get(uuid);
@@ -190,6 +194,8 @@ const Home = memo(
           Math.floor(availableWidth / (COLUMN_WIDTH + GUTTER))
         );
         const contentWidth = columns * (COLUMN_WIDTH + GUTTER) - GUTTER;
+
+        setColumnsNumber(columns);
 
         container.style.width = `${contentWidth}px`;
         container.style.maxWidth = "100%";
@@ -256,10 +262,6 @@ const Home = memo(
           pinnedHeight + gapBetweenSections
         );
 
-        setHasUnpinnedNotes(!!unpinnedItems.length);
-
-        setHasPinnedNotes(!!pinnedItems.length);
-
         setPinnedHeight(pinnedHeight);
         container.style.height = `${unpinnedHeight}px`;
         setLayoutReady(true);
@@ -288,7 +290,7 @@ const Home = memo(
           cancelAnimationFrame(layoutFrameRef.current);
         }
       };
-    }, [calculateLayout, debouncedCalculateLayout, notes, order]);
+    }, [calculateLayout, debouncedCalculateLayout, notes, order, visibleNotes]);
 
     useEffect(() => {
       if (notes.length > 0) {
@@ -468,6 +470,96 @@ const Home = memo(
       handleDragOver();
     };
 
+    const loadNextBatch = (currentVisibleSet = visibleNotes) => {
+      let sectionCount = 0;
+      let batchSize = 5;
+
+      const unrendered = order.filter((uuid) => {
+        const note = notes.get(uuid);
+        if (!currentVisibleSet.has(uuid) && !note.isArchived && !note.isTrash) {
+          sectionCount++;
+          return true;
+        }
+      });
+
+      // 🔽 Sort pinned first, unpinned after
+      const sortedUnrendered = unrendered.sort((a, b) => {
+        const noteA = notes.get(a);
+        const noteB = notes.get(b);
+
+        if (noteA.isPinned && !noteB.isPinned) return -1;
+        if (!noteA.isPinned && noteB.isPinned) return 1;
+        return 0;
+      });
+
+      if (isFirstRenderRef.current) {
+        isFirstRenderRef.current = false;
+        batchSize = sectionCount <= 15 ? sectionCount : 5;
+      }
+
+      const nextBatch = sortedUnrendered.slice(0, batchSize);
+      if (nextBatch.length === 0) return;
+
+      requestIdleCallback(() => {
+        setVisibleNotes((prev) => {
+          const updated = new Set(prev);
+          nextBatch.forEach((uuid) => updated.add(uuid));
+
+          setTimeout(() => {
+            maybeLoadMore(updated);
+          }, 800);
+
+          return updated;
+        });
+      });
+    };
+
+    const maybeLoadMore = (currentVisibleSet) => {
+      const container = containerRef.current;
+      if (!container) return;
+      // calculateLayout();
+
+      const scrollY = window.scrollY;
+      const totalHeight = container.offsetHeight;
+      const viewportHeight = window.innerHeight;
+
+      if (totalHeight < viewportHeight + scrollY + 700) {
+        loadNextBatch(currentVisibleSet);
+        // calculateLayout();
+      }
+    };
+
+    useEffect(() => {
+      if (visibleNotes.size === 0 && order.length > 0) {
+        loadNextBatch(); // load initial batch
+      }
+    }, [order, notes, visibleNotes]);
+
+    useEffect(() => {
+      calculateLayout();
+    }, [visibleNotes]);
+
+    useEffect(() => {
+      const handler = () => {
+        const scrollTop = window.scrollY;
+        const viewportHeight = window.innerHeight;
+        const fullHeight = document.body.offsetHeight;
+
+        // Trigger when within 200px of bottom
+        if (scrollTop + viewportHeight >= fullHeight - 600) {
+          requestAnimationFrame(() => {
+            setTimeout(() => {
+              loadNextBatch();
+            }, 800);
+          });
+        }
+      };
+
+      window.addEventListener("scroll", handler);
+
+      return () => window.removeEventListener("scroll", handler);
+    }, [order, notes, visibleNotes]);
+
     return (
       <>
         <div ref={rootContainerRef} className="starting-div">
@@ -481,7 +573,7 @@ const Home = memo(
               className="section-label"
               style={{
                 // top: "33px",
-                opacity: hasPinnedNotes ? "1" : "0",
+                opacity: hasPinned ? "1" : "0",
               }}
             >
               PINNED
@@ -490,13 +582,15 @@ const Home = memo(
               className="section-label"
               style={{
                 top: `${pinnedHeight + GAP_BETWEEN_SECTIONS + 2}px`,
-                opacity: hasPinnedNotes && hasUnpinnedNotes ? "1" : "0",
+                opacity: hasPinned && hasUnpinned ? "1" : "0",
               }}
             >
               OTHERS
             </p>
             {order.map((uuid, index) => {
               const note = notes.get(uuid);
+              if (!visibleNotes.has(note.uuid)) return null;
+
               return (
                 !note.isArchived &&
                 !note.isTrash && (
@@ -526,7 +620,14 @@ const Home = memo(
               );
             })}
           </div>
-          <div className="empty-page">
+          <div
+            style={
+              {
+                // display: notesExist && "none"
+              }
+            }
+            className="empty-page"
+          >
             {notesReady && notesExist && (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -570,6 +671,7 @@ const Home = memo(
         /> */}
         <ComposeNote
           dispatchNotes={dispatchNotes}
+          setVisibleNotes={setVisibleNotes}
           containerRef={containerRef}
           lastAddedNoteRef={lastAddedNoteRef}
           setTooltipAnchor={setTooltipAnchor}

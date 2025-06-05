@@ -18,6 +18,7 @@ import DeleteModal from "../DeleteModal";
 
 const TopMenuHome = ({
   notes,
+  setVisibleNotes,
   dispatchNotes,
   openSnackFunction,
   setFadingNotes,
@@ -503,6 +504,8 @@ const TopMenuHome = ({
         type: "BATCH_COPY_NOTE",
         newNotes: newNotes,
       });
+
+      setVisibleNotes((prev) => new Set([...prev, ...newNotesUUIDs]));
 
       window.dispatchEvent(new Event("loadingStart"));
       await batchCopyNoteAction({ newNotes: newNotes, imagesMap: imagesMap });

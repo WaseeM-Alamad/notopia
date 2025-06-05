@@ -1,4 +1,11 @@
-import React, { memo, useEffect, useRef, useState, useCallback } from "react";
+import React, {
+  memo,
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
 import "@/assets/styles/Note.css";
 import "@/assets/styles/LinearLoader.css";
 import NoteTools from "./NoteTools";
@@ -212,6 +219,16 @@ const Note = memo(
       window.dispatchEvent(new Event("loadingEnd"));
     };
 
+    const noteClassName = useMemo(() => {
+      return `note ${note.color} n-bg-${note.background} ${
+        selected
+          ? "element-selected"
+          : note.color === "Default"
+          ? "default-border"
+          : "transparent-border"
+      }`;
+    }, [note.color, note.background, selected]);
+
     return (
       <>
         <div
@@ -278,13 +295,7 @@ const Note = memo(
                   ? "45px"
                   : "0px  ",
             }}
-            className={`note ${note.color} ${"n-bg-" + note.background} ${
-              selected
-                ? "element-selected"
-                : note.color === "Default"
-                ? "default-border"
-                : "transparent-border"
-            }`}
+            className={noteClassName}
             onClick={(e) =>
               handleSelectNote({
                 source: "note",
@@ -298,161 +309,103 @@ const Note = memo(
             }
           >
             <div>
-              <div
-                style={{
-                  position:
-                    (note.images.length > 0 ||
-                      (note.checkboxes.length > 0 &&
-                        !note.title.trim() &&
-                        !note.content.trim())) &&
-                    "absolute",
-                }}
-                className="corner"
-              />
-              <div
-                style={{
-                  opacity: colorMenuOpen ? "1" : undefined,
-                  opacity: (colorMenuOpen || moreMenuOpen) && "1",
-                }}
-                className="pin"
-                tabIndex="0"
-              >
-                {!note.isTrash && (
-                  <Button
-                    onMouseEnter={(e) =>
-                      handleMouseEnter(e, `${note.isPinned ? "Unpin" : "Pin"}`)
-                    }
-                    onMouseLeave={handleMouseLeave}
-                    onClick={handlePinClick}
-                    tabIndex="-1"
-                  >
-                    <PinIcon
-                      isPinned={note.isPinned}
-                      rotation={note.isPinned ? "-45deg" : "-5deg"}
-                    />
-                  </Button>
-                )}
-              </div>
-              <div
-                style={{
-                  position: "relative",
-                  opacity: isLoading && note.images.length > 0 ? "0.6" : "1",
-                  transition: "all 0.2s ease",
-                }}
-                ref={imagesRef}
-              >
-                <NoteImagesLayout
-                  images={note.images}
-                  calculateMasonryLayout={calculateLayout}
-                  isLoadingImages={isLoadingImages}
-                />
-                {isLoading && note.images.length > 0 && (
-                  <div className="linear-loader" />
-                )}
-              </div>
-
-              {note.images.length === 0 &&
-                note.labels.length === 0 &&
-                !note.title?.trim() &&
-                !note.content?.trim() &&
-                (note.checkboxes.length === 0 || !note.showCheckboxes) && (
-                  <div className="empty-note" aria-label="Empty note" />
-                )}
-              <div ref={inputsRef}>
-                {note.title?.trim() && (
-                  <div dir="auto" ref={titleRef} className="title">
-                    {note.title}
-                  </div>
-                )}
-                {note.content?.trim() && (
-                  <div dir="auto" ref={contentRef} className="content">
-                    {note.content}
-                  </div>
-                )}
-              </div>
-
-              {note.checkboxes.length > 0 && note.showCheckboxes && (
+              <div>
                 <div
                   style={{
-                    paddingTop: !note.content.trim() && "0.625rem",
-                    paddingBottom: "0.4rem",
+                    position:
+                      (note.images.length > 0 ||
+                        (note.checkboxes.length > 0 &&
+                          !note.title.trim() &&
+                          !note.content.trim())) &&
+                      "absolute",
                   }}
+                  className="corner"
+                />
+                <div
+                  style={{
+                    opacity: colorMenuOpen ? "1" : undefined,
+                    opacity: (colorMenuOpen || moreMenuOpen) && "1",
+                  }}
+                  className="pin"
+                  tabIndex="0"
                 >
-                  {uncheckedItems.map((checkbox, index) => {
-                    return (
-                      <div
-                        key={checkbox.uuid}
-                        className="checkbox-wrapper note-checkbox-wrapper"
-                        style={{
-                          wordBreak: "break-all",
-                          paddingLeft: checkbox.parent ? "1.8rem" : "0.7rem",
-                          paddingRight:
-                            !note.content.trim() &&
-                            !note.title.trim() &&
-                            index === 0 &&
-                            "2.5rem",
-                        }}
-                      >
-                        <div
-                          onClick={(e) =>
-                            handleCheckboxClick(
-                              e,
-                              checkbox.uuid,
-                              !checkbox.isCompleted
-                            )
-                          }
-                          className={`note-checkbox checkbox-unchecked ${
-                            checkbox.isCompleted ? "checkbox-checked" : ""
-                          }`}
-                        />
-                        <div
-                          style={{
-                            width: "100%",
-                            paddingLeft: "0.5rem",
-                            fontSize: ".875rem",
-                          }}
-                          className={
-                            checkbox.isCompleted ? "checked-content" : ""
-                          }
-                        >
-                          {checkbox.content}
-                        </div>
-                      </div>
-                    );
-                  })}
+                  {!note.isTrash && (
+                    <Button
+                      onMouseEnter={(e) =>
+                        handleMouseEnter(
+                          e,
+                          `${note.isPinned ? "Unpin" : "Pin"}`
+                        )
+                      }
+                      onMouseLeave={handleMouseLeave}
+                      onClick={handlePinClick}
+                      tabIndex="-1"
+                    >
+                      <PinIcon
+                        isPinned={note.isPinned}
+                        rotation={note.isPinned ? "-45deg" : "-5deg"}
+                      />
+                    </Button>
+                  )}
+                </div>
+                <div
+                  style={{
+                    position: "relative",
+                    opacity: isLoading && note.images.length > 0 ? "0.6" : "1",
+                    transition: "all 0.2s ease",
+                  }}
+                  ref={imagesRef}
+                >
+                  <NoteImagesLayout
+                    images={note.images}
+                    calculateMasonryLayout={calculateLayout}
+                    isLoadingImages={isLoadingImages}
+                  />
+                  {isLoading && note.images.length > 0 && (
+                    <div className="linear-loader" />
+                  )}
+                </div>
+
+                {note.images.length === 0 &&
+                  note.labels.length === 0 &&
+                  !note.title?.trim() &&
+                  !note.content?.trim() &&
+                  (note.checkboxes.length === 0 || !note.showCheckboxes) && (
+                    <div className="empty-note" aria-label="Empty note" />
+                  )}
+                <div ref={inputsRef}>
+                  {note.title?.trim() && (
+                    <div dir="auto" ref={titleRef} className="title">
+                      {note.title}
+                    </div>
+                  )}
+                  {note.content?.trim() && (
+                    <div dir="auto" ref={contentRef} className="content">
+                      {note.content}
+                    </div>
+                  )}
+                </div>
+
+                {note.checkboxes.length > 0 && note.showCheckboxes && (
                   <div
                     style={{
-                      display: "flex",
-                      justifyContent: "center",
+                      paddingTop: !note.content.trim() && "0.625rem",
+                      paddingBottom: "0.4rem",
                     }}
                   >
-                    {checkedItems.length > 0 && uncheckedItems.length > 0 && (
-                      <div
-                        onClick={handleExpand}
-                        className="checkboxes-divider"
-                        style={{ cursor: "pointer" }}
-                      />
-                    )}
-                  </div>
-
-                  {checkedItems.length > 0 && !note.expandCompleted && (
-                    <div
-                      className="completed-items completed-items-note"
-                      aria-label={`${checkedItems.length} Completed item${
-                        checkedItems.length === 1 ? "" : "s"
-                      }`}
-                    />
-                  )}
-
-                  {note.expandCompleted &&
-                    checkedItems.map((checkbox) => {
+                    {uncheckedItems.map((checkbox, index) => {
                       return (
                         <div
                           key={checkbox.uuid}
                           className="checkbox-wrapper note-checkbox-wrapper"
                           style={{
                             wordBreak: "break-all",
-                            paddingLeft: "0.7rem",
+                            paddingLeft: checkbox.parent ? "1.8rem" : "0.7rem",
+                            paddingRight:
+                              !note.content.trim() &&
+                              !note.title.trim() &&
+                              index === 0 &&
+                              "2.5rem",
                           }}
                         >
                           <div
@@ -482,58 +435,121 @@ const Note = memo(
                         </div>
                       );
                     })}
-                </div>
-              )}
-              {note.labels.length !== 0 && (
-                <>
-                  <div className="note-labels-container">
-                    {note.labels
-                      .sort((a, b) => {
-                        const labelsMap = labelsRef.current;
-                        const labelA = labelsMap.get(a)?.label || "";
-                        const labelB = labelsMap.get(b)?.label || "";
-                        return labelA.localeCompare(labelB);
-                      })
-                      .map((labelUUID, index) => {
-                        if (index + 1 >= 3 && note.labels.length > 3) return;
-                        const label = labelsRef.current.get(labelUUID)?.label;
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {checkedItems.length > 0 && uncheckedItems.length > 0 && (
+                        <div
+                          onClick={handleExpand}
+                          className="checkboxes-divider"
+                          style={{ cursor: "pointer" }}
+                        />
+                      )}
+                    </div>
+
+                    {checkedItems.length > 0 && !note.expandCompleted && (
+                      <div
+                        className="completed-items completed-items-note"
+                        aria-label={`${checkedItems.length} Completed item${
+                          checkedItems.length === 1 ? "" : "s"
+                        }`}
+                      />
+                    )}
+
+                    {note.expandCompleted &&
+                      checkedItems.map((checkbox) => {
                         return (
                           <div
-                            onClick={(e) => handleLabelClick(e, label)}
-                            key={labelUUID}
-                            className={[
-                              "label-wrapper",
-                              !note.isTrash && "label-wrapper-h",
-                            ]
-                              .filter(Boolean)
-                              .join(" ")}
+                            key={checkbox.uuid}
+                            className="checkbox-wrapper note-checkbox-wrapper"
+                            style={{
+                              wordBreak: "break-all",
+                              paddingLeft: "0.7rem",
+                            }}
                           >
-                            <label className="note-label">{label}</label>
                             <div
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                closeToolTip();
-                                removeLabel(labelUUID);
-                              }}
-                              onMouseEnter={(e) =>
-                                handleMouseEnter(e, "Remove label")
+                              onClick={(e) =>
+                                handleCheckboxClick(
+                                  e,
+                                  checkbox.uuid,
+                                  !checkbox.isCompleted
+                                )
                               }
-                              onMouseLeave={handleMouseLeave}
-                              className="remove-label"
+                              className={`note-checkbox checkbox-unchecked ${
+                                checkbox.isCompleted ? "checkbox-checked" : ""
+                              }`}
                             />
+                            <div
+                              style={{
+                                width: "100%",
+                                paddingLeft: "0.5rem",
+                                fontSize: ".875rem",
+                              }}
+                              className={
+                                checkbox.isCompleted ? "checked-content" : ""
+                              }
+                            >
+                              {checkbox.content}
+                            </div>
                           </div>
                         );
                       })}
-                    {note.labels.length > 3 && (
-                      <div className="more-labels">
-                        <label className="more-labels-label">
-                          +{note.labels.length - 2}
-                        </label>
-                      </div>
-                    )}
                   </div>
-                </>
-              )}
+                )}
+                {note.labels.length !== 0 && (
+                  <>
+                    <div className="note-labels-container">
+                      {note.labels
+                        .sort((a, b) => {
+                          const labelsMap = labelsRef.current;
+                          const labelA = labelsMap.get(a)?.label || "";
+                          const labelB = labelsMap.get(b)?.label || "";
+                          return labelA.localeCompare(labelB);
+                        })
+                        .map((labelUUID, index) => {
+                          if (index + 1 >= 3 && note.labels.length > 3) return;
+                          const label = labelsRef.current.get(labelUUID)?.label;
+                          return (
+                            <div
+                              onClick={(e) => handleLabelClick(e, label)}
+                              key={labelUUID}
+                              className={[
+                                "label-wrapper",
+                                !note.isTrash && "label-wrapper-h",
+                              ]
+                                .filter(Boolean)
+                                .join(" ")}
+                            >
+                              <label className="note-label">{label}</label>
+                              <div
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  closeToolTip();
+                                  removeLabel(labelUUID);
+                                }}
+                                onMouseEnter={(e) =>
+                                  handleMouseEnter(e, "Remove label")
+                                }
+                                onMouseLeave={handleMouseLeave}
+                                className="remove-label"
+                              />
+                            </div>
+                          );
+                        })}
+                      {note.labels.length > 3 && (
+                        <div className="more-labels">
+                          <label className="more-labels-label">
+                            +{note.labels.length - 2}
+                          </label>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
           <NoteTools

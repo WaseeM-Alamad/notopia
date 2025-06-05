@@ -987,8 +987,7 @@ const Modal = ({
             </div>
           )}
 
-          {isOpen && (
-            <div className="modal-date-section">
+            <div style={{opacity: !isOpen && "0"}} className="modal-date-section">
               <div onClick={(e) => e.stopPropagation()} className="edited">
                 {localNote?.isTrash
                   ? "Note in Trash  •  "
@@ -1006,7 +1005,6 @@ const Modal = ({
                 </span>
               </div>
             </div>
-          )}
         </div>
         <Tools
           trigger={isOpen}

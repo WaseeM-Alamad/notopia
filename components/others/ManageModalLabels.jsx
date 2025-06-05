@@ -38,16 +38,10 @@ const ManageModalLabels = ({
         }
     };
 
-    const handleResize = () => {
-      setIsOpen(false);
-    };
-
     document.addEventListener("click", handler);
-    window.addEventListener("resize", handleResize);
 
     return () => {
       document.removeEventListener("click", handler);
-      window.removeEventListener("resize", handleResize);
     };
   }, [isOpen]);
 

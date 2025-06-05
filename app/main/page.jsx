@@ -713,6 +713,7 @@ const page = () => {
   const [current, setCurrent] = useState("Home");
   const [tooltipAnchor, setTooltipAnchor] = useState(null);
   const [notesState, dispatchNotes] = useReducer(notesReducer, initialStates);
+  const [visibleNotes, setVisibleNotes] = useState(new Set());
   const notesStateRef = useRef(notesState);
   const [modalStyle, setModalStyle] = useState(null);
   const [selectedNote, setSelectedNote] = useState(null);
@@ -1195,6 +1196,8 @@ const page = () => {
             newNote: newNote,
           });
 
+          setVisibleNotes((prev) => new Set([...prev, newUUID]));
+
           window.dispatchEvent(new Event("loadingStart"));
           const received = await copyNoteAction({
             originalNoteUUID: note.uuid,
@@ -1513,12 +1516,16 @@ const page = () => {
         } else {
           setCurrent(captialized(selected));
         }
+
+        if (!selectedNote){
+        setVisibleNotes(new Set());
+        }
       });
     };
 
     window.addEventListener("sectionChange", handler);
     return () => window.removeEventListener("sectionChange", handler);
-  }, []);
+  }, [selectedNote]);
 
   useEffect(() => {
     if (searchTerm.trim() !== "" && current !== "Search") {
@@ -1789,62 +1796,63 @@ const page = () => {
         }
       }
 
-      if (event.ctrlKey && event.code === "KeyZ" && !keyThrottleRef.current) {
-        if (!event.shiftKey) {
-          // UNDO
-          if (
-            ignoreKeysRef.current ||
-            !allowUndoRef.current ||
-            !undoFunction.current
-          )
-            return;
+      if (event.ctrlKey && event.code === "KeyZ" && !event.shiftKey) {
+        if (
+          ignoreKeysRef.current ||
+          !allowUndoRef.current ||
+          !undoFunction.current
+        )
+          return;
 
-          keyThrottleRef.current = true;
-          undoFunction.current();
-          allowRedoRef.current = true;
-          allowUndoRef.current = false;
+        keyThrottleRef.current = true;
+        undoFunction.current();
+        allowRedoRef.current = true;
+        allowUndoRef.current = false;
 
-          setSnackbarState((prev) => ({ ...prev, snackOpen: false }));
-          setTimeout(() => {
-            setSnackbarState({
-              message: "Action undone",
-              showUndo: false,
-              snackOpen: true,
-            });
-          }, 80);
+        setSnackbarState((prev) => ({ ...prev, snackOpen: false }));
+        setTimeout(() => {
+          setSnackbarState({
+            message: "Action undone",
+            showUndo: false,
+            snackOpen: true,
+          });
+        }, 80);
 
-          // Release throttle
-          setTimeout(() => {
-            keyThrottleRef.current = false;
-          }, 300);
-        } else {
-          // REDO
-          if (
-            ignoreKeysRef.current ||
-            !allowRedoRef.current ||
-            !redoFunction.current
-          )
-            return;
+        // Release throttle
+        setTimeout(() => {
+          keyThrottleRef.current = false;
+        }, 300);
+      }
 
-          keyThrottleRef.current = true;
-          redoFunction.current();
-          allowUndoRef.current = true;
-          allowRedoRef.current = false;
+      if (
+        (event.ctrlKey && event.code === "KeyZ" && event.shiftKey) ||
+        (event.ctrlKey && event.code === "KeyY")
+      ) {
+        if (
+          ignoreKeysRef.current ||
+          !allowRedoRef.current ||
+          !redoFunction.current
+        )
+          return;
 
-          setSnackbarState((prev) => ({ ...prev, snackOpen: false }));
-          setTimeout(() => {
-            setSnackbarState({
-              message: "Action redone",
-              showUndo: false,
-              snackOpen: true,
-            });
-          }, 80);
+        keyThrottleRef.current = true;
+        redoFunction.current();
+        allowUndoRef.current = true;
+        allowRedoRef.current = false;
 
-          // Release throttle
-          setTimeout(() => {
-            keyThrottleRef.current = false;
-          }, 300);
-        }
+        setSnackbarState((prev) => ({ ...prev, snackOpen: false }));
+        setTimeout(() => {
+          setSnackbarState({
+            message: "Action redone",
+            showUndo: false,
+            snackOpen: true,
+          });
+        }, 80);
+
+        // Release throttle
+        setTimeout(() => {
+          keyThrottleRef.current = false;
+        }, 300);
       }
 
       if (event.code === "Slash") {
@@ -2051,6 +2059,7 @@ const page = () => {
 
       <TopMenu
         notes={notesState.notes}
+        setVisibleNotes={setVisibleNotes}
         functionRefs={{ batchArchiveRef, batchPinRef, batchDeleteRef }}
         dispatchNotes={dispatchNotes}
         openSnackFunction={openSnackFunction}
@@ -2064,6 +2073,8 @@ const page = () => {
 
       <Page
         dispatchNotes={dispatchNotes}
+        visibleNotes={visibleNotes}
+        setVisibleNotes={setVisibleNotes}
         notes={notesState.notes}
         notesStateRef={notesStateRef}
         order={notesState.order}

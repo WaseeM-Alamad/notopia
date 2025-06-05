@@ -109,7 +109,7 @@ const MoreMenu = ({
                   <div
                     key={index}
                     style={{
-                      padding: "0.5rem 1.5rem 0.5rem 2.4rem",
+                      padding: "0.5rem 1.5rem 0.5rem 2.6rem",
                       fontSize: "0.9rem",
                     }}
                     className={`${item.icon || ""} menu-btn n-menu-btn not-draggable`}

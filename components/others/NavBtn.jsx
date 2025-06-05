@@ -51,6 +51,7 @@ const NavBtn = ({
   };
 
   const handleIconClick = (e, hash) => {
+    if (currentHash.toLowerCase() === hash) return;
     e.preventDefault();
     e.stopPropagation();
     closeToolTip();

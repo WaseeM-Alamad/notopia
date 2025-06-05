@@ -7,6 +7,7 @@ import LabelMenu from "./LabelMenu";
 import { useAppContext } from "@/context/AppContext";
 import DeleteModal from "./DeleteModal";
 import ColorSelectMenu from "./ColorSelectMenu";
+import MoreMenu from "./MoreMenu";
 
 const Label = ({
   labelData,
@@ -18,7 +19,14 @@ const Label = ({
   openSnackFunction,
   handleDeleteLabel,
 }) => {
-  const { updateLabel, updateLabelColor, labelLookUPRef } = useAppContext();
+  const {
+    updateLabel,
+    updateLabelColor,
+    handlePin,
+    updateLabelImage,
+    deleteLabelImage,
+    labelLookUPRef,
+  } = useAppContext();
   const [mounted, setMounted] = useState(false);
   const [anchorEl, setAnchorEL] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -40,6 +48,7 @@ const Label = ({
   const moreRef = useRef(null);
   const dateRef = useRef(null);
   const imageRef = useRef(null);
+  const inputRef = useRef(null);
   const isFirstRender = useRef(true);
 
   useEffect(() => {
@@ -220,6 +229,101 @@ const Label = ({
     const encodedLabel = encodeURIComponent(labelData.label);
     window.location.hash = `label/${encodedLabel.toLowerCase()}`;
   };
+
+  const handleOnChange = async (event) => {
+    const imageFile = event.target?.files[0];
+
+    inputRef.current.value = "";
+    setIsImageLoading(true);
+    updateLabelImage(labelData.uuid, imageFile).then(() => {
+      setIsImageLoading(false);
+    });
+    if (imageRef.current) {
+      imageRef.current.src = labelData.image + `?v=${new Date().getTime()}`;
+    }
+    triggerReRender((prev) => !prev);
+    setIsOpen(false);
+  };
+
+  const handleRenameLabel = () => {
+    labelTitleRef.current.focus();
+  };
+
+  const handleRemoveImage = () => {
+    const image = labelData.image;
+
+    deleteLabelImage({ uuid: labelData.uuid, action: "remove" });
+    triggerReRender((prev) => !prev);
+    setIsOpen(false);
+    const onClose = () => {
+      deleteLabelImage({ uuid: labelData.uuid, action: "delete" });
+      triggerReRender((prev) => !prev);
+      setIsOpen(false);
+    };
+
+    const undo = () => {
+      deleteLabelImage({
+        uuid: labelData.uuid,
+        image: image,
+        action: "restore",
+      });
+      triggerReRender((prev) => !prev);
+      setIsOpen(false);
+    };
+
+    openSnackFunction({
+      snackMessage: "Image deleted",
+      snackOnUndo: undo,
+      snackOnClose: onClose,
+      unloadWarn: true,
+    });
+  };
+
+  const handleLabelPin = () => {
+    setIsOpen(false);
+    handlePin(labelData.uuid);
+    window.dispatchEvent(new Event("refreshPinnedLabels"));
+    triggerReRender((prev) => !prev);
+  };
+
+  const menuItems = [
+    {
+      title: labelData.isPinned ? "Unpin from sidebar" : "Pin to sidebar",
+      function: handleLabelPin,
+      icon: labelData.isPinned ? "unpin-menu-icon" : "pin-menu-icon",
+    },
+    {
+      title: "Delete label",
+      function: () => {
+        setDeleteModalOpen(true);
+        setIsOpen(false);
+      },
+      icon: "trash-menu-icon",
+    },
+    {
+      title: "Change color",
+      function: () => {
+        setColorMenuOpen(true);
+        setIsOpen(false);
+      },
+      icon: "color-menu-icon",
+    },
+    {
+      title: labelData.image ? "Change image" : "Add image",
+      function: () => inputRef.current.click(),
+      icon: "image-menu-icon",
+    },
+    {
+      title: labelData.image ? "Remove image" : "",
+      function: handleRemoveImage,
+      icon: "remove-image-menu-icon",
+    },
+    {
+      title: "Rename label",
+      function: handleRenameLabel,
+      icon: "edit-menu-icon",
+    },
+  ];
 
   return (
     <>
@@ -460,9 +564,15 @@ const Label = ({
             </div>
           </div>
         </motion.div>
+        <input
+          ref={inputRef}
+          style={{ display: "none", position: "fixed" }}
+          type="file"
+          onChange={handleOnChange}
+        />
       </div>
       <AnimatePresence>
-        {isOpen && (
+        {/* {isOpen && (
           <LabelMenu
             isOpen={isOpen}
             setIsOpen={setIsOpen}
@@ -476,6 +586,14 @@ const Label = ({
             imageRef={imageRef}
             setIsImageLoading={setIsImageLoading}
             openSnackFunction={openSnackFunction}
+          />
+        )} */}
+        {isOpen && (
+          <MoreMenu
+            setIsOpen={setIsOpen}
+            anchorEl={anchorEl}
+            isOpen={isOpen}
+            menuItems={menuItems}
           />
         )}
       </AnimatePresence>
