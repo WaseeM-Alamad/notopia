@@ -46,7 +46,8 @@ const Navbar = ({ user }) => {
     left: 600,
   });
   const image = user?.image;
-  const firstRun = useRef(true);
+  const isFirstRunRef = useRef(true);
+  const isFirstRunRef2 = useRef(true);
   const imageRef = useRef(null);
   const menuRef = useRef(null);
   const settingsRef = useRef(null);
@@ -123,8 +124,8 @@ const Navbar = ({ user }) => {
   const timeoutRef = useRef(null);
 
   useEffect(() => {
-    if (firstRun.current) {
-      firstRun.current = false;
+    if (isFirstRunRef.current) {
+      isFirstRunRef.current = false;
       return;
     }
     if (!isLoading) {
@@ -356,15 +357,22 @@ const Navbar = ({ user }) => {
   // 795  600
 
   useEffect(() => {
-    const handler = () => {
+    const handler = (e) => {
+      // console.log("here");
       const width = window.innerWidth;
       const hash = window.location.hash.replace("#", "");
       const focused = searchRef.current === document.activeElement;
 
       if (width < 795) {
         setThreshold1(true);
-        setShowInput(false);
-        setShowNav(true);
+        if (!focused) {
+          console.log("here");
+          setShowInput(false);
+          setShowNav(true);
+        } else if (focused && !threshold1) {
+          setShowInput(false);
+          setShowNav(true);
+        }
       } else {
         setThreshold1(false);
         setShowInput(true);
@@ -385,12 +393,15 @@ const Navbar = ({ user }) => {
       }
     };
 
-    handler();
+    if (isFirstRunRef2.current) {
+      handler();
+      isFirstRunRef2.current = false;
+    }
 
     window.addEventListener("resize", handler);
 
     return () => window.removeEventListener("resize", handler);
-  }, []);
+  }, [threshold1]);
 
   if (!isClient) return;
 
@@ -458,8 +469,8 @@ const Navbar = ({ user }) => {
                 const nextFocused = e.relatedTarget;
 
                 if (!element.contains(nextFocused)) {
-                  setShowNav(true);
-                  setShowInput(false);
+                  // setShowNav(true);
+                  // setShowInput(false);
                 }
               }}
             >
