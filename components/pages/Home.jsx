@@ -98,7 +98,7 @@ const NoteWrapper = memo(
           }`}
           style={{
             maxWidth: `${isGrid ? 240 : 600}px`,
-            minWidth: !isGrid && "21.5rem",
+            minWidth: !isGrid && "15rem",
             width: "100%",
             marginBottom: `${GUTTER}px`,
             transition: `transform ${
