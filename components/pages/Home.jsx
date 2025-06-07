@@ -1,6 +1,5 @@
 "use client";
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
-import "@/assets/styles/home.css";
 import Note from "../others/Note";
 import { motion } from "framer-motion";
 import { updateOrderAction } from "@/utils/actions";

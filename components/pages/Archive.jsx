@@ -7,7 +7,6 @@ import React, {
   useState,
   useMemo,
 } from "react";
-import "@/assets/styles/home.css";
 import Note from "../others/Note";
 import AddNoteModal from "../others/AddNoteModal";
 import { AnimatePresence, motion } from "framer-motion";

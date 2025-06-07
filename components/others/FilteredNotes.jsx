@@ -1,6 +1,5 @@
 "use client";
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
-import "@/assets/styles/home.css";
 import { AnimatePresence, motion } from "framer-motion";
 import { useSearch } from "@/context/SearchContext";
 import FilteredNote from "./FilteredNote";

@@ -7,7 +7,6 @@ import React, {
   useRef,
   useState,
 } from "react";
-import "@/assets/styles/home.css";
 import { useAppContext } from "@/context/AppContext";
 import Label from "../others/Label";
 import { v4 as uuid } from "uuid";
