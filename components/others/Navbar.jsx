@@ -469,8 +469,8 @@ const Navbar = ({ user }) => {
                 const nextFocused = e.relatedTarget;
 
                 if (!element.contains(nextFocused)) {
-                  // setShowNav(true);
-                  // setShowInput(false);
+                  setShowNav(true);
+                  setShowInput(false);
                 }
               }}
             >
