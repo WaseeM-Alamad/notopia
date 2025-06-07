@@ -1,7 +1,7 @@
 import React, { memo, useCallback, useRef, useState } from "react";
 import { copyNoteAction, NoteUpdateAction, undoAction } from "@/utils/actions";
 import ColorSelectMenu from "./ColorSelectMenu";
-import "@/assets/styles/Note.css";
+import "@/assets/styles/note.css";
 import Button from "../Tools/Button";
 import { v4 as uuid } from "uuid";
 import { createClient } from "@supabase/supabase-js";

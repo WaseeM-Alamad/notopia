@@ -618,7 +618,9 @@ aside {
   width: 2rem;
   cursor: pointer;
   height: 2rem;
+  z-index: 9;
   background-size: 50%;
+  background-color: rgba(0,0,0,0);
 }
 
 .link-btn::before {
@@ -644,6 +646,8 @@ aside {
   left: -82px;
 }
 
+
+
 .link-btn-selected.link-btn::before {
   content: "";
   position: absolute;
@@ -662,6 +666,10 @@ aside {
 
 .link-btn-selected svg {
   opacity: 1;
+}
+
+.side-menu-open .link-btn::before {
+  left: -100px;
 }
 
 .pulse-button {
@@ -939,11 +947,6 @@ aside {
   transition: all 0.3s ease;
 }
 
-.note {
-  width: 240px;
-  height: 104px;
-}
-
 .corner {
   float: right;
   width: 38px;
@@ -967,11 +970,11 @@ aside {
 }
 
 .btn:hover {
-  background-color: rgba(85, 88, 92, 0.187);
+  background-color: rgba(85, 88, 92, 0.127);
 }
 
 .dark-mode .btn:hover {
-  background-color: rgba(154, 160, 166, 0.187);
+  background-color: rgba(154, 160, 166, 0.127);
 }
 
 .btn-click:active {

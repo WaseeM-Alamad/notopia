@@ -5,13 +5,12 @@ import Note from "../others/Note";
 import { motion } from "framer-motion";
 import { updateOrderAction } from "@/utils/actions";
 import ComposeNote from "../others/ComposeNote";
-
-const COLUMN_WIDTH = 240;
-const GUTTER = 15;
-const GAP_BETWEEN_SECTIONS = 88;
+import { useAppContext } from "@/context/AppContext";
 
 const NoteWrapper = memo(
   ({
+    isGrid,
+    GUTTER,
     dispatchNotes,
     openSnackFunction,
     note,
@@ -99,7 +98,9 @@ const NoteWrapper = memo(
             fadingNotes.has(note.uuid) ? "fade-out" : ""
           }`}
           style={{
-            width: `${COLUMN_WIDTH}px`,
+            maxWidth: `${isGrid ? 240 : 600}px`,
+            minWidth: !isGrid && "21.5rem",
+            width: "100%",
             marginBottom: `${GUTTER}px`,
             transition: `transform ${
               mounted ? "0.22s" : "0"
@@ -147,6 +148,7 @@ const Home = memo(
     notesReady,
     rootContainerRef,
   }) => {
+    const { layout } = useAppContext();
     const [pinnedHeight, setPinnedHeight] = useState(null);
     const [isLoadingImages, setIsLoadingImages] = useState([]);
     const lastAddedNoteRef = useRef(null);
@@ -156,6 +158,12 @@ const Home = memo(
     const [layoutReady, setLayoutReady] = useState(false);
     const [columnsNumber, setColumnsNumber] = useState(null);
     const isFirstRenderRef = useRef(true);
+    const isFirstRenderRef2 = useRef(true);
+    const stopLoadingBatchesRef = useRef(false);
+    const COLUMN_WIDTH = layout === "grid" ? 240 : 600;
+    const [isGrid, setIsGrid] = useState(layout === "grid");
+    const GUTTER = 15;
+    const GAP_BETWEEN_SECTIONS = 88;
 
     const hasPinned = [...visibleNotes].some((uuid) => {
       const note = notes.get(uuid);
@@ -167,11 +175,29 @@ const Home = memo(
       return !note.isPinned;
     });
 
-    const notesExist = !order.some((uuid) => {
+    const notesExist = order.some((uuid) => {
       const note = notes.get(uuid);
       if (note.isArchived || note.isTrash) return false;
       return true;
     });
+
+    useEffect(() => {
+      if (isFirstRenderRef.current) {
+        setIsGrid(layout === "grid");
+        return;
+      }
+      requestIdleCallback(() => {
+        setLayoutReady(false);
+        requestAnimationFrame(() => {
+          stopLoadingBatchesRef.current = true;
+          setVisibleNotes(new Set());
+          setIsGrid(layout === "grid");
+          setTimeout(() => {
+            loadNextBatch(new Set());
+          }, 200);
+        });
+      });
+    }, [layout]);
 
     const calculateLayout = useCallback(() => {
       if (layoutFrameRef.current) {
@@ -189,16 +215,20 @@ const Home = memo(
         const paddingRight = parseFloat(style.paddingRight) || 0;
         const availableWidth = parentWidth - paddingLeft - paddingRight;
 
-        const columns = Math.max(
-          1,
-          Math.floor(availableWidth / (COLUMN_WIDTH + GUTTER))
-        );
-        const contentWidth = columns * (COLUMN_WIDTH + GUTTER) - GUTTER;
+        const columns = !isGrid
+          ? 1
+          : Math.max(1, Math.floor(availableWidth / (COLUMN_WIDTH + GUTTER)));
+        const contentWidth = !isGrid
+          ? COLUMN_WIDTH
+          : columns * (COLUMN_WIDTH + GUTTER) - GUTTER;
 
+        // const columns = 1;
+
+        // const contentWidth = COLUMN_WIDTH;
         setColumnsNumber(columns);
 
         container.style.width = `${contentWidth}px`;
-        container.style.maxWidth = "100%";
+        container.style.maxWidth = isGrid ? "100%" : "90%";
         container.style.position = "relative";
         container.style.left = "50%";
         container.style.transform = "translateX(-50%)";
@@ -264,9 +294,11 @@ const Home = memo(
 
         setPinnedHeight(pinnedHeight);
         container.style.height = `${unpinnedHeight}px`;
-        setLayoutReady(true);
+        requestAnimationFrame(() => {
+          setLayoutReady(true);
+        });
       });
-    }, []);
+    }, [isGrid]);
 
     const debouncedCalculateLayout = useCallback(() => {
       if (resizeTimeoutRef.current) {
@@ -290,7 +322,7 @@ const Home = memo(
           cancelAnimationFrame(layoutFrameRef.current);
         }
       };
-    }, [calculateLayout, debouncedCalculateLayout, notes, order, visibleNotes]);
+    }, [calculateLayout, debouncedCalculateLayout, notes, order]);
 
     useEffect(() => {
       if (notes.length > 0) {
@@ -339,16 +371,14 @@ const Home = memo(
         const draggedInitialIndex = index;
         draggedIndexRef.current = index;
         draggedIsPinnedRef.current = isPinned;
-        draggedElement.classList.add("dragged-element");
         document.querySelector(".starting-div")?.classList.add("dragging");
 
         const rect = draggedElement.getBoundingClientRect();
         const offsetX = e.clientX - rect.left;
         const offsetY = e.clientY - rect.top;
 
-        ghostElementRef.current = draggedElement
-          .querySelector(".note")
-          .cloneNode(true);
+        ghostElementRef.current = draggedElement.cloneNode(true);
+        draggedElement.classList.add("dragged-element");
         const ghostElement = ghostElementRef.current;
         document.body.appendChild(ghostElement);
         const pin = ghostElement.querySelector(".pin");
@@ -361,7 +391,9 @@ const Home = memo(
         ghostElement.style.top = `${rect.top - 15}px`;
 
         const updateGhostPosition = (moveEvent) => {
-          ghostElement.style.left = `${moveEvent.clientX - offsetX - 15}px`; // Update left with offset
+          if (layout === "grid") {
+            ghostElement.style.left = `${moveEvent.clientX - offsetX - 15}px`; // Update left with offset
+          }
           ghostElement.style.top = `${moveEvent.clientY - offsetY - 15}px`; // Update top with offset
         };
 
@@ -422,7 +454,7 @@ const Home = memo(
 
         document.addEventListener("mouseup", handleDragEnd);
       },
-      [calculateLayout]
+      [calculateLayout, layout]
     );
 
     const handleDragOver = async () => {
@@ -471,6 +503,7 @@ const Home = memo(
     };
 
     const loadNextBatch = (currentVisibleSet = visibleNotes) => {
+      stopLoadingBatchesRef.current = false;
       let sectionCount = 0;
       let batchSize = 5;
 
@@ -515,6 +548,8 @@ const Home = memo(
     };
 
     const maybeLoadMore = (currentVisibleSet) => {
+      if (stopLoadingBatchesRef.current) return;
+
       const container = containerRef.current;
       if (!container) return;
       // calculateLayout();
@@ -530,8 +565,14 @@ const Home = memo(
     };
 
     useEffect(() => {
-      if (visibleNotes.size === 0 && order.length > 0) {
+      if (
+        visibleNotes.size === 0 &&
+        order.length > 0 &&
+        isFirstRenderRef2.current
+      ) {
         loadNextBatch(); // load initial batch
+        isFirstRenderRef2.current = false;
+        console.log("first ");
       }
     }, [order, notes, visibleNotes]);
 
@@ -574,6 +615,7 @@ const Home = memo(
               style={{
                 // top: "33px",
                 opacity: hasPinned ? "1" : "0",
+                display: visibleNotes.size === 0 && "none",
               }}
             >
               PINNED
@@ -583,6 +625,7 @@ const Home = memo(
               style={{
                 top: `${pinnedHeight + GAP_BETWEEN_SECTIONS + 2}px`,
                 opacity: hasPinned && hasUnpinned ? "1" : "0",
+                display: visibleNotes.size === 0 && "none",
               }}
             >
               OTHERS
@@ -598,6 +641,8 @@ const Home = memo(
                     lastAddedNoteRef={index === 0 ? lastAddedNoteRef : null}
                     key={note.uuid}
                     note={note}
+                    isGrid={isGrid}
+                    GUTTER={GUTTER}
                     overIndexRef={overIndexRef}
                     overIsPinnedRef={overIsPinnedRef}
                     fadingNotes={fadingNotes}
@@ -620,47 +665,49 @@ const Home = memo(
               );
             })}
           </div>
-          <div
-            style={
-              {
-                // display: notesExist && "none"
+          {!notesExist && (
+            <div
+              style={
+                {
+                  // display: notesExist && "none"
+                }
               }
-            }
-            className="empty-page"
-          >
-            {notesReady && notesExist && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{
-                  type: "spring",
-                  stiffness: 800,
-                  damping: 50,
-                  mass: 1,
-                }}
-                className="empty-page-box"
-              >
-                <div className="empty-page-home" />
-                Notes you add appear here
-              </motion.div>
-            )}
-            {!notesReady && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{
-                  type: "spring",
-                  stiffness: 800,
-                  damping: 50,
-                  mass: 1,
-                }}
-                className="empty-page-box"
-              >
-                <div className="empty-page-loading" />
-                Loading notes...
-              </motion.div>
-            )}
-          </div>
+              className="empty-page"
+            >
+              {notesReady && !notesExist && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 800,
+                    damping: 50,
+                    mass: 1,
+                  }}
+                  className="empty-page-box"
+                >
+                  <div className="empty-page-home" />
+                  Notes you add appear here
+                </motion.div>
+              )}
+              {!notesReady && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 800,
+                    damping: 50,
+                    mass: 1,
+                  }}
+                  className="empty-page-box"
+                >
+                  <div className="empty-page-loading" />
+                  Loading notes...
+                </motion.div>
+              )}
+            </div>
+          )}
         </div>
         {/* <AddNoteModal
           dispatchNotes={dispatchNotes}

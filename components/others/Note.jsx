@@ -6,7 +6,7 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
-import "@/assets/styles/Note.css";
+import "@/assets/styles/note.css";
 import "@/assets/styles/LinearLoader.css";
 import NoteTools from "./NoteTools";
 import PinIcon from "../icons/PinIcon";

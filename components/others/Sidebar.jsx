@@ -71,7 +71,7 @@ const Sidebar = memo(() => {
       setNavitems(() => {
         const updatedItems = [...items];
         const lastIndex = updatedItems.length - 1;
-        updatedItems.splice(lastIndex, 0, ...labelItems);
+        updatedItems.splice(3, 0, ...labelItems);
         return updatedItems;
       });
 
@@ -253,6 +253,7 @@ const Sidebar = memo(() => {
                 setTooltipAnchor={setTooltipAnchor}
                 calculateVerticalLayout={calculateVerticalLayout}
                 pageMounted={pageMounted}
+                containerRef={containerRef}
               />
             ))}
             {/* <span className="copyright-text">&copy; {currentYear}</span> */}

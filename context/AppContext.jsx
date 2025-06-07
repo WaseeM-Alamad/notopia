@@ -22,6 +22,7 @@ const AppContext = createContext();
 export function AppProvider({ children }) {
   const { data: session, status } = useSession();
   const [labelsReady, setLabelsReady] = useState(false);
+  const [layout, setLayout] = useState(null);
   const userID = session?.user?.id;
 
   const labelsRef = useRef(new Map());
@@ -39,6 +40,11 @@ export function AppProvider({ children }) {
     );
     setLabelsReady(true);
   };
+
+  useEffect(() => {
+    const savedLayout = localStorage.getItem("layout");
+    setLayout(savedLayout);
+  }, []);
 
   useEffect(() => {
     window.addEventListener("loadLabels", getLabels);
@@ -242,7 +248,6 @@ export function AppProvider({ children }) {
     labelLookUPRef.current.delete(label.toLowerCase().trim());
   };
 
-
   const handlePin = async (uuid) => {
     const currentLabel = labelsRef.current.get(uuid);
     const value = !currentLabel.isPinned;
@@ -280,6 +285,8 @@ export function AppProvider({ children }) {
         handleLabelsTop,
         ignoreKeysRef,
         handlePin,
+        layout,
+        setLayout,
       }}
     >
       {children}

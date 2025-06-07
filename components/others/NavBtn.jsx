@@ -13,6 +13,7 @@ const NavBtn = ({
   setTooltipAnchor,
   calculateVerticalLayout,
   pageMounted,
+  containerRef,
 }) => {
   const { handlePin, labelsRef } = useAppContext();
   const [mounted, setMounted] = useState(null);
@@ -39,6 +40,7 @@ const NavBtn = ({
   };
 
   const handleMouseEnter = (e, text) => {
+    if (moreMenuOpen) return;
     const target = e.currentTarget;
     setTooltipAnchor({ anchor: target, text: text, display: true });
   };
@@ -51,7 +53,8 @@ const NavBtn = ({
   };
 
   const handleIconClick = (e, hash) => {
-    if (currentHash.toLowerCase() === hash) return;
+    const currentHash = window.location.hash.replace("#", "");
+    if (hash === currentHash.toLowerCase()) return;
     e.preventDefault();
     e.stopPropagation();
     closeToolTip();
@@ -70,6 +73,11 @@ const NavBtn = ({
   };
 
   const navToSection = () => {
+    const currentHash = window.location.hash.replace("#", "");
+    if (hash === currentHash.toLowerCase()) {
+      setMoreMenuOpen(false);
+      return;
+    }
     if (type === "label") {
       const labelData = labelsRef.current.get(labelUUID);
       const encodedLabel = encodeURIComponent(labelData.label);
@@ -105,21 +113,35 @@ const NavBtn = ({
           e.preventDefault();
           closeToolTip();
 
+          const scrollContainer = containerRef.current;
+          const currentTarget = e.currentTarget;
+
           const virtualAnchor = {
-            getBoundingClientRect: () =>
-              new DOMRect(
-                e.pageX - window.scrollX,
-                e.pageY - window.scrollY,
-                0,
-                0
-              ),
-            contextElement: document.body,
+            getBoundingClientRect: () => {
+              const targetRect = currentTarget.getBoundingClientRect();
+              const containerRect = scrollContainer.getBoundingClientRect();
+
+              const offsetX =
+                targetRect.left -
+                containerRect.left +
+                scrollContainer.scrollLeft;
+              const offsetY =
+                targetRect.top - containerRect.top + scrollContainer.scrollTop;
+
+              return new DOMRect(
+                containerRect.left + offsetX - scrollContainer.scrollLeft,
+                containerRect.top + offsetY - scrollContainer.scrollTop,
+                targetRect.width,
+                targetRect.height
+              );
+            },
+            contextElement: scrollContainer,
           };
 
           setAnchorEl({ ...virtualAnchor, navTitle: name });
           setMoreMenuOpen(true);
         }}
-        className={`link-btn ${
+        className={`link-btn ${moreMenuOpen ? "side-menu-open" : ""} ${
           decodeURIComponent(currentHash).toLowerCase() === name.toLowerCase()
             ? "link-btn-selected"
             : ""
@@ -141,8 +163,11 @@ const NavBtn = ({
         tabIndex="-1"
         onClick={(e) => handleIconClick(e, hash)}
         style={{
-          zIndex: "9",
-          transition: mounted && pageMounted ? "transform 0.2s ease" : "none",
+          backgroundColor: moreMenuOpen && "rgba(0,0,0,0.07)",
+          transition:
+            mounted && pageMounted
+              ? "transform 0.2s ease, background-color 0.2s ease"
+              : "none",
         }}
       >
         <Icon />
