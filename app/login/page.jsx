@@ -1,7 +1,7 @@
 "use client";
 import { useSession, signIn } from "next-auth/react";
 import { redirect } from "next/navigation";
-import "@/assets/styles/Login.css";
+import "@/assets/styles/login.css";
 import {
   EmailOutlined,
   FacebookOutlined,
