@@ -1510,15 +1510,14 @@ const page = () => {
           ) {
             window.location.hash = "search";
             setCurrent(captialized(selected));
+            !selectedNote && setVisibleNotes(new Set());
           }
         } else if (selected.startsWith("label/")) {
           setCurrent("DynamicLabel");
+          !selectedNote && setVisibleNotes(new Set());
         } else {
           setCurrent(captialized(selected));
-        }
-
-        if (!selectedNote) {
-          setVisibleNotes(new Set());
+          !selectedNote && setVisibleNotes(new Set());
         }
       });
     };

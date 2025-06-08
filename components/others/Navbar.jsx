@@ -457,8 +457,12 @@ const Navbar = ({ user }) => {
                 display: !showInput && "none",
                 position: threshold1 && "absolute",
                 top: threshold1 && 0,
-                right: threshold1 && "100px",
-                width: threshold1 && "calc(100% - 110px)",
+                right: threshold1 ? (showLayoutBtn ? "146px" : "100px") : null,
+                width: threshold1
+                  ? showLayoutBtn
+                    ? "calc(100% - 156px)"
+                    : "calc(100% - 110px)"
+                  : null,
                 // left: "3px"
               }}
               tabIndex="0"
@@ -531,6 +535,19 @@ const Navbar = ({ user }) => {
                     searchRef.current.focus();
                   });
                 }
+                requestAnimationFrame(() => {
+                  const hash = window.location.hash.replace("#", "");
+                  if (!hash.startsWith("search")) {
+                    const width = window.innerWidth;
+                    setShowInput(true);
+                    if (width < 795) {
+                      setShowNav(false);
+                    }
+                    requestAnimationFrame(() => {
+                      searchRef.current.focus();
+                    });
+                  }
+                });
               }}
               style={{ display: showInput && "none" }}
               onMouseEnter={(e) => handleMouseEnter(e, "Search")}
