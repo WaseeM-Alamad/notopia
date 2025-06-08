@@ -231,6 +231,7 @@ const Label = ({
   };
 
   const handleOnChange = async (event) => {
+    event.stopPropagation();
     const imageFile = event.target?.files[0];
 
     inputRef.current.value = "";
@@ -564,30 +565,15 @@ const Label = ({
             </div>
           </div>
         </motion.div>
-        <input
-          ref={inputRef}
-          style={{ display: "none", position: "fixed" }}
-          type="file"
-          onChange={handleOnChange}
-        />
       </div>
+      <input
+        className="labelInput"
+        ref={inputRef}
+        style={{ display: "none" }}
+        type="file"
+        onChange={handleOnChange}
+      />
       <AnimatePresence>
-        {/* {isOpen && (
-          <LabelMenu
-            isOpen={isOpen}
-            setIsOpen={setIsOpen}
-            setColorMenuOpen={setColorMenuOpen}
-            setDeleteModalOpen={setDeleteModalOpen}
-            anchorEl={anchorEl}
-            setSelectedColor={setSelectedColor}
-            labelData={labelData}
-            triggerReRender={triggerReRender}
-            labelTitleRef={labelTitleRef}
-            imageRef={imageRef}
-            setIsImageLoading={setIsImageLoading}
-            openSnackFunction={openSnackFunction}
-          />
-        )} */}
         {isOpen && (
           <MoreMenu
             setIsOpen={setIsOpen}

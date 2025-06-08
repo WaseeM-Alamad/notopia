@@ -67,6 +67,7 @@ const Labels = memo(
           const columnHeights = new Array(columns).fill(0);
 
           itemList.forEach((item) => {
+            if (item.classList.contains("labelInput")) return;
             const minColumnIndex = columnHeights.indexOf(
               Math.min(...columnHeights)
             );
