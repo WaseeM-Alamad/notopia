@@ -19,6 +19,7 @@ import AccountSettings from "./AccountSettings";
 import ListIcon from "../icons/ListIcon";
 import SearchIcon from "../icons/SearchIcon";
 import InputSearchIcon from "../icons/InputSearchIcon";
+import LeftArrow from "../icons/LeftArrow";
 
 const Navbar = ({ user }) => {
   const {
@@ -474,14 +475,24 @@ const Navbar = ({ user }) => {
                 }
               }}
             >
-              <Button
-                onClick={inputClick}
-                onMouseEnter={(e) => handleMouseEnter(e, "Search")}
-                onMouseLeave={handleMouseLeave}
-                className="nav-btn nav-search-icon"
-              >
-                <InputSearchIcon />
-              </Button>
+              <div style={{ padding: "0 0.5rem" }}>
+                <Button
+                  onClick={
+                    threshold1
+                      ? () => {
+                          closeToolTip();
+                          setShowNav(true);
+                          setShowInput(false);
+                        }
+                      : inputClick
+                  }
+                  onMouseEnter={(e) => handleMouseEnter(e, "Search")}
+                  onMouseLeave={handleMouseLeave}
+                  className="nav-btn nav-search-icon"
+                >
+                  {threshold1 ? <LeftArrow /> : <InputSearchIcon />}
+                </Button>
+              </div>
               <input
                 onClick={inputClick}
                 ref={searchRef}
@@ -492,13 +503,15 @@ const Navbar = ({ user }) => {
                 spellCheck="false"
               />
 
-              <Button
-                onClick={handleClearSearch}
-                style={{ display: !showClearBtn && "none" }}
-                className="clear-search-icon"
-                onMouseEnter={(e) => handleMouseEnter(e, "Clear search")}
-                onMouseLeave={handleMouseLeave}
-              />
+              <div style={{ padding: "0 0.5rem" }}>
+                <Button
+                  onClick={handleClearSearch}
+                  style={{ display: !showClearBtn && "none" }}
+                  className="clear-search-icon"
+                  onMouseEnter={(e) => handleMouseEnter(e, "Clear search")}
+                  onMouseLeave={handleMouseLeave}
+                />
+              </div>
             </div>
           </div>
           <div className="top-icons">
@@ -610,8 +623,7 @@ const Navbar = ({ user }) => {
         <div
           style={{
             display: "flex",
-
-            paddingRight: "1.8rem",
+            paddingRight: "1rem",
             paddingLeft: "1rem",
             flex: "0 0 auto",
           }}

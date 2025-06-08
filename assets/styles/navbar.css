@@ -91,7 +91,6 @@ nav {
   display: flex;
   align-items: center;
   box-sizing: border-box;
-  padding: 0 0.5rem;
   width: 100%;
   border-radius: 0.7rem;
   background-color: #f1f3f4;
@@ -125,7 +124,6 @@ nav {
 }
 
 .nav-search-icon {
-  /* position: absolute; */
   width: 2.5rem;
   height: 2.5rem;
   flex-shrink: 0;

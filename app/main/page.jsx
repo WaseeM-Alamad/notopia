@@ -1517,8 +1517,8 @@ const page = () => {
           setCurrent(captialized(selected));
         }
 
-        if (!selectedNote){
-        setVisibleNotes(new Set());
+        if (!selectedNote) {
+          setVisibleNotes(new Set());
         }
       });
     };
@@ -2008,6 +2008,12 @@ const page = () => {
       window.removeEventListener("mouseup", handleMouseUp);
     };
   }, []);
+
+  useEffect(() => {
+    if (searchRef.current) {
+      searchRef.current.value = "";
+    }
+  }, [current]);
 
   return (
     <>
