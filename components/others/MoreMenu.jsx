@@ -92,6 +92,8 @@ const MoreMenu = ({
               maxWidth: "14.0625rem",
               maxHeight: "26.96125rem",
               borderRadius: "0.6rem",
+              position: "relative",
+              overflow: "visible",
               border: "1px solid #e5e7eb",
               boxShadow: "rgba(0, 0, 0, 0.3) 0px 4px 12px",
               paddingTop: navTitle?.trim() && "0",
@@ -99,7 +101,9 @@ const MoreMenu = ({
             ref={menuRef}
             className="menu not-draggable"
           >
-            {navTitle?.trim() &&<div className="menu-top-title">{navTitle}</div>}
+            {navTitle?.trim() && (
+              <div className="menu-top-title">{navTitle}</div>
+            )}
             <div className="menu-buttons not-draggable">
               {menuItems.map((item, index) => {
                 if (!item?.title?.trim()) {
@@ -110,9 +114,11 @@ const MoreMenu = ({
                     key={index}
                     style={{
                       padding: "0.5rem 1.5rem 0.5rem 2.6rem",
-                      fontSize: "0.9rem",
+                      fontSize: "14px",
                     }}
-                    className={`${item.icon || ""} menu-btn n-menu-btn not-draggable`}
+                    className={`${
+                      item.icon || ""
+                    } menu-btn n-menu-btn not-draggable`}
                     onClick={item.function}
                   >
                     {item.title}

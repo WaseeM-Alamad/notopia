@@ -7,6 +7,7 @@ import { useAppContext } from "@/context/AppContext";
 const Search = ({
   notesStateRef,
   notes,
+  selectedNotesRef,
   order,
   dispatchNotes,
   setTooltipAnchor,
@@ -19,6 +20,12 @@ const Search = ({
   rootContainerRef,
   noteActions,
   notesReady,
+  containerRef,
+  loadNextBatch,
+  layoutVersionRef,
+  isGrid,
+  visibleItems,
+  setVisibleItems,
 }) => {
   const { searchTerm, filters, setFilters, skipHashChangeRef } = useSearch();
   const { labelsRef } = useAppContext();
@@ -183,7 +190,7 @@ const Search = ({
                 No matching results.
               </div>
             )}
-            {filtersToRender.map((item) => {
+            {filtersToRender.map((item, index) => {
               if (
                 item.set.size === 0 ||
                 (item.title === "Colors" &&
@@ -195,14 +202,20 @@ const Search = ({
               return (
                 <motion.div
                   key={item.title}
-                  initial={{ y: 200, opacity: 0 }}
+                  initial={{ y: 200 / (index + 1.7), opacity: 0 }}
                   animate={{
                     y: 0,
                     opacity: 1,
                   }}
                   transition={{
-                    y: { type: "spring", stiffness: 700, damping: 50, mass: 1 },
-                    opacity: { duration: 0.2 },
+                    y: {
+                      delay: index / 10,
+                      type: "spring",
+                      stiffness: 700,
+                      damping: 50,
+                      mass: 1,
+                    },
+                    opacity: { delay: index / 10, duration: 0.3 },
                   }}
                   className="filter-container"
                 >
@@ -251,6 +264,7 @@ const Search = ({
             setNoMatchingNotes={setNoMatchingNotes}
             notesStateRef={notesStateRef}
             filteredNotes={filteredNotes}
+            selectedNotesRef={selectedNotesRef}
             notes={notes}
             order={order}
             dispatchNotes={dispatchNotes}
@@ -262,7 +276,12 @@ const Search = ({
             noteActions={noteActions}
             setFadingNotes={setFadingNotes}
             fadingNotes={fadingNotes}
-            filters={filters}
+            visibleItems={visibleItems}
+            setVisibleItems={setVisibleItems}
+            containerRef={containerRef}
+            loadNextBatch={loadNextBatch}
+            layoutVersionRef={layoutVersionRef}
+            isGrid={isGrid}
           />
         )}
       </div>

@@ -8,11 +8,14 @@ import { useAppContext } from "@/context/AppContext";
 import DeleteModal from "./DeleteModal";
 import ColorSelectMenu from "./ColorSelectMenu";
 import MoreMenu from "./MoreMenu";
+import { useSearch } from "@/context/SearchContext";
 
 const Label = ({
   labelData,
   setTooltipAnchor,
+  isGrid,
   triggerReRender,
+  fadingNotes,
   dispatchNotes,
   index,
   calculateLayout,
@@ -27,8 +30,10 @@ const Label = ({
     deleteLabelImage,
     labelLookUPRef,
   } = useAppContext();
+  const { labelSearchTerm } = useSearch();
   const [mounted, setMounted] = useState(false);
   const [anchorEl, setAnchorEL] = useState(null);
+  const [colorAnchorEl, setColorAnchorEl] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
@@ -40,8 +45,6 @@ const Label = ({
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const labelDate = getNoteFormattedDate(labelData.createdAt);
   const [selectedColor, setSelectedColor] = useState(labelData.color);
-  const isRemoteImage =
-    labelData.image?.startsWith("http") || labelData.image?.startsWith("https");
   const labelRef = useRef(null);
   const labelTitleRef = useRef(null);
   const originalTitleRef = useRef(null);
@@ -50,6 +53,12 @@ const Label = ({
   const imageRef = useRef(null);
   const inputRef = useRef(null);
   const isFirstRender = useRef(true);
+
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      setMounted(true);
+    });
+  }, []);
 
   useEffect(() => {
     labelTitleRef.current.innerText = labelData.label;
@@ -61,10 +70,6 @@ const Label = ({
 
       return labelTitleRef.current.innerText.trim().length;
     });
-
-    setTimeout(() => {
-      setMounted(true);
-    }, 10);
   }, []);
 
   const handleMoreClick = (e) => {
@@ -161,6 +166,7 @@ const Label = ({
         originalTitleRef.current
       );
       originalTitleRef.current = labelTitleRef.current.innerText.trim();
+      window.dispatchEvent(new Event("refreshPinnedLabels"));
     } else {
       labelTitleRef.current.innerText = originalTitleRef.current.trim();
     }
@@ -247,7 +253,10 @@ const Label = ({
   };
 
   const handleRenameLabel = () => {
-    labelTitleRef.current.focus();
+    setIsFocused(true);
+    requestAnimationFrame(() => {
+      labelTitleRef.current.focus();
+    });
   };
 
   const handleRemoveImage = () => {
@@ -304,6 +313,7 @@ const Label = ({
     {
       title: "Change color",
       function: () => {
+        setColorAnchorEl(moreRef.current);
         setColorMenuOpen(true);
         setIsOpen(false);
       },
@@ -326,9 +336,36 @@ const Label = ({
     },
   ];
 
+  function highlightMatch(text) {
+    if (!labelSearchTerm) return text;
+
+    const regex = new RegExp(`(${labelSearchTerm.toLowerCase().trim()})`, "ig");
+
+    const parts = text.split(regex);
+
+    return parts.map((part, index) =>
+      regex.test(part) ? (
+        <span key={index} className="highlight">
+          {part}
+        </span>
+      ) : (
+        part
+      )
+    );
+  }
+
   return (
     <>
-      <div
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{
+          type: "spring",
+          stiffness: 800,
+          damping: 50,
+          mass: 1,
+        }}
+        className={`label-container ${isGrid ? "grid-label" : "list-label"}`}
         onContextMenu={(e) => {
           e.preventDefault();
           closeToolTip();
@@ -355,14 +392,14 @@ const Label = ({
           } cubic-bezier(0.2, 0, 0, 1), opacity 0.23s ease`,
         }}
       >
-        <motion.div
+        <div
           className={`label label-${labelData.color} ${
             selected
               ? "element-selected"
               : labelData.color === "Default"
               ? "default-border"
               : "transparent-border"
-          }`}
+          } ${fadingNotes.has(labelData.uuid) ? "fade-out" : ""} `}
         >
           <div
             style={{ display: labelData.image && "none" }}
@@ -394,11 +431,7 @@ const Label = ({
                   opacity: !isImageLoading ? "1" : "0.5",
                   transition: "opacity 0.2s ease",
                 }}
-                src={
-                  isRemoteImage
-                    ? labelData.image + `?v=${new Date().getTime()}`
-                    : labelData.image
-                }
+                src={labelData.image}
               />
               <AnimatePresence>
                 {isImageLoading && (
@@ -448,6 +481,7 @@ const Label = ({
               }}
             ></div>
             <div
+              style={{ display: !isFocused && "none" }}
               contentEditable={isFocused}
               data-index={index}
               suppressContentEditableWarning
@@ -459,6 +493,11 @@ const Label = ({
                 ) {
                   return;
                 }
+
+                if (e.key === "Escape") {
+                  e.currentTarget.blur();
+                }
+
                 if (e.key === "Enter") {
                   e.preventDefault();
                   const oldLabel = originalTitleRef.current
@@ -489,11 +528,14 @@ const Label = ({
 
                   return labelTitleRef.current.innerText.trim().length;
                 });
-                setIsFocused(true);
                 moreRef.current.classList.add("zero-opacity");
                 dateRef.current.classList.add("zero-opacity");
               }}
               onBlur={handleOnBlur}
+              onClick={(e) => {
+                if (!isFocused) return;
+                e.stopPropagation();
+              }}
               ref={labelTitleRef}
               dir="auto"
               className="label-title-input"
@@ -502,6 +544,12 @@ const Label = ({
               aria-multiline="true"
               spellCheck="false"
             />
+            <div
+              style={{ display: isFocused && "none" }}
+              className="label-title-input"
+            >
+              {highlightMatch(labelData.label)}
+            </div>
             <div
               style={{
                 color: "#5E5E5E",
@@ -564,8 +612,8 @@ const Label = ({
               </div>
             </div>
           </div>
-        </motion.div>
-      </div>
+        </div>
+      </motion.div>
       <input
         className="labelInput"
         ref={inputRef}
@@ -600,7 +648,7 @@ const Label = ({
           <ColorSelectMenu
             isLabel={true}
             handleColorClick={handleColorClick}
-            anchorEl={anchorEl}
+            anchorEl={colorAnchorEl}
             selectedColor={selectedColor}
             setTooltipAnchor={setTooltipAnchor}
             isOpen={colorMenuOpen}

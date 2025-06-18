@@ -18,7 +18,9 @@ import DeleteModal from "../DeleteModal";
 
 const TopMenuHome = ({
   notes,
-  setVisibleNotes,
+  fadeNote,
+  visibleItems,
+  setVisibleItems,
   dispatchNotes,
   openSnackFunction,
   setFadingNotes,
@@ -203,21 +205,35 @@ const TopMenuHome = ({
     const firstItem = selectedNotesIDs[0];
     const val = notes.get(firstItem.uuid).isArchived;
     const length = selectedNotesIDs.length;
+    let clearSet = false;
 
-    const selectedUUIDs = selectedNotesIDs.map(({ uuid }) => uuid);
+    const selectedUUIDs = selectedNotesIDs.map(({ uuid }) => {
+      if (!visibleItems.has(uuid)) clearSet = true;
+      return uuid;
+    });
+
+    if (clearSet) {
+      setVisibleItems(new Set());
+      window.dispatchEvent(new Event("reloadNotes"));
+    }
 
     const redo = async () => {
-      setFadingNotes(new Set(selectedUUIDs));
+      if (fadeNote) {
+        setFadingNotes(new Set(selectedUUIDs));
+      }
 
-      setTimeout(() => {
-        dispatchNotes({
-          type: "BATCH_ARCHIVE/TRASH",
-          selectedNotes: selectedNotesIDs,
-          property: "isArchived",
-          val: val,
-        });
-        setFadingNotes(new Set());
-      }, 250);
+      setTimeout(
+        () => {
+          dispatchNotes({
+            type: "BATCH_ARCHIVE/TRASH",
+            selectedNotes: selectedNotesIDs,
+            property: "isArchived",
+            val: val,
+          });
+          setFadingNotes(new Set());
+        },
+        fadeNote ? 250 : 0
+      );
 
       window.dispatchEvent(new Event("loadingStart"));
 
@@ -267,55 +283,65 @@ const TopMenuHome = ({
 
     const firstItem = selectedNotesIDs[0];
     const ArchiveVal = notes.get(firstItem.uuid).isArchived;
+    const clearSet = selectedNotesIDs.some(
+      (item) => !visibleItems.has(item.uuid)
+    );
 
-    if (ArchiveVal) {
-      const selectedUUIDs = selectedNotesIDs.map((data) => data.uuid);
-      const length = selectedNotesIDs.length;
-      setFadingNotes(new Set(selectedUUIDs));
-
-      const undo = () => {
-        window.dispatchEvent(new Event("loadingStart"));
-
-        undoAction({
-          type: "UNDO_BATCH_PIN_ARCHIVED",
-          selectedNotes: selectedNotesIDs,
-        }).then(() => window.dispatchEvent(new Event("loadingEnd")));
-
-        dispatchNotes({
-          type: "UNDO_BATCH_PIN_ARCHIVED",
-          selectedNotes: selectedNotesIDs,
-          length: length,
-        });
-      };
-
-      const snackMessage =
-        length === 1
-          ? "Note unarchived and pinned"
-          : `${length} notes unarchived and pinned`;
-
-      openSnackFunction({
-        snackMessage: snackMessage,
-        snackOnUndo: undo,
-      });
+    if (clearSet) {
+      setVisibleItems(new Set());
+      window.dispatchEvent(new Event("reloadNotes"));
     }
 
-    setTimeout(
-      () => {
-        dispatchNotes({
-          type: "BATCH_PIN",
-          selectedNotes: selectedNotesIDs,
-          isPinned: pinNotes,
+    requestAnimationFrame(() => {
+      if (ArchiveVal) {
+        const selectedUUIDs = selectedNotesIDs.map((data) => data.uuid);
+        const length = selectedNotesIDs.length;
+        setFadingNotes(new Set(selectedUUIDs));
+
+        const undo = () => {
+          window.dispatchEvent(new Event("loadingStart"));
+
+          undoAction({
+            type: "UNDO_BATCH_PIN_ARCHIVED",
+            selectedNotes: selectedNotesIDs,
+          }).then(() => window.dispatchEvent(new Event("loadingEnd")));
+
+          dispatchNotes({
+            type: "UNDO_BATCH_PIN_ARCHIVED",
+            selectedNotes: selectedNotesIDs,
+            length: length,
+          });
+        };
+
+        const snackMessage =
+          length === 1
+            ? "Note unarchived and pinned"
+            : `${length} notes unarchived and pinned`;
+
+        openSnackFunction({
+          snackMessage: snackMessage,
+          snackOnUndo: undo,
         });
-        setFadingNotes(new Set());
-      },
-      ArchiveVal ? 250 : 0
-    );
-    window.dispatchEvent(new Event("loadingStart"));
-    batchUpdateAction({
-      type: "BATCH_PIN",
-      selectedNotes: selectedNotesIDs,
-      val: pinNotes,
-    }).then(() => window.dispatchEvent(new Event("loadingEnd")));
+      }
+
+      setTimeout(
+        () => {
+          dispatchNotes({
+            type: "BATCH_PIN",
+            selectedNotes: selectedNotesIDs,
+            isPinned: pinNotes,
+          });
+          setFadingNotes(new Set());
+        },
+        ArchiveVal ? 250 : 0
+      );
+      window.dispatchEvent(new Event("loadingStart"));
+      batchUpdateAction({
+        type: "BATCH_PIN",
+        selectedNotes: selectedNotesIDs,
+        val: pinNotes,
+      }).then(() => window.dispatchEvent(new Event("loadingEnd")));
+    });
   };
 
   const handleOpenMenu = (e) => {
@@ -505,7 +531,7 @@ const TopMenuHome = ({
         newNotes: newNotes,
       });
 
-      setVisibleNotes((prev) => new Set([...prev, ...newNotesUUIDs]));
+      setVisibleItems((prev) => new Set([...prev, ...newNotesUUIDs]));
 
       window.dispatchEvent(new Event("loadingStart"));
       await batchCopyNoteAction({ newNotes: newNotes, imagesMap: imagesMap });

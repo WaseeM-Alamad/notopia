@@ -11,23 +11,34 @@ import { useAppContext } from "@/context/AppContext";
 import Label from "../others/Label";
 import { v4 as uuid } from "uuid";
 import { motion } from "framer-motion";
+import { useSearch } from "@/context/SearchContext";
 
-const COLUMN_WIDTH = 240;
 const GUTTER = 15;
 
 const Labels = memo(
   ({
     setTooltipAnchor,
+    visibleItems,
+    setVisibleItems,
     dispatchNotes,
+    fadingNotes,
     openSnackFunction,
     handleDeleteLabel,
     rootContainerRef,
+    containerRef,
+    loadNextBatch,
+    layoutVersionRef,
+    isGrid,
   }) => {
-    const { createLabel, labelsRef, labelsReady } = useAppContext();
+    const { createLabel, labelsRef, labelsReady, layout } = useAppContext();
+    const { labelSearchTerm } = useSearch();
     const [reRender, triggerReRender] = useState(false);
-    const containerRef = useRef(null);
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
+    const isFirstRenderRef = useRef(true);
+    const searchTimeoutRef = useRef(null);
+
+    const COLUMN_WIDTH = layout === "grid" ? 240 : 450;
 
     const labelsExist = useMemo(() => {
       return !!labelsRef.current.size;
@@ -49,14 +60,15 @@ const Labels = memo(
         const paddingRight = parseFloat(style.paddingRight) || 0;
         const availableWidth = parentWidth - paddingLeft - paddingRight;
 
-        const columns = Math.max(
-          1,
-          Math.floor(availableWidth / (COLUMN_WIDTH + GUTTER))
-        );
-        const contentWidth = columns * (COLUMN_WIDTH + GUTTER) - GUTTER;
+        const columns = !isGrid
+          ? 1
+          : Math.max(1, Math.floor(availableWidth / (COLUMN_WIDTH + GUTTER)));
+        const contentWidth = !isGrid
+          ? COLUMN_WIDTH
+          : columns * (COLUMN_WIDTH + GUTTER) - GUTTER;
 
         container.style.width = `${contentWidth}px`;
-        container.style.maxWidth = "100%";
+        container.style.maxWidth = isGrid ? "100%" : "90%";
         container.style.position = "relative";
         container.style.left = "50%";
         container.style.transform = "translateX(-50%)";
@@ -86,7 +98,7 @@ const Labels = memo(
         const totalHeight = positionItems(Array.from(items));
         container.style.height = `${totalHeight}px`;
       });
-    }, []);
+    }, [isGrid]);
 
     const debouncedCalculateLayout = useCallback(() => {
       if (resizeTimeoutRef.current) {
@@ -117,13 +129,18 @@ const Labels = memo(
 
       const createdAt = new Date();
       createLabel(newUUID, newLabel, createdAt);
+      setVisibleItems((prev) => {
+        const updated = new Set(prev);
+        updated.add(newUUID);
+        return updated;
+      });
       triggerReRender((prev) => !prev);
-      setTimeout(() => {
+      requestAnimationFrame(() => {
         const element = document.querySelector(
           '.section-container [data-index="0"]'
         );
         element.focus();
-      }, 10);
+      });
     };
 
     useEffect(() => {
@@ -146,21 +163,66 @@ const Labels = memo(
       };
     }, [calculateLayout, debouncedCalculateLayout, reRender]);
 
+    useEffect(() => {
+      calculateLayout();
+    }, [visibleItems]);
+
+    useEffect(() => {
+      if (!labelsReady) return;
+      if (
+        visibleItems.size === 0 &&
+        labelsRef.current.size > 0 &&
+        isFirstRenderRef.current
+      ) {
+        requestAnimationFrame(() => {
+          loadNextBatch({
+            currentSet: new Set(),
+            version: layoutVersionRef.current,
+          });
+        });
+        isFirstRenderRef.current = false;
+      }
+    }, [visibleItems, labelsReady]);
+
+    useEffect(() => {
+      if (isFirstRenderRef.current) return;
+
+      requestIdleCallback(() => {
+        requestAnimationFrame(() => {
+          clearTimeout(searchTimeoutRef.current);
+          triggerReRender((prev) => !prev);
+          layoutVersionRef.current += 0.1;
+          setVisibleItems(new Set());
+          searchTimeoutRef.current = setTimeout(() => {
+            loadNextBatch({
+              currentSet: new Set(),
+              version: layoutVersionRef.current,
+            });
+          }, 100);
+        });
+      });
+    }, [labelSearchTerm]);
+
     return (
       <>
         <div ref={rootContainerRef} className="starting-div">
           <div ref={containerRef} className="section-container">
             {/* <NewLabel triggerReRender={triggerReRender} /> */}
             {[...labelsRef.current]
-              .reverse()
+              .sort(
+                ([, a], [, b]) => new Date(b.createdAt) - new Date(a.createdAt)
+              )
               .map(([uuid, labelData], index) => {
+                if (!visibleItems.has(uuid)) return null;
                 return (
                   <Label
                     index={index === 0 ? index : ""}
                     setTooltipAnchor={setTooltipAnchor}
                     handleDeleteLabel={handleDeleteLabel}
                     key={uuid}
+                    isGrid={isGrid}
                     dispatchNotes={dispatchNotes}
+                    fadingNotes={fadingNotes}
                     labelData={labelData}
                     triggerReRender={triggerReRender}
                     calculateLayout={calculateLayout}

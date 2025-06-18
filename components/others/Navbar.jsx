@@ -23,6 +23,7 @@ import LeftArrow from "../icons/LeftArrow";
 
 const Navbar = ({ user }) => {
   const {
+    setLabelSearchTerm,
     setSearchTerm,
     searchRef,
     skipHashChangeRef,
@@ -220,15 +221,19 @@ const Navbar = ({ user }) => {
       }
 
       requestAnimationFrame(() => {
-        if (hash === "search" || hash.startsWith("search/")) {
+        if (hash === "search") {
           setShowLayoutBtn(false);
-          setShowClearBtn(true);
         } else {
           const width = window.innerWidth;
-          setShowClearBtn(false);
           if (width >= 605) {
             setShowLayoutBtn(true);
           }
+        }
+
+        if (hash === "search" || hash.startsWith("search/")) {
+          setShowClearBtn(true);
+        } else {
+          setShowClearBtn(false);
         }
       });
 
@@ -295,7 +300,7 @@ const Navbar = ({ user }) => {
   const inputClick = () => {
     closeToolTip();
     const currentHash = window.location.hash.replace("#", "");
-    if (currentHash.startsWith("search")) {
+    if (currentHash.startsWith("search") || currentHash === "labels") {
       return;
     }
     const hash = "search";
@@ -319,8 +324,13 @@ const Navbar = ({ user }) => {
   const debouncedHandleInputOnChange = useMemo(
     () =>
       debounce((e) => {
-        skipHashChangeRef.current = true;
-        setSearchTerm(e.target.value);
+        const hash = window.location.hash.replace("#", "");
+        if (hash === "labels") {
+          setLabelSearchTerm(e.target.value.trim());
+        } else {
+          skipHashChangeRef.current = true;
+          setSearchTerm(e.target.value.trim());
+        }
       }, 300),
     []
   );
@@ -490,7 +500,9 @@ const Navbar = ({ user }) => {
                         }
                       : inputClick
                   }
-                  onMouseEnter={(e) => handleMouseEnter(e, "Search")}
+                  onMouseEnter={(e) =>
+                    handleMouseEnter(e, threshold1 ? "Close search" : "Search")
+                  }
                   onMouseLeave={handleMouseLeave}
                   className="nav-btn nav-search-icon"
                 >

@@ -17,21 +17,28 @@ import LabelIcon from "../icons/LabelIcon";
 import FolderIcon from "../icons/FolderIcon";
 import Tooltip from "../Tools/Tooltip";
 import { useAppContext } from "@/context/AppContext";
-import NavBtn from "./NavBtn";
+import SideBtn from "./SideBtn";
 import RightTooltip from "../Tools/RightTooltip";
 
 const Sidebar = memo(() => {
-  const { labelsRef, labelsReady } = useAppContext();
+  const { labelsRef, labelsReady, swapPinnedLabels } = useAppContext();
   const addButtonRef = useRef(null);
   const containerRef = useRef(null);
   const [tooltipAnchor, setTooltipAnchor] = useState(null);
   const [currentHash, setCurrentHash] = useState(null);
+  const [isDragging, setIsDragging] = useState(null);
   const layoutFrameRef = useRef(null);
 
   const items = [
     { type: "nav", name: "Home", hash: "home", Icon: HomeIcon },
     { type: "nav", name: "Labels", hash: "labels", Icon: FolderIcon },
-    { type: "nav", name: "Reminders", hash: "reminders", Icon: BellIcon },
+    {
+      type: "nav",
+      name: "Reminders",
+      hash: "reminders",
+      Icon: BellIcon,
+      uuid: "remind",
+    },
     { type: "nav", name: "Archive", hash: "archive", Icon: SideArchiveIcon },
     { type: "nav", name: "Trash", hash: "trash", Icon: TrashIcon },
   ];
@@ -155,10 +162,13 @@ const Sidebar = memo(() => {
           });
           window.dispatchEvent(event);
 
-          const setHash = hash.replace("label/", "");
+          // const setHash = hash.replace("label/", "");
 
-          setCurrentHash(setHash);
-        } else if (!hash.toLowerCase().startsWith("note/")) {
+          setCurrentHash(hash);
+        } else if (
+          !hash.toLowerCase().startsWith("note/") &&
+          !hash.toLowerCase().startsWith("search")
+        ) {
           setCurrentHash("home");
         }
       });
@@ -224,6 +234,29 @@ const Sidebar = memo(() => {
     }
   };
 
+  const draggedUUIDRef = useRef(null);
+  const overUUIDRef = useRef(null);
+
+  const handleDragStart = (labelUUID) => {
+    if (isDragging) return;
+    setIsDragging(labelUUID);
+    draggedUUIDRef.current = labelUUID;
+    closeToolTip();
+    document.body.classList.add("dragging-sidebar");
+
+    const handleDragEnd = () => {
+      swapPinnedLabels(labelUUID, overUUIDRef.current);
+      setIsDragging(null);
+      overUUIDRef.current = null;
+      draggedUUIDRef.current = null;
+
+      document.body.classList.remove("dragging-sidebar");
+      document.removeEventListener("mouseup", handleDragEnd);
+    };
+
+    document.addEventListener("mouseup", handleDragEnd);
+  };
+
   if (currentHash === null) return;
 
   return (
@@ -239,11 +272,16 @@ const Sidebar = memo(() => {
         >
           <AddButton />
         </button>
-        <div ref={containerRef} className="sidebar-icons-container">
+        <div
+          ref={containerRef}
+          className={`sidebar-icons-container ${
+            isDragging ? "side-dragging" : ""
+          }`}
+        >
           <AnimatePresence>
             {navItems.map(({ type, name, hash, Icon, uuid: labelUUID }) => (
-              <NavBtn
-                key={hash}
+              <SideBtn
+                key={labelUUID || hash}
                 type={type}
                 name={name}
                 hash={hash}
@@ -254,6 +292,9 @@ const Sidebar = memo(() => {
                 calculateVerticalLayout={calculateVerticalLayout}
                 pageMounted={pageMounted}
                 containerRef={containerRef}
+                handleDragStart={handleDragStart}
+                overUUIDRef={overUUIDRef}
+                isDragging={isDragging}
               />
             ))}
             {/* <span className="copyright-text">&copy; {currentYear}</span> */}

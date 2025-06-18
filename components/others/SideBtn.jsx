@@ -3,7 +3,7 @@ import React, { memo, useEffect, useState } from "react";
 import MoreMenu from "./MoreMenu";
 import { useAppContext } from "@/context/AppContext";
 
-const NavBtn = ({
+const SideBtn = ({
   type,
   name,
   hash,
@@ -14,11 +14,24 @@ const NavBtn = ({
   calculateVerticalLayout,
   pageMounted,
   containerRef,
+  handleDragStart,
+  overUUIDRef,
+  isDragging,
 }) => {
   const { handlePin, labelsRef } = useAppContext();
   const [mounted, setMounted] = useState(null);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
+  const selected = () => {
+    const decodedCurrentHash = decodeURIComponent(currentHash).toLowerCase();
+
+    if (currentHash.startsWith("label/")) {
+      const decodedBtnHash = decodeURIComponent(hash).toLowerCase();
+      return type === "label" && decodedCurrentHash === decodedBtnHash;
+    } else {
+      return type === "nav" && decodedCurrentHash === name.toLowerCase();
+    }
+  };
 
   useEffect(() => {
     requestAnimationFrame(() => {
@@ -105,47 +118,49 @@ const NavBtn = ({
     },
   ];
 
+  const handleMouseDown = (e) => {
+    if (e.button !== 0 || type !== "label") {
+      return;
+    }
+
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const targetElement = e.currentTarget;
+    const target = e.target;
+
+    const detectDrag = (event) => {
+      const deltaX = Math.abs(event.clientX - startX);
+      const deltaY = Math.abs(event.clientY - startY);
+
+      if (deltaX > 5 || deltaY > 5) {
+        // if (
+        // targetElement === noteRef.current &&
+        // !target.classList.contains("not-draggable")
+        // ) {
+        handleDragStart(labelUUID);
+        // }
+        document.removeEventListener("mousemove", detectDrag);
+      }
+    };
+
+    const handleMouseUp = () => {
+      document.removeEventListener("mousemove", detectDrag);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+
+    document.addEventListener("mousemove", detectDrag);
+    document.addEventListener("mouseup", handleMouseUp);
+  };
+
+  const handleDragOver = (labelUUID) => {
+    if ((type === "label" || name === "Reminders") && isDragging) {
+      overUUIDRef.current = labelUUID;
+    }
+  };
+
   return (
     <>
       <motion.div
-        key={hash}
-        onContextMenu={(e) => {
-          e.preventDefault();
-          closeToolTip();
-
-          const scrollContainer = containerRef.current;
-          const currentTarget = e.currentTarget;
-
-          const virtualAnchor = {
-            getBoundingClientRect: () => {
-              const targetRect = currentTarget.getBoundingClientRect();
-              const containerRect = scrollContainer.getBoundingClientRect();
-
-              const offsetX =
-                targetRect.left -
-                containerRect.left +
-                scrollContainer.scrollLeft;
-              const offsetY =
-                targetRect.top - containerRect.top + scrollContainer.scrollTop;
-
-              return new DOMRect(
-                containerRect.left + offsetX - scrollContainer.scrollLeft,
-                containerRect.top + offsetY - scrollContainer.scrollTop,
-                targetRect.width,
-                targetRect.height
-              );
-            },
-            contextElement: scrollContainer,
-          };
-
-          setAnchorEl({ ...virtualAnchor, navTitle: name });
-          setMoreMenuOpen(true);
-        }}
-        className={`link-btn ${moreMenuOpen ? "side-menu-open" : ""} ${
-          decodeURIComponent(currentHash).toLowerCase() === name.toLowerCase()
-            ? "link-btn-selected"
-            : ""
-        }`}
         initial={{
           marginRight: pageMounted ? 150 : 0,
           opacity: pageMounted ? 0 : 1,
@@ -157,20 +172,67 @@ const NavBtn = ({
           transition: { duration: 0.16, ease: "easeInOut", type: "tween" },
         }}
         transition={{ type: "spring", stiffness: 800, damping: 50, mass: 1 }}
-        onMouseEnter={(e) => handleMouseEnter(e, name)}
-        onMouseLeave={handleMouseLeave}
-        id={hash}
-        tabIndex="-1"
-        onClick={(e) => handleIconClick(e, hash)}
+        className={`${
+          overUUIDRef.current === labelUUID ? "hovered-side-btn" : ""
+        }`}
         style={{
-          backgroundColor: moreMenuOpen && "rgba(0,0,0,0.07)",
           transition:
             mounted && pageMounted
-              ? "transform 0.2s ease, background-color 0.2s ease"
+              ? "transform 0.17s ease, background-color 0.2s ease"
               : "none",
         }}
+        onMouseEnter={()=> handleDragOver(labelUUID)}
       >
-        <Icon />
+        <div
+          key={hash}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            closeToolTip();
+
+            const scrollContainer = containerRef.current;
+            const currentTarget = e.currentTarget;
+
+            const virtualAnchor = {
+              getBoundingClientRect: () => {
+                const targetRect = currentTarget.getBoundingClientRect();
+                const containerRect = scrollContainer.getBoundingClientRect();
+
+                const offsetX =
+                  targetRect.left -
+                  containerRect.left +
+                  scrollContainer.scrollLeft;
+                const offsetY =
+                  targetRect.top -
+                  containerRect.top +
+                  scrollContainer.scrollTop;
+
+                return new DOMRect(
+                  containerRect.left + offsetX - scrollContainer.scrollLeft,
+                  containerRect.top + offsetY - scrollContainer.scrollTop,
+                  targetRect.width,
+                  targetRect.height
+                );
+              },
+              contextElement: scrollContainer,
+            };
+
+            setAnchorEl({ ...virtualAnchor, navTitle: name });
+            setMoreMenuOpen(true);
+          }}
+          className={`link-btn ${
+            moreMenuOpen || isDragging === labelUUID ? "side-btn-active" : ""
+          } ${selected() ? "link-btn-selected" : ""} `}
+          onMouseEnter={(e) => {
+            handleMouseEnter(e, name);
+          }}
+          onMouseLeave={handleMouseLeave}
+          id={hash}
+          tabIndex="-1"
+          onClick={(e) => handleIconClick(e, hash)}
+          onMouseDown={handleMouseDown}
+        >
+          <Icon />
+        </div>
       </motion.div>
       <AnimatePresence>
         {moreMenuOpen && (
@@ -186,4 +248,4 @@ const NavBtn = ({
   );
 };
 
-export default memo(NavBtn);
+export default memo(SideBtn);

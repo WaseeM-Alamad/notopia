@@ -1149,6 +1149,22 @@ export const updateLabelAction = async (data) => {
         message: "Label pinned state updated successfully!",
         status: 201,
       };
+    } else if (data.type === "side-dnd") {
+      const set = {};
+      const arrayFilters = [];
+
+      data.affected.forEach((label, index) => {
+        set[`labels.$[label${index}].pinDate`] = label.pinDate;
+        arrayFilters.push({ [`label${index}.uuid`]: label.uuid });
+      });
+
+      await User.updateOne({ _id: userID }, { $set: set }, { arrayFilters });
+
+      return {
+        success: true,
+        message: "Labels updated successfully!",
+        status: 201,
+      };
     }
   } catch (error) {
     console.log(error);

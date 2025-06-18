@@ -4,7 +4,7 @@ import "@/assets/styles/modal.css";
 import Button from "../Tools/Button";
 import PinIcon from "../icons/PinIcon";
 import { getNoteFormattedDate } from "@/utils/noteDateFormatter";
-import { debounce } from "lodash";
+import { debounce, filter } from "lodash";
 import {
   NoteImageDeleteAction,
   NoteTextUpdateAction,
@@ -22,6 +22,7 @@ import ListItemsLayout from "./ListitemsLayout";
 const Modal = ({
   localNote,
   setLocalNote,
+  filters,
   setFadingNotes,
   noteActions,
   initialStyle,
@@ -33,7 +34,7 @@ const Modal = ({
   dispatchNotes,
   openSnackFunction,
   setModalStyle,
-  current,
+  currentSection,
 }) => {
   const { handleLabelNoteCount, labelsRef, ignoreKeysRef } = useAppContext();
   const [isMounted, setIsMounted] = useState(false);
@@ -60,6 +61,8 @@ const Modal = ({
   const modalRef = useRef(null);
   const archiveRef = useRef(false);
   const trashRef = useRef(false);
+  const delayLabelDispatchRef = useRef(false);
+  const delayImageDispatchRef = useRef(false);
   const imagesChangedRef = useRef(false);
   const prevHash = useRef(null);
   const ignoreTopRef = useRef(false);
@@ -67,7 +70,7 @@ const Modal = ({
   const modalOpenRef = useRef(false);
 
   const centerModal = () => {
-    if (!modalRef.current || !initialStyle) return;
+    if (!modalRef.current || !initialStyle.element) return;
     requestAnimationFrame(() => {
       setTimeout(() => {
         const modal = modalRef.current;
@@ -88,21 +91,24 @@ const Modal = ({
   };
 
   const positionModal = () => {
-    if (!modalRef.current || !initialStyle) return;
-
-    const rect = initialStyle.element.getBoundingClientRect();
+    if (!modalRef.current) return;
     const modal = modalRef.current;
+    if (initialStyle.element) {
+      const rect = initialStyle.element.getBoundingClientRect();
 
-    modal.style.display = "flex";
-    modal.style.left = `${rect.left}px`;
-    modal.style.top = `${rect.top}px`;
-    modal.style.transformOrigin = "top left";
+      modal.style.left = `${rect.left}px`;
+      modal.style.top = `${rect.top}px`;
+      modal.style.transformOrigin = "top left";
 
-    const scaleX = rect.width / modal.offsetWidth;
-    const scaleY = rect.height / modal.offsetHeight;
+      const scaleX = rect.width / modal.offsetWidth;
+      const scaleY = rect.height / modal.offsetHeight;
 
-    // Set starting scale + no translation (start at note)
-    modal.style.transform = `translate(0px, 0px) scale(${scaleX}, ${scaleY})`;
+      // Set starting scale + no translation (start at note)
+      modal.style.transform = `translate(0px, 0px) scale(${scaleX}, ${scaleY})`;
+    } else {
+      modal.style.right = `10%`;
+      modal.style.top = `30%`;
+    }
   };
 
   const center = () => {
@@ -117,9 +123,8 @@ const Modal = ({
   };
 
   const reverseModalToNote = () => {
-    if (!modalRef.current || !initialStyle) return;
+    if (!modalRef.current || !initialStyle.element) return;
 
-    modalOpenRef.current = false;
     const modal = modalRef.current;
     const rect = initialStyle.element.getBoundingClientRect();
 
@@ -183,7 +188,7 @@ const Modal = ({
       }, 20);
     }
 
-    if ((!archiveRef.current || !trashRef.current) && initialStyle) {
+    if ((!archiveRef.current || !trashRef.current) && initialStyle.element) {
       initialStyle.element.style.opacity = "1";
     }
 
@@ -212,11 +217,38 @@ const Modal = ({
   }, []);
 
   useEffect(() => {
-    if (!modalRef.current) return;
+    if (!modalRef.current || !initialStyle) return;
+
     const overlay = document.getElementById("n-overlay");
 
     if (isOpen) {
-      window.location.hash = `NOTE/${note?.uuid}`;
+      window.location.hash = `NOTE/${localNote?.uuid}`;
+      // history.pushState(null, null, `#NOTE/${note?.uuid}`);
+      // window.dispatchEvent(new HashChangeEvent("hashchange"));
+      console.log(filters);
+
+      if (currentSection === "DynamicLabel") {
+        delayLabelDispatchRef.current = true;
+      }
+
+      Object.entries(filters).forEach((filter) => {
+        const title = filter[0];
+        const content = filter[1];
+
+        if (content) {
+          if (title === "label") {
+            const matchingLabel = note.labels.find(
+              (labelUUID) => labelUUID === content
+            );
+            if (matchingLabel === content) {
+              delayLabelDispatchRef.current = true;
+            }
+          } else if (title === "image") {
+            delayImageDispatchRef.current = content;
+          }
+        }
+      });
+
       ignoreKeysRef.current = true;
       archiveRef.current = false;
       trashRef.current = false;
@@ -231,6 +263,8 @@ const Modal = ({
       if (titleRef?.current) {
         titleRef.current.innerText = note?.title;
       }
+
+      modalRef.current.style.display = "flex";
 
       positionModal();
 
@@ -258,18 +292,24 @@ const Modal = ({
         }, 30);
       }, 220);
 
-      centerModal();
+      if (initialStyle.element) {
+        // console.log("center modal");
+        centerModal();
+      } else {
+        center();
+      }
     } else {
       ignoreKeysRef.current = false;
       if (!prevHash.current) {
-        history.pushState(null, null, `#${current.toLowerCase()}`);
-
-        window.dispatchEvent(new HashChangeEvent("hashchange"));
+        // history.pushState(null, null, `#${currentSection.toLowerCase()}`);
+        window.location.hash = `${currentSection.toLowerCase()}`;
       } else {
-        history.pushState(null, null, `#${prevHash.current}`);
-
-        window.dispatchEvent(new HashChangeEvent("hashchange"));
+        window.location.hash = `${prevHash.current}`;
       }
+
+      // window.location.hash = `${prevHash.current}`;
+
+      // window.dispatchEvent(new HashChangeEvent("hashchange"));
 
       modalRef.current.style.transition =
         "all 0.22s cubic-bezier(0.35, 0.9, 0.25, 1), opacity 0.13s";
@@ -277,20 +317,25 @@ const Modal = ({
       overlay.style.opacity = "0";
       inputsContainerRef.current.style.opacity = "0.15";
       checkForChanges();
-      if (initialStyle) {
+      modalOpenRef.current = false;
+      if (initialStyle.element) {
         setTimeout(() => {
           reverseModalToNote();
         }, 10);
       }
 
-      if (initialStyle) {
+      if (initialStyle.element) {
         setTimeout(() => {
+          delayLabelDispatchRef.current = false;
+          delayImageDispatchRef.current = false;
           closeModal();
         }, 220);
       } else {
         modalRef.current.style.transition = "opacity 0.09s";
         modalRef.current.style.opacity = 0;
         setTimeout(() => {
+          delayLabelDispatchRef.current = false;
+          delayImageDispatchRef.current = false;
           closeModal();
         }, 90);
       }
@@ -706,20 +751,30 @@ const Modal = ({
       });
     }
     if (imagesChangedRef.current) {
-      dispatchNotes({
-        type: "UPDATE_IMAGES",
-        note: note,
-        newImages: localNote?.images,
-      });
+      setTimeout(
+        () => {
+          dispatchNotes({
+            type: "UPDATE_IMAGES",
+            note: note,
+            newImages: localNote?.images,
+          });
+        },
+        delayImageDispatchRef.current ? 210 : 0
+      );
     }
     const labelsChange =
       JSON.stringify(localNote?.labels) === JSON.stringify(note?.labels);
     if (!labelsChange) {
-      dispatchNotes({
-        type: "UPDATE_NOTE_LABELS",
-        note: note,
-        newLabels: localNote?.labels,
-      });
+      setTimeout(
+        () => {
+          dispatchNotes({
+            type: "UPDATE_NOTE_LABELS",
+            note: note,
+            newLabels: localNote?.labels,
+          });
+        },
+        delayLabelDispatchRef.current ? 220 : 0
+      );
     }
   };
 
@@ -971,7 +1026,8 @@ const Modal = ({
                     >
                       <label className="note-label">{label}</label>
                       <div
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           closeToolTip();
                           removeLabel(labelUUID);
                         }}
@@ -987,27 +1043,32 @@ const Modal = ({
             </div>
           )}
 
-            <div style={{opacity: !isOpen && "0"}} className="modal-date-section">
-              <div onClick={(e) => e.stopPropagation()} className="edited">
-                {localNote?.isTrash
-                  ? "Note in Trash  •  "
-                  : localNote?.isArchived
-                  ? "Note in Archive  •  "
-                  : ""}
-                <span
-                  onMouseEnter={(e) =>
-                    handleMouseEnter(e, "Created " + formattedCreatedAtDate)
-                  }
-                  onMouseLeave={handleMouseLeave}
-                >
-                  Edited
-                  {" " + formattedEditedDate}
-                </span>
-              </div>
+          <div
+            style={{ opacity: !isOpen && "0" }}
+            className="modal-date-section"
+          >
+            <div onClick={(e) => e.stopPropagation()} className="edited">
+              {localNote?.isTrash
+                ? "Note in Trash  •  "
+                : localNote?.isArchived
+                ? "Note in Archive  •  "
+                : ""}
+              <span
+                onMouseEnter={(e) =>
+                  handleMouseEnter(e, "Created " + formattedCreatedAtDate)
+                }
+                onMouseLeave={handleMouseLeave}
+              >
+                Edited
+                {" " + formattedEditedDate}
+              </span>
             </div>
+          </div>
         </div>
         <Tools
           trigger={isOpen}
+          filters={filters}
+          delayLabelDispatchRef={delayLabelDispatchRef}
           archiveRef={archiveRef}
           trashRef={trashRef}
           setLocalNote={setLocalNote}

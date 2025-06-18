@@ -5,6 +5,7 @@ const SearchContext = createContext();
 
 export const SearchProvider = ({ children }) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [labelSearchTerm, setLabelSearchTerm] = useState("");
   const searchRef = useRef(null);
   const skipHashChangeRef = useRef(null);
   const [filters, setFilters] = useState({
@@ -17,6 +18,8 @@ export const SearchProvider = ({ children }) => {
       value={{
         searchTerm,
         setSearchTerm,
+        labelSearchTerm,
+        setLabelSearchTerm,
         searchRef,
         skipHashChangeRef,
         filters,

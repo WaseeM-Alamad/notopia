@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useRef, useState } from "react";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import { copyNoteAction, NoteUpdateAction, undoAction } from "@/utils/actions";
 import ColorSelectMenu from "./ColorSelectMenu";
 import "@/assets/styles/note.css";
@@ -16,8 +16,11 @@ import ManageLabelsMenu from "./ManageLabelsMenu";
 const NoteTools = ({
   index,
   note = {},
+  isFilteredNote = false,
   anchorEl,
   setAnchorEl,
+  selectedColor,
+  setSelectedColor,
   dispatchNotes,
   colorMenuOpen,
   setColorMenuOpen,
@@ -34,17 +37,17 @@ const NoteTools = ({
 
   const inputRef = useRef(null);
 
-  const handleColorClick = useCallback(
-    async (newColor) => {
-      closeToolTip();
-      if (newColor === note.color) return;
+  const handleColorClick = async (newColor) => {
+    closeToolTip();
+    if (newColor === note.color && !isFilteredNote) return;
+    setSelectedColor(newColor);
 
+    if (!isFilteredNote) {
       dispatchNotes({
         type: "UPDATE_COLOR",
         note: note,
         newColor: newColor,
       });
-
       window.dispatchEvent(new Event("loadingStart"));
       await NoteUpdateAction({
         type: "color",
@@ -52,9 +55,51 @@ const NoteTools = ({
         noteUUIDs: [note.uuid],
       });
       window.dispatchEvent(new Event("loadingEnd"));
-    },
-    [note.color]
-  );
+    } else {
+      noteActions({
+        type: "COLOR",
+        note: note,
+        newColor: newColor,
+      });
+      if (newColor !== selectedColor) {
+        window.dispatchEvent(new Event("loadingStart"));
+        await NoteUpdateAction({
+          type: "color",
+          value: newColor,
+          noteUUIDs: [note.uuid],
+        });
+        window.dispatchEvent(new Event("loadingEnd"));
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (!isFilteredNote) return;
+
+    const handler = async () => {
+      if (!colorMenuOpen && selectedColor !== note.color) {
+        noteActions({
+          type: "COLOR",
+          note: note,
+          newColor: selectedColor,
+          isUseEffectCall: true,
+        });
+        window.dispatchEvent(new Event("loadingStart"));
+        await NoteUpdateAction({
+          type: "color",
+          value: selectedColor,
+          noteUUIDs: [note.uuid],
+        });
+        window.dispatchEvent(new Event("loadingEnd"));
+      }
+    };
+
+    handler();
+  }, [colorMenuOpen]);
+
+  useEffect(() => {
+    setSelectedColor(note.color);
+  }, [note.color]);
 
   const handleBackground = useCallback(
     async (newBG) => {
@@ -468,7 +513,7 @@ const NoteTools = ({
                       handleColorClick={handleColorClick}
                       handleBackground={handleBackground}
                       anchorEl={colorAnchorEl}
-                      selectedColor={note.color}
+                      selectedColor={selectedColor}
                       selectedBG={note.background}
                       setTooltipAnchor={setTooltipAnchor}
                       isOpen={colorMenuOpen}

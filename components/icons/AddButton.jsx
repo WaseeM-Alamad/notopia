@@ -8,7 +8,8 @@ const AddButton = () => {
     setCurrentHash(window.location.hash);
 
     const handler = (e) => {
-      const hash = window.location.hash;
+      const hash = window.location.hash.replace("#", "").toLowerCase();
+      if (hash.startsWith("note/")) return;
       setCurrentHash(hash);
     };
 
@@ -30,14 +31,14 @@ const AddButton = () => {
       <g filter="url(#filter0_d_419_13)">
         <motion.path
           initial={{
-            rotate: currentHash.includes("trash") ? 45 : 0,
-            scale: currentHash.includes("trash") ? 0.5 : 1,
-            strokeWidth: currentHash.includes("trash") ? .8 : 0,
+            rotate: currentHash === "trash" ? 45 : 0,
+            scale: currentHash === "trash" ? 0.5 : 1,
+            strokeWidth: currentHash === "trash" ? .8 : 0,
           }}
           animate={{
-            rotate: currentHash.includes("trash") ? 45 : 0,
-            scale: currentHash.includes("trash") ? 0.5 : 1,
-            strokeWidth: currentHash.includes("trash") ? .8 : 0,
+            rotate: currentHash === "trash" ? 45 : 0,
+            scale: currentHash === "trash" ? 0.5 : 1,
+            strokeWidth: currentHash === "trash" ? .8 : 0,
           }}
           transition={{
             type: "spring",
@@ -51,13 +52,13 @@ const AddButton = () => {
       </g>
       <motion.path
         initial={{
-          scale: !currentHash.includes("trash") ? 0.9 : 1,
-          opacity: !currentHash.includes("trash") ? 0 : 1,
+          scale: currentHash !== "trash" ? 0.9 : 1,
+          opacity: currentHash !== "trash" ? 0 : 1,
         }}
         animate={{
-          scale: !currentHash.includes("trash") ? 0.9 : 1,
-          opacity: !currentHash.includes("trash") ? 0 : 1,
-          display: !currentHash.includes("trash") ? "none" : "",
+          scale: currentHash !== "trash" ? 0.9 : 1,
+          opacity: currentHash !== "trash" ? 0 : 1,
+          display: currentHash !== "trash" ? "none" : "",
         }}
         transition={{
           type: "spring",
@@ -72,10 +73,10 @@ const AddButton = () => {
         className="add-btn-fill"
       />
       {/* <motion.path
-        initial={{ x: !currentHash.includes("trash") ? -40 : 0 }}
+        initial={{ x: !currentHash === "trash" ? -40 : 0 }}
         animate={{
-          x: !currentHash.includes("trash") ? -40 : 0,
-          displax: !currentHash.includes("trash") ? "none" : "",
+          x: !currentHash === "trash" ? -40 : 0,
+          displax: !currentHash === "trash" ? "none" : "",
         }}
         transition={{
           x: { type: "spring", stiffness: 700, damping: 50, mass: 1 },

@@ -12,15 +12,17 @@ import AddNoteModal from "../others/AddNoteModal";
 import { AnimatePresence, motion } from "framer-motion";
 import TopMenuHome from "../others/topMenu/TopMenu";
 import ArchiveIcon from "../icons/ArchiveIcon";
+import { useAppContext } from "@/context/AppContext";
 
-const COLUMN_WIDTH = 240;
 const GUTTER = 15;
 
 const NoteWrapper = memo(
   ({
+    isGrid,
     note,
     ref,
     setSelectedNotesIDs,
+    selectedNotesRef,
     selectedNotes,
     index,
     handleNoteClick,
@@ -36,35 +38,48 @@ const NoteWrapper = memo(
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-      setTimeout(() => {
+      requestAnimationFrame(() => {
         setMounted(true);
-      }, 100);
+      });
     }, []);
 
     return (
       <motion.div
-        ref={ref}
-        className={`grid-item ${fadingNotes.has(note.uuid) ? "fade-out" : ""}`}
-        onClick={(e) => handleNoteClick(e, note, index)}
-        style={{
-          width: `${COLUMN_WIDTH}px`,
-          marginBottom: `${GUTTER}px`,
-          transition: `transform ${mounted ? "0.2s" : "0"} ease, opacity 0s`,
-        }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.2, type: "tween" }}
       >
-        <Note
-          note={note}
-          dispatchNotes={dispatchNotes}
-          index={index}
-          noteActions={noteActions}
-          calculateLayout={calculateLayout}
-          handleSelectNote={handleSelectNote}
-          setTooltipAnchor={setTooltipAnchor}
-          setSelectedNotesIDs={setSelectedNotesIDs}
-          selectedNotes={selectedNotes}
-          openSnackFunction={openSnackFunction}
-        />
-        {/* <p>{index}</p> */}
+        <div
+          ref={ref}
+          className={`grid-item ${
+            fadingNotes.has(note.uuid) ? "fade-out" : ""
+          }`}
+          onClick={(e) => handleNoteClick(e, note, index)}
+          style={{
+            maxWidth: `${isGrid ? 240 : 600}px`,
+            minWidth: !isGrid && "15rem",
+            width: "100%",
+            marginBottom: `${GUTTER}px`,
+            transition: `transform ${
+              mounted ? "0.22s" : "0"
+            } cubic-bezier(0.5, 0.2, 0.3, 1), opacity 0s`,
+          }}
+        >
+          <Note
+            note={note}
+            dispatchNotes={dispatchNotes}
+            index={index}
+            selectedNotesRef={selectedNotesRef}
+            noteActions={noteActions}
+            calculateLayout={calculateLayout}
+            handleSelectNote={handleSelectNote}
+            setTooltipAnchor={setTooltipAnchor}
+            setSelectedNotesIDs={setSelectedNotesIDs}
+            selectedNotes={selectedNotes}
+            openSnackFunction={openSnackFunction}
+          />
+          {/* <p>{index}</p> */}
+        </div>
       </motion.div>
     );
   }
@@ -74,7 +89,10 @@ NoteWrapper.displayName = "NoteWrapper";
 
 const Archive = memo(
   ({
+    visibleItems,
+    setVisibleItems,
     notesStateRef,
+    selectedNotesRef,
     notes,
     order,
     dispatchNotes,
@@ -88,12 +106,18 @@ const Archive = memo(
     rootContainerRef,
     noteActions,
     notesReady,
+    containerRef,
+    loadNextBatch,
+    layoutVersionRef,
+    isGrid,
   }) => {
-    const containerRef = useRef(null);
+    const { layout } = useAppContext();
+    const COLUMN_WIDTH = layout === "grid" ? 240 : 600;
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
+    const isFirstRenderRef = useRef(true);
 
-    const notesExist = !order.some((uuid) => {
+    const notesExist = order.some((uuid) => {
       const note = notes.get(uuid);
       if (!note.isArchived || note.isTrash) return false;
       return true;
@@ -115,11 +139,12 @@ const Archive = memo(
         const paddingRight = parseFloat(style.paddingRight) || 0;
         const availableWidth = parentWidth - paddingLeft - paddingRight;
 
-        const columns = Math.max(
-          1,
-          Math.floor(availableWidth / (COLUMN_WIDTH + GUTTER))
-        );
-        const contentWidth = columns * (COLUMN_WIDTH + GUTTER) - GUTTER;
+        const columns = !isGrid
+          ? 1
+          : Math.max(1, Math.floor(availableWidth / (COLUMN_WIDTH + GUTTER)));
+        const contentWidth = !isGrid
+          ? COLUMN_WIDTH
+          : columns * (COLUMN_WIDTH + GUTTER) - GUTTER;
 
         container.style.width = `${contentWidth}px`;
         container.style.maxWidth = "100%";
@@ -156,7 +181,7 @@ const Archive = memo(
         const totalHeight = positionItems(Array.from(items));
         container.style.height = `${totalHeight}px`;
       });
-    }, []);
+    }, [isGrid]);
 
     const debouncedCalculateLayout = useCallback(() => {
       if (resizeTimeoutRef.current) {
@@ -166,6 +191,28 @@ const Archive = memo(
         calculateLayout();
       }, 100);
     }, [calculateLayout]);
+
+    useEffect(() => {
+      if (
+        visibleItems.size === 0 &&
+        order.length > 0 &&
+        isFirstRenderRef.current
+      ) {
+        requestAnimationFrame(() => {
+          loadNextBatch({
+            currentSet: new Set(),
+            notes: notes,
+            order: order,
+            version: layoutVersionRef.current,
+          });
+        });
+        isFirstRenderRef.current = false;
+      }
+    }, [order, notes, visibleItems]);
+
+    useEffect(() => {
+      calculateLayout();
+    }, [visibleItems]);
 
     useEffect(() => {
       calculateLayout();
@@ -193,34 +240,37 @@ const Archive = memo(
       <>
         <div ref={rootContainerRef} className="starting-div">
           {/* <div style={{ padding: "0 2rem" }} className="page-header"> */}
-            {/* <ArchiveIcon size={22} color="#212121" /> */}
-            {/* <div /> */}
-            {/* <h1 className="page-header-title"> */}
-              {/* <span>Archive</span> */}
-            {/* </h1> */}
-            {/* <div
+          {/* <ArchiveIcon size={22} color="#212121" /> */}
+          {/* <div /> */}
+          {/* <h1 className="page-header-title"> */}
+          {/* <span>Archive</span> */}
+          {/* </h1> */}
+          {/* <div
             // animate={{ width: "100%" }}
             // className="page-header-divider"
             /> */}
-            {/* <div className="divider-tools-container"> */}
-              {/* <div className="divider-tool"> */}
-                {/* <SortByIcon /> */}
-                {/* <span className="divider-tool-text">Sort by</span> */}
-              {/* </div> */}
-              {/* <div className="divider-tool"> */}
-                {/* <LabelIcon /> */}
-                {/* <span className="divider-tool-text">Labels</span> */}
-              {/* </div> */}
-            {/* </div> */}
+          {/* <div className="divider-tools-container"> */}
+          {/* <div className="divider-tool"> */}
+          {/* <SortByIcon /> */}
+          {/* <span className="divider-tool-text">Sort by</span> */}
+          {/* </div> */}
+          {/* <div className="divider-tool"> */}
+          {/* <LabelIcon /> */}
+          {/* <span className="divider-tool-text">Labels</span> */}
+          {/* </div> */}
+          {/* </div> */}
           {/* </div> */}
           <div ref={containerRef} className="section-container">
             {order.map((uuid, index) => {
               const note = notes.get(uuid);
+              if (!visibleItems.has(note.uuid)) return null;
               if (note.isArchived && !note.isTrash)
                 return (
                   <NoteWrapper
                     key={note.uuid}
                     note={note}
+                    isGrid={isGrid}
+                    selectedNotesRef={selectedNotesRef}
                     dispatchNotes={dispatchNotes}
                     index={index}
                     handleNoteClick={handleNoteClick}
@@ -236,8 +286,8 @@ const Archive = memo(
                 );
             })}
           </div>
-          <div className="empty-page">
-            {notesReady && notesExist && (
+          <div style={{ display: notesExist && "none" }} className="empty-page">
+            {notesReady && !notesExist && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}

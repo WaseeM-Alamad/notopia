@@ -3,18 +3,18 @@ import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import Note from "../others/Note";
 import AddNoteModal from "../others/AddNoteModal";
 import { AnimatePresence, motion } from "framer-motion";
-import TopMenuHome from "../others/topMenu/TopMenu";
 import { emptyTrashAction } from "@/utils/actions";
 import DeleteModal from "../others/DeleteModal";
 import { useAppContext } from "@/context/AppContext";
 
-const COLUMN_WIDTH = 240;
 const GUTTER = 15;
 
 const NoteWrapper = memo(
   ({
+    isGrid,
     note,
     noteActions,
+    selectedNotesRef,
     ref,
     setSelectedNotesIDs,
     dispatchNotes,
@@ -30,35 +30,48 @@ const NoteWrapper = memo(
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-      setTimeout(() => {
+      requestAnimationFrame(() => {
         setMounted(true);
-      }, 100);
+      });
     }, []);
 
     return (
       <motion.div
-        ref={ref}
-        className={`grid-item ${fadingNotes.has(note.uuid) ? "fade-out" : ""}`}
-        onClick={(e) => handleNoteClick(e, note, index)}
-        style={{
-          width: `${COLUMN_WIDTH}px`,
-          marginBottom: `${GUTTER}px`,
-          transition: `transform ${mounted ? "0.2s" : "0"} ease`,
-        }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.2, type: "tween" }}
       >
-        <Note
-          note={note}
-          noteActions={noteActions}
-          setSelectedNotesIDs={setSelectedNotesIDs}
-          selectedNotes={selectedNotes}
-          dispatchNotes={dispatchNotes}
-          setTooltipAnchor={setTooltipAnchor}
-          openSnackFunction={openSnackFunction}
-          handleSelectNote={handleSelectNote}
-          index={index}
-          calculateLayout={calculateLayout}
-        />
-        {/* <p>{index}</p> */}
+        <div
+          ref={ref}
+          className={`grid-item ${
+            fadingNotes.has(note.uuid) ? "fade-out" : ""
+          }`}
+          onClick={(e) => handleNoteClick(e, note, index)}
+          style={{
+            maxWidth: `${isGrid ? 240 : 600}px`,
+            minWidth: !isGrid && "15rem",
+            width: "100%",
+            marginBottom: `${GUTTER}px`,
+            transition: `transform ${
+              mounted ? "0.22s" : "0"
+            } cubic-bezier(0.5, 0.2, 0.3, 1), opacity 0s`,
+          }}
+        >
+          <Note
+            note={note}
+            selectedNotesRef={selectedNotesRef}
+            noteActions={noteActions}
+            setSelectedNotesIDs={setSelectedNotesIDs}
+            selectedNotes={selectedNotes}
+            dispatchNotes={dispatchNotes}
+            setTooltipAnchor={setTooltipAnchor}
+            openSnackFunction={openSnackFunction}
+            handleSelectNote={handleSelectNote}
+            index={index}
+            calculateLayout={calculateLayout}
+          />
+          {/* <p>{index}</p> */}
+        </div>
       </motion.div>
     );
   }
@@ -66,8 +79,11 @@ const NoteWrapper = memo(
 
 NoteWrapper.displayName = "NoteWrapper";
 
-const Home = memo(
+const Trash = memo(
   ({
+    visibleItems,
+    selectedNotesRef,
+    setVisibleItems,
     notesStateRef,
     notes,
     order,
@@ -82,14 +98,19 @@ const Home = memo(
     rootContainerRef,
     setFadingNotes,
     fadingNotes,
+    containerRef,
+    loadNextBatch,
+    layoutVersionRef,
+    isGrid,
   }) => {
-    const { batchNoteCount } = useAppContext();
+    const { batchNoteCount, layout } = useAppContext();
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-    const containerRef = useRef(null);
+    const COLUMN_WIDTH = layout === "grid" ? 240 : 600;
     const resizeTimeoutRef = useRef(null);
+    const isFirstRenderRef = useRef(true);
     const layoutFrameRef = useRef(null);
 
-    const notesExist = !order.some((uuid) => {
+    const notesExist = order.some((uuid) => {
       const note = notes.get(uuid);
       if (!note.isTrash) return false;
       return true;
@@ -111,11 +132,12 @@ const Home = memo(
         const paddingRight = parseFloat(style.paddingRight) || 0;
         const availableWidth = parentWidth - paddingLeft - paddingRight;
 
-        const columns = Math.max(
-          1,
-          Math.floor(availableWidth / (COLUMN_WIDTH + GUTTER))
-        );
-        const contentWidth = columns * (COLUMN_WIDTH + GUTTER) - GUTTER;
+        const columns = !isGrid
+          ? 1
+          : Math.max(1, Math.floor(availableWidth / (COLUMN_WIDTH + GUTTER)));
+        const contentWidth = !isGrid
+          ? COLUMN_WIDTH
+          : columns * (COLUMN_WIDTH + GUTTER) - GUTTER;
 
         container.style.width = `${contentWidth}px`;
         container.style.maxWidth = "100%";
@@ -152,7 +174,7 @@ const Home = memo(
         const totalHeight = positionItems(Array.from(items));
         container.style.height = `${totalHeight}px`;
       });
-    }, []);
+    }, [isGrid]);
 
     const debouncedCalculateLayout = useCallback(() => {
       if (resizeTimeoutRef.current) {
@@ -162,6 +184,28 @@ const Home = memo(
         calculateLayout();
       }, 100);
     }, [calculateLayout]);
+
+    useEffect(() => {
+      if (
+        visibleItems.size === 0 &&
+        order.length > 0 &&
+        isFirstRenderRef.current
+      ) {
+        requestAnimationFrame(() => {
+          loadNextBatch({
+            currentSet: new Set(),
+            notes: notes,
+            order: order,
+            version: layoutVersionRef.current,
+          });
+        });
+        isFirstRenderRef.current = false;
+      }
+    }, [order, notes, visibleItems]);
+
+    useEffect(() => {
+      calculateLayout();
+    }, [visibleItems]);
 
     const handleEmptyTrash = async () => {
       let deletedNotesUUIDs = [];
@@ -238,11 +282,14 @@ const Home = memo(
           <div ref={containerRef} className="section-container">
             {order.map((uuid, index) => {
               const note = notes.get(uuid);
+              if (!visibleItems.has(note.uuid)) return null;
               if (note.isTrash)
                 return (
                   <NoteWrapper
+                    isGrid={isGrid}
                     key={note.uuid}
                     note={note}
+                    selectedNotesRef={selectedNotesRef}
                     noteActions={noteActions}
                     dispatchNotes={dispatchNotes}
                     index={index}
@@ -257,8 +304,8 @@ const Home = memo(
                 );
             })}
           </div>
-          <div className="empty-page">
-            {notesReady && notesExist && (
+          <div style={{ display: notesExist && "none" }} className="empty-page">
+            {notesReady && !notesExist && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -314,6 +361,6 @@ const Home = memo(
   }
 );
 
-Home.displayName = "Home";
+Trash.displayName = "Trash";
 
-export default Home;
+export default Trash;

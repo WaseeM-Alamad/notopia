@@ -20,8 +20,10 @@ import DeleteModal from "./DeleteModal";
 
 const NoteModalTools = ({
   localNote,
+  filters,
   setLocalNote,
   openSnackFunction,
+  delayDispatchRef,
   note,
   noteActions,
   setTooltipAnchor,
@@ -42,18 +44,12 @@ const NoteModalTools = ({
   const [labelsOpen, setLabelsOpen] = useState(false);
   const { data: session } = useSession();
   const userID = session?.user?.id;
-  const colorButtonRef = useRef(null);
   const closeRef = useRef(null);
   const inputRef = useRef(null);
 
   const handleColorClick = useCallback(async (color) => {
     if (color === localNote?.color) return;
     setLocalNote((prev) => ({ ...prev, color: color }));
-    // dispatchNotes({
-    //   type: "UPDATE_COLOR",
-    //   note: note,
-    //   newColor: color,
-    // });
     window.dispatchEvent(new Event("loadingStart"));
     await NoteUpdateAction({
       type: "color",

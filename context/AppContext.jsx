@@ -272,6 +272,76 @@ export function AppProvider({ children }) {
     window.dispatchEvent(new Event("loadingEnd"));
   };
 
+  const swapPinnedLabels = async (draggedUUID, overUUID) => {
+    if (!draggedUUID || !overUUID) return;
+
+    const changedLabels = [];
+    let initialIndex = -2;
+    let endIndex = -1;
+
+    if (overUUID === "remind") {
+      const entries = Array.from(labelsRef.current.entries()).sort(
+        ([, a], [, b]) =>
+          new Date(b.pinDate).getTime() - new Date(a.pinDate).getTime()
+      );
+      const draggedIndex = entries.findIndex(([id]) => id === draggedUUID);
+      initialIndex = draggedIndex;
+      const [removed] = entries.splice(draggedIndex, 1);
+      entries.splice(0, 0, removed);
+      const now = Date.now();
+      const reordered = new Map(
+        entries.map(([id, label], i) => {
+          if (!label.isPinned) return [id, label];
+          if (id === draggedUUID) {
+            endIndex = i;
+          }
+          const newDate = now - i;
+          changedLabels.push({ uuid: id, pinDate: newDate });
+          return [id, { ...label, pinDate: newDate }];
+        })
+      );
+      labelsRef.current = reordered;
+    } else {
+      // Convert Map to array for easier reordering
+      const entries = Array.from(labelsRef.current.entries()).sort(
+        ([, a], [, b]) =>
+          new Date(b.pinDate).getTime() - new Date(a.pinDate).getTime()
+      );
+      const draggedIndex = entries.findIndex(([id]) => id === draggedUUID);
+      initialIndex = draggedIndex;
+      const overIndex = entries.findIndex(([id]) => id === overUUID);
+
+      // Remove dragged label and reinsert at new position
+      const [removed] = entries.splice(draggedIndex, 1);
+      entries.splice(
+        overIndex > draggedIndex ? overIndex : overIndex + 1,
+        0,
+        removed
+      );
+
+      // Recalculate pinDates so they stay consistent
+      const now = Date.now();
+      const reordered = new Map(
+        entries.map(([id, label], i) => {
+          if (!label.isPinned) return [id, label];
+          if (id === draggedUUID) {
+            endIndex = i;
+          }
+          const newDate = now - i;
+          changedLabels.push({ uuid: id, pinDate: newDate });
+          return [id, { ...label, pinDate: now - i }];
+        })
+      );
+      labelsRef.current = reordered;
+    }
+    if (initialIndex !== endIndex) {
+      window.dispatchEvent(new Event("refreshPinnedLabels"));
+      window.dispatchEvent(new Event("loadingStart"));
+      await updateLabelAction({ type: "side-dnd", affected: changedLabels });
+      window.dispatchEvent(new Event("loadingEnd"));
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -292,6 +362,7 @@ export function AppProvider({ children }) {
         handlePin,
         layout,
         setLayout,
+        swapPinnedLabels,
       }}
     >
       {children}

@@ -1,10 +1,16 @@
 import { useAppContext } from "@/context/AppContext";
-import React, { memo, useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import Note from "../others/Note";
 import { motion } from "framer-motion";
 import { getNoteFormattedDate } from "@/utils/noteDateFormatter";
 
-const COLUMN_WIDTH = 240;
 const GUTTER = 15;
 const GAP_BETWEEN_SECTIONS = 88;
 
@@ -12,6 +18,8 @@ const NoteWrapper = memo(
   ({
     dispatchNotes,
     openSnackFunction,
+    selectedNotesRef,
+    isGrid,
     note,
     noteActions,
     fadingNotes,
@@ -26,44 +34,58 @@ const NoteWrapper = memo(
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-      setTimeout(() => {
+      requestAnimationFrame(() => {
         setMounted(true);
-      }, 100);
+      });
     }, []);
 
     return (
       <motion.div
-        onClick={(e) => handleNoteClick(e, note, index)}
-        className={`grid-item ${fadingNotes.has(note.uuid) ? "fade-out" : ""}`}
-        style={{
-          width: `${COLUMN_WIDTH}px`,
-          marginBottom: `${GUTTER}px`,
-          transition: `transform ${
-            mounted ? "0.22s" : "0"
-          } cubic-bezier(0.5, 0.2, 0.3, 1), opacity 0s`,
-        }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.2, type: "tween" }}
       >
-        <Note
-          dispatchNotes={dispatchNotes}
-          note={note}
-          noteActions={noteActions}
-          setTooltipAnchor={setTooltipAnchor}
-          calculateLayout={calculateLayout}
-          setFadingNotes={setFadingNotes}
-          setSelectedNotesIDs={setSelectedNotesIDs}
-          handleSelectNote={handleSelectNote}
-          openSnackFunction={openSnackFunction}
-          index={index}
-        />
+        <div
+          onClick={(e) => handleNoteClick(e, note, index)}
+          className={`grid-item ${
+            fadingNotes.has(note.uuid) ? "fade-out" : ""
+          }`}
+          style={{
+            maxWidth: `${isGrid ? 240 : 600}px`,
+            minWidth: !isGrid && "15rem",
+            width: "100%",
+            marginBottom: `${GUTTER}px`,
+            transition: `transform ${
+              mounted ? "0.22s" : "0"
+            } cubic-bezier(0.5, 0.2, 0.3, 1), opacity 0s`,
+          }}
+        >
+          <Note
+            dispatchNotes={dispatchNotes}
+            note={note}
+            noteActions={noteActions}
+            selectedNotesRef={selectedNotesRef}
+            setTooltipAnchor={setTooltipAnchor}
+            calculateLayout={calculateLayout}
+            setFadingNotes={setFadingNotes}
+            setSelectedNotesIDs={setSelectedNotesIDs}
+            handleSelectNote={handleSelectNote}
+            openSnackFunction={openSnackFunction}
+            index={index}
+          />
+        </div>
       </motion.div>
     );
   }
 );
 
 const DynamicLabel = ({
+  visibleItems,
+  setVisibleItems,
   dispatchNotes,
   notes,
   notesStateRef,
+  selectedNotesRef,
   noteActions,
   notesReady,
   order,
@@ -76,20 +98,40 @@ const DynamicLabel = ({
   handleNoteClick,
   handleSelectNote,
 }) => {
-  const { labelsRef, labelsReady } = useAppContext();
+  const { labelsRef, labelsReady, layout } = useAppContext();
   const [labelObj, setLabelObj] = useState(null);
-  const [hasUnpinnedNotes, setHasUnpinnedNotes] = useState(false);
-  const [hasPinnedNotes, setHasPinnedNotes] = useState(false);
-  const [hasArchivedNotes, setHasArchivedNotes] = useState(false);
   const [pinnedHeight, setPinnedHeight] = useState(null);
   const [sectionsHeight, setSectionsHeight] = useState(null);
   const [layoutReady, setLayoutReady] = useState(false);
+  const labelObjRef = useRef(null);
   const containerRef = useRef(null);
   const resizeTimeoutRef = useRef(null);
   const layoutFrameRef = useRef(null);
   const noteCount = labelObj?.noteCount ?? null;
+  const isFirstRenderRef = useRef(true);
+  const isFirstRenderRef2 = useRef(true);
+  const stopLoadingBatchesRef = useRef(false);
+  const layoutTimeoutRef = useRef(null);
+  const initialTimeoutRef = useRef(null);
+  const COLUMN_WIDTH = layout === "grid" ? 240 : 600;
+  const [isGrid, setIsGrid] = useState(layout === "grid");
 
-  const notesExist = !order.some((uuid) => {
+  const hasPinned = [...visibleItems].some((uuid) => {
+    const note = notes.get(uuid);
+    return note?.isPinned;
+  });
+
+  const hasUnpinned = [...visibleItems].some((uuid) => {
+    const note = notes.get(uuid);
+    return !note?.isPinned;
+  });
+
+  const hasArchivedNotes = [...visibleItems].some((uuid) => {
+    const note = notes.get(uuid);
+    return note?.isArchived;
+  });
+
+  const notesExist = order.some((uuid) => {
     const note = notes.get(uuid);
     if (!note?.labels?.includes(labelObj?.uuid) || note.isTrash) return false;
     return true;
@@ -107,6 +149,7 @@ const DynamicLabel = ({
       });
 
       if (targetedLabel) {
+        labelObjRef.current = targetedLabel;
         setLabelObj(targetedLabel);
       }
     };
@@ -134,11 +177,12 @@ const DynamicLabel = ({
       const paddingRight = parseFloat(style.paddingRight) || 0;
       const availableWidth = parentWidth - paddingLeft - paddingRight;
 
-      const columns = Math.max(
-        1,
-        Math.floor(availableWidth / (COLUMN_WIDTH + GUTTER))
-      );
-      const contentWidth = columns * (COLUMN_WIDTH + GUTTER) - GUTTER;
+      const columns = !isGrid
+        ? 1
+        : Math.max(1, Math.floor(availableWidth / (COLUMN_WIDTH + GUTTER)));
+      const contentWidth = !isGrid
+        ? COLUMN_WIDTH
+        : columns * (COLUMN_WIDTH + GUTTER) - GUTTER;
 
       container.style.width = `${contentWidth}px`;
       container.style.maxWidth = "100%";
@@ -238,19 +282,13 @@ const DynamicLabel = ({
           ? GAP_BETWEEN_SECTIONS + 2
           : 32);
 
-      setHasUnpinnedNotes(!!unpinnedItems.length);
-
-      setHasPinnedNotes(!!pinnedItems.length);
-
-      setHasArchivedNotes(!!archivedItems.length);
-
       setSectionsHeight(sectionGap);
 
       setPinnedHeight(pinnedHeight + GAP_BETWEEN_SECTIONS + 2);
       container.style.height = `${archivedHeight}px`;
       setLayoutReady(true);
     });
-  }, [labelObj]);
+  }, [labelObj, isGrid]);
 
   const debouncedCalculateLayout = useCallback(() => {
     if (resizeTimeoutRef.current) {
@@ -282,6 +320,163 @@ const DynamicLabel = ({
       return () => clearTimeout(timer);
     }
   }, [notes, calculateLayout, labelObj]);
+
+  useEffect(() => {
+    if (isFirstRenderRef.current) {
+      isFirstRenderRef.current = false;
+      setIsGrid(layout === "grid");
+      return;
+    }
+    requestIdleCallback(() => {
+      setLayoutReady(false);
+      requestAnimationFrame(() => {
+        clearTimeout(layoutTimeoutRef.current);
+        stopLoadingBatchesRef.current = true;
+        setVisibleItems(new Set());
+        setIsGrid(layout === "grid");
+        layoutTimeoutRef.current = setTimeout(() => {
+          loadNextBatch(labelObj, new Set());
+        }, 200);
+      });
+    });
+  }, [layout]);
+
+  const loadNextBatch = (
+    currentLabel,
+    currentVisibleSet = visibleItems,
+    currentOrder = notesStateRef.current.order,
+    currentNotes = notesStateRef.current.notes
+  ) => {
+    stopLoadingBatchesRef.current = false;
+    if (currentLabel !== labelObjRef.current) return;
+    let sectionCount = 0;
+    const batchSize = 5;
+
+    const unrendered = currentOrder.filter((uuid) => {
+      const note = currentNotes.get(uuid);
+
+      if (
+        !currentVisibleSet.has(uuid) &&
+        note?.labels?.includes(labelObj?.uuid) &&
+        !note.isTrash
+      ) {
+        sectionCount++;
+        return true;
+      }
+    });
+
+    const sortedUnrendered = unrendered.sort((a, b) => {
+      const noteA = notes.get(a);
+      const noteB = notes.get(b);
+
+      // Pinned notes first
+      if (noteA?.isPinned && !noteB?.isPinned) return -1;
+      if (!noteA?.isPinned && noteB?.isPinned) return 1;
+
+      // Then non-archived before archived
+      if (!noteA?.isArchived && noteB?.isArchived) return -1;
+      if (noteA?.isArchived && !noteB?.isArchived) return 1;
+
+      return 0;
+    });
+
+    const nextBatch = sortedUnrendered.slice(0, batchSize);
+    if (nextBatch.length === 0) return;
+
+    requestIdleCallback(() => {
+      setVisibleItems((prev) => {
+        const updated = new Set(prev);
+        nextBatch.forEach((uuid) => updated.add(uuid));
+
+        setTimeout(() => {
+          maybeLoadMore(updated);
+        }, 800);
+
+        return updated;
+      });
+    });
+  };
+
+  const maybeLoadMore = (currentVisibleSet) => {
+    if (stopLoadingBatchesRef.current) return;
+
+    const container = containerRef.current;
+    if (!container) return;
+
+    const scrollY = window.scrollY;
+    const totalHeight = container.offsetHeight;
+    const viewportHeight = window.innerHeight;
+
+    if (totalHeight < viewportHeight + scrollY + 700) {
+      loadNextBatch(labelObj, currentVisibleSet);
+    }
+  };
+
+  useEffect(() => {
+    if (
+      visibleItems.size === 0 &&
+      order.length > 0 &&
+      isFirstRenderRef2.current
+    ) {
+      loadNextBatch(labelObj, new Set(), order, notes); // load initial batch
+      isFirstRenderRef2.current = false;
+    }
+  }, [order, notes, visibleItems]);
+
+  useEffect(() => {
+    calculateLayout();
+  }, [visibleItems]);
+
+  useEffect(() => {
+    setVisibleItems(new Set());
+    stopLoadingBatchesRef.current = true;
+    clearTimeout(initialTimeoutRef.current);
+    requestIdleCallback(() => {
+      requestAnimationFrame(() => {
+        initialTimeoutRef.current = setTimeout(() => {
+          loadNextBatch(labelObj, new Set());
+        }, 200);
+      });
+    });
+  }, [labelObj]);
+
+  useEffect(() => {
+    const handler = () => {
+      const scrollTop = window.scrollY;
+      const viewportHeight = window.innerHeight;
+      const fullHeight = document.body.offsetHeight;
+
+      // Trigger when within 200px of bottom
+      if (scrollTop + viewportHeight >= fullHeight - 600) {
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            loadNextBatch(labelObj);
+          }, 800);
+        });
+      }
+    };
+
+    window.addEventListener("scroll", handler);
+
+    return () => window.removeEventListener("scroll", handler);
+  }, [order, notes, visibleItems, labelObj]);
+
+  useEffect(() => {
+    const handler = () => {
+      stopLoadingBatchesRef.current = true;
+      requestIdleCallback(() => {
+        setVisibleItems(new Set());
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            loadNextBatch(labelObj, new Set());
+          }, 100);
+        });
+      });
+    };
+
+    window.addEventListener("reloadNotes", handler);
+    return () => window.removeEventListener("reloadNotes", handler);
+  }, [notes, order]);
 
   return (
     <>
@@ -334,8 +529,8 @@ const DynamicLabel = ({
           <p
             className="section-label"
             style={{
-              // top: "33px",
-              opacity: hasPinnedNotes ? "1" : "0",
+              opacity: hasPinned ? "1" : "0",
+              display: visibleItems.size === 0 && "none",
             }}
           >
             PINNED
@@ -344,7 +539,8 @@ const DynamicLabel = ({
             className="section-label"
             style={{
               top: `${pinnedHeight}px`,
-              opacity: hasPinnedNotes && hasUnpinnedNotes ? "1" : "0",
+              opacity: hasPinned && hasUnpinned ? "1" : "0",
+              display: visibleItems.size === 0 && "none",
             }}
           >
             OTHERS
@@ -360,14 +556,17 @@ const DynamicLabel = ({
           </p>
           {order.map((uuid, index) => {
             const note = notes.get(uuid);
+            if (!visibleItems.has(note.uuid)) return null;
             if (!note.labels.includes(labelObj?.uuid) || note.isTrash)
               return null;
             return (
               <NoteWrapper
                 key={note.uuid}
                 note={note}
+                selectedNotesRef={selectedNotesRef}
                 noteActions={noteActions}
                 fadingNotes={fadingNotes}
+                isGrid={isGrid}
                 setFadingNotes={setFadingNotes}
                 index={index}
                 dispatchNotes={dispatchNotes}
@@ -381,8 +580,8 @@ const DynamicLabel = ({
             );
           })}
         </div>
-        <div className="empty-page">
-          {notesReady && notesExist && (
+        <div style={{ display: notesExist && "none" }} className="empty-page">
+          {notesReady && !notesExist && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}

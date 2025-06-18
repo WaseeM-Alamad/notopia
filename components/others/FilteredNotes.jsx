@@ -3,8 +3,8 @@ import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useSearch } from "@/context/SearchContext";
 import FilteredNote from "./FilteredNote";
+import { useAppContext } from "@/context/AppContext";
 
-const COLUMN_WIDTH = 240;
 const GUTTER = 15;
 const GAP_BETWEEN_SECTIONS = 88;
 
@@ -13,9 +13,11 @@ const NoteWrapper = memo(
     note,
     noteActions,
     ref,
+    selectedNotesRef,
     setSelectedNotesIDs,
     dispatchNotes,
     selectedNotes,
+    isGrid,
     index,
     setTooltipAnchor,
     openSnackFunction,
@@ -34,32 +36,42 @@ const NoteWrapper = memo(
 
     return (
       <motion.div
-        ref={ref}
-        className={`grid-item ${fadingNotes.has(note.uuid) ? "fade-out" : ""}`}
-        onClick={(e) => handleNoteClick(e, note, index)}
-        style={{
-          width: `${COLUMN_WIDTH}px`,
-          marginBottom: `${GUTTER}px`,
-          visibility: mounted ? "visible" : "hidden", // Hide until ready
-          transition: `transform ${
-            mounted ? "0.22s" : "0"
-          } cubic-bezier(0.5, 0.2, 0.3, 1), opacity 0s`,
-        }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.2, type: "tween" }}
       >
-        <FilteredNote
-          note={note}
-          noteActions={noteActions}
-          setSelectedNotesIDs={setSelectedNotesIDs}
-          selectedNotes={selectedNotes}
-          dispatchNotes={dispatchNotes}
-          setTooltipAnchor={setTooltipAnchor}
-          openSnackFunction={openSnackFunction}
-          handleNoteClick={handleNoteClick}
-          handleSelectNote={handleSelectNote}
-          index={index}
-          calculateLayout={calculateLayout}
-        />
-        {/* <p>{index}</p> */}
+        <div
+          ref={ref}
+          className={`grid-item ${
+            fadingNotes.has(note.uuid) ? "fade-out" : ""
+          }`}
+          onClick={(e) => handleNoteClick(e, note, index)}
+          style={{
+            maxWidth: `${isGrid ? 240 : 600}px`,
+            minWidth: !isGrid && "15rem",
+            width: "100%",
+            marginBottom: `${GUTTER}px`,
+            transition: `transform ${
+              mounted ? "0.22s" : "0"
+            } cubic-bezier(0.5, 0.2, 0.3, 1), opacity 0s`,
+          }}
+        >
+          <FilteredNote
+            note={note}
+            noteActions={noteActions}
+            selectedNotesRef={selectedNotesRef}
+            setSelectedNotesIDs={setSelectedNotesIDs}
+            selectedNotes={selectedNotes}
+            dispatchNotes={dispatchNotes}
+            setTooltipAnchor={setTooltipAnchor}
+            openSnackFunction={openSnackFunction}
+            handleNoteClick={handleNoteClick}
+            handleSelectNote={handleSelectNote}
+            index={index}
+            calculateLayout={calculateLayout}
+          />
+          {/* <p>{index}</p> */}
+        </div>
       </motion.div>
     );
   }
@@ -67,11 +79,12 @@ const NoteWrapper = memo(
 
 NoteWrapper.displayName = "NoteWrapper";
 
-const Home = memo(
+const FilteredNotes = memo(
   ({
     notesStateRef,
     notes,
     order,
+    selectedNotesRef,
     filteredNotes,
     dispatchNotes,
     setTooltipAnchor,
@@ -81,18 +94,33 @@ const Home = memo(
     handleSelectNote,
     noteActions,
     fadingNotes,
-    filters,
+    visibleItems,
+    setVisibleItems,
+    containerRef,
+    loadNextBatch,
+    layoutVersionRef,
+    isGrid,
   }) => {
-    const { searchTerm } = useSearch();
-    const containerRef = useRef(null);
+    const { searchTerm, filters } = useSearch();
+    const { layout } = useAppContext();
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
     const [layoutReady, setLayoutReady] = useState(false); // New state to track layout completion
     const [unarchivedHeight, setUnarchivedHeight] = useState(null);
-    const [hasUnpinnedNotes, setHasUnpinnedNotes] = useState(false);
-    const [hasArchivedNotes, setHasArchivedNotes] = useState(false);
-
     const filteredNotesRef = useRef(null);
+    const isFirstRenderRef = useRef(true);
+
+    const COLUMN_WIDTH = layout === "grid" ? 240 : 600;
+
+    const hasArchived = [...visibleItems].some((uuid) => {
+      const note = notes.get(uuid);
+      return note?.isArchived;
+    });
+
+    const hasUnpinned = [...visibleItems].some((uuid) => {
+      const note = notes.get(uuid);
+      return !note?.isPinned;
+    });
 
     useEffect(() => {
       filteredNotesRef.current = filteredNotes;
@@ -116,14 +144,15 @@ const Home = memo(
         const paddingRight = parseFloat(style.paddingRight) || 0;
         const availableWidth = parentWidth - paddingLeft - paddingRight;
 
-        const columns = Math.max(
-          1,
-          Math.floor(availableWidth / (COLUMN_WIDTH + GUTTER))
-        );
-        const contentWidth = columns * (COLUMN_WIDTH + GUTTER) - GUTTER;
+        const columns = !isGrid
+          ? 1
+          : Math.max(1, Math.floor(availableWidth / (COLUMN_WIDTH + GUTTER)));
+        const contentWidth = !isGrid
+          ? COLUMN_WIDTH
+          : columns * (COLUMN_WIDTH + GUTTER) - GUTTER;
 
         container.style.width = `${contentWidth}px`;
-        container.style.maxWidth = "100%";
+        container.style.maxWidth = isGrid ? "100%" : "90%";
         container.style.position = "relative";
         container.style.left = "50%";
         container.style.transform = "translateX(-50%)";
@@ -185,15 +214,11 @@ const Home = memo(
           unarchivedHeight + gapBetweenSections
         );
 
-        setHasUnpinnedNotes(!!unarchivedItems.length);
-
-        setHasArchivedNotes(!!archivedItems.length);
-
         setUnarchivedHeight(unarchivedHeight);
         container.style.height = `${archivedHeight}px`;
         setLayoutReady(true);
       });
-    }, []);
+    }, [isGrid]);
 
     const debouncedCalculateLayout = useCallback(() => {
       if (resizeTimeoutRef.current) {
@@ -253,6 +278,28 @@ const Home = memo(
       }
     }, [layoutReady]);
 
+    useEffect(() => {
+      if (
+        visibleItems.size === 0 &&
+        order.length > 0 &&
+        isFirstRenderRef.current
+      ) {
+        requestAnimationFrame(() => {
+          loadNextBatch({
+            currentSet: new Set(),
+            notes: notes,
+            order: order,
+            version: layoutVersionRef.current,
+          });
+        });
+        isFirstRenderRef.current = false;
+      }
+    }, [order, notes, visibleItems]);
+
+    useEffect(() => {
+      calculateLayout();
+    }, [visibleItems]);
+
     return (
       <>
         <div ref={containerRef} className="section-container">
@@ -260,20 +307,23 @@ const Home = memo(
             className="section-label"
             style={{
               top: `${unarchivedHeight + GAP_BETWEEN_SECTIONS + 2}px`,
-              opacity: hasArchivedNotes && hasUnpinnedNotes ? "1" : "0",
+              opacity: hasArchived && hasUnpinned ? "1" : "0",
             }}
           >
             ARCHIVED
           </p>
           {order.map((uuid, index) => {
             if (!filteredNotes.has(uuid)) return;
+            if (!visibleItems.has(uuid)) return null;
             const note = notes.get(uuid);
             return (
               <NoteWrapper
                 key={note.uuid}
                 note={note}
                 noteActions={noteActions}
+                selectedNotesRef={selectedNotesRef}
                 dispatchNotes={dispatchNotes}
+                isGrid={isGrid}
                 index={index}
                 setSelectedNotesIDs={setSelectedNotesIDs}
                 setTooltipAnchor={setTooltipAnchor}
@@ -291,4 +341,4 @@ const Home = memo(
   }
 );
 
-export default Home;
+export default FilteredNotes;

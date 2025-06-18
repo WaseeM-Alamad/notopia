@@ -21,6 +21,7 @@ const Note = memo(
   ({
     note,
     noteActions,
+    selectedNotesRef,
     dispatchNotes,
     calculateLayout,
     isLoadingImagesAddNote = [],
@@ -38,7 +39,8 @@ const Note = memo(
     const [moreMenuOpen, setMoreMenuOpen] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
     const [isLoadingImages, setIsLoadingImages] = useState([]);
-    const [selected, setSelected] = useState(false);
+    const [selected, setSelected] = useState(selectedNotesRef.current.has(note.uuid));
+    const [selectedColor, setSelectedColor] = useState(note.color)
     const uncheckedItems = note?.checkboxes.filter((cb) => !cb.isCompleted);
     const checkedItems = note?.checkboxes.filter((cb) => cb.isCompleted);
     const isLoading = isLoadingImagesAddNote.includes(note.uuid);
@@ -169,18 +171,11 @@ const Note = memo(
     };
 
     const removeLabel = async (labelUUID) => {
-      dispatchNotes({
+      noteActions({
         type: "REMOVE_LABEL",
         note: note,
         labelUUID: labelUUID,
       });
-      handleLabelNoteCount(labelUUID, "decrement");
-      window.dispatchEvent(new Event("loadingStart"));
-      await removeLabelAction({
-        noteUUID: note.uuid,
-        labelUUID: labelUUID,
-      });
-      window.dispatchEvent(new Event("loadingEnd"));
     };
 
     const handleCheckboxClick = async (e, checkboxUUID, value) => {
@@ -560,6 +555,8 @@ const Note = memo(
             setFadingNotes={setFadingNotes}
             anchorEl={anchorEl}
             setAnchorEl={setAnchorEl}
+            selectedColor={selectedColor}
+            setSelectedColor={setSelectedColor}
             setMoreMenuOpen={setMoreMenuOpen}
             note={note}
             dispatchNotes={dispatchNotes}

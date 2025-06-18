@@ -12,7 +12,7 @@ import { debounce } from "lodash";
 
 const AddNoteModall = ({
   dispatchNotes,
-  setVisibleNotes,
+  setVisibleItems,
   setTooltipAnchor,
   containerRef,
   lastAddedNoteRef,
@@ -148,7 +148,7 @@ const AddNoteModall = ({
       newNote: newNote,
     });
 
-    setVisibleNotes((prev) => new Set([...prev, newUUID]));
+    setVisibleItems((prev) => new Set([...prev, newUUID]));
 
     window.dispatchEvent(new Event("loadingStart"));
 

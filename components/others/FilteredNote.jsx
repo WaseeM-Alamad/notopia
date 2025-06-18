@@ -15,6 +15,7 @@ const FilteredNote = memo(
     note,
     noteActions,
     dispatchNotes,
+    selectedNotesRef,
     calculateLayout,
     isLoadingImagesAddNote = [],
     setSelectedNotesIDs,
@@ -33,7 +34,9 @@ const FilteredNote = memo(
     const [colorMenuOpen, setColorMenuOpen] = useState(false);
     const [moreMenuOpen, setMoreMenuOpen] = useState(false);
     const [isLoadingImages, setIsLoadingImages] = useState([]);
-    const [selected, setSelected] = useState(false);
+    const [selected, setSelected] = useState(selectedNotesRef.current.has(note.uuid));
+    const [anchorEl, setAnchorEl] = useState(null);
+    const [selectedColor, setSelectedColor] = useState(note.color);
     const isLoading = isLoadingImagesAddNote.includes(note.uuid);
     const noteDataRef = useRef(null);
     const inputsRef = useRef(null);
@@ -156,18 +159,23 @@ const FilteredNote = memo(
     };
 
     const removeLabel = async (labelUUID) => {
-      dispatchNotes({
+      noteActions({
         type: "REMOVE_LABEL",
         note: note,
         labelUUID: labelUUID,
       });
-      handleLabelNoteCount(labelUUID, "decrement");
-      window.dispatchEvent(new Event("loadingStart"));
-      await removeLabelAction({
-        noteUUID: note.uuid,
-        labelUUID: labelUUID,
-      });
-      window.dispatchEvent(new Event("loadingEnd"));
+      // dispatchNotes({
+      //   type: "REMOVE_LABEL",
+      //   note: note,
+      //   labelUUID: labelUUID,
+      // });
+      // handleLabelNoteCount(labelUUID, "decrement");
+      // window.dispatchEvent(new Event("loadingStart"));
+      // await removeLabelAction({
+      //   noteUUID: note.uuid,
+      //   labelUUID: labelUUID,
+      // });
+      // window.dispatchEvent(new Event("loadingEnd"));
     };
 
     function highlightMatch(text) {
@@ -369,10 +377,15 @@ const FilteredNote = memo(
             setColorMenuOpen={handleMenuIsOpenChange}
             setTooltipAnchor={setTooltipAnchor}
             moreMenuOpen={moreMenuOpen}
+            selectedColor={selectedColor}
+            setSelectedColor={setSelectedColor}
             setFadingNotes={setFadingNotes}
             setMoreMenuOpen={setMoreMenuOpen}
             images={note.images.length !== 0}
             note={note}
+            isFilteredNote={true}
+            anchorEl={anchorEl}
+            setAnchorEl={setAnchorEl}
             dispatchNotes={dispatchNotes}
             setIsLoadingImages={setIsLoadingImages}
             userID={userID}

@@ -6,11 +6,14 @@ import { updateOrderAction } from "@/utils/actions";
 import ComposeNote from "../others/ComposeNote";
 import { useAppContext } from "@/context/AppContext";
 
+const GUTTER = 15;
+const GAP_BETWEEN_SECTIONS = 88;
+
 const NoteWrapper = memo(
   ({
     isGrid,
-    GUTTER,
     dispatchNotes,
+    selectedNotesRef,
     openSnackFunction,
     note,
     overIndexRef,
@@ -108,6 +111,7 @@ const NoteWrapper = memo(
         >
           <Note
             dispatchNotes={dispatchNotes}
+            selectedNotesRef={selectedNotesRef}
             note={note}
             noteActions={noteActions}
             setTooltipAnchor={setTooltipAnchor}
@@ -130,8 +134,10 @@ NoteWrapper.displayName = "NoteWrapper";
 
 const Home = memo(
   ({
-    visibleNotes,
-    setVisibleNotes,
+    layoutVersionRef,
+    visibleItems,
+    selectedNotesRef,
+    setVisibleItems,
     notes,
     notesStateRef,
     order,
@@ -145,58 +151,38 @@ const Home = memo(
     handleSelectNote,
     noteActions,
     notesReady,
+    containerRef,
     rootContainerRef,
+    loadNextBatch,
+    isGrid,
+    setIsGrid,
   }) => {
     const { layout } = useAppContext();
     const [pinnedHeight, setPinnedHeight] = useState(null);
     const [isLoadingImages, setIsLoadingImages] = useState([]);
     const lastAddedNoteRef = useRef(null);
-    const containerRef = useRef(null);
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
     const [layoutReady, setLayoutReady] = useState(false);
     const [columnsNumber, setColumnsNumber] = useState(null);
-    const isFirstRenderRef = useRef(true);
     const isFirstRenderRef2 = useRef(true);
-    const stopLoadingBatchesRef = useRef(false);
     const COLUMN_WIDTH = layout === "grid" ? 240 : 600;
-    const [isGrid, setIsGrid] = useState(layout === "grid");
-    const GUTTER = 15;
-    const GAP_BETWEEN_SECTIONS = 88;
 
-    const hasPinned = [...visibleNotes].some((uuid) => {
+    const hasPinned = [...visibleItems].some((uuid) => {
       const note = notes.get(uuid);
-      return note.isPinned;
+      return note?.isPinned;
     });
 
-    const hasUnpinned = [...visibleNotes].some((uuid) => {
+    const hasUnpinned = [...visibleItems].some((uuid) => {
       const note = notes.get(uuid);
-      return !note.isPinned;
+      return !note?.isPinned;
     });
 
     const notesExist = order.some((uuid) => {
       const note = notes.get(uuid);
-      if (note.isArchived || note.isTrash) return false;
+      if (note?.isArchived || note?.isTrash) return false;
       return true;
     });
-
-    useEffect(() => {
-      if (isFirstRenderRef.current) {
-        setIsGrid(layout === "grid");
-        return;
-      }
-      requestIdleCallback(() => {
-        setLayoutReady(false);
-        requestAnimationFrame(() => {
-          stopLoadingBatchesRef.current = true;
-          setVisibleNotes(new Set());
-          setIsGrid(layout === "grid");
-          setTimeout(() => {
-            loadNextBatch(new Set());
-          }, 200);
-        });
-      });
-    }, [layout]);
 
     const calculateLayout = useCallback(() => {
       if (layoutFrameRef.current) {
@@ -501,104 +487,27 @@ const Home = memo(
       handleDragOver();
     };
 
-    const loadNextBatch = (currentVisibleSet = visibleNotes) => {
-      stopLoadingBatchesRef.current = false;
-      let sectionCount = 0;
-      let batchSize = 5;
-
-      const unrendered = order.filter((uuid) => {
-        const note = notes.get(uuid);
-        if (!currentVisibleSet.has(uuid) && !note.isArchived && !note.isTrash) {
-          sectionCount++;
-          return true;
-        }
-      });
-
-      // 🔽 Sort pinned first, unpinned after
-      const sortedUnrendered = unrendered.sort((a, b) => {
-        const noteA = notes.get(a);
-        const noteB = notes.get(b);
-
-        if (noteA.isPinned && !noteB.isPinned) return -1;
-        if (!noteA.isPinned && noteB.isPinned) return 1;
-        return 0;
-      });
-
-      if (isFirstRenderRef.current) {
-        isFirstRenderRef.current = false;
-        batchSize = sectionCount <= 15 ? sectionCount : 5;
-      }
-
-      const nextBatch = sortedUnrendered.slice(0, batchSize);
-      if (nextBatch.length === 0) return;
-
-      requestIdleCallback(() => {
-        setVisibleNotes((prev) => {
-          const updated = new Set(prev);
-          nextBatch.forEach((uuid) => updated.add(uuid));
-
-          setTimeout(() => {
-            maybeLoadMore(updated);
-          }, 800);
-
-          return updated;
-        });
-      });
-    };
-
-    const maybeLoadMore = (currentVisibleSet) => {
-      if (stopLoadingBatchesRef.current) return;
-
-      const container = containerRef.current;
-      if (!container) return;
-      // calculateLayout();
-
-      const scrollY = window.scrollY;
-      const totalHeight = container.offsetHeight;
-      const viewportHeight = window.innerHeight;
-
-      if (totalHeight < viewportHeight + scrollY + 700) {
-        loadNextBatch(currentVisibleSet);
-        // calculateLayout();
-      }
-    };
-
     useEffect(() => {
       if (
-        visibleNotes.size === 0 &&
+        visibleItems.size === 0 &&
         order.length > 0 &&
         isFirstRenderRef2.current
       ) {
-        loadNextBatch(); // load initial batch
+        requestAnimationFrame(() => {
+          loadNextBatch({
+            currentSet: new Set(),
+            notes: notes,
+            order: order,
+            version: layoutVersionRef.current,
+          });
+        });
         isFirstRenderRef2.current = false;
-        console.log("first ");
       }
-    }, [order, notes, visibleNotes]);
+    }, [order, notes, visibleItems]);
 
     useEffect(() => {
       calculateLayout();
-    }, [visibleNotes]);
-
-    useEffect(() => {
-      const handler = () => {
-        const scrollTop = window.scrollY;
-        const viewportHeight = window.innerHeight;
-        const fullHeight = document.body.offsetHeight;
-
-        // Trigger when within 200px of bottom
-        if (scrollTop + viewportHeight >= fullHeight - 600) {
-          requestAnimationFrame(() => {
-            setTimeout(() => {
-              loadNextBatch();
-            }, 800);
-          });
-        }
-      };
-
-      window.addEventListener("scroll", handler);
-
-      return () => window.removeEventListener("scroll", handler);
-    }, [order, notes, visibleNotes]);
+    }, [visibleItems]);
 
     return (
       <>
@@ -614,7 +523,7 @@ const Home = memo(
               style={{
                 // top: "33px",
                 opacity: hasPinned ? "1" : "0",
-                display: visibleNotes.size === 0 && "none",
+                display: visibleItems.size === 0 && "none",
               }}
             >
               PINNED
@@ -624,24 +533,24 @@ const Home = memo(
               style={{
                 top: `${pinnedHeight + GAP_BETWEEN_SECTIONS + 2}px`,
                 opacity: hasPinned && hasUnpinned ? "1" : "0",
-                display: visibleNotes.size === 0 && "none",
+                display: visibleItems.size === 0 && "none",
               }}
             >
               OTHERS
             </p>
             {order.map((uuid, index) => {
               const note = notes.get(uuid);
-              if (!visibleNotes.has(note.uuid)) return null;
+              if (!visibleItems.has(note.uuid)) return null;
 
               return (
                 !note.isArchived &&
                 !note.isTrash && (
                   <NoteWrapper
                     lastAddedNoteRef={index === 0 ? lastAddedNoteRef : null}
+                    selectedNotesRef={selectedNotesRef}
                     key={note.uuid}
                     note={note}
                     isGrid={isGrid}
-                    GUTTER={GUTTER}
                     overIndexRef={overIndexRef}
                     overIsPinnedRef={overIsPinnedRef}
                     fadingNotes={fadingNotes}
@@ -664,60 +573,44 @@ const Home = memo(
               );
             })}
           </div>
-          {!notesExist && (
-            <div
-              style={
-                {
-                  // display: notesExist && "none"
-                }
-              }
-              className="empty-page"
-            >
-              {notesReady && !notesExist && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 800,
-                    damping: 50,
-                    mass: 1,
-                  }}
-                  className="empty-page-box"
-                >
-                  <div className="empty-page-home" />
-                  Notes you add appear here
-                </motion.div>
-              )}
-              {!notesReady && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 800,
-                    damping: 50,
-                    mass: 1,
-                  }}
-                  className="empty-page-box"
-                >
-                  <div className="empty-page-loading" />
-                  Loading notes...
-                </motion.div>
-              )}
-            </div>
-          )}
+          <div style={{ display: notesExist && "none" }} className="empty-page">
+            {notesReady && !notesExist && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 800,
+                  damping: 50,
+                  mass: 1,
+                }}
+                className="empty-page-box"
+              >
+                <div className="empty-page-home" />
+                Notes you add appear here
+              </motion.div>
+            )}
+            {!notesReady && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 800,
+                  damping: 50,
+                  mass: 1,
+                }}
+                className="empty-page-box"
+              >
+                <div className="empty-page-loading" />
+                Loading notes...
+              </motion.div>
+            )}
+          </div>
         </div>
-        {/* <AddNoteModal
-          dispatchNotes={dispatchNotes}
-          lastAddedNoteRef={lastAddedNoteRef}
-          setIsLoadingImages={setIsLoadingImages}
-          setTooltipAnchor={setTooltipAnchor}
-          openSnackFunction={openSnackFunction}
-        /> */}
         <ComposeNote
           dispatchNotes={dispatchNotes}
-          setVisibleNotes={setVisibleNotes}
+          setVisibleItems={setVisibleItems}
           containerRef={containerRef}
           lastAddedNoteRef={lastAddedNoteRef}
           setTooltipAnchor={setTooltipAnchor}
