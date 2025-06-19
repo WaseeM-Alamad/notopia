@@ -33,12 +33,12 @@ const AddButton = () => {
           initial={{
             rotate: currentHash === "trash" ? 45 : 0,
             scale: currentHash === "trash" ? 0.5 : 1,
-            strokeWidth: currentHash === "trash" ? .8 : 0,
+            strokeWidth: currentHash === "trash" ? 0.8 : 0,
           }}
           animate={{
             rotate: currentHash === "trash" ? 45 : 0,
             scale: currentHash === "trash" ? 0.5 : 1,
-            strokeWidth: currentHash === "trash" ? .8 : 0,
+            strokeWidth: currentHash === "trash" ? 0.8 : 0,
           }}
           transition={{
             type: "spring",

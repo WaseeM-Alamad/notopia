@@ -31,6 +31,7 @@ import { v4 as uuid } from "uuid";
 import Search from "@/components/pages/Search";
 import { useSearch } from "@/context/SearchContext";
 import DynamicLabel from "@/components/pages/DynamicLabel";
+import Button from "@/components/Tools/Button";
 
 const initialStates = {
   notes: new Map(),
@@ -2083,8 +2084,27 @@ const page = () => {
   }, [currentSection]);
 
   const resetBatchLoading = () => {
-    layoutVersionRef.current += 0.1;
+    if (layoutVersionRef.current >= 1) {
+      layoutVersionRef.current = 0;
+    } else {
+      layoutVersionRef.current += 0.1;
+    }
     setVisibleItems(new Set());
+  };
+
+  const resetAndLoad = () => {
+    requestIdleCallback(() => {
+      resetBatchLoading();
+      clearTimeout(layoutTimeoutRef.current);
+      requestAnimationFrame(() => {
+        layoutTimeoutRef.current = setTimeout(() => {
+          loadNextBatch({
+            currentSet: new Set(),
+            version: layoutVersionRef.current,
+          });
+        }, 100);
+      });
+    });
   };
 
   const filterUnrendered = (note) => {
@@ -2151,6 +2171,8 @@ const page = () => {
               }
             });
 
+      console.log("load");
+
       const sortedUnrendered =
         currentSection.toLowerCase() !== "labels"
           ? unrendered.sort((a, b) => {
@@ -2188,8 +2210,14 @@ const page = () => {
         });
       });
     },
-    [currentSection, layout]
+    [currentSection, layout, filters, searchTerm]
   );
+
+  useEffect(() => {
+    if (currentSection.toLowerCase() !== "search") return;
+    console.log(currentSection);
+    resetAndLoad();
+  }, [searchTerm]);
 
   useEffect(() => {
     const handler = () => {
@@ -2217,20 +2245,7 @@ const page = () => {
 
   useEffect(() => {
     const handler = () => {
-      requestIdleCallback(() => {
-        // stopLoadingBatchesRef.current = true;
-        setVisibleItems(new Set());
-        requestAnimationFrame(() => {
-          resetBatchLoading();
-          setTimeout(() => {
-            loadNextBatch({
-              section: "home",
-              currentSet: new Set(),
-              version: layoutVersionRef.current,
-            });
-          }, 100);
-        });
-      });
+      resetAndLoad();
     };
 
     window.addEventListener("reloadNotes", handler);
@@ -2249,11 +2264,11 @@ const page = () => {
       return;
     }
     requestIdleCallback(() => {
+      resetBatchLoading();
+      clearTimeout(layoutTimeoutRef.current);
+      setIsGrid(layout === "grid");
+
       requestAnimationFrame(() => {
-        clearTimeout(layoutTimeoutRef.current);
-        setVisibleItems(new Set());
-        setIsGrid(layout === "grid");
-        resetBatchLoading();
         layoutTimeoutRef.current = setTimeout(() => {
           loadNextBatch({
             currentSet: new Set(),

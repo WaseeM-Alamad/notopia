@@ -231,7 +231,10 @@ const Search = ({
                       return (
                         <div
                           className="filter-item-wrapper"
-                          onClick={() => item.function(setItem)}
+                          onClick={() => {
+                            closeToolTip();
+                            item.function(setItem);
+                          }}
                           onMouseEnter={(e) => {
                             if (item.title !== "Colors") return;
                             handleMouseEnter(e, setItem);

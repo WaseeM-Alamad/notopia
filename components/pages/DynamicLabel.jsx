@@ -185,7 +185,7 @@ const DynamicLabel = ({
         : columns * (COLUMN_WIDTH + GUTTER) - GUTTER;
 
       container.style.width = `${contentWidth}px`;
-      container.style.maxWidth = "100%";
+      container.style.maxWidth = isGrid ? "100%" : "90%";
       container.style.position = "relative";
       container.style.left = "50%";
       container.style.transform = "translateX(-50%)";
