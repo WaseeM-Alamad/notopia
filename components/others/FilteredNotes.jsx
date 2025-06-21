@@ -95,10 +95,7 @@ const FilteredNotes = memo(
     noteActions,
     fadingNotes,
     visibleItems,
-    setVisibleItems,
     containerRef,
-    loadNextBatch,
-    layoutVersionRef,
     isGrid,
   }) => {
     const { searchTerm, filters } = useSearch();
@@ -108,7 +105,6 @@ const FilteredNotes = memo(
     const [layoutReady, setLayoutReady] = useState(false); // New state to track layout completion
     const [unarchivedHeight, setUnarchivedHeight] = useState(null);
     const filteredNotesRef = useRef(null);
-    const isFirstRenderRef = useRef(true);
 
     const COLUMN_WIDTH = layout === "grid" ? 240 : 600;
 
@@ -277,24 +273,6 @@ const FilteredNotes = memo(
         containerRef.current.classList.remove("layout-ready");
       }
     }, [layoutReady]);
-
-    useEffect(() => {
-      if (
-        visibleItems.size === 0 &&
-        order.length > 0 &&
-        isFirstRenderRef.current
-      ) {
-        requestAnimationFrame(() => {
-          loadNextBatch({
-            currentSet: new Set(),
-            notes: notes,
-            order: order,
-            version: layoutVersionRef.current,
-          });
-        });
-        isFirstRenderRef.current = false;
-      }
-    }, [order, notes, visibleItems]);
 
     useEffect(() => {
       calculateLayout();

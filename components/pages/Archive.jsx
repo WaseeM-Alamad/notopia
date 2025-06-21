@@ -90,7 +90,6 @@ NoteWrapper.displayName = "NoteWrapper";
 const Archive = memo(
   ({
     visibleItems,
-    setVisibleItems,
     notesStateRef,
     selectedNotesRef,
     notes,
@@ -107,15 +106,12 @@ const Archive = memo(
     noteActions,
     notesReady,
     containerRef,
-    loadNextBatch,
-    layoutVersionRef,
     isGrid,
   }) => {
     const { layout } = useAppContext();
     const COLUMN_WIDTH = layout === "grid" ? 240 : 600;
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
-    const isFirstRenderRef = useRef(true);
 
     const notesExist = order.some((uuid) => {
       const note = notes.get(uuid);
@@ -191,24 +187,6 @@ const Archive = memo(
         calculateLayout();
       }, 100);
     }, [calculateLayout]);
-
-    useEffect(() => {
-      if (
-        visibleItems.size === 0 &&
-        order.length > 0 &&
-        isFirstRenderRef.current
-      ) {
-        requestAnimationFrame(() => {
-          loadNextBatch({
-            currentSet: new Set(),
-            notes: notes,
-            order: order,
-            version: layoutVersionRef.current,
-          });
-        });
-        isFirstRenderRef.current = false;
-      }
-    }, [order, notes, visibleItems]);
 
     useEffect(() => {
       calculateLayout();

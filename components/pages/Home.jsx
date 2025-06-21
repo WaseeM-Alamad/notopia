@@ -153,9 +153,7 @@ const Home = memo(
     notesReady,
     containerRef,
     rootContainerRef,
-    loadNextBatch,
     isGrid,
-    setIsGrid,
   }) => {
     const { layout } = useAppContext();
     const [pinnedHeight, setPinnedHeight] = useState(null);
@@ -165,7 +163,6 @@ const Home = memo(
     const layoutFrameRef = useRef(null);
     const [layoutReady, setLayoutReady] = useState(false);
     const [columnsNumber, setColumnsNumber] = useState(null);
-    const isFirstRenderRef2 = useRef(true);
     const COLUMN_WIDTH = layout === "grid" ? 240 : 600;
 
     const hasPinned = [...visibleItems].some((uuid) => {
@@ -486,24 +483,6 @@ const Home = memo(
 
       handleDragOver();
     };
-
-    useEffect(() => {
-      if (
-        visibleItems.size === 0 &&
-        order.length > 0 &&
-        isFirstRenderRef2.current
-      ) {
-        requestAnimationFrame(() => {
-          loadNextBatch({
-            currentSet: new Set(),
-            notes: notes,
-            order: order,
-            version: layoutVersionRef.current,
-          });
-        });
-        isFirstRenderRef2.current = false;
-      }
-    }, [order, notes, visibleItems]);
 
     useEffect(() => {
       calculateLayout();

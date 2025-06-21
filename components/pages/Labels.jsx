@@ -26,8 +26,6 @@ const Labels = memo(
     handleDeleteLabel,
     rootContainerRef,
     containerRef,
-    loadNextBatch,
-    layoutVersionRef,
     isGrid,
   }) => {
     const { createLabel, labelsRef, labelsReady, layout } = useAppContext();
@@ -36,7 +34,6 @@ const Labels = memo(
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
     const isFirstRenderRef = useRef(true);
-    const searchTimeoutRef = useRef(null);
 
     const COLUMN_WIDTH = layout === "grid" ? 240 : 450;
 
@@ -168,39 +165,9 @@ const Labels = memo(
     }, [visibleItems]);
 
     useEffect(() => {
-      if (!labelsReady) return;
-      if (
-        visibleItems.size === 0 &&
-        labelsRef.current.size > 0 &&
-        isFirstRenderRef.current
-      ) {
-        requestAnimationFrame(() => {
-          loadNextBatch({
-            currentSet: new Set(),
-            version: layoutVersionRef.current,
-          });
-        });
-        isFirstRenderRef.current = false;
-      }
-    }, [visibleItems, labelsReady]);
-
-    useEffect(() => {
       if (isFirstRenderRef.current) return;
 
-      requestIdleCallback(() => {
-        requestAnimationFrame(() => {
-          clearTimeout(searchTimeoutRef.current);
-          triggerReRender((prev) => !prev);
-          layoutVersionRef.current += 0.1;
-          setVisibleItems(new Set());
-          searchTimeoutRef.current = setTimeout(() => {
-            loadNextBatch({
-              currentSet: new Set(),
-              version: layoutVersionRef.current,
-            });
-          }, 100);
-        });
-      });
+      triggerReRender((prev) => !prev);
     }, [labelSearchTerm]);
 
     return (

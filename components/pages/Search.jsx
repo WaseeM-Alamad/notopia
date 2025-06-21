@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import React, { useEffect, useRef, useState } from "react";
 import FilteredNotes from "../others/FilteredNotes";
 import { useSearch } from "@/context/SearchContext";
@@ -21,19 +21,70 @@ const Search = ({
   noteActions,
   notesReady,
   containerRef,
-  loadNextBatch,
-  layoutVersionRef,
   isGrid,
   visibleItems,
   setVisibleItems,
+  setFilterTrigger,
 }) => {
-  const { searchTerm, filters, setFilters, skipHashChangeRef } = useSearch();
-  const { labelsRef } = useAppContext();
+  const {
+    searchTerm,
+    setSearchTerm,
+    searchRef,
+    filters,
+    setFilters,
+    skipHashChangeRef,
+  } = useSearch();
+  const { labelsRef, setIsFiltered } = useAppContext();
   const [colorsSet, setColorsSet] = useState(new Set());
   const [labelsSet, setLabelsSet] = useState(new Set());
   const [typesSet, setTypesSet] = useState(new Set());
-  const [noMatchingNotes, setNoMatchingNotes] = useState(false);
+
   const firstRun = useRef(true);
+
+  const filtersExist =
+    Object.values(filters).some((filter) => filter !== null) ||
+    searchTerm.trim();
+
+  const matchesFilters = (note) => {
+    if (note.isTrash) return false;
+
+    if (filters.color && note.color !== filters.color) {
+      return false;
+    }
+
+    if (
+      searchTerm &&
+      !(
+        note.title.toLowerCase().includes(searchTerm.toLowerCase().trim()) ||
+        note.content.toLowerCase().includes(searchTerm.toLowerCase().trim())
+      )
+    ) {
+      return false;
+    }
+
+    if (filters.label && !note.labels.includes(filters.label)) {
+      return false;
+    }
+
+    if (filters.image && note.images.length === 0) {
+      return false;
+    }
+
+    return true;
+  };
+
+  const filteredNotes = new Set(
+    order.filter((uuid) => {
+      const note = notes.get(uuid);
+      return note && matchesFilters(note) && filtersExist;
+    })
+  );
+
+  const noMatchingNotes = filteredNotes.size === 0;
+
+  useEffect(() => {
+    setIsFiltered(!noMatchingNotes);
+  }, [noMatchingNotes]);
 
   const getFilters = () => {
     const colors = new Set();
@@ -61,10 +112,15 @@ const Search = ({
       return;
     }
 
-    if (noMatchingNotes && filtersExist()) {
+    if (noMatchingNotes && filtersExist) {
       getFilters();
     }
   }, [noMatchingNotes]);
+
+  const resetText = () => {
+    setSearchTerm("");
+    searchRef.current.value = "";
+  };
 
   const typeClick = (type) => {
     const title = type.toLowerCase().slice(0, type.length - 1);
@@ -124,52 +180,6 @@ const Search = ({
     }));
   };
 
-  const filtersExist = () => {
-    return (
-      Object.values(filters).some((filter) => filter !== null) ||
-      searchTerm.trim() !== ""
-    );
-  };
-
-  const matchesFilters = (note) => {
-    if (note.isTrash) return false;
-
-    if (filters.color && note.color !== filters.color) {
-      return false;
-    }
-
-    if (
-      searchTerm &&
-      !(
-        note.title.toLowerCase().includes(searchTerm.toLowerCase().trim()) ||
-        note.content.toLowerCase().includes(searchTerm.toLowerCase().trim())
-      )
-    ) {
-      return false;
-    }
-
-    if (filters.label && !note.labels.includes(filters.label)) {
-      return false;
-    }
-
-    if (filters.image && note.images.length === 0) {
-      return false;
-    }
-
-    return true;
-  };
-
-  const filteredNotes = new Set(
-    order.filter((uuid) => {
-      const note = notes.get(uuid);
-      return note && matchesFilters(note) && filtersExist();
-    })
-  );
-
-  useEffect(() => {
-    setNoMatchingNotes(filteredNotes.size === 0);
-  }, [filteredNotes]);
-
   const filtersToRender = [
     { title: "Types", function: typeClick, set: typesSet },
     { title: "Labels", function: labelClick, set: labelsSet },
@@ -181,15 +191,26 @@ const Search = ({
   return (
     <>
       <div ref={rootContainerRef} className="starting-div">
-        {!filtersExist() || noMatchingNotes ? (
-          <div className="search-section">
-            {noMatchingNotes && filtersExist() && (
-              <div
-                style={{ padding: "1rem 2rem 2rem 2rem", fontSize: "0.9rem" }}
-              >
-                No matching results.
-              </div>
-            )}
+        {noMatchingNotes || !filtersExist ? (
+          <div
+            className="search-section"
+            style={{
+              paddingTop: noMatchingNotes && filtersExist && "5.625rem",
+            }}
+          >
+            <AnimatePresence>
+              {noMatchingNotes && filtersExist && (
+                <motion.div
+                  className="no-matching"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.1 }}
+                >
+                  No matching results.
+                </motion.div>
+              )}
+            </AnimatePresence>
             {filtersToRender.map((item, index) => {
               if (
                 item.set.size === 0 ||
@@ -233,6 +254,8 @@ const Search = ({
                           className="filter-item-wrapper"
                           onClick={() => {
                             closeToolTip();
+                            resetText();
+                            setFilterTrigger((prev) => !prev);
                             item.function(setItem);
                           }}
                           onMouseEnter={(e) => {
@@ -264,7 +287,6 @@ const Search = ({
           </div>
         ) : (
           <FilteredNotes
-            setNoMatchingNotes={setNoMatchingNotes}
             notesStateRef={notesStateRef}
             filteredNotes={filteredNotes}
             selectedNotesRef={selectedNotesRef}
@@ -282,8 +304,6 @@ const Search = ({
             visibleItems={visibleItems}
             setVisibleItems={setVisibleItems}
             containerRef={containerRef}
-            loadNextBatch={loadNextBatch}
-            layoutVersionRef={layoutVersionRef}
             isGrid={isGrid}
           />
         )}

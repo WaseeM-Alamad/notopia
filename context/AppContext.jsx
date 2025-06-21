@@ -21,6 +21,7 @@ const AppContext = createContext();
 
 export function AppProvider({ children }) {
   const { data: session, status } = useSession();
+  const [currentSection, setCurrentSection] = useState("Home");
   const [labelsReady, setLabelsReady] = useState(false);
   const [layout, setLayout] = useState(null);
   const userID = session?.user?.id;
@@ -28,6 +29,7 @@ export function AppProvider({ children }) {
   const labelsRef = useRef(new Map());
   const labelLookUPRef = useRef(new Map());
   const ignoreKeysRef = useRef(null);
+  const [isFiltered, setIsFiltered] = useState(false);
 
   const getLabels = async () => {
     const fetchedLables = await fetchLabelsAction();
@@ -363,6 +365,10 @@ export function AppProvider({ children }) {
         layout,
         setLayout,
         swapPinnedLabels,
+        isFiltered,
+        setIsFiltered,
+        currentSection,
+        setCurrentSection,
       }}
     >
       {children}

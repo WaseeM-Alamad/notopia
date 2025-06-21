@@ -83,7 +83,6 @@ const Trash = memo(
   ({
     visibleItems,
     selectedNotesRef,
-    setVisibleItems,
     notesStateRef,
     notes,
     order,
@@ -99,8 +98,6 @@ const Trash = memo(
     setFadingNotes,
     fadingNotes,
     containerRef,
-    loadNextBatch,
-    layoutVersionRef,
     isGrid,
   }) => {
     const { batchNoteCount, layout } = useAppContext();
@@ -185,23 +182,23 @@ const Trash = memo(
       }, 100);
     }, [calculateLayout]);
 
-    useEffect(() => {
-      if (
-        visibleItems.size === 0 &&
-        order.length > 0 &&
-        isFirstRenderRef.current
-      ) {
-        requestAnimationFrame(() => {
-          loadNextBatch({
-            currentSet: new Set(),
-            notes: notes,
-            order: order,
-            version: layoutVersionRef.current,
-          });
-        });
-        isFirstRenderRef.current = false;
-      }
-    }, [order, notes, visibleItems]);
+    // useEffect(() => {
+    //   if (
+    //     visibleItems.size === 0 &&
+    //     order.length > 0 &&
+    //     isFirstRenderRef.current
+    //   ) {
+    //     requestAnimationFrame(() => {
+    //       loadNextBatch({
+    //         currentSet: new Set(),
+    //         notes: notes,
+    //         order: order,
+    //         version: layoutVersionRef.current,
+    //       });
+    //     });
+    //     isFirstRenderRef.current = false;
+    //   }
+    // }, [order, notes, visibleItems]);
 
     useEffect(() => {
       calculateLayout();

@@ -21,7 +21,8 @@ import SideBtn from "./SideBtn";
 import RightTooltip from "../Tools/RightTooltip";
 
 const Sidebar = memo(() => {
-  const { labelsRef, labelsReady, swapPinnedLabels } = useAppContext();
+  const { labelsRef, labelsReady, swapPinnedLabels, currentSection } =
+    useAppContext();
   const addButtonRef = useRef(null);
   const containerRef = useRef(null);
   const [tooltipAnchor, setTooltipAnchor] = useState(null);
@@ -109,14 +110,14 @@ const Sidebar = memo(() => {
     addButtonRef.current.classList.remove("animate");
     void addButtonRef.current.offsetWidth;
     addButtonRef.current.classList.add("animate");
-    const hash = window.location.hash.replace("#", "");
-    if (hash === "labels") {
+    const section = currentSection.toLowerCase();
+    if (section === "labels") {
       window.dispatchEvent(new Event("addLabel"));
       return;
-    } else if (!hash || hash === "home") {
+    } else if (section === "home") {
       window.dispatchEvent(new Event("openModal"));
       return;
-    } else if (hash === "trash") {
+    } else if (section === "trash") {
       window.dispatchEvent(new Event("emptyTrash"));
       return;
     }
@@ -222,12 +223,12 @@ const Sidebar = memo(() => {
   }, [labelsReady]);
 
   const handleAddTooltip = (e) => {
-    const hash = window.location.hash.replace("#", "").trim();
-    if (!hash || hash === "home") {
+    const section = currentSection.toLowerCase();
+    if (section === "home") {
       handleMouseEnter(e, "New note");
-    } else if (hash === "labels") {
+    } else if (section === "labels") {
       handleMouseEnter(e, "New label");
-    } else if (hash === "trash") {
+    } else if (section === "trash") {
       handleMouseEnter(e, "Empty trash");
     } else {
       handleMouseEnter(e, "New note");

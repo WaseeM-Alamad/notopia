@@ -97,24 +97,21 @@ const DynamicLabel = ({
   setSelectedNotesIDs,
   handleNoteClick,
   handleSelectNote,
+  labelObj,
+  setLabelObj,
+  containerRef,
+  isGrid,
 }) => {
   const { labelsRef, labelsReady, layout } = useAppContext();
-  const [labelObj, setLabelObj] = useState(null);
   const [pinnedHeight, setPinnedHeight] = useState(null);
   const [sectionsHeight, setSectionsHeight] = useState(null);
   const [layoutReady, setLayoutReady] = useState(false);
   const labelObjRef = useRef(null);
-  const containerRef = useRef(null);
   const resizeTimeoutRef = useRef(null);
   const layoutFrameRef = useRef(null);
   const noteCount = labelObj?.noteCount ?? null;
-  const isFirstRenderRef = useRef(true);
-  const isFirstRenderRef2 = useRef(true);
   const stopLoadingBatchesRef = useRef(false);
-  const layoutTimeoutRef = useRef(null);
-  const initialTimeoutRef = useRef(null);
   const COLUMN_WIDTH = layout === "grid" ? 240 : 600;
-  const [isGrid, setIsGrid] = useState(layout === "grid");
 
   const hasPinned = [...visibleItems].some((uuid) => {
     const note = notes.get(uuid);
@@ -322,161 +319,8 @@ const DynamicLabel = ({
   }, [notes, calculateLayout, labelObj]);
 
   useEffect(() => {
-    if (isFirstRenderRef.current) {
-      isFirstRenderRef.current = false;
-      setIsGrid(layout === "grid");
-      return;
-    }
-    requestIdleCallback(() => {
-      setLayoutReady(false);
-      requestAnimationFrame(() => {
-        clearTimeout(layoutTimeoutRef.current);
-        stopLoadingBatchesRef.current = true;
-        setVisibleItems(new Set());
-        setIsGrid(layout === "grid");
-        layoutTimeoutRef.current = setTimeout(() => {
-          loadNextBatch(labelObj, new Set());
-        }, 200);
-      });
-    });
-  }, [layout]);
-
-  const loadNextBatch = (
-    currentLabel,
-    currentVisibleSet = visibleItems,
-    currentOrder = notesStateRef.current.order,
-    currentNotes = notesStateRef.current.notes
-  ) => {
-    stopLoadingBatchesRef.current = false;
-    if (currentLabel !== labelObjRef.current) return;
-    let sectionCount = 0;
-    const batchSize = 5;
-
-    const unrendered = currentOrder.filter((uuid) => {
-      const note = currentNotes.get(uuid);
-
-      if (
-        !currentVisibleSet.has(uuid) &&
-        note?.labels?.includes(labelObj?.uuid) &&
-        !note.isTrash
-      ) {
-        sectionCount++;
-        return true;
-      }
-    });
-
-    const sortedUnrendered = unrendered.sort((a, b) => {
-      const noteA = notes.get(a);
-      const noteB = notes.get(b);
-
-      // Pinned notes first
-      if (noteA?.isPinned && !noteB?.isPinned) return -1;
-      if (!noteA?.isPinned && noteB?.isPinned) return 1;
-
-      // Then non-archived before archived
-      if (!noteA?.isArchived && noteB?.isArchived) return -1;
-      if (noteA?.isArchived && !noteB?.isArchived) return 1;
-
-      return 0;
-    });
-
-    const nextBatch = sortedUnrendered.slice(0, batchSize);
-    if (nextBatch.length === 0) return;
-
-    requestIdleCallback(() => {
-      setVisibleItems((prev) => {
-        const updated = new Set(prev);
-        nextBatch.forEach((uuid) => updated.add(uuid));
-
-        setTimeout(() => {
-          maybeLoadMore(updated);
-        }, 800);
-
-        return updated;
-      });
-    });
-  };
-
-  const maybeLoadMore = (currentVisibleSet) => {
-    if (stopLoadingBatchesRef.current) return;
-
-    const container = containerRef.current;
-    if (!container) return;
-
-    const scrollY = window.scrollY;
-    const totalHeight = container.offsetHeight;
-    const viewportHeight = window.innerHeight;
-
-    if (totalHeight < viewportHeight + scrollY + 700) {
-      loadNextBatch(labelObj, currentVisibleSet);
-    }
-  };
-
-  useEffect(() => {
-    if (
-      visibleItems.size === 0 &&
-      order.length > 0 &&
-      isFirstRenderRef2.current
-    ) {
-      loadNextBatch(labelObj, new Set(), order, notes); // load initial batch
-      isFirstRenderRef2.current = false;
-    }
-  }, [order, notes, visibleItems]);
-
-  useEffect(() => {
     calculateLayout();
   }, [visibleItems]);
-
-  useEffect(() => {
-    setVisibleItems(new Set());
-    stopLoadingBatchesRef.current = true;
-    clearTimeout(initialTimeoutRef.current);
-    requestIdleCallback(() => {
-      requestAnimationFrame(() => {
-        initialTimeoutRef.current = setTimeout(() => {
-          loadNextBatch(labelObj, new Set());
-        }, 200);
-      });
-    });
-  }, [labelObj]);
-
-  useEffect(() => {
-    const handler = () => {
-      const scrollTop = window.scrollY;
-      const viewportHeight = window.innerHeight;
-      const fullHeight = document.body.offsetHeight;
-
-      // Trigger when within 200px of bottom
-      if (scrollTop + viewportHeight >= fullHeight - 600) {
-        requestAnimationFrame(() => {
-          setTimeout(() => {
-            loadNextBatch(labelObj);
-          }, 800);
-        });
-      }
-    };
-
-    window.addEventListener("scroll", handler);
-
-    return () => window.removeEventListener("scroll", handler);
-  }, [order, notes, visibleItems, labelObj]);
-
-  useEffect(() => {
-    const handler = () => {
-      stopLoadingBatchesRef.current = true;
-      requestIdleCallback(() => {
-        setVisibleItems(new Set());
-        requestAnimationFrame(() => {
-          setTimeout(() => {
-            loadNextBatch(labelObj, new Set());
-          }, 100);
-        });
-      });
-    };
-
-    window.addEventListener("reloadNotes", handler);
-    return () => window.removeEventListener("reloadNotes", handler);
-  }, [notes, order]);
 
   return (
     <>

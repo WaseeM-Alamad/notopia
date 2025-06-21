@@ -225,7 +225,6 @@ const Modal = ({
       window.location.hash = `NOTE/${localNote?.uuid}`;
       // history.pushState(null, null, `#NOTE/${note?.uuid}`);
       // window.dispatchEvent(new HashChangeEvent("hashchange"));
-      console.log(filters);
 
       if (currentSection === "DynamicLabel") {
         delayLabelDispatchRef.current = true;

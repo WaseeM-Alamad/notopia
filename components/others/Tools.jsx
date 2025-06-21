@@ -70,7 +70,6 @@ const NoteModalTools = ({
       //   note: note,
       //   newBG: newBG,
       // });
-      console.log("yes");
       window.dispatchEvent(new Event("loadingStart"));
       await NoteUpdateAction({
         type: "background",

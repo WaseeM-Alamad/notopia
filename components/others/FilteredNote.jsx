@@ -34,7 +34,9 @@ const FilteredNote = memo(
     const [colorMenuOpen, setColorMenuOpen] = useState(false);
     const [moreMenuOpen, setMoreMenuOpen] = useState(false);
     const [isLoadingImages, setIsLoadingImages] = useState([]);
-    const [selected, setSelected] = useState(selectedNotesRef.current.has(note.uuid));
+    const [selected, setSelected] = useState(
+      selectedNotesRef.current.has(note.uuid)
+    );
     const [anchorEl, setAnchorEl] = useState(null);
     const [selectedColor, setSelectedColor] = useState(note.color);
     const isLoading = isLoadingImagesAddNote.includes(note.uuid);
@@ -198,7 +200,28 @@ const FilteredNote = memo(
 
     return (
       <>
-        <div className="note-wrapper" ref={note.ref}>
+        <div
+          onContextMenu={(e) => {
+            e.preventDefault();
+            closeToolTip();
+
+            const virtualAnchor = {
+              getBoundingClientRect: () =>
+                new DOMRect(
+                  e.pageX - window.scrollX,
+                  e.pageY - window.scrollY,
+                  0,
+                  0
+                ),
+              contextElement: document.body,
+            };
+
+            setAnchorEl(virtualAnchor);
+            setMoreMenuOpen((prev) => !prev);
+          }}
+          className="note-wrapper"
+          ref={note.ref}
+        >
           {/* <button onClick={()=> console.log(note.images)}>click</button> */}
           <span
             style={{

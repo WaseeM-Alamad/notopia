@@ -705,6 +705,7 @@ const page = () => {
   const {
     searchTerm,
     setSearchTerm,
+    labelSearchTerm,
     setLabelSearchTerm,
     searchRef,
     skipHashChangeRef,
@@ -719,11 +720,14 @@ const page = () => {
     ignoreKeysRef,
     handleLabelNoteCount,
     layout,
+    setIsFiltered,
+    currentSection,
+    setCurrentSection,
   } = useAppContext();
-  const [currentSection, setCurrentSection] = useState("Home");
   const [tooltipAnchor, setTooltipAnchor] = useState(null);
   const [notesState, dispatchNotes] = useReducer(notesReducer, initialStates);
   const [visibleItems, setVisibleItems] = useState(new Set());
+  const [filterTrigger, setFilterTrigger] = useState(false);
   const notesStateRef = useRef(notesState);
   const [modalStyle, setModalStyle] = useState(null);
   const [selectedNote, setSelectedNote] = useState(null);
@@ -738,6 +742,7 @@ const page = () => {
   });
   const [unloadWarn, setUnloadWarn] = useState(false);
   const [noActionUndone, setNoActionUndone] = useState(false);
+  const [labelObj, setLabelObj] = useState(null);
   const undoFunction = useRef(null);
   const redoFunction = useRef(null);
   const allowUndoRef = useRef(true);
@@ -1447,7 +1452,6 @@ const page = () => {
       if (note !== undefined && !isModalOpen) {
         setSelectedNote(note);
         setIsModalOpen(true);
-        console.log("IDK MAN");
         setModalStyle({
           index: index,
           element: null,
@@ -1540,7 +1544,6 @@ const page = () => {
         (uuid) => uuid === noteUUID
       );
       if (note !== undefined) {
-        console.log(note);
         setSelectedNote(note);
         setIsModalOpen(true);
         setModalStyle({
@@ -2075,13 +2078,20 @@ const page = () => {
   }, []);
 
   useEffect(() => {
-    if (isFirstRenderRef.current) return;
+    // if (isFirstRenderRef.current) return;
+    if (!notesReady || !labelsReady) return;
     resetBatchLoading();
+    requestAnimationFrame(() => {
+      loadNextBatch({
+        currentSet: new Set(),
+        version: layoutVersionRef.current,
+      });
+    });
     if (searchRef.current) {
       searchRef.current.value = "";
       setLabelSearchTerm("");
     }
-  }, [currentSection]);
+  }, [currentSection, notesReady, labelsReady]);
 
   const resetBatchLoading = () => {
     if (layoutVersionRef.current >= 1) {
@@ -2092,17 +2102,20 @@ const page = () => {
     setVisibleItems(new Set());
   };
 
-  const resetAndLoad = () => {
+  const resetAndLoad = (timeout = true) => {
     requestIdleCallback(() => {
       resetBatchLoading();
       clearTimeout(layoutTimeoutRef.current);
       requestAnimationFrame(() => {
-        layoutTimeoutRef.current = setTimeout(() => {
-          loadNextBatch({
-            currentSet: new Set(),
-            version: layoutVersionRef.current,
-          });
-        }, 100);
+        layoutTimeoutRef.current = setTimeout(
+          () => {
+            loadNextBatch({
+              currentSet: new Set(),
+              version: layoutVersionRef.current,
+            });
+          },
+          timeout ? 100 : 10
+        );
       });
     });
   };
@@ -2117,107 +2130,98 @@ const page = () => {
         return note.isTrash;
       case "search":
         return matchesFilters(note);
+      case "dynamiclabel":
+        return note?.labels?.includes(labelObj?.uuid) && !note.isTrash;
     }
   };
 
   const isLoadingNotesRef = useRef(false);
 
-  const loadNextBatch = useCallback(
-    (data) => {
-      const { currentSet: currentVisibleSet, version } = data;
-      const container = containerRef.current;
-      if (!container) {
-        isLoadingNotesRef.current = false;
-        return;
-      }
-      const scrollY = window.scrollY;
-      const totalHeight = container.offsetHeight;
-      const viewportHeight = window.innerHeight;
+  const loadNextBatch = (data) => {
+    const { currentSet: currentVisibleSet, version } = data;
+    const container = containerRef.current;
+    if (!container) {
+      isLoadingNotesRef.current = false;
+      return;
+    }
+    const scrollY = window.scrollY;
+    const totalHeight = container.offsetHeight;
+    const viewportHeight = window.innerHeight;
 
-      if (
-        totalHeight > viewportHeight + scrollY + 700 ||
-        version !== layoutVersionRef.current
-      ) {
-        isLoadingNotesRef.current = false;
-        return;
-      }
+    if (
+      totalHeight > viewportHeight + scrollY + 700 ||
+      version !== layoutVersionRef.current
+    ) {
+      isLoadingNotesRef.current = false;
+      return;
+    }
 
-      isLoadingNotesRef.current = true;
+    isLoadingNotesRef.current = true;
 
-      const currentNotes = data.notes || notesStateRef.current.notes;
-      const currentOrder = data.order || notesStateRef.current.order;
-      let sectionCount = 0;
-      const batchSize = 5;
-      const unrendered =
-        currentSection.toLowerCase() === "labels"
-          ? [...labelsRef.current]
-              .sort(
-                ([, a], [, b]) => new Date(b.createdAt) - new Date(a.createdAt)
-              )
-              .filter(([uuid, labelData]) => {
-                const search = searchRef.current.value.trim().toLowerCase();
-                const label = labelData.label.toLowerCase().trim();
+    const currentNotes = data.notes || notesStateRef.current.notes;
+    const currentOrder = data.order || notesStateRef.current.order;
+    let sectionCount = 0;
+    const batchSize = 5;
+    const unrendered =
+      currentSection.toLowerCase() === "labels"
+        ? [...labelsRef.current]
+            .sort(
+              ([, a], [, b]) => new Date(b.createdAt) - new Date(a.createdAt)
+            )
+            .filter(([uuid, labelData]) => {
+              const search = labelSearchTerm.trim().toLowerCase();
+              const label = labelData.label.toLowerCase().trim();
 
-                const notRenderedYet = !currentVisibleSet.has(uuid);
-                const matchesSearch = search === "" || label.includes(search);
+              const notRenderedYet = !currentVisibleSet.has(uuid);
+              const matchesSearch = search === "" || label.includes(search);
 
-                return notRenderedYet && matchesSearch;
-              })
-          : currentOrder.filter((uuid) => {
-              const note = currentNotes.get(uuid);
-              if (!currentVisibleSet.has(uuid) && filterUnrendered(note)) {
-                sectionCount++;
-                return true;
-              }
-            });
-
-      console.log("load");
-
-      const sortedUnrendered =
-        currentSection.toLowerCase() !== "labels"
-          ? unrendered.sort((a, b) => {
-              const noteA = currentNotes.get(a);
-              const noteB = currentNotes.get(b);
-
-              if (noteA?.isPinned && !noteB?.isPinned) return -1;
-              if (!noteA?.isPinned && noteB?.isPinned) return 1;
-
-              if (!noteA?.isArchived && noteB?.isArchived) return -1;
-              if (noteA?.isArchived && !noteB?.isArchived) return 1;
-
-              return 0;
+              return notRenderedYet && matchesSearch;
             })
-          : unrendered;
+        : currentOrder.filter((uuid) => {
+            const note = currentNotes.get(uuid);
+            if (!currentVisibleSet.has(uuid) && filterUnrendered(note)) {
+              sectionCount++;
+              return true;
+            }
+          });
 
-      const nextBatch = sortedUnrendered.slice(0, batchSize);
-      if (nextBatch.length === 0) return;
+    const sortedUnrendered =
+      currentSection.toLowerCase() !== "labels"
+        ? unrendered.sort((a, b) => {
+            const noteA = currentNotes.get(a);
+            const noteB = currentNotes.get(b);
 
-      requestIdleCallback(() => {
-        setVisibleItems((prev) => {
-          const updated = new Set(prev);
-          currentSection.toLowerCase() !== "labels"
-            ? nextBatch.forEach((uuid) => updated.add(uuid))
-            : nextBatch.forEach(([uuid, label]) => updated.add(uuid));
+            if (noteA?.isPinned && !noteB?.isPinned) return -1;
+            if (!noteA?.isPinned && noteB?.isPinned) return 1;
 
-          setTimeout(() => {
-            loadNextBatch({
-              currentSet: updated,
-              version: version,
-            });
-          }, 800);
+            if (!noteA?.isArchived && noteB?.isArchived) return -1;
+            if (noteA?.isArchived && !noteB?.isArchived) return 1;
 
-          return updated;
-        });
+            return 0;
+          })
+        : unrendered;
+
+    const nextBatch = sortedUnrendered.slice(0, batchSize);
+    if (nextBatch.length === 0) return;
+
+    requestIdleCallback(() => {
+      setVisibleItems((prev) => {
+        const updated = new Set(prev);
+        currentSection.toLowerCase() !== "labels"
+          ? nextBatch.forEach((uuid) => updated.add(uuid))
+          : nextBatch.forEach(([uuid, label]) => updated.add(uuid));
+
+        setTimeout(() => {
+          loadNextBatch({
+            currentSet: updated,
+            version: version,
+          });
+        }, 800);
+
+        return updated;
       });
-    },
-    [currentSection, layout, filters, searchTerm]
-  );
-
-  useEffect(() => {
-    if (currentSection.toLowerCase() !== "search") return;
-    console.log(currentSection);
-    resetAndLoad();
-  }, [searchTerm]);
+    });
+  };
 
   useEffect(() => {
     const handler = () => {
@@ -2241,7 +2245,7 @@ const page = () => {
     window.addEventListener("scroll", handler);
 
     return () => window.removeEventListener("scroll", handler);
-  }, [notesState.order, notesState.notes, visibleItems, layout]);
+  }, [visibleItems, layout]);
 
   useEffect(() => {
     const handler = () => {
@@ -2279,7 +2283,16 @@ const page = () => {
     });
   }, [layout]);
 
-  useEffect(() => resetBatchLoading(), [filters, searchTerm]);
+  useEffect(() => resetAndLoad(false), [filterTrigger, labelSearchTerm, labelObj]);
+  useEffect(() => {
+    if (currentSection.toLowerCase() !== "search") return;
+    resetAndLoad(false);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    if (currentSection.toLowerCase() === "search") return;
+    setIsFiltered(false);
+  }, [currentSection]);
 
   return (
     <>
@@ -2367,12 +2380,13 @@ const page = () => {
         setSelectedNotesIDs={setSelectedNotesIDs}
         noteActions={noteActions}
         notesReady={notesReady}
-        loadNextBatch={loadNextBatch}
         isGrid={isGrid}
-        setIsGrid={setIsGrid}
         containerRef={containerRef}
         rootContainerRef={rootContainerRef}
         layoutVersionRef={layoutVersionRef}
+        labelObj={labelObj}
+        setLabelObj={setLabelObj}
+        setFilterTrigger={setFilterTrigger}
       />
 
       <SelectionBox ref={selectionBoxRef} />

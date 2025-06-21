@@ -29,8 +29,15 @@ const Navbar = ({ user }) => {
     skipHashChangeRef,
     filters: searchFilters,
   } = useSearch();
-  const { labelsRef, labelsReady, ignoreKeysRef, layout, setLayout } =
-    useAppContext();
+  const {
+    labelsRef,
+    labelsReady,
+    ignoreKeysRef,
+    layout,
+    setLayout,
+    isFiltered,
+    currentSection,
+  } = useAppContext();
   const [isLoading, setIsLoading] = useState(0);
   const [UpToDatetrigger, setUpToDateTrigger] = useState(true);
   const [tooltipAnchor, setTooltipAnchor] = useState(null);
@@ -221,15 +228,6 @@ const Navbar = ({ user }) => {
       }
 
       requestAnimationFrame(() => {
-        if (hash === "search") {
-          setShowLayoutBtn(false);
-        } else {
-          const width = window.innerWidth;
-          if (width >= 605) {
-            setShowLayoutBtn(true);
-          }
-        }
-
         if (hash === "search" || hash.startsWith("search/")) {
           setShowClearBtn(true);
         } else {
@@ -280,6 +278,27 @@ const Navbar = ({ user }) => {
       window.removeEventListener("hashchange", handler);
     };
   }, [labelsReady, searchFilters]);
+
+  useEffect(() => {
+    const handler = () => {
+      requestAnimationFrame(() => {
+        const width = window.innerWidth;
+        if (width < 605) return;
+        if (currentSection.toLowerCase() === "search") {
+          setShowLayoutBtn(isFiltered);
+        } else {
+          setShowLayoutBtn(true);
+        }
+      });
+    };
+
+    handler();
+
+    window.addEventListener("hashchange", handler);
+    return () => {
+      window.removeEventListener("hashchange", handler);
+    };
+  }, [currentSection, isFiltered]);
 
   const handleRefresh = () => {
     closeToolTip();
@@ -398,7 +417,7 @@ const Navbar = ({ user }) => {
         setThreshold2(false);
         const savedLayout = localStorage.getItem("layout");
         setLayout(savedLayout);
-        if (!hash.startsWith("search")) {
+        if (currentSection.toLowerCase() === "search" || isFiltered) {
           setShowLayoutBtn(true);
         }
       }
@@ -412,7 +431,7 @@ const Navbar = ({ user }) => {
     window.addEventListener("resize", handler);
 
     return () => window.removeEventListener("resize", handler);
-  }, [threshold1]);
+  }, [threshold1, currentSection]);
 
   if (!isClient) return;
 
@@ -519,12 +538,32 @@ const Navbar = ({ user }) => {
                 spellCheck="false"
               />
 
-              <div style={{ padding: "0 0.5rem" }}>
+              <div
+                style={{
+                  padding: "0 0.5rem",
+                  display: !showClearBtn && "none",
+                }}
+              >
                 <Button
                   onClick={handleClearSearch}
-                  style={{ display: !showClearBtn && "none" }}
                   className="clear-search-icon"
                   onMouseEnter={(e) => handleMouseEnter(e, "Clear search")}
+                  onMouseLeave={handleMouseLeave}
+                />
+              </div>
+              <div
+                style={{
+                  padding: "0 0.5rem",
+                  display: currentSection.toLowerCase() !== "labels" && "none",
+                }}
+              >
+                <Button
+                  onClick={() => {
+                    closeToolTip();
+                    window.location.hash = "search";
+                  }}
+                  className="filter-search-icon"
+                  onMouseEnter={(e) => handleMouseEnter(e, "Advanced filters")}
                   onMouseLeave={handleMouseLeave}
                 />
               </div>

@@ -9,7 +9,6 @@ html {
 }
 
 body {
-  scrollbar-gutter: stable;
   overflow-x: hidden !important;
 }
 
@@ -2578,11 +2577,14 @@ img {
 }
 
 .search-section {
+  position: relative;
   display: flex;
   gap: 1rem;
   padding-top: 1rem;
   flex-direction: column;
   align-items: center;
+  padding-bottom: 3rem;
+  transition: padding 0.2s ease;
 }
 
 .filter-container {
@@ -2950,7 +2952,7 @@ img {
 }
 
 .grid-item {
-  transform: translateY(-100000px);
+  transform: translate(-100000px);
 }
 
 .modal-open .grid-item {
@@ -3064,4 +3066,15 @@ img {
   background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M16.8225 2.20211C17.0862 1.93808 17.5204 1.932 17.7922 2.18822C18.0636 2.44458 18.07 2.86678 17.8065 3.13095L16.9815 3.95736C17.1927 4.32164 17.3145 4.7417 17.3145 5.19003V14.3656C17.3144 15.672 16.2927 16.7467 14.9841 16.8761L14.7189 16.8891H5.28117C4.92569 16.8891 4.58753 16.8181 4.27936 16.692L3.17755 17.798C2.91393 18.0619 2.47967 18.0679 2.20788 17.8119C1.93631 17.5555 1.93006 17.1334 2.19359 16.8691L16.8225 2.20211ZM5.45707 15.5123H11.6519L10.0938 13.9229L10.0884 13.9168L10.0831 13.9116L8.61608 12.3447L5.45707 15.5123ZM13.4867 11.8464C13.393 11.7555 13.2397 11.7575 13.1483 11.8508L11.5831 13.4472L13.6064 15.5123H14.7189L14.8394 15.5063C15.4341 15.4474 15.8983 14.9593 15.8984 14.3656V14.192L13.4867 11.8464ZM9.60271 11.3551L10.6179 12.4385L12.1233 10.9011C12.7632 10.2479 13.8315 10.2356 14.4876 10.8733L15.8984 12.2458V5.19003C15.8984 5.14361 15.8941 5.09784 15.8886 5.05287L9.60271 11.3551Z' fill='%23374151'/%3E%3Cpath d='M13.1849 4.0433H5.28117C4.62961 4.0433 4.10168 4.55657 4.10168 5.19003V11.7865L5.96869 9.97139C6.42748 9.52537 7.08595 9.3984 7.65891 9.58336L2.69539 14.56C2.69037 14.4959 2.68558 14.431 2.68557 14.3656V5.19003C2.68557 3.79641 3.84774 2.66653 5.28117 2.66653H14.5582L13.1849 4.0433Z' fill='%23374151'/%3E%3C/svg%3E%0A");
   background-position: 0.7rem center;
   background-repeat: no-repeat;
+}
+
+.no-matching {
+  font-size: 0.9rem;
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  box-sizing: border-box;
+  left: 0;
+  padding: 27px 0;
+  top: 0;
 }

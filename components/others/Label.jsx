@@ -170,6 +170,7 @@ const Label = ({
     } else {
       labelTitleRef.current.innerText = originalTitleRef.current.trim();
     }
+    triggerReRender((prev) => !prev);
   };
 
   useEffect(() => {
@@ -424,6 +425,7 @@ const Label = ({
           {labelData.image && (
             <div style={{ position: "relative" }}>
               <img
+                draggable="false"
                 ref={imageRef}
                 style={{
                   width: "100%",
@@ -547,6 +549,7 @@ const Label = ({
             <div
               style={{ display: isFocused && "none" }}
               className="label-title-input"
+              dir="auto"
             >
               {highlightMatch(labelData.label)}
             </div>

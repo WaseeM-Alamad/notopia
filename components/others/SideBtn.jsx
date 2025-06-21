@@ -18,18 +18,18 @@ const SideBtn = ({
   overUUIDRef,
   isDragging,
 }) => {
-  const { handlePin, labelsRef } = useAppContext();
+  const { handlePin, labelsRef, currentSection } = useAppContext();
   const [mounted, setMounted] = useState(null);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const selected = () => {
     const decodedCurrentHash = decodeURIComponent(currentHash).toLowerCase();
-
-    if (currentHash.startsWith("label/")) {
+    const section = currentSection.toLowerCase();
+    if (section === "dynamiclabel") {
       const decodedBtnHash = decodeURIComponent(hash).toLowerCase();
       return type === "label" && decodedCurrentHash === decodedBtnHash;
     } else {
-      return type === "nav" && decodedCurrentHash === name.toLowerCase();
+      return type === "nav" && section === name.toLowerCase();
     }
   };
 
@@ -181,7 +181,7 @@ const SideBtn = ({
               ? "transform 0.17s ease, background-color 0.2s ease"
               : "none",
         }}
-        onMouseEnter={()=> handleDragOver(labelUUID)}
+        onMouseEnter={() => handleDragOver(labelUUID)}
       >
         <div
           key={hash}

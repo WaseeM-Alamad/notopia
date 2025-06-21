@@ -1,22 +1,9 @@
+import { useAppContext } from "@/context/AppContext";
 import { motion } from "framer-motion";
-import React, { memo, useEffect, useState } from "react";
+import React, { memo } from "react";
 
 const AddButton = () => {
-  const [currentHash, setCurrentHash] = useState(window.location.hash);
-
-  useEffect(() => {
-    setCurrentHash(window.location.hash);
-
-    const handler = (e) => {
-      const hash = window.location.hash.replace("#", "").toLowerCase();
-      if (hash.startsWith("note/")) return;
-      setCurrentHash(hash);
-    };
-
-    window.addEventListener("hashchange", handler);
-
-    return () => window.removeEventListener("hashchange", handler);
-  }, []);
+  const { currentSection } = useAppContext();
 
   return (
     <svg
@@ -31,14 +18,14 @@ const AddButton = () => {
       <g filter="url(#filter0_d_419_13)">
         <motion.path
           initial={{
-            rotate: currentHash === "trash" ? 45 : 0,
-            scale: currentHash === "trash" ? 0.5 : 1,
-            strokeWidth: currentHash === "trash" ? 0.8 : 0,
+            rotate: currentSection.toLowerCase() === "trash" ? 45 : 0,
+            scale: currentSection.toLowerCase() === "trash" ? 0.5 : 1,
+            strokeWidth: currentSection.toLowerCase() === "trash" ? 0.8 : 0,
           }}
           animate={{
-            rotate: currentHash === "trash" ? 45 : 0,
-            scale: currentHash === "trash" ? 0.5 : 1,
-            strokeWidth: currentHash === "trash" ? 0.8 : 0,
+            rotate: currentSection.toLowerCase() === "trash" ? 45 : 0,
+            scale: currentSection.toLowerCase() === "trash" ? 0.5 : 1,
+            strokeWidth: currentSection.toLowerCase() === "trash" ? 0.8 : 0,
           }}
           transition={{
             type: "spring",
@@ -52,13 +39,13 @@ const AddButton = () => {
       </g>
       <motion.path
         initial={{
-          scale: currentHash !== "trash" ? 0.9 : 1,
-          opacity: currentHash !== "trash" ? 0 : 1,
+          scale: currentSection.toLowerCase() !== "trash" ? 0.9 : 1,
+          opacity: currentSection.toLowerCase() !== "trash" ? 0 : 1,
         }}
         animate={{
-          scale: currentHash !== "trash" ? 0.9 : 1,
-          opacity: currentHash !== "trash" ? 0 : 1,
-          display: currentHash !== "trash" ? "none" : "",
+          scale: currentSection.toLowerCase() !== "trash" ? 0.9 : 1,
+          opacity: currentSection.toLowerCase() !== "trash" ? 0 : 1,
+          display: currentSection.toLowerCase() !== "trash" ? "none" : "",
         }}
         transition={{
           type: "spring",
@@ -73,10 +60,10 @@ const AddButton = () => {
         className="add-btn-fill"
       />
       {/* <motion.path
-        initial={{ x: !currentHash === "trash" ? -40 : 0 }}
+        initial={{ x: !currentSection.toLowerCase() === "trash" ? -40 : 0 }}
         animate={{
-          x: !currentHash === "trash" ? -40 : 0,
-          displax: !currentHash === "trash" ? "none" : "",
+          x: !currentSection.toLowerCase() === "trash" ? -40 : 0,
+          displax: !currentSection.toLowerCase() === "trash" ? "none" : "",
         }}
         transition={{
           x: { type: "spring", stiffness: 700, damping: 50, mass: 1 },
