@@ -1871,7 +1871,7 @@ const page = () => {
           !undoFunction.current
         )
           return;
-
+        event.preventDefault();
         keyThrottleRef.current = true;
         undoFunction.current();
         allowRedoRef.current = true;
@@ -1903,6 +1903,7 @@ const page = () => {
         )
           return;
 
+        event.preventDefault();
         keyThrottleRef.current = true;
         redoFunction.current();
         allowUndoRef.current = true;
@@ -2087,7 +2088,7 @@ const page = () => {
         version: layoutVersionRef.current,
       });
     });
-    if (searchRef.current) {
+    if (searchRef.current && currentSection.toLowerCase() !== "search") {
       searchRef.current.value = "";
       setLabelSearchTerm("");
     }
@@ -2283,7 +2284,10 @@ const page = () => {
     });
   }, [layout]);
 
-  useEffect(() => resetAndLoad(false), [filterTrigger, labelSearchTerm, labelObj]);
+  useEffect(
+    () => resetAndLoad(false),
+    [filterTrigger, labelSearchTerm, labelObj]
+  );
   useEffect(() => {
     if (currentSection.toLowerCase() !== "search") return;
     resetAndLoad(false);

@@ -23,6 +23,7 @@ import LeftArrow from "../icons/LeftArrow";
 
 const Navbar = ({ user }) => {
   const {
+    labelSearchTerm,
     setLabelSearchTerm,
     setSearchTerm,
     searchRef,
@@ -266,6 +267,8 @@ const Navbar = ({ user }) => {
             setInputPlaceHolder(`Search within "Images"`);
           }
         });
+      } else if (currentSection.toLowerCase() === "labels") {
+        setInputPlaceHolder("Search labels");
       } else {
         setInputPlaceHolder("Search");
       }
@@ -277,7 +280,7 @@ const Navbar = ({ user }) => {
     return () => {
       window.removeEventListener("hashchange", handler);
     };
-  }, [labelsReady, searchFilters]);
+  }, [labelsReady, searchFilters, currentSection]);
 
   useEffect(() => {
     const handler = () => {
@@ -560,10 +563,27 @@ const Navbar = ({ user }) => {
                 <Button
                   onClick={() => {
                     closeToolTip();
-                    window.location.hash = "search";
+
+                    if (labelSearchTerm.trim()) {
+                      setLabelSearchTerm("");
+                      searchRef.current.value = "";
+                    } else {
+                      window.location.hash = "search";
+                    }
                   }}
-                  className="filter-search-icon"
-                  onMouseEnter={(e) => handleMouseEnter(e, "Advanced filters")}
+                  className={
+                    labelSearchTerm.trim()
+                      ? "clear-search-icon"
+                      : "filter-search-icon"
+                  }
+                  onMouseEnter={(e) =>
+                    handleMouseEnter(
+                      e,
+                      labelSearchTerm.trim()
+                        ? "Clear search"
+                        : "Advanced filters"
+                    )
+                  }
                   onMouseLeave={handleMouseLeave}
                 />
               </div>
