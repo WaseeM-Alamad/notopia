@@ -134,30 +134,6 @@ const DynamicLabel = ({
     return true;
   });
 
-  useEffect(() => {
-    const handler = () => {
-      const hash = window.location.hash.replace("#label/", "");
-      const decodedHash = decodeURIComponent(hash);
-      let targetedLabel = null;
-      labelsRef.current.forEach((labelData) => {
-        if (labelData.label.toLowerCase() === decodedHash.toLowerCase()) {
-          targetedLabel = labelData;
-        }
-      });
-
-      if (targetedLabel) {
-        labelObjRef.current = targetedLabel;
-        setLabelObj(targetedLabel);
-      }
-    };
-
-    handler();
-
-    window.addEventListener("hashchange", handler);
-
-    return () => window.removeEventListener("hashchange", handler);
-  }, [labelsReady]);
-
   const calculateLayout = useCallback(() => {
     if (layoutFrameRef.current) {
       cancelAnimationFrame(layoutFrameRef.current);

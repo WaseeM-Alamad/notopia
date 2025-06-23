@@ -485,6 +485,7 @@ const Home = memo(
     };
 
     useEffect(() => {
+      console.log("calculate")
       calculateLayout();
     }, [visibleItems]);
 

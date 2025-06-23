@@ -2082,10 +2082,11 @@ const page = () => {
     // if (isFirstRenderRef.current) return;
     if (!notesReady || !labelsReady) return;
     resetBatchLoading();
+    const version = layoutVersionRef.current;
     requestAnimationFrame(() => {
       loadNextBatch({
         currentSet: new Set(),
-        version: layoutVersionRef.current,
+        version: version,
       });
     });
     if (searchRef.current && currentSection.toLowerCase() !== "search") {
@@ -2106,13 +2107,14 @@ const page = () => {
   const resetAndLoad = (timeout = true) => {
     requestIdleCallback(() => {
       resetBatchLoading();
+      const version = layoutVersionRef.current;
       clearTimeout(layoutTimeoutRef.current);
       requestAnimationFrame(() => {
         layoutTimeoutRef.current = setTimeout(
           () => {
             loadNextBatch({
               currentSet: new Set(),
-              version: layoutVersionRef.current,
+              version: version,
             });
           },
           timeout ? 100 : 10
@@ -2229,14 +2231,14 @@ const page = () => {
       const scrollTop = window.scrollY;
       const viewportHeight = window.innerHeight;
       const fullHeight = document.body.offsetHeight;
-
+      const version = layoutVersionRef.current;
       if (scrollTop + viewportHeight >= fullHeight - 600) {
         requestAnimationFrame(() => {
           setTimeout(() => {
             if (isLoadingNotesRef.current) return;
             loadNextBatch({
               currentSet: visibleItems,
-              version: layoutVersionRef.current,
+              version: version,
             });
           }, 800);
         });
@@ -2250,7 +2252,9 @@ const page = () => {
 
   useEffect(() => {
     const handler = () => {
-      resetAndLoad();
+      requestAnimationFrame(() => {
+        resetAndLoad();
+      });
     };
 
     window.addEventListener("reloadNotes", handler);
@@ -2270,6 +2274,7 @@ const page = () => {
     }
     requestIdleCallback(() => {
       resetBatchLoading();
+      const version = layoutVersionRef.current;
       clearTimeout(layoutTimeoutRef.current);
       setIsGrid(layout === "grid");
 
@@ -2277,26 +2282,53 @@ const page = () => {
         layoutTimeoutRef.current = setTimeout(() => {
           loadNextBatch({
             currentSet: new Set(),
-            version: layoutVersionRef.current,
+            version: version,
           });
         }, 200);
       });
     });
   }, [layout]);
 
-  useEffect(
-    () => resetAndLoad(false),
-    [filterTrigger, labelSearchTerm, labelObj]
-  );
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      resetAndLoad(false);
+    });
+  }, [filterTrigger, labelSearchTerm, labelObj]);
+
   useEffect(() => {
     if (currentSection.toLowerCase() !== "search") return;
-    resetAndLoad(false);
+    requestAnimationFrame(() => {
+      resetAndLoad(false);
+    });
   }, [searchTerm]);
 
   useEffect(() => {
     if (currentSection.toLowerCase() === "search") return;
     setIsFiltered(false);
   }, [currentSection]);
+
+  useEffect(() => {
+    const handler = () => {
+      const hash = window.location.hash.replace("#label/", "");
+      const decodedHash = decodeURIComponent(hash);
+      let targetedLabel = null;
+      labelsRef.current.forEach((labelData) => {
+        if (labelData.label.toLowerCase() === decodedHash.toLowerCase()) {
+          targetedLabel = labelData;
+        }
+      });
+
+      if (targetedLabel) {
+        setLabelObj(targetedLabel);
+      }
+    };
+
+    handler();
+
+    window.addEventListener("hashchange", handler);
+
+    return () => window.removeEventListener("hashchange", handler);
+  }, [labelsReady]);
 
   return (
     <>
