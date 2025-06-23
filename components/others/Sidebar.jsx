@@ -258,7 +258,7 @@ const Sidebar = memo(() => {
     document.addEventListener("mouseup", handleDragEnd);
   };
 
-  if (currentHash === null || !currentSection) return;
+  if (currentHash === null) return;
 
   return (
     <>

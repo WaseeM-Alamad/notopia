@@ -38,6 +38,7 @@ const Navbar = ({ user }) => {
     setLayout,
     isFiltered,
     currentSection,
+    modalOpenRef,
   } = useAppContext();
   const [isLoading, setIsLoading] = useState(0);
   const [UpToDatetrigger, setUpToDateTrigger] = useState(true);
@@ -393,7 +394,6 @@ const Navbar = ({ user }) => {
     const handler = (e) => {
       // console.log("here");
       const width = window.innerWidth;
-      const hash = window.location.hash.replace("#", "");
       const focused = searchRef.current === document.activeElement;
 
       if (width < 795) {
@@ -411,7 +411,7 @@ const Navbar = ({ user }) => {
         setShowNav(true);
       }
 
-      if (width < 605) {
+      if (width < 605 && !modalOpenRef.current ) {
         setLayout("list");
         setThreshold2(true);
         setShowLayoutBtn(false);
@@ -419,11 +419,17 @@ const Navbar = ({ user }) => {
         setThreshold2(false);
         const savedLayout = localStorage.getItem("layout");
         setLayout(savedLayout);
-        if (currentSection?.toLowerCase() === "search" || isFiltered) {
+        if (currentSection?.toLowerCase() === "search") {
+          if (isFiltered) {
+            setShowLayoutBtn(true);
+          }
+        } else {
           setShowLayoutBtn(true);
         }
       }
     };
+
+    if (!currentSection) return;
 
     if (isFirstRunRef2.current) {
       handler();
@@ -435,7 +441,7 @@ const Navbar = ({ user }) => {
     return () => window.removeEventListener("resize", handler);
   }, [threshold1, currentSection]);
 
-  if (!isClient || !currentSection) return;
+  if (!isClient) return;
 
   return (
     <>

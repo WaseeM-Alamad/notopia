@@ -301,7 +301,7 @@ const DynamicLabel = ({
   return (
     <>
       <div ref={rootContainerRef} className="starting-div">
-        {labelsReady && (
+        {/* {labelsReady && (
           <div
             style={{
               height: "fit-content",
@@ -340,7 +340,7 @@ const DynamicLabel = ({
               <div>{getNoteFormattedDate(labelObj?.createdAt)}</div>
             </div>
           </div>
-        )}
+        )} */}
         <div
           ref={containerRef}
           className="section-container"

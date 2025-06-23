@@ -723,6 +723,7 @@ const page = () => {
     setIsFiltered,
     currentSection,
     setCurrentSection,
+    modalOpenRef,
   } = useAppContext();
   const [tooltipAnchor, setTooltipAnchor] = useState(null);
   const [notesState, dispatchNotes] = useReducer(notesReducer, initialStates);
@@ -764,6 +765,7 @@ const page = () => {
   const rootContainerRef = useRef(null);
   const prevSelectedRef = useRef(null);
   const throttleRef = useRef(false);
+  const isLoadingNotesRef = useRef(false);
 
   const containerRef = useRef(null);
   const layoutVersionRef = useRef(0);
@@ -1425,8 +1427,6 @@ const page = () => {
     window.location.hash = encodedNewHash;
   }, [searchTerm]);
 
-  const modalOpenRef = useRef(null);
-
   useEffect(() => {
     modalOpenRef.current = isModalOpen;
   }, [isModalOpen]);
@@ -2070,8 +2070,6 @@ const page = () => {
     setTimeout(() => {
       isDraggingRef.current = false;
     }, 10);
-
-    // selectedNotesRef.current = new Set();
   };
 
   useEffect(() => {
@@ -2086,15 +2084,14 @@ const page = () => {
     };
   }, []);
 
-  const skipLabelRefreshRef = useRef(null);
-
   useEffect(() => {
-    // if (isFirstRenderRef.current) return;
     if (!notesReady || !labelsReady) return;
 
     if (currentSection?.toLowerCase() === "dynamiclabel") {
       return;
     }
+
+    console.log("hi");
 
     resetBatchLoading();
     const version = layoutVersionRef.current;
@@ -2152,8 +2149,6 @@ const page = () => {
         return note?.labels?.includes(labelObj?.uuid) && !note.isTrash;
     }
   };
-
-  const isLoadingNotesRef = useRef(false);
 
   const loadNextBatch = (data) => {
     const { currentSet: currentVisibleSet, version } = data;
@@ -2314,11 +2309,12 @@ const page = () => {
   }, [filters, labelSearchTerm]);
 
   useEffect(() => {
-    if (isFirstRenderRef.current || !labelObj) return;
+    if (isFirstRenderRef.current || !labelObj || !notesReady || !labelsReady)
+      return;
     requestAnimationFrame(() => {
       resetAndLoad(false);
     });
-  }, [labelObj]);
+  }, [labelObj, notesReady, labelsReady]);
 
   useEffect(() => {
     if (currentSection?.toLowerCase() !== "search" || isFirstRenderRef.current)
@@ -2359,8 +2355,6 @@ const page = () => {
 
     return () => window.removeEventListener("hashchange", handler);
   }, [currentSection, labelsReady]);
-
-  if (!currentSection) return;
 
   return (
     <>
