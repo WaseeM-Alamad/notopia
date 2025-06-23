@@ -727,7 +727,6 @@ const page = () => {
   const [tooltipAnchor, setTooltipAnchor] = useState(null);
   const [notesState, dispatchNotes] = useReducer(notesReducer, initialStates);
   const [visibleItems, setVisibleItems] = useState(new Set());
-  const [filterTrigger, setFilterTrigger] = useState(false);
   const notesStateRef = useRef(notesState);
   const [modalStyle, setModalStyle] = useState(null);
   const [selectedNote, setSelectedNote] = useState(null);
@@ -1259,7 +1258,6 @@ const page = () => {
         });
         data.setMoreMenuOpen(false);
       } else if (data.type === "REMOVE_LABEL") {
-        // console.log(filters)
         const fadeNote =
           filters.label === data.labelUUID || currentSection === "DynamicLabel";
 
@@ -1427,6 +1425,12 @@ const page = () => {
     window.location.hash = encodedNewHash;
   }, [searchTerm]);
 
+  const modalOpenRef = useRef(null);
+
+  useEffect(() => {
+    modalOpenRef.current = isModalOpen;
+  }, [isModalOpen]);
+
   const handleHashChange = useCallback(() => {
     setSelectedNotesIDs([]);
     setTooltipAnchor(null);
@@ -1449,7 +1453,7 @@ const page = () => {
       const index = notesStateRef.current.order.findIndex(
         (uuid) => uuid === noteUUID
       );
-      if (note !== undefined && !isModalOpen) {
+      if (note !== undefined && !modalOpenRef.current) {
         setSelectedNote(note);
         setIsModalOpen(true);
         setModalStyle({
@@ -1459,7 +1463,10 @@ const page = () => {
         });
       }
     } else {
-      setIsModalOpen(false);
+      if (modalOpenRef.current) {
+        setIsModalOpen(false);
+        skipHashChangeRef.current = true;
+      }
     }
 
     if (skipHashChangeRef.current) {
@@ -1521,7 +1528,7 @@ const page = () => {
         searchRef.current.value = "";
       });
     }
-  }, [labelsReady, isModalOpen]);
+  }, [labelsReady]);
 
   useEffect(() => {
     handleHashChange();
@@ -1532,7 +1539,7 @@ const page = () => {
     return () => {
       window.removeEventListener("hashchange", handleHashChange);
     };
-  }, [labelsReady, isModalOpen]);
+  }, [labelsReady]);
 
   useEffect(() => {
     if (!notesReady) return;
@@ -1630,6 +1637,7 @@ const page = () => {
   const Page = components[currentSection];
 
   useEffect(() => {
+    if (!currentSection) return;
     notesStateRef.current = notesState;
     requestAnimationFrame(() => {
       if (notesState.order.length === 0 && currentSection === "Trash") {
@@ -2078,9 +2086,16 @@ const page = () => {
     };
   }, []);
 
+  const skipLabelRefreshRef = useRef(null);
+
   useEffect(() => {
     // if (isFirstRenderRef.current) return;
     if (!notesReady || !labelsReady) return;
+
+    if (currentSection?.toLowerCase() === "dynamiclabel") {
+      return;
+    }
+
     resetBatchLoading();
     const version = layoutVersionRef.current;
     requestAnimationFrame(() => {
@@ -2089,7 +2104,7 @@ const page = () => {
         version: version,
       });
     });
-    if (searchRef.current && currentSection.toLowerCase() !== "search") {
+    if (searchRef.current && currentSection?.toLowerCase() !== "search") {
       searchRef.current.value = "";
       setLabelSearchTerm("");
     }
@@ -2124,7 +2139,7 @@ const page = () => {
   };
 
   const filterUnrendered = (note) => {
-    switch (currentSection.toLowerCase()) {
+    switch (currentSection?.toLowerCase()) {
       case "home":
         return !note.isArchived && !note.isTrash;
       case "archive":
@@ -2166,7 +2181,7 @@ const page = () => {
     let sectionCount = 0;
     const batchSize = 5;
     const unrendered =
-      currentSection.toLowerCase() === "labels"
+      currentSection?.toLowerCase() === "labels"
         ? [...labelsRef.current]
             .sort(
               ([, a], [, b]) => new Date(b.createdAt) - new Date(a.createdAt)
@@ -2189,7 +2204,7 @@ const page = () => {
           });
 
     const sortedUnrendered =
-      currentSection.toLowerCase() !== "labels"
+      currentSection?.toLowerCase() !== "labels"
         ? unrendered.sort((a, b) => {
             const noteA = currentNotes.get(a);
             const noteB = currentNotes.get(b);
@@ -2208,13 +2223,15 @@ const page = () => {
     if (nextBatch.length === 0) return;
 
     requestIdleCallback(() => {
+      if (version !== layoutVersionRef.current) return;
       setVisibleItems((prev) => {
         const updated = new Set(prev);
-        currentSection.toLowerCase() !== "labels"
+        currentSection?.toLowerCase() !== "labels"
           ? nextBatch.forEach((uuid) => updated.add(uuid))
           : nextBatch.forEach(([uuid, label]) => updated.add(uuid));
 
         setTimeout(() => {
+          if (version !== layoutVersionRef.current) return;
           loadNextBatch({
             currentSet: updated,
             version: version,
@@ -2290,25 +2307,38 @@ const page = () => {
   }, [layout]);
 
   useEffect(() => {
+    if (isFirstRenderRef.current) return;
     requestAnimationFrame(() => {
       resetAndLoad(false);
     });
-  }, [filterTrigger, labelSearchTerm, labelObj]);
+  }, [filters, labelSearchTerm]);
 
   useEffect(() => {
-    if (currentSection.toLowerCase() !== "search") return;
+    if (isFirstRenderRef.current || !labelObj) return;
+    requestAnimationFrame(() => {
+      resetAndLoad(false);
+    });
+  }, [labelObj]);
+
+  useEffect(() => {
+    if (currentSection?.toLowerCase() !== "search" || isFirstRenderRef.current)
+      return;
     requestAnimationFrame(() => {
       resetAndLoad(false);
     });
   }, [searchTerm]);
 
   useEffect(() => {
-    if (currentSection.toLowerCase() === "search") return;
+    if (currentSection?.toLowerCase() === "search") return;
     setIsFiltered(false);
   }, [currentSection]);
 
   useEffect(() => {
     const handler = () => {
+      if (currentSection?.toLowerCase() !== "dynamiclabel") {
+        setLabelObj(null);
+        return;
+      }
       const hash = window.location.hash.replace("#label/", "");
       const decodedHash = decodeURIComponent(hash);
       let targetedLabel = null;
@@ -2328,7 +2358,9 @@ const page = () => {
     window.addEventListener("hashchange", handler);
 
     return () => window.removeEventListener("hashchange", handler);
-  }, [labelsReady]);
+  }, [currentSection, labelsReady]);
+
+  if (!currentSection) return;
 
   return (
     <>
@@ -2422,7 +2454,6 @@ const page = () => {
         layoutVersionRef={layoutVersionRef}
         labelObj={labelObj}
         setLabelObj={setLabelObj}
-        setFilterTrigger={setFilterTrigger}
       />
 
       <SelectionBox ref={selectionBoxRef} />

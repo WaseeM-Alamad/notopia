@@ -18,6 +18,7 @@ import { useSession } from "next-auth/react";
 import { useAppContext } from "@/context/AppContext";
 import { v4 as uuid } from "uuid";
 import ListItemsLayout from "./ListitemsLayout";
+import { useSearch } from "@/context/SearchContext";
 
 const Modal = ({
   localNote,
@@ -37,6 +38,7 @@ const Modal = ({
   currentSection,
 }) => {
   const { handleLabelNoteCount, labelsRef, ignoreKeysRef } = useAppContext();
+  const { skipHashChangeRef } = useSearch();
   const [isMounted, setIsMounted] = useState(false);
   // const [localNote, setLocalNote] = useState(null);
   const note = initialStyle?.initialNote;
@@ -195,6 +197,7 @@ const Modal = ({
     rootContainerRef.current.classList.remove("modal-open");
 
     requestAnimationFrame(() => {
+      skipHashChangeRef.current = false;
       archiveRef.current = false;
       trashRef.current = false;
       setInitialStyle(null);
@@ -298,6 +301,7 @@ const Modal = ({
         center();
       }
     } else {
+      skipHashChangeRef.current = true;
       ignoreKeysRef.current = false;
       if (!prevHash.current) {
         // history.pushState(null, null, `#${currentSection.toLowerCase()}`);

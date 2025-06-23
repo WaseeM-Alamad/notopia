@@ -7,7 +7,7 @@ export const SearchProvider = ({ children }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [labelSearchTerm, setLabelSearchTerm] = useState("");
   const searchRef = useRef(null);
-  const skipHashChangeRef = useRef(null);
+  const skipHashChangeRef = useRef(false);
   const [filters, setFilters] = useState({
     color: null,
     label: null,

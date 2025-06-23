@@ -267,7 +267,7 @@ const Navbar = ({ user }) => {
             setInputPlaceHolder(`Search within "Images"`);
           }
         });
-      } else if (currentSection.toLowerCase() === "labels") {
+      } else if (currentSection?.toLowerCase() === "labels") {
         setInputPlaceHolder("Search labels");
       } else {
         setInputPlaceHolder("Search");
@@ -287,7 +287,7 @@ const Navbar = ({ user }) => {
       requestAnimationFrame(() => {
         const width = window.innerWidth;
         if (width < 605) return;
-        if (currentSection.toLowerCase() === "search") {
+        if (currentSection?.toLowerCase() === "search") {
           setShowLayoutBtn(isFiltered);
         } else {
           setShowLayoutBtn(true);
@@ -399,7 +399,6 @@ const Navbar = ({ user }) => {
       if (width < 795) {
         setThreshold1(true);
         if (!focused) {
-          console.log("here");
           setShowInput(false);
           setShowNav(true);
         } else if (focused && !threshold1) {
@@ -420,7 +419,7 @@ const Navbar = ({ user }) => {
         setThreshold2(false);
         const savedLayout = localStorage.getItem("layout");
         setLayout(savedLayout);
-        if (currentSection.toLowerCase() === "search" || isFiltered) {
+        if (currentSection?.toLowerCase() === "search" || isFiltered) {
           setShowLayoutBtn(true);
         }
       }
@@ -436,7 +435,7 @@ const Navbar = ({ user }) => {
     return () => window.removeEventListener("resize", handler);
   }, [threshold1, currentSection]);
 
-  if (!isClient) return;
+  if (!isClient || !currentSection) return;
 
   return (
     <>
@@ -557,7 +556,7 @@ const Navbar = ({ user }) => {
               <div
                 style={{
                   padding: "0 0.5rem",
-                  display: currentSection.toLowerCase() !== "labels" && "none",
+                  display: currentSection?.toLowerCase() !== "labels" && "none",
                 }}
               >
                 <Button

@@ -24,7 +24,6 @@ const Search = ({
   isGrid,
   visibleItems,
   setVisibleItems,
-  setFilterTrigger,
 }) => {
   const {
     searchTerm,
@@ -40,6 +39,8 @@ const Search = ({
   const [typesSet, setTypesSet] = useState(new Set());
 
   const firstRun = useRef(true);
+
+  let renderedIndex = -1;
 
   const filtersExist =
     Object.values(filters).some((filter) => filter !== null) ||
@@ -211,7 +212,7 @@ const Search = ({
                 </motion.div>
               )}
             </AnimatePresence>
-            {filtersToRender.map((item, index) => {
+            {filtersToRender.map((item) => {
               if (
                 item.set.size === 0 ||
                 (item.title === "Colors" &&
@@ -220,23 +221,25 @@ const Search = ({
               ) {
                 return;
               }
+
+              renderedIndex++;
               return (
                 <motion.div
                   key={item.title}
-                  initial={{ y: 200 / (index + 1.7), opacity: 0 }}
+                  initial={{ y: 200 / (renderedIndex + 1.7), opacity: 0 }}
                   animate={{
                     y: 0,
                     opacity: 1,
                   }}
                   transition={{
                     y: {
-                      delay: index / 10,
+                      delay: renderedIndex / 10,
                       type: "spring",
                       stiffness: 700,
                       damping: 50,
                       mass: 1,
                     },
-                    opacity: { delay: index / 10, duration: 0.3 },
+                    opacity: { delay: renderedIndex / 10, duration: 0.3 },
                   }}
                   className="filter-container"
                 >
@@ -255,7 +258,6 @@ const Search = ({
                           onClick={() => {
                             closeToolTip();
                             resetText();
-                            setFilterTrigger((prev) => !prev);
                             item.function(setItem);
                           }}
                           onMouseEnter={(e) => {

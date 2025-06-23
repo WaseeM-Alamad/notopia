@@ -37,9 +37,19 @@ const Labels = memo(
 
     const COLUMN_WIDTH = layout === "grid" ? 240 : 450;
 
-    const labelsExist = useMemo(() => {
-      return !!labelsRef.current.size;
-    }, [labelsReady, reRender, labelsRef.current]);
+    const noMatchingLabels =
+      labelsReady &&
+      labelSearchTerm.trim() &&
+      ![...labelsRef.current].some(([, labelData]) => {
+        const search = labelSearchTerm.trim().toLowerCase();
+        const label = labelData.label.toLowerCase().trim();
+
+        const matchesSearch = label.includes(search);
+
+        return matchesSearch;
+      });
+
+    const labelsExist = !!labelsRef.current.size;
 
     const calculateLayout = useCallback(() => {
       if (layoutFrameRef.current) {
@@ -199,7 +209,7 @@ const Labels = memo(
               })}
           </div>
           <div className="empty-page">
-            {labelsReady && !labelsExist && (
+            {labelsReady && !labelsExist && !labelSearchTerm.trim() && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -229,6 +239,22 @@ const Labels = memo(
               >
                 <div className="empty-page-loading" />
                 Loading labels...
+              </motion.div>
+            )}
+            {noMatchingLabels && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 900,
+                  damping: 50,
+                  mass: 1,
+                }}
+                className="empty-page-box"
+              >
+                <div className="no-labels-found" />
+                No matching labels
               </motion.div>
             )}
           </div>

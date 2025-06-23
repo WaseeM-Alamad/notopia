@@ -21,7 +21,7 @@ const AppContext = createContext();
 
 export function AppProvider({ children }) {
   const { data: session, status } = useSession();
-  const [currentSection, setCurrentSection] = useState("Home");
+  const [currentSection, setCurrentSection] = useState(null);
   const [labelsReady, setLabelsReady] = useState(false);
   const [layout, setLayout] = useState(null);
   const userID = session?.user?.id;
