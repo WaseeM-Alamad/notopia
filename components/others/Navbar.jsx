@@ -1,5 +1,12 @@
 "use client";
-import React, { memo, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import "@/assets/styles/navbar.css";
 import RefreshIcon from "../icons/RefreshIcon";
 import SettingsIcon from "../icons/SettingsIcon";
@@ -47,7 +54,10 @@ const Navbar = ({ user }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [isClient, setIsClient] = useState(false);
-  const [showInput, setShowInput] = useState(true);
+  const [showInput, setShowInput] = useState(() => {
+    const width = window.innerWidth;
+    return !(width < 795);
+  });
   const [showLayoutBtn, setShowLayoutBtn] = useState(false);
   const [showNav, setShowNav] = useState(true);
   const [threshold1, setThreshold1] = useState(false);
@@ -58,12 +68,14 @@ const Navbar = ({ user }) => {
   });
   const image = user?.image;
   const isFirstRunRef = useRef(true);
-  const isFirstRunRef2 = useRef(true);
   const imageRef = useRef(null);
   const menuRef = useRef(null);
   const settingsRef = useRef(null);
 
   useEffect(() => {
+    requestAnimationFrame(() => {
+      handleResizeLayout();
+    });
     setIsClient(true);
   }, []);
 
@@ -122,7 +134,6 @@ const Navbar = ({ user }) => {
       }, 800);
     };
 
-    // Listen for custom events
     window.addEventListener("loadingStart", startLoading);
     window.addEventListener("loadingEnd", stopLoading);
 
@@ -167,8 +178,8 @@ const Navbar = ({ user }) => {
       if (isLoading) {
         const message =
           "Your request is still in progress. Are you sure you want to leave?";
-        event.returnValue = message; // Standard for most browsers
-        return message; // For some browsers
+        event.returnValue = message;
+        return message;
       }
     };
 
@@ -192,7 +203,6 @@ const Navbar = ({ user }) => {
 
     const handleResize = () => {
       if (isMenuOpen) {
-        // setIsMenuOpen(false);
         const rect = imageRef.current?.getBoundingClientRect();
         setMenuPosition({
           top: rect.top,
@@ -210,10 +220,6 @@ const Navbar = ({ user }) => {
   }, [isMenuOpen]);
 
   const [showClearBtn, setShowClearBtn] = useState(false);
-
-  const tripleEncode = (str) => {
-    return encodeURIComponent(encodeURIComponent(encodeURIComponent(str)));
-  };
 
   const doubleDecode = (str) => {
     return decodeURIComponent(decodeURIComponent(str));
@@ -388,58 +394,44 @@ const Navbar = ({ user }) => {
     }
   };
 
-  // 795  600
+  const handleResizeLayout = useCallback(() => {
+    const width = window.innerWidth;
+    const focused = searchRef.current === document.activeElement;
 
-  useEffect(() => {
-    const handler = (e) => {
-      // console.log("here");
-      const width = window.innerWidth;
-      const focused = searchRef.current === document.activeElement;
-
-      if (width < 795) {
-        setThreshold1(true);
-        if (!focused) {
-          setShowInput(false);
-          setShowNav(true);
-        } else if (focused && !threshold1) {
-          setShowInput(false);
-          setShowNav(true);
-        }
-      } else {
-        setThreshold1(false);
-        setShowInput(true);
+    if (width < 795) {
+      setThreshold1(true);
+      if (!focused || !threshold1) {
+        setShowInput(false);
         setShowNav(true);
       }
-
-      if (width < 605 && !modalOpenRef.current ) {
-        setLayout("list");
-        setThreshold2(true);
-        setShowLayoutBtn(false);
-      } else {
-        setThreshold2(false);
-        const savedLayout = localStorage.getItem("layout");
-        setLayout(savedLayout);
-        if (currentSection?.toLowerCase() === "search") {
-          if (isFiltered) {
-            setShowLayoutBtn(true);
-          }
-        } else {
-          setShowLayoutBtn(true);
-        }
-      }
-    };
-
-    if (!currentSection) return;
-
-    if (isFirstRunRef2.current) {
-      handler();
-      isFirstRunRef2.current = false;
+    } else {
+      setThreshold1(false);
+      setShowInput(true);
+      setShowNav(true);
     }
 
-    window.addEventListener("resize", handler);
+    if (width < 605 && !modalOpenRef.current) {
+      setLayout("list");
+      setThreshold2(true);
+      setShowLayoutBtn(false);
+    } else {
+      setThreshold2(false);
+      const savedLayout = localStorage.getItem("layout");
+      setLayout(savedLayout);
+      if (currentSection?.toLowerCase() === "search") {
+        if (isFiltered) {
+          setShowLayoutBtn(true);
+        }
+      } else {
+        setShowLayoutBtn(true);
+      }
+    }
+  }, [currentSection, isFiltered, threshold1]);
 
-    return () => window.removeEventListener("resize", handler);
-  }, [threshold1, currentSection]);
+  useEffect(() => {
+    window.addEventListener("resize", handleResizeLayout);
+    return () => window.removeEventListener("resize", handleResizeLayout);
+  }, [handleResizeLayout]);
 
   if (!isClient) return;
 
@@ -500,7 +492,6 @@ const Navbar = ({ user }) => {
                     ? "calc(100% - 156px)"
                     : "calc(100% - 110px)"
                   : null,
-                // left: "3px"
               }}
               tabIndex="0"
               className="search-wrapper"
@@ -658,9 +649,9 @@ const Navbar = ({ user }) => {
               <AnimatePresence>
                 {!isLoading && UpToDatetrigger && (
                   <motion.div
-                    initial={{ opacity: 0 }} // Start with opacity 0 when the component first mounts
-                    animate={{ opacity: 1 }} // Fade in to opacity 1 when it becomes visible
-                    exit={{ opacity: 0, transition: { delay: 0.1 } }} // Fade out to opacity 0 when the component unmounts
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0, transition: { delay: 0.1 } }}
                     transition={{ duration: 0.2 }}
                     style={{ position: "absolute", height: "18px" }}
                   >
@@ -671,9 +662,9 @@ const Navbar = ({ user }) => {
               <AnimatePresence>
                 {isLoading && UpToDatetrigger && (
                   <motion.div
-                    initial={{ opacity: 0 }} // Start with opacity 0 when the component first mounts
-                    animate={{ opacity: 1 }} // Fade in to opacity 1 when it becomes visible
-                    exit={{ opacity: 0, transition: { delay: 0.07 } }} // Fade out to opacity 0 when the component unmounts
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0, transition: { delay: 0.07 } }}
                     transition={{ duration: 0.15 }}
                     style={{ position: "absolute", marginTop: "4px" }}
                   >
@@ -696,9 +687,9 @@ const Navbar = ({ user }) => {
               <AnimatePresence>
                 {!UpToDatetrigger && (
                   <motion.div
-                    initial={{ opacity: 0 }} // Start with opacity 0 when the component first mounts
-                    animate={{ opacity: 1, transition: { duration: 0.35 } }} // Fade in to opacity 1 when it becomes visible
-                    exit={{ opacity: 0, transition: { duration: 0.1 } }} // Fade out to opacity 0 when the component unmounts
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1, transition: { duration: 0.35 } }}
+                    exit={{ opacity: 0, transition: { duration: 0.1 } }}
                     transition={{ duration: 0.25 }}
                     style={{ position: "absolute", height: "22px" }}
                   >

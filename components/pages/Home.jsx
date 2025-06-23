@@ -362,6 +362,7 @@ const Home = memo(
         ghostElementRef.current = draggedElement.cloneNode(true);
         draggedElement.classList.add("dragged-element");
         const ghostElement = ghostElementRef.current;
+        ghostElement.style.width = rect.width + "px";
         document.body.appendChild(ghostElement);
         const pin = ghostElement.querySelector(".pin");
         pin.style.opacity = "1";
