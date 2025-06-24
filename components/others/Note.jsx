@@ -6,7 +6,6 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
-import "@/assets/styles/note.css";
 import "@/assets/styles/LinearLoader.css";
 import NoteTools from "./NoteTools";
 import PinIcon from "../icons/PinIcon";
@@ -39,8 +38,10 @@ const Note = memo(
     const [moreMenuOpen, setMoreMenuOpen] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
     const [isLoadingImages, setIsLoadingImages] = useState([]);
-    const [selected, setSelected] = useState(selectedNotesRef.current.has(note.uuid));
-    const [selectedColor, setSelectedColor] = useState(note.color)
+    const [selected, setSelected] = useState(
+      selectedNotesRef.current.has(note.uuid)
+    );
+    const [selectedColor, setSelectedColor] = useState(note.color);
     const uncheckedItems = note?.checkboxes.filter((cb) => !cb.isCompleted);
     const checkedItems = note?.checkboxes.filter((cb) => cb.isCompleted);
     const isLoading = isLoadingImagesAddNote.includes(note.uuid);
@@ -215,13 +216,7 @@ const Note = memo(
     };
 
     const noteClassName = useMemo(() => {
-      return `note ${note.color} n-bg-${note.background} ${
-        selected
-          ? "element-selected"
-          : note.color === "Default"
-          ? "default-border"
-          : "transparent-border"
-      }`;
+      return `note ${note.color} n-bg-${note.background}`;
     }, [note.color, note.background, selected]);
 
     return (
@@ -565,6 +560,16 @@ const Note = memo(
             openSnackFunction={openSnackFunction}
             noteActions={noteActions}
             index={index}
+          />
+          <div
+            className={`note-border ${
+              selected
+                ? "element-selected"
+                : note.color === "Default"
+                ? "default-border"
+                : "transparent-border"
+            }`}
+            style={{ opacity: selected ? "1" : "0" }}
           />
         </div>
       </>
