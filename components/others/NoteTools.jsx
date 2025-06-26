@@ -25,11 +25,11 @@ const NoteTools = ({
   setColorMenuOpen,
   moreMenuOpen,
   setMoreMenuOpen,
-  setIsLoadingImages,
   userID,
   noteActions,
   setTooltipAnchor,
 }) => {
+  const { loadingImages, setLoadingImages } = useAppContext();
   const [colorAnchorEl, setColorAnchorEl] = useState(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [labelsOpen, setLabelsOpen] = useState(false);
@@ -175,20 +175,28 @@ const NoteTools = ({
     const starter =
       "https://fopkycgspstkfctmhyyq.supabase.co/storage/v1/object/public/notopia";
     const path = `${starter}/${userID}/${note.uuid}/${newUUID}`;
-    setIsLoadingImages((prev) => [...prev, newUUID]);
+    setLoadingImages((prev) => {
+      const newSet = new Set(prev);
+      newSet.add(newUUID);
+      return newSet;
+    });
 
-    const updatedImages = await NoteUpdateAction({
+    const updatedImage = await NoteUpdateAction({
       type: "images",
       value: { url: path, uuid: newUUID },
       noteUUIDs: [note.uuid],
     });
     await UploadImageAction({ file: file, id: newUUID }, note.uuid);
     dispatchNotes({
-      type: "UPDATE_IMAGES",
+      type: "UPDATE_IMAGE",
       note: note,
-      newImages: updatedImages,
+      newImage: updatedImage,
     });
-    setIsLoadingImages((prev) => prev.filter((id) => id !== newUUID));
+    setLoadingImages((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(newUUID);
+      return newSet;
+    });
     window.dispatchEvent(new Event("loadingEnd"));
   };
 

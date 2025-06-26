@@ -102,15 +102,12 @@ const DynamicLabel = ({
   containerRef,
   isGrid,
 }) => {
-  const { labelsRef, labelsReady, layout } = useAppContext();
+  const { layout } = useAppContext();
   const [pinnedHeight, setPinnedHeight] = useState(null);
   const [sectionsHeight, setSectionsHeight] = useState(null);
   const [layoutReady, setLayoutReady] = useState(false);
-  const labelObjRef = useRef(null);
   const resizeTimeoutRef = useRef(null);
   const layoutFrameRef = useRef(null);
-  const noteCount = labelObj?.noteCount ?? null;
-  const stopLoadingBatchesRef = useRef(false);
   const COLUMN_WIDTH = layout === "grid" ? 240 : 600;
 
   const hasPinned = [...visibleItems].some((uuid) => {
@@ -120,7 +117,7 @@ const DynamicLabel = ({
 
   const hasUnpinned = [...visibleItems].some((uuid) => {
     const note = notes.get(uuid);
-    return !note?.isPinned;
+    return !note?.isPinned && !note?.isArchived;
   });
 
   const hasArchivedNotes = [...visibleItems].some((uuid) => {

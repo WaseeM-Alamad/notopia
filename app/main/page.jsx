@@ -427,6 +427,7 @@ function notesReducer(state, action) {
         ...state.notes.get(action.note.uuid),
         title: action.newTitle,
         content: action.newContent,
+        textUpdatedAt: new Date(),
       };
       const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
       return {
@@ -434,10 +435,14 @@ function notesReducer(state, action) {
         notes: updatedNotes,
       };
     }
-    case "UPDATE_IMAGES": {
+    case "UPDATE_IMAGE": {
+      const note = state.notes.get(action.note.uuid);
       const newNote = {
-        ...state.notes.get(action.note.uuid),
-        images: action.newImages,
+        ...note,
+        images: note.images.map((img) => {
+          if (img.uuid === action.newImage.uuid) return action.newImage;
+          return img;
+        }),
       };
       const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
       return {
@@ -586,6 +591,7 @@ function notesReducer(state, action) {
       updatedNotes.set(action.noteUUID, {
         ...note,
         checkboxes: [...note.checkboxes, action.checkbox],
+        textUpdatedAt: new Date(),
       });
 
       return {
@@ -766,6 +772,7 @@ const page = () => {
   const prevSelectedRef = useRef(null);
   const throttleRef = useRef(false);
   const isLoadingNotesRef = useRef(false);
+  const skipSetLabelObjRef = useRef(false);
 
   const containerRef = useRef(null);
   const layoutVersionRef = useRef(0);
@@ -909,6 +916,7 @@ const page = () => {
         const redo = async () => {
           if (fadeNote) {
             setFadingNotes((prev) => new Set(prev).add(data.note.uuid));
+            setVisibleItems((prev) => new Set(prev).add(data.note.uuid));
           }
           setTimeout(
             () => {
@@ -916,11 +924,18 @@ const page = () => {
                 type: "ARCHIVE_NOTE",
                 note: data.note,
               });
-              setFadingNotes((prev) => {
-                const newSet = new Set(prev);
-                newSet.delete(data.note.uuid);
-                return newSet;
-              });
+              if (fadeNote) {
+                setFadingNotes((prev) => {
+                  const newSet = new Set(prev);
+                  newSet.delete(data.note.uuid);
+                  return newSet;
+                });
+                setVisibleItems((prev) => {
+                  const updated = new Set(prev);
+                  updated.delete(data.note.uuid);
+                  return updated;
+                });
+              }
             },
             fadeNote ? 250 : 0
           );
@@ -939,6 +954,13 @@ const page = () => {
         redo();
 
         const undoArchive = async () => {
+          if (fadeNote) {
+            setVisibleItems((prev) => {
+              const updated = new Set(prev);
+              updated.add(data.note.uuid);
+              return updated;
+            });
+          }
           dispatchNotes({
             type: "UNDO_ARCHIVE",
             note: data.note,
@@ -982,6 +1004,11 @@ const page = () => {
               newSet.delete(data.note.uuid);
               return newSet;
             });
+            setVisibleItems((prev) => {
+              const updated = new Set(prev);
+              updated.delete(data.note.uuid);
+              return updated;
+            });
           }, 250);
 
           window.dispatchEvent(new Event("loadingStart"));
@@ -1000,6 +1027,11 @@ const page = () => {
             type: "UNDO_TRASH",
             note: data.note,
             initialIndex: initialIndex,
+          });
+          setVisibleItems((prev) => {
+            const updated = new Set(prev);
+            updated.add(data.note.uuid);
+            return updated;
           });
 
           window.dispatchEvent(new Event("loadingStart"));
@@ -1034,6 +1066,11 @@ const page = () => {
               newSet.delete(data.note.uuid);
               return newSet;
             });
+            setVisibleItems((prev) => {
+              const updated = new Set(prev);
+              updated.delete(data.note.uuid);
+              return updated;
+            });
           }, 250);
         };
 
@@ -1044,6 +1081,11 @@ const page = () => {
             type: "UNDO_TRASH",
             note: data.note,
             initialIndex: initialIndex,
+          });
+          setVisibleItems((prev) => {
+            const updated = new Set(prev);
+            updated.add(data.note.uuid);
+            return updated;
           });
         };
 
@@ -1083,6 +1125,11 @@ const page = () => {
             newSet.delete(data.note.uuid);
             return newSet;
           });
+          setVisibleItems((prev) => {
+            const updated = new Set(prev);
+            updated.delete(data.note.uuid);
+            return updated;
+          });
         }, 250);
 
         window.dispatchEvent(new Event("loadingStart"));
@@ -1103,11 +1150,18 @@ const page = () => {
                 note: data.note,
               });
 
-              setFadingNotes((prev) => {
-                const newSet = new Set(prev);
-                newSet.delete(data.note.uuid);
-                return newSet;
-              });
+              if (fadeNote) {
+                setFadingNotes((prev) => {
+                  const newSet = new Set(prev);
+                  newSet.delete(data.note.uuid);
+                  return newSet;
+                });
+                setVisibleItems((prev) => {
+                  const updated = new Set(prev);
+                  updated.delete(data.note.uuid);
+                  return updated;
+                });
+              }
             },
             fadeNote ? 250 : 0
           );
@@ -1128,6 +1182,11 @@ const page = () => {
             type: "UNDO_PIN_ARCHIVED",
             note: data.note,
             initialIndex: initialIndex,
+          });
+          setVisibleItems((prev) => {
+            const updated = new Set(prev);
+            updated.add(data.note.uuid);
+            return updated;
           });
 
           window.dispatchEvent(new Event("loadingStart"));
@@ -1199,6 +1258,7 @@ const page = () => {
           isTrash: note.isTrash,
           createdAt: new Date(),
           updatedAt: new Date(),
+          textUpdatedAt: new Date(),
           images: newImages,
         };
 
@@ -1261,7 +1321,7 @@ const page = () => {
         data.setMoreMenuOpen(false);
       } else if (data.type === "REMOVE_LABEL") {
         const fadeNote =
-          filters.label === data.labelUUID || currentSection === "DynamicLabel";
+          filters.label === data.labelUUID || labelObj?.uuid === data.labelUUID;
 
         fadeNote && setFadingNotes((prev) => new Set(prev).add(data.note.uuid));
 
@@ -1278,6 +1338,13 @@ const page = () => {
               newSet.delete(data.note.uuid);
               return newSet;
             });
+
+            fadeNote &&
+              setVisibleItems((prev) => {
+                const updated = new Set(prev);
+                updated.delete(data.note.uuid);
+                return updated;
+              });
           },
           fadeNote ? 250 : 0
         );
@@ -1310,12 +1377,18 @@ const page = () => {
               newSet.delete(data.note.uuid);
               return newSet;
             });
+            fadeNote &&
+              setVisibleItems((prev) => {
+                const updated = new Set(prev);
+                updated.delete(data.note.uuid);
+                return updated;
+              });
           },
           fadeNote ? 250 : 0
         );
       }
     },
-    [currentSection, filters]
+    [currentSection, labelObj, filters]
   );
 
   const tripleEncode = (str) => {
@@ -1673,6 +1746,11 @@ const page = () => {
         type: "REMOVE_LABEL_FROM_NOTES",
         labelUUID: data.labelData.uuid,
       });
+      setVisibleItems((prev) => {
+        const updated = new Set(prev);
+        updated.delete(data.labelData.uuid);
+        return updated;
+      });
       removeLabel(data.labelData.uuid, data.labelData.label);
       data.triggerReRender((prev) => !prev);
       window.dispatchEvent(new Event("refreshPinnedLabels"));
@@ -1881,7 +1959,9 @@ const page = () => {
           return;
         event.preventDefault();
         keyThrottleRef.current = true;
-        undoFunction.current();
+        requestAnimationFrame(() => {
+          undoFunction.current();
+        });
         allowRedoRef.current = true;
         allowUndoRef.current = false;
 
@@ -1913,7 +1993,9 @@ const page = () => {
 
         event.preventDefault();
         keyThrottleRef.current = true;
-        redoFunction.current();
+        requestAnimationFrame(() => {
+          redoFunction.current();
+        });
         allowUndoRef.current = true;
         allowRedoRef.current = false;
 
@@ -2327,10 +2409,15 @@ const page = () => {
   useEffect(() => {
     if (currentSection?.toLowerCase() === "search") return;
     setIsFiltered(false);
+    setFilters({ image: null, color: null, label: null });
   }, [currentSection]);
 
   useEffect(() => {
     const handler = () => {
+      if (skipSetLabelObjRef.current) {
+        skipSetLabelObjRef.current = false;
+        return;
+      }
       if (currentSection?.toLowerCase() !== "dynamiclabel") {
         setLabelObj(null);
         return;
@@ -2358,6 +2445,17 @@ const page = () => {
 
   return (
     <>
+      {/* <button
+        style={{
+          position: "fixed",
+          top: "10rem",
+          left: "10rem",
+          zIndex: "100000",
+        }}
+        onClick={()=> console.log(visibleItems.size)}
+      >
+        check
+      </button> */}
       <div
         id="n-overlay"
         onClick={() => {
@@ -2374,6 +2472,7 @@ const page = () => {
       <Modal
         localNote={selectedNote}
         setLocalNote={setSelectedNote}
+        setVisibleItems={setVisibleItems}
         filters={filters}
         setFadingNotes={setFadingNotes}
         noteActions={noteActions}
@@ -2390,6 +2489,8 @@ const page = () => {
         openSnackFunction={openSnackFunction}
         closeSnackbar={closeSnackbar}
         setModalStyle={setModalStyle}
+        labelObj={labelObj}
+        skipSetLabelObjRef={skipSetLabelObjRef}
       />
       {tooltipAnchor?.display && <Tooltip anchorEl={tooltipAnchor} />}
       <Snackbar
@@ -2419,6 +2520,7 @@ const page = () => {
         setTooltipAnchor={setTooltipAnchor}
         isDraggingRef={isDraggingRef}
         rootContainerRef={rootContainerRef}
+        currentSection={currentSection}
       />
 
       <Page

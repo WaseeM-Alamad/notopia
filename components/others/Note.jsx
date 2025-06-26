@@ -23,7 +23,6 @@ const Note = memo(
     selectedNotesRef,
     dispatchNotes,
     calculateLayout,
-    isLoadingImagesAddNote = [],
     setSelectedNotesIDs,
     setFadingNotes,
     handleSelectNote,
@@ -37,14 +36,12 @@ const Note = memo(
     const [colorMenuOpen, setColorMenuOpen] = useState(false);
     const [moreMenuOpen, setMoreMenuOpen] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
-    const [isLoadingImages, setIsLoadingImages] = useState([]);
     const [selected, setSelected] = useState(
       selectedNotesRef.current.has(note.uuid)
     );
     const [selectedColor, setSelectedColor] = useState(note.color);
     const uncheckedItems = note?.checkboxes.filter((cb) => !cb.isCompleted);
     const checkedItems = note?.checkboxes.filter((cb) => cb.isCompleted);
-    const isLoading = isLoadingImagesAddNote.includes(note.uuid);
     const noteDataRef = useRef(null);
     const inputsRef = useRef(null);
     const imagesRef = useRef(null);
@@ -341,7 +338,7 @@ const Note = memo(
                 <div
                   style={{
                     position: "relative",
-                    opacity: isLoading && note.images.length > 0 ? "0.6" : "1",
+                    // opacity: isLoading && note.images.length > 0 ? "0.6" : "1",
                     transition: "all 0.2s ease",
                   }}
                   ref={imagesRef}
@@ -349,9 +346,8 @@ const Note = memo(
                   <NoteImagesLayout
                     images={note.images}
                     calculateMasonryLayout={calculateLayout}
-                    isLoadingImages={isLoadingImages}
                   />
-                  {isLoading && note.images.length > 0 && (
+                  {false && note.images.length > 0 && (
                     <div className="linear-loader" />
                   )}
                 </div>
@@ -555,7 +551,6 @@ const Note = memo(
             setMoreMenuOpen={setMoreMenuOpen}
             note={note}
             dispatchNotes={dispatchNotes}
-            setIsLoadingImages={setIsLoadingImages}
             userID={userID}
             openSnackFunction={openSnackFunction}
             noteActions={noteActions}

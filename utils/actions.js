@@ -93,12 +93,15 @@ export const NoteUpdateAction = async (data) => {
   try {
     await connectDB();
     if (data.type === "images") {
-      const updatedImages = await Note.findOneAndUpdate(
+      const updatedNote = await Note.findOneAndUpdate(
         { uuid: data.noteUUIDs[0], creator: userID },
         { $push: { images: data.value } },
         { returnDocument: "after" }
       );
-      return JSON.parse(JSON.stringify(updatedImages.images));
+      const updatedImage = updatedNote.images.find(
+        (img) => img.uuid === data.value.uuid
+      );
+      return JSON.parse(JSON.stringify(updatedImage));
     } else if (data.type === "isArchived") {
       await Note.updateOne(
         { uuid: data.noteUUIDs[0], creator: userID },
@@ -156,7 +159,10 @@ export const NoteUpdateAction = async (data) => {
           };
           await Note.updateOne(
             { uuid: data.noteUUIDs[0], creator: userID },
-            { $push: { checkboxes: checkbox } }
+            {
+              $push: { checkboxes: checkbox },
+              $set: { textUpdatedAt: new Date() },
+            }
           );
           break;
         }
@@ -167,7 +173,12 @@ export const NoteUpdateAction = async (data) => {
               "checkboxes.uuid": data.checkboxUUID,
               creator: userID,
             },
-            { $set: { "checkboxes.$.isCompleted": data.value } }
+            {
+              $set: {
+                "checkboxes.$.isCompleted": data.value,
+                textUpdatedAt: new Date(),
+              },
+            }
           );
           break;
         }
@@ -186,6 +197,7 @@ export const NoteUpdateAction = async (data) => {
                   ],
                 },
               },
+              $set: { textUpdatedAt: new Date() },
             }
           );
           break;
@@ -193,14 +205,22 @@ export const NoteUpdateAction = async (data) => {
         case "DELETE_CHECKED": {
           await Note.updateOne(
             { uuid: data.noteUUIDs[0], creator: userID },
-            { $pull: { checkboxes: { isCompleted: true } } }
+            {
+              $pull: { checkboxes: { isCompleted: true } },
+              $set: { textUpdatedAt: new Date() },
+            }
           );
           break;
         }
         case "UNCHECK_ALL": {
           await Note.updateMany(
             { uuid: data.noteUUIDs[0], creator: userID },
-            { $set: { "checkboxes.$[elem].isCompleted": false } },
+            {
+              $set: {
+                "checkboxes.$[elem].isCompleted": false,
+                textUpdatedAt: new Date(),
+              },
+            },
             { arrayFilters: [{ "elem.isCompleted": true }] }
           );
           break;
@@ -212,7 +232,12 @@ export const NoteUpdateAction = async (data) => {
               "checkboxes.uuid": data.checkboxUUID,
               creator: userID,
             },
-            { $set: { "checkboxes.$.content": data.value } }
+            {
+              $set: {
+                "checkboxes.$.content": data.value,
+                textUpdatedAt: new Date(),
+              },
+            }
           );
           break;
         }
@@ -278,7 +303,7 @@ export const NoteUpdateAction = async (data) => {
           });
 
           console.log(initialIndex, overIndex);
-
+          note.textUpdatedAt = new Date();
           note.checkboxes = newList;
           await note.save();
 
@@ -288,7 +313,7 @@ export const NoteUpdateAction = async (data) => {
     } else {
       await Note.updateMany(
         { uuid: { $in: data.noteUUIDs }, creator: userID },
-        { $set: { [data.type]: data.value } }
+        { $set: { [data.type]: data.value, textUpdatedAt: new Date() } }
       );
     }
   } catch (error) {
@@ -373,7 +398,13 @@ export const NoteTextUpdateAction = async (values, noteUUID) => {
 
     await Note.updateOne(
       { uuid: noteUUID, creator: userID },
-      { $set: { title: values.title, content: values.content } }
+      {
+        $set: {
+          title: values.title,
+          content: values.content,
+          textUpdatedAt: new Date(),
+        },
+      }
     );
   } catch (error) {
     console.log("Error updating note:", error);

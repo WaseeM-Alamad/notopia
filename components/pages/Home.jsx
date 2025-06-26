@@ -23,7 +23,6 @@ const NoteWrapper = memo(
     setFadingNotes,
     lastAddedNoteRef,
     calculateLayout,
-    isLoadingImages,
     setSelectedNotesIDs,
     handleDragStart,
     index,
@@ -117,7 +116,6 @@ const NoteWrapper = memo(
             setTooltipAnchor={setTooltipAnchor}
             calculateLayout={calculateLayout}
             setFadingNotes={setFadingNotes}
-            isLoadingImagesAddNote={isLoadingImages}
             setSelectedNotesIDs={setSelectedNotesIDs}
             handleSelectNote={handleSelectNote}
             openSnackFunction={openSnackFunction}
@@ -157,7 +155,6 @@ const Home = memo(
   }) => {
     const { layout } = useAppContext();
     const [pinnedHeight, setPinnedHeight] = useState(null);
-    const [isLoadingImages, setIsLoadingImages] = useState([]);
     const lastAddedNoteRef = useRef(null);
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
@@ -544,9 +541,6 @@ const Home = memo(
                     setSelectedNotesIDs={setSelectedNotesIDs}
                     handleNoteClick={handleNoteClick}
                     handleSelectNote={handleSelectNote}
-                    {...(isLoadingImages.includes(note.uuid)
-                      ? { isLoadingImages }
-                      : {})}
                     calculateLayout={calculateLayout}
                   />
                 )

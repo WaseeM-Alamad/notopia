@@ -20,6 +20,7 @@ const Labels = memo(
     setTooltipAnchor,
     visibleItems,
     setVisibleItems,
+    setFadingNotes,
     dispatchNotes,
     fadingNotes,
     openSnackFunction,
@@ -199,9 +200,11 @@ const Labels = memo(
                     key={uuid}
                     isGrid={isGrid}
                     dispatchNotes={dispatchNotes}
+                    setFadingNotes={setFadingNotes}
                     fadingNotes={fadingNotes}
                     labelData={labelData}
                     triggerReRender={triggerReRender}
+                    setVisibleItems={setVisibleItems}
                     calculateLayout={calculateLayout}
                     openSnackFunction={openSnackFunction}
                   />

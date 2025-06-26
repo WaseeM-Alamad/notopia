@@ -15,6 +15,7 @@ const ListItem = ({
   setLocalNote,
   modalOpen,
   index,
+  setTooltipAnchor,
 }) => {
   const listItemRef = useRef(null);
   const containerRef = useRef(null);
@@ -64,6 +65,7 @@ const ListItem = ({
       checkboxes: prev.checkboxes.map((cb) =>
         cb.uuid === checkbox.uuid ? { ...cb, content: t } : cb
       ),
+      textUpdatedAt: new Date(),
     }));
     updateListItemContent(t, checkbox.uuid);
 
@@ -73,6 +75,7 @@ const ListItem = ({
   };
 
   const handleDelete = async () => {
+    closeToolTip();
     setLocalNote((prev) => ({
       ...prev,
       checkboxes: prev.checkboxes.filter((cb) => {
@@ -82,6 +85,7 @@ const ListItem = ({
 
         return true;
       }),
+      textUpdatedAt: new Date(),
     }));
     window.dispatchEvent(new Event("loadingStart"));
     await NoteUpdateAction({
@@ -128,6 +132,25 @@ const ListItem = ({
     overIndexRef.current = index;
   };
 
+  const closeToolTip = () => {
+    setTooltipAnchor((prev) => ({
+      anchor: null,
+      text: prev?.text,
+    }));
+  };
+
+  const handleMouseEnterT = (e, text) => {
+    const target = e.currentTarget;
+    setTooltipAnchor({ anchor: target, text: text, display: true });
+  };
+
+  const handleMouseLeave = () => {
+    setTooltipAnchor((prev) => ({
+      ...prev,
+      display: false,
+    }));
+  };
+
   return (
     <div
       onMouseEnter={handleMouseEnter}
@@ -144,7 +167,12 @@ const ListItem = ({
         className={`checkbox-wrapper note-checkbox-wrapper modal-checkbox-wrapper`}
       >
         {!no && <div onMouseDown={handleMouseDown} className="drag-db-area" />}
-        <Button onClick={handleDelete} className="delete-list-item" />
+        <Button
+          onMouseEnter={(e) => handleMouseEnterT(e, "Delete")}
+          onMouseLeave={handleMouseLeave}
+          onClick={handleDelete}
+          className="delete-list-item"
+        />
         {/* <div className="clear-icon"/> */}
         <div
           onClick={(e) =>

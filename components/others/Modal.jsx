@@ -12,7 +12,7 @@ import {
   removeLabelAction,
   undoAction,
 } from "@/utils/actions";
-import Tools from "./Tools";
+import ModalTools from "./ModalTools";
 import NoteImagesLayout from "../Tools/NoteImagesLayout";
 import { useSession } from "next-auth/react";
 import { useAppContext } from "@/context/AppContext";
@@ -36,17 +36,19 @@ const Modal = ({
   openSnackFunction,
   setModalStyle,
   currentSection,
+  setVisibleItems,
+  labelObj,
+  skipSetLabelObjRef,
 }) => {
   const { handleLabelNoteCount, labelsRef, ignoreKeysRef } = useAppContext();
-  const { skipHashChangeRef } = useSearch();
+  const { skipHashChangeRef, searchTerm } = useSearch();
   const [isMounted, setIsMounted] = useState(false);
-  // const [localNote, setLocalNote] = useState(null);
+  const [localIsPinned, setLocalIsPinned] = useState(null);
   const note = initialStyle?.initialNote;
-  const [localPinned, setLocalPinned] = useState(null);
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
   const formattedEditedDate = isOpen
-    ? getNoteFormattedDate(note?.updatedAt)
+    ? getNoteFormattedDate(localNote?.textUpdatedAt)
     : null;
 
   const formattedCreatedAtDate = isOpen
@@ -55,9 +57,6 @@ const Modal = ({
 
   const { data: session } = useSession();
   const userID = session?.user?.id;
-  const titleTextRef = useRef(null);
-  const contentTextRef = useRef(null);
-  const addListItemRef = useRef(null);
   const titleRef = useRef(null);
   const contentRef = useRef(null);
   const modalRef = useRef(null);
@@ -70,6 +69,31 @@ const Modal = ({
   const ignoreTopRef = useRef(false);
   const inputsContainerRef = useRef(null);
   const modalOpenRef = useRef(false);
+
+  const includesTitle = localNote?.title
+    .toLowerCase()
+    .includes(searchTerm.toLowerCase().trim());
+
+  const includesContent = localNote?.content
+    .toLowerCase()
+    .includes(searchTerm.toLowerCase().trim());
+
+  const noTextMatch = searchTerm.trim() && !includesTitle && !includesContent;
+  const noImageMatch = filters.image && localNote?.images?.length === 0;
+  const noColorMatch = filters.color && localNote?.color !== filters.color;
+  const noLabelMatch =
+    filters.label && !localNote?.labels?.includes(filters.label);
+
+  const noFilterMatch =
+    currentSection.toLowerCase() === "search" &&
+    (noImageMatch || noTextMatch || noColorMatch || noLabelMatch);
+
+  const dynamicLabelNoMatch =
+    currentSection.toLowerCase() === "dynamiclabel" &&
+    !localNote?.labels?.includes(labelObj?.uuid);
+
+  const isArchivePinned =
+    currentSection.toLowerCase() === "archive" && localIsPinned;
 
   const centerModal = () => {
     if (!modalRef.current || !initialStyle.element) return;
@@ -136,19 +160,14 @@ const Modal = ({
     const centerLeft = parseFloat(modal.style.left);
     const centerTop = parseFloat(modal.style.top);
 
-    // Calculate how much to translate *relative to the centered position*
     const translateX = rect.left - centerLeft;
     const translateY = rect.top - centerTop;
 
-    // Calculate scale needed to shrink modal to note's size
     const scaleX = rect.width / modalWidth;
     const scaleY = rect.height / modalHeight;
 
     modal.style.transformOrigin = "top left";
 
-    // Animate transform from no transform to scaled + translated (back to note)
-
-    // Trigger the animation:
     requestAnimationFrame(() => {
       modal.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
     });
@@ -156,22 +175,24 @@ const Modal = ({
 
   const reset = () => {
     setLocalNote(null);
-    setLocalPinned(null);
+    setLocalIsPinned(null);
     setRedoStack([]);
     setUndoStack([]);
   };
 
-  const closeModal = () => {
-    const overlay = document.getElementById("n-overlay");
-    modalRef.current.removeAttribute("style");
-    overlay.removeAttribute("style");
-
+  const updateNote = () => {
     const { ref: _, ...cleanLocalNote } = localNote;
     const { ref: __, ...cleanNote } = note;
 
     if (JSON.stringify(cleanLocalNote) !== JSON.stringify(cleanNote)) {
       dispatchNotes({ type: "SET_NOTE", note: localNote });
     }
+  };
+
+  const closeModal = () => {
+    const overlay = document.getElementById("n-overlay");
+    modalRef.current.removeAttribute("style");
+    overlay.removeAttribute("style");
 
     if (archiveRef.current) {
       setTimeout(() => {
@@ -181,7 +202,7 @@ const Modal = ({
       setTimeout(() => {
         handleTrash();
       }, 20);
-    } else if (localPinned !== note?.isPinned) {
+    } else if (localIsPinned !== note?.isPinned) {
       setTimeout(() => {
         dispatchNotes({
           type: "PIN_NOTE",
@@ -195,6 +216,14 @@ const Modal = ({
     }
 
     rootContainerRef.current.classList.remove("modal-open");
+
+    if (noFilterMatch || dynamicLabelNoMatch || isArchivePinned) {
+      setVisibleItems((prev) => {
+        const updated = new Set(prev);
+        updated.delete(localNote?.uuid);
+        return updated;
+      });
+    }
 
     requestAnimationFrame(() => {
       skipHashChangeRef.current = false;
@@ -251,13 +280,10 @@ const Modal = ({
         }
       });
 
+      setLocalIsPinned(note?.isPinned);
       ignoreKeysRef.current = true;
       archiveRef.current = false;
       trashRef.current = false;
-      // setLocalNote(note);
-      setLocalPinned(note?.isPinned);
-      titleTextRef.current = note?.title;
-      contentTextRef.current = note?.content;
 
       if (contentRef?.current) {
         contentRef.current.textContent = note?.content;
@@ -303,6 +329,7 @@ const Modal = ({
     } else {
       skipHashChangeRef.current = true;
       ignoreKeysRef.current = false;
+      skipSetLabelObjRef.current = true;
       if (!prevHash.current) {
         // history.pushState(null, null, `#${currentSection.toLowerCase()}`);
         window.location.hash = `${currentSection.toLowerCase()}`;
@@ -315,16 +342,25 @@ const Modal = ({
       // window.dispatchEvent(new HashChangeEvent("hashchange"));
 
       modalRef.current.style.transition =
-        "all 0.22s cubic-bezier(0.35, 0.9, 0.25, 1), opacity 0.13s";
+        "all 0.22s cubic-bezier(0.35, 0.9, 0.25, 1), opacity 0.5s";
       modalRef.current.offsetHeight;
       overlay.style.opacity = "0";
       inputsContainerRef.current.style.opacity = "0.15";
-      checkForChanges();
       modalOpenRef.current = false;
       if (initialStyle.element) {
-        setTimeout(() => {
-          reverseModalToNote();
-        }, 10);
+        if (noFilterMatch || dynamicLabelNoMatch) {
+          setTimeout(() => {
+            updateNote();
+          }, 220);
+        } else {
+          updateNote();
+        }
+
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            reverseModalToNote();
+          });
+        });
       }
 
       if (initialStyle.element) {
@@ -371,12 +407,12 @@ const Modal = ({
 
   const handleArchive = async () => {
     const passedNote =
-      localPinned && localNote.isArchived
+      localIsPinned && localNote?.isArchived
         ? { ...note, isArchived: !note.isArchived }
         : note;
     const undoArchive = async () => {
-      if (localPinned && localNote.isArchived) {
-        setFadingNotes((prev) => new Set(prev).add(localNote.uuid));
+      if (localIsPinned && localNote?.isArchived) {
+        setFadingNotes((prev) => new Set(prev).add(localNote?.uuid));
       }
       const initialIndex = initialStyle.index;
       setTimeout(
@@ -388,11 +424,11 @@ const Modal = ({
           });
           setFadingNotes((prev) => {
             const newSet = new Set(prev);
-            newSet.delete(localNote.uuid);
+            newSet.delete(localNote?.uuid);
             return newSet;
           });
         },
-        localPinned && localNote.isArchived ? 250 : 0
+        localIsPinned && localNote?.isArchived ? 250 : 0
       );
 
       window.dispatchEvent(new Event("loadingStart"));
@@ -412,9 +448,9 @@ const Modal = ({
     const redo = async (fadeNote) => {
       const fade =
         fadeNote &&
-        ((localNote.isArchived && !localPinned) || !localNote.isArchived);
+        ((localNote?.isArchived && !localIsPinned) || !localNote?.isArchived);
       if (fade) {
-        setFadingNotes((prev) => new Set(prev).add(localNote.uuid));
+        setFadingNotes((prev) => new Set(prev).add(localNote?.uuid));
       }
 
       setTimeout(
@@ -426,7 +462,7 @@ const Modal = ({
 
           setFadingNotes((prev) => {
             const newSet = new Set(prev);
-            newSet.delete(localNote.uuid);
+            newSet.delete(localNote?.uuid);
             return newSet;
           });
         },
@@ -450,7 +486,7 @@ const Modal = ({
       snackMessage: `${
         passedNote.isArchived
           ? "Note unarchived"
-          : localPinned
+          : localIsPinned
           ? "Note unpinned and archived"
           : "Note Archived"
       }`,
@@ -486,7 +522,7 @@ const Modal = ({
     if (!localNote?.isTrash) {
       openSnackFunction({
         snackMessage: `${
-          localPinned ? "Note unpinned and trashed" : "Note trashed"
+          localIsPinned ? "Note unpinned and trashed" : "Note trashed"
         }`,
         snackOnClose: onClose,
         unloadWarn: true,
@@ -497,20 +533,19 @@ const Modal = ({
   };
 
   const handlePinClick = async () => {
-    if (localNote.isTrash) return;
-    setLocalPinned((prev) => !prev);
+    if (localNote?.isTrash) return;
+    setLocalIsPinned((prev) => !prev);
     window.dispatchEvent(new Event("loadingStart"));
     try {
-      if (!localNote.isArchived) {
+      if (!localNote?.isArchived) {
         await NoteUpdateAction({
           type: "isPinned",
-          value: !localPinned,
+          value: !localIsPinned,
           noteUUIDs: [note.uuid],
         });
       } else {
         const redo = async () => {
-          setLocalPinned(!localPinned);
-          if (!localPinned) {
+          if (!localIsPinned) {
             await NoteUpdateAction({
               type: "pinArchived",
               value: true,
@@ -527,7 +562,7 @@ const Modal = ({
         };
         redo();
         const undo = async () => {
-          setLocalPinned(false);
+          setLocalIsPinned(false);
           dispatchNotes({
             type: "UNDO_PIN_ARCHIVED",
             note: note,
@@ -560,18 +595,6 @@ const Modal = ({
       const imageObject = { url: imageURL, uuid: imageUUID };
       let imageIndex;
 
-      // setLocalImages((prev) => {
-      //   const filteredImages = prev.reduce((acc, image, index) => {
-      //     if (image.uuid === imageUUID) {
-      //       imageIndex = index;
-      //       return acc;
-      //     }
-      //     acc.push(image);
-      //     return acc;
-      //   }, []);
-      //   return filteredImages;
-      // });
-
       setLocalNote((prev) => ({
         ...prev,
         images: prev.images.reduce((acc, image, index) => {
@@ -587,12 +610,6 @@ const Modal = ({
       imagesChangedRef.current = true;
 
       const undo = async () => {
-        // setLocalImages((prev) => {
-        //   const updatedImages = [...prev];
-        //   updatedImages.splice(imageIndex, 0, imageObject);
-        //   return updatedImages;
-        // });
-
         setLocalNote((prev) => {
           const updatedImages = [...prev.images];
           updatedImages.splice(imageIndex, 0, imageObject);
@@ -603,7 +620,6 @@ const Modal = ({
       };
 
       const onClose = async () => {
-        // imagesChangedRef.current = true;
         const filePath = `${userID}/${note.uuid}/${imageUUID}`;
         window.dispatchEvent(new Event("loadingStart"));
         await NoteImageDeleteAction(filePath, note.uuid, imageUUID);
@@ -637,19 +653,13 @@ const Modal = ({
     [note?.uuid] // Dependencies array, make sure it's updated when `note.uuid` changes
   );
 
-  const titleDebouncedSetUndo = useCallback(
-    debounce((data) => {
-      setUndoStack((prev) => [...prev, data]);
-    }, 120),
-    []
-  );
+  const titleDebouncedSetUndo = debounce((data) => {
+    setUndoStack((prev) => [...prev, data]);
+  }, 120);
 
-  const contentDebouncedSetUndo = useCallback(
-    debounce((data) => {
-      setUndoStack((prev) => [...prev, data]);
-    }, 100),
-    []
-  );
+  const contentDebouncedSetUndo = debounce((data) => {
+    setUndoStack((prev) => [...prev, data]);
+  }, 100);
 
   const handleUndo = async () => {
     if (undoStack.length === 1) {
@@ -657,8 +667,11 @@ const Modal = ({
       setUndoStack([]);
       titleRef.current.innerText = note?.title;
       contentRef.current.innerText = note?.content;
-      titleTextRef.current = note?.title;
-      contentTextRef.current = note?.content;
+      setLocalNote((prev) => ({
+        ...prev,
+        title: note?.title,
+        content: note?.content,
+      }));
       window.dispatchEvent(new Event("loadingStart"));
       await NoteTextUpdateAction(
         { title: note?.title, content: note?.content },
@@ -674,8 +687,11 @@ const Modal = ({
 
       titleRef.current.innerText = undoItem.title;
       contentRef.current.innerText = undoItem.content;
-      titleTextRef.current = undoItem.title;
-      contentTextRef.current = undoItem.content;
+      setLocalNote((prev) => ({
+        ...prev,
+        title: undoItem.title,
+        content: undoItem.content,
+      }));
       window.dispatchEvent(new Event("loadingStart"));
       await NoteTextUpdateAction(
         { title: undoItem.title, content: undoItem.content },
@@ -693,9 +709,11 @@ const Modal = ({
 
     titleRef.current.innerText = redoItem.title;
     contentRef.current.innerText = redoItem.content;
-    titleTextRef.current = redoItem.title;
-    contentTextRef.current = redoItem.content;
-
+    setLocalNote((prev) => ({
+      ...prev,
+      title: redoItem.title,
+      content: redoItem.content,
+    }));
     window.dispatchEvent(new Event("loadingStart"));
     await NoteTextUpdateAction(
       { title: redoItem.title, content: redoItem.content },
@@ -709,11 +727,16 @@ const Modal = ({
       if (localNote?.isTrash) return;
       const text = e.target.innerText;
       const t = text === "\n" ? "" : text;
-      titleDebouncedSetUndo({ title: t, content: contentTextRef.current });
+      titleDebouncedSetUndo({ title: t, content: localNote?.content });
+      // updateEditedDate();
 
-      titleTextRef.current = t;
+      setLocalNote((prev) => ({
+        ...prev,
+        title: t,
+        textUpdatedAt: new Date(),
+      }));
 
-      updateTextDebounced({ title: t, content: contentTextRef.current });
+      updateTextDebounced({ title: t, content: localNote?.content });
 
       if (text === "\n") {
         e.target.innerText = "";
@@ -728,11 +751,15 @@ const Modal = ({
       const text = e.target.innerText;
       const t = text === "\n" ? "" : text;
 
-      contentDebouncedSetUndo({ title: titleTextRef.current, content: t });
+      contentDebouncedSetUndo({ title: localNote?.title, content: t });
+      // updateEditedDate();
+      setLocalNote((prev) => ({
+        ...prev,
+        content: t,
+        textUpdatedAt: new Date(),
+      }));
 
-      contentTextRef.current = t;
-
-      updateTextDebounced({ title: titleTextRef.current, content: t });
+      updateTextDebounced({ title: localNote?.title, content: t });
 
       if (text === "\n") {
         e.target.innerText = "";
@@ -742,43 +769,43 @@ const Modal = ({
   );
 
   const checkForChanges = () => {
-    if (
-      titleTextRef.current !== note?.title ||
-      contentTextRef.current !== note?.content
-    ) {
-      dispatchNotes({
-        type: "UPDATE_TEXT",
-        note: note,
-        newTitle: titleTextRef.current,
-        newContent: contentTextRef.current,
-      });
-    }
-    if (imagesChangedRef.current) {
-      setTimeout(
-        () => {
-          dispatchNotes({
-            type: "UPDATE_IMAGES",
-            note: note,
-            newImages: localNote?.images,
-          });
-        },
-        delayImageDispatchRef.current ? 210 : 0
-      );
-    }
-    const labelsChange =
-      JSON.stringify(localNote?.labels) === JSON.stringify(note?.labels);
-    if (!labelsChange) {
-      setTimeout(
-        () => {
-          dispatchNotes({
-            type: "UPDATE_NOTE_LABELS",
-            note: note,
-            newLabels: localNote?.labels,
-          });
-        },
-        delayLabelDispatchRef.current ? 220 : 0
-      );
-    }
+    // if (
+    //   localNote?.title !== note?.title ||
+    //   localNote?.content !== note?.content
+    // ) {
+    //   dispatchNotes({
+    //     type: "UPDATE_TEXT",
+    //     note: note,
+    //     newTitle: localNote?.title,
+    //     newContent: localNote?.content,
+    //   });
+    // }
+    // if (imagesChangedRef.current) {
+    //   setTimeout(
+    //     () => {
+    //       dispatchNotes({
+    //         type: "UPDATE_IMAGES",
+    //         note: note,
+    //         newImages: localNote?.images,
+    //       });
+    //     },
+    //     delayImageDispatchRef.current ? 210 : 0
+    //   );
+    // }
+    // const labelsChange =
+    //   JSON.stringify(localNote?.labels) === JSON.stringify(note?.labels);
+    // if (!labelsChange) {
+    //   setTimeout(
+    //     () => {
+    //       dispatchNotes({
+    //         type: "UPDATE_NOTE_LABELS",
+    //         note: note,
+    //         newLabels: localNote?.labels,
+    //       });
+    //     },
+    //     delayLabelDispatchRef.current ? 220 : 0
+    //   );
+    // }
   };
 
   const closeToolTip = () => {
@@ -856,7 +883,7 @@ const Modal = ({
       await NoteUpdateAction({
         type: "isTrash",
         value: true,
-        noteUUIDs: [localNote.uuid],
+        noteUUIDs: [localNote?.uuid],
       });
       window.dispatchEvent(new Event("loadingEnd"));
     };
@@ -872,7 +899,7 @@ const Modal = ({
       await NoteUpdateAction({
         type: "isTrash",
         value: false,
-        noteUUIDs: [localNote.uuid],
+        noteUUIDs: [localNote?.uuid],
       });
       window.dispatchEvent(new Event("loadingEnd"));
     };
@@ -919,9 +946,9 @@ const Modal = ({
             <div style={{ opacity: !isOpen && "0" }} className="modal-pin">
               <Button onClick={handlePinClick} disabled={!isOpen}>
                 <PinIcon
-                  isPinned={localPinned}
+                  isPinned={localIsPinned}
                   opacity={0.8}
-                  rotation={localPinned ? "-45deg" : "-5deg"}
+                  rotation={localIsPinned ? "-45deg" : "-5deg"}
                   images={localNote?.images.length !== 0}
                 />
               </Button>
@@ -938,9 +965,9 @@ const Modal = ({
           {/* {isLoading && <div className="linear-loader" />} */}
           {!isOpen &&
             localNote?.images.length === 0 &&
-            !titleTextRef.current?.trim() &&
-            !contentTextRef.current?.trim() &&
-            (localNote?.checkboxes.length === 0 ||
+            !localNote?.title?.trim() &&
+            !localNote?.content?.trim() &&
+            (localNote?.checkboxes?.length === 0 ||
               !localNote?.showCheckboxes) && (
               <div className="empty-note" aria-label="Empty note" />
             )}
@@ -948,9 +975,9 @@ const Modal = ({
             style={{
               opacity: isOpen
                 ? "1"
-                : contentTextRef.current && !titleTextRef.current
+                : localNote?.content && !localNote?.title
                 ? "0"
-                : !titleTextRef.current && !contentTextRef.current
+                : !localNote?.title && !localNote?.content
                 ? "0"
                 : "1",
             }}
@@ -972,9 +999,9 @@ const Modal = ({
             style={{
               opacity: isOpen
                 ? "1"
-                : !contentTextRef.current && titleTextRef.current
+                : !localNote?.content && localNote?.title
                 ? "0"
-                : !titleTextRef.current && !contentTextRef.current
+                : !localNote?.title && !localNote?.content
                 ? "0"
                 : "1",
               minHeight: "30px",
@@ -993,16 +1020,18 @@ const Modal = ({
             aria-label={!localNote?.isTrash ? "Note" : ""}
             spellCheck="false"
           />
+          {localNote?.checkboxes && (
+            <ListItemsLayout
+              localNote={localNote}
+              setLocalNote={setLocalNote}
+              ignoreTopRef={ignoreTopRef}
+              dispatchNotes={dispatchNotes}
+              setTooltipAnchor={setTooltipAnchor}
+              isOpen={isOpen}
+            />
+          )}
 
-          <ListItemsLayout
-            localNote={localNote}
-            setLocalNote={setLocalNote}
-            ignoreTopRef={ignoreTopRef}
-            dispatchNotes={dispatchNotes}
-            isOpen={isOpen}
-          />
-
-          {localNote?.labels.length > 0 && (
+          {localNote?.labels?.length > 0 && (
             <div
               style={{ paddingBottom: "0.8rem" }}
               className="note-labels-container"
@@ -1068,8 +1097,8 @@ const Modal = ({
             </div>
           </div>
         </div>
-        <Tools
-          trigger={isOpen}
+        <ModalTools
+          modalOpenRef={modalOpenRef}
           filters={filters}
           delayLabelDispatchRef={delayLabelDispatchRef}
           archiveRef={archiveRef}

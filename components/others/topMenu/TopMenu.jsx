@@ -15,6 +15,7 @@ import { v4 as uuid } from "uuid";
 import { useSession } from "next-auth/react";
 import ManageTopLabelsMenu from "../ManageTopLabelsMenu";
 import DeleteModal from "../DeleteModal";
+import { useSearch } from "@/context/SearchContext";
 
 const TopMenuHome = ({
   notes,
@@ -30,8 +31,10 @@ const TopMenuHome = ({
   isDraggingRef,
   rootContainerRef,
   functionRefs,
+  currentSection,
 }) => {
   const { batchNoteCount } = useAppContext();
+  const { filters } = useSearch();
   const { data: session } = useSession();
   const userID = session?.user?.id;
   const [colorAnchorEl, setColorAnchorEl] = useState(null);
@@ -46,6 +49,8 @@ const TopMenuHome = ({
   const [archiveNotes, setArchiveNotes] = useState(false);
   const [selectedColor, setSelectedColor] = useState();
   const topMenuRef = useRef(null);
+  const selectedNotesRef = useRef(null);
+  const initialColorRef = useRef(null);
 
   const hasLabels = () => {
     const labelsExist = selectedNotesIDs.some((noteData) => {
@@ -101,6 +106,12 @@ const TopMenuHome = ({
   }, [selectedNotesIDs]);
 
   useEffect(() => {
+    if (selectedNotesIDs.length > 0) {
+      selectedNotesRef.current = selectedNotesIDs;
+    }
+  }, [selectedNotesIDs]);
+
+  useEffect(() => {
     const length = selectedNotesIDs.length;
 
     if (length === 0) {
@@ -128,8 +139,10 @@ const TopMenuHome = ({
       setArchiveNotes(!archived);
       if (sharedColor.size === 1) {
         setSelectedColor([...sharedColor][0]);
+        initialColorRef.current = [...sharedColor][0];
       } else {
         setSelectedColor(null);
+        initialColorRef.current = null;
       }
 
       if (sharedBG.size === 1) {
@@ -167,11 +180,13 @@ const TopMenuHome = ({
   const handleColorClick = async (newColor) => {
     closeToolTip();
     if (selectedColor === newColor) return;
-    dispatchNotes({
-      type: "BATCH_UPDATE_COLOR",
-      selectedNotes: selectedNotesIDs,
-      color: newColor,
-    });
+    if (!filters.color) {
+      dispatchNotes({
+        type: "BATCH_UPDATE_COLOR",
+        selectedNotes: selectedNotesIDs,
+        color: newColor,
+      });
+    }
     setSelectedColor(newColor);
     const UUIDS = selectedNotesIDs.map((data) => data.uuid);
     window.dispatchEvent(new Event("loadingStart"));
@@ -182,6 +197,37 @@ const TopMenuHome = ({
     });
     window.dispatchEvent(new Event("loadingEnd"));
   };
+
+  useEffect(() => {
+    if (!colorMenuOpen) {
+      if (
+        filters.color &&
+        selectedColor &&
+        initialColorRef.current !== selectedColor
+      ) {
+        const selectedNotes = selectedNotesRef.current;
+        const selectedUUIDs = selectedNotes.map(({ uuid }) => uuid);
+        setFadingNotes(new Set(selectedUUIDs));
+        setTimeout(() => {
+          console.log("idk man");
+          dispatchNotes({
+            type: "BATCH_UPDATE_COLOR",
+            selectedNotes: selectedNotes,
+            color: selectedColor,
+          });
+          setFadingNotes(new Set());
+          setVisibleItems((prev) => {
+            const updated = new Set(prev);
+            selectedUUIDs.forEach((uuid) => {
+              updated.delete(uuid);
+            });
+            return updated;
+          });
+        }, 250);
+      }
+      initialColorRef.current = null;
+    }
+  }, [colorMenuOpen]);
 
   const handleBackground = async (newBG) => {
     if (selectedBG === newBG) return;
@@ -231,6 +277,15 @@ const TopMenuHome = ({
             val: val,
           });
           setFadingNotes(new Set());
+          if (fadeNote && !clearSet) {
+            setVisibleItems((prev) => {
+              const updated = new Set(prev);
+              selectedUUIDs.forEach((uuid) => {
+                updated.delete(uuid);
+              });
+              return updated;
+            });
+          }
         },
         fadeNote ? 250 : 0
       );
@@ -256,6 +311,15 @@ const TopMenuHome = ({
         property: "isArchived",
         val: val,
       }).then(() => window.dispatchEvent(new Event("loadingEnd")));
+      if (fadeNote && !clearSet) {
+        setVisibleItems((prev) => {
+          const updated = new Set(prev);
+          selectedUUIDs.forEach((uuid) => {
+            updated.add(uuid);
+          });
+          return updated;
+        });
+      }
 
       dispatchNotes({
         type: "UNDO_BATCH_ARCHIVE/TRASH",
@@ -282,7 +346,9 @@ const TopMenuHome = ({
     handleClose();
 
     const firstItem = selectedNotesIDs[0];
-    const ArchiveVal = notes.get(firstItem.uuid).isArchived;
+    const ArchiveVal =
+      currentSection.toLowerCase() === "archive" &&
+      notes.get(firstItem.uuid).isArchived;
     const clearSet = selectedNotesIDs.some(
       (item) => !visibleItems.has(item.uuid)
     );
@@ -368,6 +434,13 @@ const TopMenuHome = ({
           val: val,
         });
         setFadingNotes(new Set());
+        setVisibleItems((prev) => {
+          const updated = new Set(prev);
+          selectedUUIDs.forEach((uuid) => {
+            updated.delete(uuid);
+          });
+          return updated;
+        });
       }, 250);
 
       window.dispatchEvent(new Event("loadingStart"));
@@ -385,13 +458,6 @@ const TopMenuHome = ({
     const undo = () => {
       window.dispatchEvent(new Event("loadingStart"));
 
-      undoAction({
-        type: "UNDO_BATCH_ARCHIVE/TRASH",
-        selectedNotes: selectedNotesIDs,
-        property: "isTrash",
-        val: val,
-      }).then(() => window.dispatchEvent(new Event("loadingEnd")));
-
       dispatchNotes({
         type: "UNDO_BATCH_ARCHIVE/TRASH",
         selectedNotes: selectedNotesIDs,
@@ -399,6 +465,20 @@ const TopMenuHome = ({
         val: val,
         length: length,
       });
+
+      setVisibleItems((prev) => {
+        const updated = new Set(prev);
+        selectedUUIDs.forEach((uuid) => {
+          updated.add(uuid);
+        });
+        return updated;
+      });
+      undoAction({
+        type: "UNDO_BATCH_ARCHIVE/TRASH",
+        selectedNotes: selectedNotesIDs,
+        property: "isTrash",
+        val: val,
+      }).then(() => window.dispatchEvent(new Event("loadingEnd")));
     };
 
     const snackMessage =
@@ -512,6 +592,7 @@ const TopMenuHome = ({
         isTrash: note.isTrash,
         createdAt: new Date(),
         updatedAt: new Date(),
+        textUpdatedAt: new Date(),
         images: newImages,
       };
       selectedUUIDs.push(noteUUID);

@@ -22,6 +22,7 @@ const AppContext = createContext();
 export function AppProvider({ children }) {
   const { data: session, status } = useSession();
   const [currentSection, setCurrentSection] = useState("Home");
+  const [loadingImages, setLoadingImages] = useState(new Set());
   const [labelsReady, setLabelsReady] = useState(false);
   const [layout, setLayout] = useState(null);
   const userID = session?.user?.id;
@@ -371,6 +372,8 @@ export function AppProvider({ children }) {
         currentSection,
         setCurrentSection,
         modalOpenRef,
+        loadingImages,
+        setLoadingImages,
       }}
     >
       {children}

@@ -17,7 +17,6 @@ const FilteredNote = memo(
     dispatchNotes,
     selectedNotesRef,
     calculateLayout,
-    isLoadingImagesAddNote = [],
     setSelectedNotesIDs,
     setFadingNotes,
     selectedNotes,
@@ -33,13 +32,11 @@ const FilteredNote = memo(
     const userID = session?.user?.id;
     const [colorMenuOpen, setColorMenuOpen] = useState(false);
     const [moreMenuOpen, setMoreMenuOpen] = useState(false);
-    const [isLoadingImages, setIsLoadingImages] = useState([]);
     const [selected, setSelected] = useState(
       selectedNotesRef.current.has(note.uuid)
     );
     const [anchorEl, setAnchorEl] = useState(null);
     const [selectedColor, setSelectedColor] = useState(note.color);
-    const isLoading = isLoadingImagesAddNote.includes(note.uuid);
     const noteDataRef = useRef(null);
     const inputsRef = useRef(null);
     const imagesRef = useRef(null);
@@ -311,7 +308,7 @@ const FilteredNote = memo(
               <div
                 style={{
                   position: "relative",
-                  opacity: isLoading && note.images.length > 0 ? "0.6" : "1",
+                  // opacity: isLoading && note.images.length > 0 ? "0.6" : "1",
                   transition: "all 0.2s ease",
                 }}
                 ref={imagesRef}
@@ -319,9 +316,8 @@ const FilteredNote = memo(
                 <NoteImagesLayout
                   images={note.images}
                   calculateMasonryLayout={calculateLayout}
-                  isLoadingImages={isLoadingImages}
                 />
-                {isLoading && note.images.length > 0 && (
+                {false && note.images.length > 0 && (
                   <div className="linear-loader" />
                 )}
               </div>
@@ -410,7 +406,6 @@ const FilteredNote = memo(
             anchorEl={anchorEl}
             setAnchorEl={setAnchorEl}
             dispatchNotes={dispatchNotes}
-            setIsLoadingImages={setIsLoadingImages}
             userID={userID}
             openSnackFunction={openSnackFunction}
             noteActions={noteActions}

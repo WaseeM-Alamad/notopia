@@ -75,6 +75,10 @@ const NoteSchema = new Schema(
         uuid: { type: String, required: true },
       },
     ],
+    textUpdatedAt: {
+      type: Date,
+      default: Date.now,
+    },
   },
   {
     timestamps: true,

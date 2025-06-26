@@ -1,17 +1,7 @@
 "use client";
-import React, {
-  memo,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  useMemo,
-} from "react";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import Note from "../others/Note";
-import AddNoteModal from "../others/AddNoteModal";
-import { AnimatePresence, motion } from "framer-motion";
-import TopMenuHome from "../others/topMenu/TopMenu";
-import ArchiveIcon from "../icons/ArchiveIcon";
+import { motion } from "framer-motion";
 import { useAppContext } from "@/context/AppContext";
 
 const GUTTER = 15;

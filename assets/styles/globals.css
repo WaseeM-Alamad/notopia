@@ -120,7 +120,7 @@ svg {
   position: absolute;
   z-index: 0;
   transition-property: box-shadow, opacity;
-  transition: all 0.25s ease-in-out;
+  transition: all 0.35s ease;
 }
 
 .starting-div.dragging .note-wrapper:hover .note-bottom {
@@ -209,7 +209,7 @@ svg {
   left: -9px;
   z-index: 100;
   cursor: pointer;
-  transition: all 0.218s ease-in;
+  transition: all 0.35s ease;
 }
 
 .note-wrapper:hover {
@@ -844,13 +844,14 @@ aside {
   content: "";
   position: absolute;
   background-color: rgba(78, 78, 78, 0.251);
+  opacity: 0.7;
   padding: 0.5rem;
   width: 3.8rem;
   height: 2rem;
   left: -100px;
   border-radius: 50%;
   /* transform: scale(0.8); */
-  transition: left 0.2s ease, background-color 0.4s ease,
+  transition: opacity 0.2s ease, left 0.2s ease, background-color 0.4s ease,
     width 0.3s cubic-bezier(0.55, 0.5, 0.25, 1),
     height 0.22s cubic-bezier(0.55, 0.5, 0.25, 1), opacity 0.2s ease;
 }
@@ -867,6 +868,7 @@ aside {
   content: "";
   position: absolute;
   background-color: #cefcf3;
+  opacity: 1;
   border-radius: 50%;
   transform: scale(1);
   padding: 0.5rem;
@@ -1527,7 +1529,7 @@ img {
   position: fixed !important;
   z-index: 999 !important;
   opacity: 1 !important;
-  pointer-events: auto !important;
+  pointer-events: none !important;
   cursor: move !important;
   border-radius: 0.8rem !important;
   box-shadow: none !important;
@@ -2865,10 +2867,11 @@ img {
   box-sizing: border-box;
   background-image: url("data:image/svg+xml,%3Csvg width='48' height='48' viewBox='0 0 48 48' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M6 10C6 7.79086 7.79086 6 10 6H38C40.2091 6 42 7.79086 42 10V38C42 40.2091 40.2091 42 38 42H10C7.79086 42 6 40.2091 6 38V10ZM38 10L10 10V27.9107L14.3293 24.5435C15.9633 23.2726 18.2969 23.4583 19.7093 24.9716L24.101 29.677L28.2268 25.8458C29.8034 24.3818 32.2557 24.4272 33.777 25.9486L38 30.1716V10ZM38 35.8284L30.9486 28.777L26.8302 32.6012L31.8691 38H38V35.8284ZM26.3976 38L16.7851 27.7009L10 32.9782V38H26.3976Z' fill='white'/%3E%3C/svg%3E");
   background-size: 25%;
-  background-color: #1a73e8;
+  background-color: #da4646;
   background-repeat: no-repeat;
   overflow: hidden;
   white-space: nowrap;
+  color: #ffffff;
   text-overflow: ellipsis;
   background-position: 50% 50%;
   cursor: pointer;
@@ -2892,32 +2895,16 @@ img {
   padding: 0 0.7rem;
   overflow: hidden;
   transform: translateX(-50%);
+  transition: transform 0.1s ease;
 }
 
 .dark-mode .filter-images::before {
   color: rgb(32, 33, 36);
 }
 
-.filter-images:hover {
-  background-color: #1b70e0;
-}
-
-.filter-images:active {
-  background-color: #1967cc;
-}
-
 .dark-mode .filter-images {
-  /* 202124 */
   background-image: url("data:image/svg+xml,%3Csvg width='48' height='48' viewBox='0 0 48 48' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M6 10C6 7.79086 7.79086 6 10 6H38C40.2091 6 42 7.79086 42 10V38C42 40.2091 40.2091 42 38 42H10C7.79086 42 6 40.2091 6 38V10ZM38 10L10 10V27.9107L14.3293 24.5435C15.9633 23.2726 18.2969 23.4583 19.7093 24.9716L24.101 29.677L28.2268 25.8458C29.8034 24.3818 32.2557 24.4272 33.777 25.9486L38 30.1716V10ZM38 35.8284L30.9486 28.777L26.8302 32.6012L31.8691 38H38V35.8284ZM26.3976 38L16.7851 27.7009L10 32.9782V38H26.3976Z' fill='%23202124'/%3E%3C/svg%3E");
-  background-color: #8ab4f8;
-}
-
-.dark-mode .filter-images:hover {
-  background-color: #9cc2ff;
-}
-
-.dark-mode .filter-images:active {
-  background-color: #a3c6fd;
+  background-color: #c25151;
 }
 
 .filter-label {
@@ -3172,7 +3159,7 @@ img {
 }
 
 .modal-open .grid-item {
-  transition: opacity 0.18s ease !important;
+  transition: opacity 0.18s ease, 0.22s cubic-bezier(0.5, 0.2, 0.3, 1) !important;
 }
 
 .modal-open .note {
@@ -3227,8 +3214,8 @@ img {
 }
 
 .uncheck-checkbox-menu-icon {
-  background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M5 12.8824C6.10457 12.8824 7 13.8041 7 14.9412C7 16.0782 6.10457 17 5 17C3.89543 17 3 16.0782 3 14.9412C3 13.8041 3.89543 12.8824 5 12.8824ZM5 14.1176C4.55817 14.1176 4.2 14.4864 4.2 14.9412C4.2 15.396 4.55817 15.7647 5 15.7647C5.44183 15.7647 5.8 15.396 5.8 14.9412C5.8 14.4864 5.44183 14.1176 5 14.1176Z' fill='%23374151'/%3E%3Cpath d='M17.2 14.1176C17.6418 14.1176 18 14.4864 18 14.9412C18 15.396 17.6418 15.7647 17.2 15.7647H8.6C8.15817 15.7647 7.8 15.396 7.8 14.9412C7.8 14.4864 8.15817 14.1176 8.6 14.1176H17.2Z' fill='%23374151'/%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M5 7.94118C6.10457 7.94118 7 8.86294 7 10C7 11.1371 6.10457 12.0588 5 12.0588C3.89543 12.0588 3 11.1371 3 10C3 8.86294 3.89543 7.94118 5 7.94118ZM5 9.17647C4.55817 9.17647 4.2 9.54518 4.2 10C4.2 10.4548 4.55817 10.8235 5 10.8235C5.44183 10.8235 5.8 10.4548 5.8 10C5.8 9.54518 5.44183 9.17647 5 9.17647Z' fill='%23374151'/%3E%3Cpath d='M17.2 9.17647C17.6418 9.17647 18 9.54518 18 10C18 10.4548 17.6418 10.8235 17.2 10.8235H8.6C8.15817 10.8235 7.8 10.4548 7.8 10C7.8 9.54518 8.15817 9.17647 8.6 9.17647H17.2Z' fill='%23374151'/%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M5 3C6.10457 3 7 3.92177 7 5.05882C7 6.19588 6.10457 7.11765 5 7.11765C3.89543 7.11765 3 6.19588 3 5.05882C3 3.92177 3.89543 3 5 3ZM5 4.23529C4.55817 4.23529 4.2 4.604 4.2 5.05882C4.2 5.51365 4.55817 5.88235 5 5.88235C5.44183 5.88235 5.8 5.51365 5.8 5.05882C5.8 4.604 5.44183 4.23529 5 4.23529Z' fill='%23374151'/%3E%3Cpath d='M17.2 4.23529C17.6418 4.23529 18 4.604 18 5.05882C18 5.51365 17.6418 5.88235 17.2 5.88235H8.6C8.15817 5.88235 7.8 5.51365 7.8 5.05882C7.8 4.604 8.15817 4.23529 8.6 4.23529H17.2Z' fill='%23374151'/%3E%3C/svg%3E%0A");
-  background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M14.9658 2C16.6415 2.00016 17.9998 3.35852 18 5.03418V14.9658C17.9998 16.6415 16.6415 17.9998 14.9658 18H5.03418C3.35852 17.9998 2.00016 16.6415 2 14.9658V5.03418C2.00016 3.35852 3.35852 2.00016 5.03418 2H14.9658ZM5.03418 3.65527C4.27265 3.65544 3.65544 4.27265 3.65527 5.03418V14.9658C3.65544 15.7274 4.27265 16.3446 5.03418 16.3447H14.9658C15.7274 16.3446 16.3446 15.7274 16.3447 14.9658V5.03418C16.3446 4.27265 15.7274 3.65544 14.9658 3.65527H5.03418Z' fill='%23374151'/%3E%3C/svg%3E%0A");
+  /* background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M14.9658 2C16.6415 2.00016 17.9998 3.35852 18 5.03418V14.9658C17.9998 16.6415 16.6415 17.9998 14.9658 18H5.03418C3.35852 17.9998 2.00016 16.6415 2 14.9658V5.03418C2.00016 3.35852 3.35852 2.00016 5.03418 2H14.9658ZM5.03418 3.65527C4.27265 3.65544 3.65544 4.27265 3.65527 5.03418V14.9658C3.65544 15.7274 4.27265 16.3446 5.03418 16.3447H14.9658C15.7274 16.3446 16.3446 15.7274 16.3447 14.9658V5.03418C16.3446 4.27265 15.7274 3.65544 14.9658 3.65527H5.03418Z' fill='%23374151'/%3E%3C/svg%3E%0A"); */
+  background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12.9697 5.96973C13.2626 5.67683 13.7374 5.67683 14.0303 5.96973C14.3232 6.26262 14.3232 6.73738 14.0303 7.03027L7.03027 14.0303C6.73738 14.3232 6.26262 14.3232 5.96973 14.0303C5.67683 13.7374 5.67683 13.2626 5.96973 12.9697L12.9697 5.96973Z' fill='%23374151'/%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M14.9658 2C16.6415 2.00016 17.9998 3.35852 18 5.03418V14.9658C17.9998 16.6415 16.6415 17.9998 14.9658 18H5.03418C3.35852 17.9998 2.00016 16.6415 2 14.9658V5.03418C2.00016 3.35852 3.35852 2.00016 5.03418 2H14.9658ZM5.03418 3.65527C4.27265 3.65544 3.65544 4.27265 3.65527 5.03418V14.9658C3.65544 15.7274 4.27265 16.3446 5.03418 16.3447H14.9658C15.7274 16.3446 16.3446 15.7274 16.3447 14.9658V5.03418C16.3446 4.27265 15.7274 3.65544 14.9658 3.65527H5.03418Z' fill='%23374151'/%3E%3C/svg%3E%0A");
 
   background-position: 0.7rem center;
   background-repeat: no-repeat;

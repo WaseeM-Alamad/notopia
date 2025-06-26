@@ -1,17 +1,18 @@
 import React, { useState, useEffect, useRef, memo, useCallback } from "react";
 import ImageTrashIcon from "../icons/ImageTrashIcon";
 import "@/assets/styles/LinearLoader.css";
+import { useAppContext } from "@/context/AppContext";
 
 const NoteImagesLayout = ({
   images = [],
   calculateMasonryLayout,
-  isLoadingImages = [],
   modalOpen,
   isTrash = false,
   deleteSource,
   noteImageDelete,
   AddNoteImageDelete,
 }) => {
+  const { loadingImages } = useAppContext();
   const containerRef = useRef(null);
   const [layout, setLayout] = useState([]);
   const [loadedImages, setLoadedImages] = useState([]);
@@ -156,7 +157,7 @@ const NoteImagesLayout = ({
             {row.map((item) => (
               <div
                 style={{
-                  opacity: isLoadingImages.includes(item.id) ? "0.6" : "1",
+                  opacity: loadingImages.has(item.id) ? "0.6" : "1",
                 }}
                 className="img-wrapper"
                 key={item.src}
@@ -172,7 +173,7 @@ const NoteImagesLayout = ({
                     height: `${item.height}px`,
                   }}
                 />
-                {isLoadingImages.includes(item.id) && (
+                {loadingImages.has(item.id) && (
                   <div key={item.src} className="linear-loader" />
                 )}
                 {modalOpen && !isTrash && (

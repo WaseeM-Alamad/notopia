@@ -1,7 +1,6 @@
 "use client";
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import Note from "../others/Note";
-import AddNoteModal from "../others/AddNoteModal";
 import { AnimatePresence, motion } from "framer-motion";
 import { emptyTrashAction } from "@/utils/actions";
 import DeleteModal from "../others/DeleteModal";
@@ -336,13 +335,6 @@ const Trash = memo(
             )}
           </div>
         </div>
-        <AddNoteModal
-          trigger={false}
-          dispatchNotes={dispatchNotes}
-          setTrigger={() => {}}
-          lastAddedNoteRef={null}
-          openSnackFunction={openSnackFunction}
-        />
         <AnimatePresence>
           {deleteModalOpen && (
             <DeleteModal

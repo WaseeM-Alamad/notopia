@@ -9,6 +9,7 @@ export const SearchProvider = ({ children }) => {
   const searchRef = useRef(null);
   const skipHashChangeRef = useRef(false);
   const [filters, setFilters] = useState({
+    image: null,
     color: null,
     label: null,
   });

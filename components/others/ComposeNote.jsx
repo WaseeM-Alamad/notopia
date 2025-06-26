@@ -7,10 +7,10 @@ import NoteImagesLayout from "../Tools/NoteImagesLayout";
 import { v4 as uuid } from "uuid";
 import { createNoteAction } from "@/utils/actions";
 import { createClient } from "@supabase/supabase-js";
-import AddModalTools from "./AddModalTools";
+import ComposeTools from "./ComposeTools";
 import { debounce } from "lodash";
 
-const AddNoteModall = ({
+const ComposeNote = ({
   dispatchNotes,
   setVisibleItems,
   setTooltipAnchor,
@@ -142,6 +142,7 @@ const AddNoteModall = ({
       createdAt: new Date(),
       updatedAt: new Date(),
       images: note.images,
+      textUpdatedAt: new Date(),
     };
     dispatchNotes({
       type: "ADD_NOTE",
@@ -558,7 +559,7 @@ const AddNoteModall = ({
             spellCheck="false"
           />
         </div>
-        <AddModalTools
+        <ComposeTools
           setIsOpen={setIsOpen}
           setNote={setNote}
           note={note}
@@ -577,4 +578,4 @@ const AddNoteModall = ({
   );
 };
 
-export default memo(AddNoteModall);
+export default memo(ComposeNote);

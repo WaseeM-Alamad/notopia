@@ -17,6 +17,8 @@ const Label = ({
   triggerReRender,
   fadingNotes,
   dispatchNotes,
+  setVisibleItems,
+  setFadingNotes,
   index,
   calculateLayout,
   openSnackFunction,
@@ -167,6 +169,31 @@ const Label = ({
       );
       originalTitleRef.current = labelTitleRef.current.innerText.trim();
       window.dispatchEvent(new Event("refreshPinnedLabels"));
+      if (
+        labelSearchTerm.trim() &&
+        !originalTitleRef.current
+          .toLowerCase()
+          .trim()
+          .includes(labelSearchTerm.toLowerCase().trim())
+      ) {
+        setFadingNotes((prev) => {
+          const updated = new Set(prev);
+          updated.add(labelData.uuid);
+          return updated;
+        });
+        setTimeout(() => {
+          setFadingNotes((prev) => {
+            const updated = new Set(prev);
+            updated.delete(labelData.uuid);
+            return updated;
+          });
+          setVisibleItems((prev) => {
+            const updated = new Set(prev);
+            updated.delete(labelData.uuid);
+            return updated;
+          });
+        }, 250);
+      }
     } else {
       labelTitleRef.current.innerText = originalTitleRef.current.trim();
     }

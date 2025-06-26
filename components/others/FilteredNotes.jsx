@@ -103,19 +103,25 @@ const FilteredNotes = memo(
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
     const [layoutReady, setLayoutReady] = useState(false); // New state to track layout completion
-    const [unarchivedHeight, setUnarchivedHeight] = useState(null);
     const filteredNotesRef = useRef(null);
+    const [pinnedHeight, setPinnedHeight] = useState(null);
+    const [sectionsHeight, setSectionsHeight] = useState(null);
 
     const COLUMN_WIDTH = layout === "grid" ? 240 : 600;
 
-    const hasArchived = [...visibleItems].some((uuid) => {
+    const hasPinned = [...visibleItems].some((uuid) => {
       const note = notes.get(uuid);
-      return note?.isArchived;
+      return note?.isPinned;
     });
 
     const hasUnpinned = [...visibleItems].some((uuid) => {
       const note = notes.get(uuid);
-      return !note?.isPinned;
+      return !note?.isPinned && !note?.isArchived;
+    });
+
+    const hasArchivedNotes = [...visibleItems].some((uuid) => {
+      const note = notes.get(uuid);
+      return note?.isArchived;
     });
 
     useEffect(() => {
@@ -166,12 +172,28 @@ const FilteredNotes = memo(
         });
 
         // Filter out pinned and unpinned items
-        const unarchivedItems = sortedItems.filter((item) => {
-          if (!filteredNotesRef.current.has(item.uuid)) return false;
-          return item.isArchived === false;
+        const pinnedItems = sortedItems.filter((item) => {
+          if (
+            !filteredNotesRef.current.has(item.uuid) ||
+            item.isTrash ||
+            item.isArchived
+          )
+            return false;
+          return item.isPinned === true;
         });
+        const unpinnedItems = sortedItems.filter((item) => {
+          if (
+            !filteredNotesRef.current.has(item.uuid) ||
+            item.isTrash ||
+            item.isArchived
+          )
+            return false;
+          return item.isPinned === false;
+        });
+
         const archivedItems = sortedItems.filter((item) => {
-          if (!filteredNotesRef.current.has(item.uuid)) return false;
+          if (!filteredNotesRef.current.has(item.uuid) || item.isTrash)
+            return false;
           return item.isArchived === true;
         });
 
@@ -201,20 +223,134 @@ const FilteredNotes = memo(
         };
 
         // Gap between pinned and unpinned sections
-        const gapBetweenSections =
-          unarchivedItems.length > 0 ? GAP_BETWEEN_SECTIONS : 0;
-
-        const unarchivedHeight = positionItems(unarchivedItems, 0);
-        const archivedHeight = positionItems(
-          archivedItems,
-          unarchivedHeight + gapBetweenSections
+        const pinnedHeight = positionItems(
+          pinnedItems,
+          pinnedItems.length > 0 && 30
         );
 
-        setUnarchivedHeight(unarchivedHeight);
+        const unpinnedGap = pinnedItems.length > 0 ? GAP_BETWEEN_SECTIONS : 0;
+        const unpinnedHeight = positionItems(
+          unpinnedItems,
+          pinnedHeight + unpinnedGap
+        );
+
+        const archivedGap =
+          unpinnedItems.length > 0 || pinnedItems.length > 0
+            ? pinnedItems.length > 0 && unpinnedItems.length === 0
+              ? 0
+              : GAP_BETWEEN_SECTIONS
+            : 0;
+
+        const archivedY = unpinnedHeight + archivedGap || 30;
+        const archivedHeight = positionItems(archivedItems, archivedY);
+
+        const sectionGap =
+          (pinnedItems.length > 0 && unpinnedItems.length === 0
+            ? unpinnedHeight - GAP_BETWEEN_SECTIONS
+            : unpinnedHeight) +
+          (pinnedItems.length > 0 || unpinnedItems.length > 0
+            ? GAP_BETWEEN_SECTIONS + 2
+            : 32);
+
+        setSectionsHeight(sectionGap);
+
+        setPinnedHeight(pinnedHeight + GAP_BETWEEN_SECTIONS + 2);
         container.style.height = `${archivedHeight}px`;
         setLayoutReady(true);
       });
     }, [isGrid]);
+
+    // const calculateLayout = useCallback(() => {
+    //   if (layoutFrameRef.current) {
+    //     cancelAnimationFrame(layoutFrameRef.current);
+    //   }
+
+    //   layoutFrameRef.current = requestAnimationFrame(() => {
+    //     const container = containerRef.current;
+    //     if (!container) return;
+
+    //     const parent = container.parentElement;
+    //     const parentWidth = parent.clientWidth;
+    //     const style = window.getComputedStyle(parent);
+    //     const paddingLeft = parseFloat(style.paddingLeft) || 0;
+    //     const paddingRight = parseFloat(style.paddingRight) || 0;
+    //     const availableWidth = parentWidth - paddingLeft - paddingRight;
+
+    //     const columns = !isGrid
+    //       ? 1
+    //       : Math.max(1, Math.floor(availableWidth / (COLUMN_WIDTH + GUTTER)));
+    //     const contentWidth = !isGrid
+    //       ? COLUMN_WIDTH
+    //       : columns * (COLUMN_WIDTH + GUTTER) - GUTTER;
+
+    //     container.style.width = `${contentWidth}px`;
+    //     container.style.maxWidth = isGrid ? "100%" : "90%";
+    //     container.style.position = "relative";
+    //     container.style.left = "50%";
+    //     container.style.transform = "translateX(-50%)";
+
+    //     // Get all the items in the container
+    //     // const items = Array.from(container.children);
+    //     const items = notesStateRef.current.order.map((uuid, index) => {
+    //       const note = notesStateRef.current.notes.get(uuid);
+    //       return { ...note, index: index };
+    //     });
+
+    //     // Sort items based on their position value (ascending order)
+    //     const sortedItems = items.sort((a, b) => {
+    //       return a.index - b.index; // Ascending order
+    //     });
+
+    //     // Filter out pinned and unpinned items
+    //     const unarchivedItems = sortedItems.filter((item) => {
+    //       if (!filteredNotesRef.current.has(item.uuid)) return false;
+    //       return item.isArchived === false;
+    //     });
+    //     const archivedItems = sortedItems.filter((item) => {
+    //       if (!filteredNotesRef.current.has(item.uuid)) return false;
+    //       return item.isArchived === true;
+    //     });
+
+    //     const positionItems = (itemList, startY = 0) => {
+    //       const columnHeights = new Array(columns).fill(startY);
+
+    //       itemList.forEach((item) => {
+    //         const wrapper = item.ref?.current?.parentElement;
+
+    //         if (!wrapper) {
+    //           return;
+    //         }
+
+    //         const minColumnIndex = columnHeights.indexOf(
+    //           Math.min(...columnHeights)
+    //         );
+    //         const x = minColumnIndex * (COLUMN_WIDTH + GUTTER);
+    //         const y = columnHeights[minColumnIndex];
+
+    //         wrapper.style.transform = `translate(${x}px, ${y}px)`;
+    //         wrapper.style.position = "absolute";
+
+    //         columnHeights[minColumnIndex] += wrapper.offsetHeight + GUTTER;
+    //       });
+
+    //       return Math.max(...columnHeights);
+    //     };
+
+    //     // Gap between pinned and unpinned sections
+    //     const gapBetweenSections =
+    //       unarchivedItems.length > 0 ? GAP_BETWEEN_SECTIONS : 0;
+
+    //     const unarchivedHeight = positionItems(unarchivedItems, 0);
+    //     const archivedHeight = positionItems(
+    //       archivedItems,
+    //       unarchivedHeight + gapBetweenSections
+    //     );
+
+    //     setUnarchivedHeight(unarchivedHeight);
+    //     container.style.height = `${archivedHeight}px`;
+    //     setLayoutReady(true);
+    //   });
+    // }, [isGrid]);
 
     const debouncedCalculateLayout = useCallback(() => {
       if (resizeTimeoutRef.current) {
@@ -284,8 +420,27 @@ const FilteredNotes = memo(
           <p
             className="section-label"
             style={{
-              top: `${unarchivedHeight + GAP_BETWEEN_SECTIONS + 2}px`,
-              opacity: hasArchived && hasUnpinned ? "1" : "0",
+              opacity: hasPinned ? "1" : "0",
+              display: visibleItems.size === 0 && "none",
+            }}
+          >
+            PINNED
+          </p>
+          <p
+            className="section-label"
+            style={{
+              top: `${pinnedHeight}px`,
+              opacity: hasPinned && hasUnpinned ? "1" : "0",
+              display: visibleItems.size === 0 && "none",
+            }}
+          >
+            OTHERS
+          </p>
+          <p
+            className="section-label"
+            style={{
+              top: `${sectionsHeight}px`,
+              opacity: hasArchivedNotes ? "1" : "0",
             }}
           >
             ARCHIVED
