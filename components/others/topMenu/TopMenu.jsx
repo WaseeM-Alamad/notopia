@@ -213,7 +213,6 @@ const TopMenuHome = ({
         const selectedUUIDs = selectedNotes.map(({ uuid }) => uuid);
         setFadingNotes(new Set(selectedUUIDs));
         setTimeout(() => {
-          console.log("idk man");
           dispatchNotes({
             type: "BATCH_UPDATE_COLOR",
             selectedNotes: selectedNotes,

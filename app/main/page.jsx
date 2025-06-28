@@ -2197,8 +2197,6 @@ const page = () => {
       return;
     }
 
-    console.log("hi");
-
     resetBatchLoading();
     const version = layoutVersionRef.current;
     requestAnimationFrame(() => {
