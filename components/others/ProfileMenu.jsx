@@ -55,6 +55,7 @@ const ProfileMenu = forwardRef(
                 position: "fixed",
                 top: `${menuPosition.top + 50}px`,
                 left: `${menuPosition.left - 165}px`,
+                pointerEvents: !isOpen && "none",
               }}
               ref={ref}
               className="menu"

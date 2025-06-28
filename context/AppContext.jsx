@@ -24,13 +24,15 @@ export function AppProvider({ children }) {
   const [currentSection, setCurrentSection] = useState("Home");
   const [loadingImages, setLoadingImages] = useState(new Set());
   const [labelsReady, setLabelsReady] = useState(false);
+  const [isFiltered, setIsFiltered] = useState(false);
   const [layout, setLayout] = useState(null);
   const userID = session?.user?.id;
 
   const labelsRef = useRef(new Map());
   const labelLookUPRef = useRef(new Map());
   const ignoreKeysRef = useRef(null);
-  const [isFiltered, setIsFiltered] = useState(false);
+  const labelObjRef = useRef(null);
+  
   const modalOpenRef = useRef(null);
 
   const getLabels = async () => {
@@ -374,6 +376,7 @@ export function AppProvider({ children }) {
         modalOpenRef,
         loadingImages,
         setLoadingImages,
+        labelObjRef,
       }}
     >
       {children}

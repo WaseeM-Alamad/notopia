@@ -215,7 +215,7 @@ const Modal = ({
       initialStyle.element.style.opacity = "1";
     }
 
-    rootContainerRef.current.classList.remove("modal-open");
+    
 
     if (noFilterMatch || dynamicLabelNoMatch || isArchivePinned) {
       setVisibleItems((prev) => {
@@ -340,6 +340,8 @@ const Modal = ({
       // window.location.hash = `${prevHash.current}`;
 
       // window.dispatchEvent(new HashChangeEvent("hashchange"));
+
+      rootContainerRef.current.classList.remove("modal-open");
 
       modalRef.current.style.transition =
         "all 0.22s cubic-bezier(0.35, 0.9, 0.25, 1), opacity 0.5s";

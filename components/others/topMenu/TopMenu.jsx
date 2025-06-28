@@ -108,6 +108,10 @@ const TopMenuHome = ({
   useEffect(() => {
     if (selectedNotesIDs.length > 0) {
       selectedNotesRef.current = selectedNotesIDs;
+    } else {
+      setColorMenuOpen(false);
+      setMoreMenuOpen(false);
+      setLabelsOpen(false);
     }
   }, [selectedNotesIDs]);
 
@@ -225,6 +229,7 @@ const TopMenuHome = ({
           });
         }, 250);
       }
+      setSelectedNotesIDs([]);
       initialColorRef.current = null;
     }
   }, [colorMenuOpen]);
@@ -345,6 +350,7 @@ const TopMenuHome = ({
   const handlePin = () => {
     handleClose();
 
+    const selectedUUIDs = selectedNotesIDs.map((data) => data.uuid);
     const firstItem = selectedNotesIDs[0];
     const ArchiveVal =
       currentSection.toLowerCase() === "archive" &&
@@ -360,7 +366,6 @@ const TopMenuHome = ({
 
     requestAnimationFrame(() => {
       if (ArchiveVal) {
-        const selectedUUIDs = selectedNotesIDs.map((data) => data.uuid);
         const length = selectedNotesIDs.length;
         setFadingNotes(new Set(selectedUUIDs));
 
@@ -377,6 +382,15 @@ const TopMenuHome = ({
             selectedNotes: selectedNotesIDs,
             length: length,
           });
+
+          ArchiveVal &&
+            setVisibleItems((prev) => {
+              const updated = new Set(prev);
+              selectedUUIDs.forEach((uuid) => {
+                updated.add(uuid);
+              });
+              return updated;
+            });
         };
 
         const snackMessage =
@@ -398,6 +412,14 @@ const TopMenuHome = ({
             isPinned: pinNotes,
           });
           setFadingNotes(new Set());
+          ArchiveVal &&
+            setVisibleItems((prev) => {
+              const updated = new Set(prev);
+              selectedUUIDs.forEach((uuid) => {
+                updated.delete(uuid);
+              });
+              return updated;
+            });
         },
         ArchiveVal ? 250 : 0
       );
@@ -698,6 +720,7 @@ const TopMenuHome = ({
               opacity: { duration: 0.2, ease: "easeIn" },
               y: { duration: 0.3, stiffness: 120, damping: 20 },
             }}
+            style={{ pointerEvents: selectedNotesIDs.length === 0 && "none" }}
           >
             <Button
               onClick={handleClose}
@@ -812,6 +835,9 @@ const TopMenuHome = ({
             anchorEl={anchorEl}
             selectedNotesIDs={selectedNotesIDs}
             notes={notes}
+            setFadingNotes={setFadingNotes}
+            setVisibleItems={setVisibleItems}
+            setSelectedNotesIDs={setSelectedNotesIDs}
           />
         )}
       </AnimatePresence>

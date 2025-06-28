@@ -110,6 +110,7 @@ const ColorSelectMenu = ({
           y: { type: "spring", stiffness: 1000, damping: 50, mass: 1 },
           opacity: { duration: 0.2 },
         }}
+        style={{ pointerEvents: !isOpen && "none" }}
       >
         {/* display: "flex",
             padding: "9px 12px 1px 12px",

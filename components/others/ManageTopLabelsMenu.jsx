@@ -1,4 +1,5 @@
 import { useAppContext } from "@/context/AppContext";
+import { useSearch } from "@/context/SearchContext";
 import { createLabelForNotesAction } from "@/utils/actions";
 import { Popper } from "@mui/material";
 import { motion } from "framer-motion";
@@ -11,9 +12,14 @@ const ManageTopLabelsMenu = ({
   setIsOpen,
   anchorEl,
   selectedNotesIDs,
+  setSelectedNotesIDs,
   notes,
+  setFadingNotes,
+  setVisibleItems,
 }) => {
-  const { createLabelForNotes, labelsRef, handleLabelsTop } = useAppContext();
+  const { createLabelForNotes, labelsRef, handleLabelsTop, labelObjRef } =
+    useAppContext();
+  const { filters } = useSearch();
   const [isClient, setIsClient] = useState();
   const [labelSearch, setLabelSearch] = useState("");
   const [notesLabels, setNotesLabels] = useState(new Map());
@@ -24,6 +30,8 @@ const ManageTopLabelsMenu = ({
 
   const menuRef = useRef(null);
   const labelinputRef = useRef(null);
+
+  const filteredlabel = labelObjRef.current?.uuid || filters.label;
 
   useEffect(() => {
     setIsClient(true);
@@ -99,17 +107,51 @@ const ManageTopLabelsMenu = ({
     window.dispatchEvent(new Event("loadingEnd"));
   };
 
-  const addLabel = (uuid, label) => {
+  const addLabel = (uuid) => {
     if (notesLabels.has(uuid)) {
       if (notesLabels.get(uuid) === selectedNotesIDs.length) {
         const notesUUIDs = selectedNotesIDs.map((n) => n.uuid);
         const count = selectedNotesIDs.length;
 
-        dispatchNotes({
-          type: "BATCH_REMOVE_LABEL",
-          selectedNotesIDs: selectedNotesIDs,
-          uuid: uuid,
-        });
+        const delay = filteredlabel === uuid;
+
+        delay &&
+          setFadingNotes((prev) => {
+            const updated = new Set(prev);
+            notesUUIDs.forEach((uuid) => {
+              updated.add(uuid);
+            });
+            return updated;
+          });
+
+        setTimeout(
+          () => {
+            dispatchNotes({
+              type: "BATCH_REMOVE_LABEL",
+              selectedNotesIDs: selectedNotesIDs,
+              uuid: uuid,
+            });
+            if (delay) {
+              setFadingNotes((prev) => {
+                const updated = new Set(prev);
+                notesUUIDs.forEach((uuid) => {
+                  updated.delete(uuid);
+                });
+                return updated;
+              });
+              setVisibleItems((prev) => {
+                const updated = new Set(prev);
+                notesUUIDs.forEach((uuid) => {
+                  updated.delete(uuid);
+                });
+                return updated;
+              });
+            }
+          },
+          delay ? 250 : 0
+        );
+
+        delay && setSelectedNotesIDs([]);
 
         handleLabelsTop({
           operation: "dec",
@@ -179,7 +221,7 @@ const ManageTopLabelsMenu = ({
           return labelData.label.toLowerCase() !== labelSearch.toLowerCase();
         })
       ) {
-        addLabel(temp.uuid, temp.label);
+        addLabel(temp.uuid);
       } else {
         handleCreateLabel();
       }
@@ -243,6 +285,7 @@ const ManageTopLabelsMenu = ({
           paddingBottom: "0",
           zIndex: "311",
           borderRadius: "0.4rem",
+          pointerEvents: !isOpen && "none"
         }}
         className="menu not-draggable"
       >
@@ -284,7 +327,7 @@ const ManageTopLabelsMenu = ({
                 return (
                   <div
                     key={index}
-                    onClick={() => addLabel(uuid, labelData.label)}
+                    onClick={() => addLabel(uuid)}
                     className="checkbox-wrapper"
                     style={{
                       wordBreak: "break-all",

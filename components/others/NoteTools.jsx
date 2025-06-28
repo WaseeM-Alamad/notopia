@@ -17,6 +17,7 @@ const NoteTools = ({
   note = {},
   isFilteredNote = false,
   anchorEl,
+  setFadingNotes,
   setAnchorEl,
   selectedColor,
   setSelectedColor,
@@ -431,6 +432,17 @@ const NoteTools = ({
     },
   ];
 
+  const removedFilteredLabelRef = useRef(null);
+
+  useEffect(() => {
+    if (labelsOpen || !removedFilteredLabelRef.current) return;
+    noteActions({
+      type: "REMOVE_FILTERED_LABEL",
+      note: note,
+      labelUUID: removedFilteredLabelRef.current,
+    });
+  }, [labelsOpen]);
+
   return (
     <>
       <div
@@ -583,6 +595,7 @@ const NoteTools = ({
             isOpen={labelsOpen}
             setIsOpen={setLabelsOpen}
             anchorEl={anchorEl}
+            removedFilteredLabelRef={removedFilteredLabelRef}
           />
         )}
       </AnimatePresence>

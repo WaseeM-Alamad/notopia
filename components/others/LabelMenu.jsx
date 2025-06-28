@@ -148,6 +148,7 @@ const LabelMenu = ({
             borderRadius: "0.4rem",
             maxWidth: "14.0625rem",
             maxHeight: "26.96125rem",
+            pointerEvents: !isOpen && "none"
           }}
           ref={menuRef}
           className="menu not-draggable"

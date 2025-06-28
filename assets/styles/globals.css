@@ -2867,7 +2867,7 @@ img {
   box-sizing: border-box;
   background-image: url("data:image/svg+xml,%3Csvg width='48' height='48' viewBox='0 0 48 48' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M6 10C6 7.79086 7.79086 6 10 6H38C40.2091 6 42 7.79086 42 10V38C42 40.2091 40.2091 42 38 42H10C7.79086 42 6 40.2091 6 38V10ZM38 10L10 10V27.9107L14.3293 24.5435C15.9633 23.2726 18.2969 23.4583 19.7093 24.9716L24.101 29.677L28.2268 25.8458C29.8034 24.3818 32.2557 24.4272 33.777 25.9486L38 30.1716V10ZM38 35.8284L30.9486 28.777L26.8302 32.6012L31.8691 38H38V35.8284ZM26.3976 38L16.7851 27.7009L10 32.9782V38H26.3976Z' fill='white'/%3E%3C/svg%3E");
   background-size: 25%;
-  background-color: #da4646;
+  background-color: #4668da;
   background-repeat: no-repeat;
   overflow: hidden;
   white-space: nowrap;
@@ -2904,7 +2904,7 @@ img {
 
 .dark-mode .filter-images {
   background-image: url("data:image/svg+xml,%3Csvg width='48' height='48' viewBox='0 0 48 48' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M6 10C6 7.79086 7.79086 6 10 6H38C40.2091 6 42 7.79086 42 10V38C42 40.2091 40.2091 42 38 42H10C7.79086 42 6 40.2091 6 38V10ZM38 10L10 10V27.9107L14.3293 24.5435C15.9633 23.2726 18.2969 23.4583 19.7093 24.9716L24.101 29.677L28.2268 25.8458C29.8034 24.3818 32.2557 24.4272 33.777 25.9486L38 30.1716V10ZM38 35.8284L30.9486 28.777L26.8302 32.6012L31.8691 38H38V35.8284ZM26.3976 38L16.7851 27.7009L10 32.9782V38H26.3976Z' fill='%23202124'/%3E%3C/svg%3E");
-  background-color: #c25151;
+  background-color: #829bee;
 }
 
 .filter-label {

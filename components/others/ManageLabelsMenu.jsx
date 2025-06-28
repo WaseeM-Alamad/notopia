@@ -5,6 +5,7 @@ import { addLabelAction, removeLabelAction } from "@/utils/actions";
 import { createPortal } from "react-dom";
 import { Popper } from "@mui/material";
 import { v4 as generateUUID } from "uuid";
+import { useSearch } from "@/context/SearchContext";
 
 const ManageLabelsMenu = ({
   dispatchNotes,
@@ -12,11 +13,19 @@ const ManageLabelsMenu = ({
   isOpen,
   setIsOpen,
   anchorEl,
+  removedFilteredLabelRef,
 }) => {
-  const { createLabel, handleLabelNoteCount, labelsRef } = useAppContext();
+  const {
+    createLabel,
+    handleLabelNoteCount,
+    labelsRef,
+    currentSection,
+    labelObjRef,
+  } = useAppContext();
+  const { filters } = useSearch();
   const [isClient, setIsClient] = useState();
   const [labelSearch, setLabelSearch] = useState("");
-  const [noteLabels, setNoteLabels] = useState(new Map());
+  const [noteLabels, setNoteLabels] = useState(new Set());
   const allLabelsMatchSearch = [...labelsRef.current].every(
     ([uuid, labelData]) =>
       labelData.label.toLowerCase() !== labelSearch.toLowerCase()
@@ -25,37 +34,37 @@ const ManageLabelsMenu = ({
   const isFirstRunRef = useRef(true);
   const labelinputRef = useRef(null);
 
+  const filteredlabel = labelObjRef.current?.uuid || filters.label;
+
   useEffect(() => {
     setIsClient(true);
   }, []);
 
   useEffect(() => {
     const handler = (e) => {
-      if (!menuRef.current?.contains(e.target))
-        if (isOpen) {
-          setIsOpen(false);
-        }
+      if (!menuRef.current?.contains(e.target) && isOpen) {
+        setIsOpen(false);
+      }
     };
 
     document.addEventListener("click", handler);
+    document.addEventListener("contextmenu", handler);
 
     return () => {
       document.removeEventListener("click", handler);
+      document.removeEventListener("contextmenu", handler);
     };
   }, [isOpen]);
 
   useEffect(() => {
-    if (isFirstRunRef.current) {
-      isFirstRunRef.current = false;
-      return;
-    }
+    // if (isFirstRunRef.current) {
+    // isFirstRunRef.current = false;
+    // return;
+    // }
     if (!isOpen) return;
 
-    const labelsMap = new Map(
-      note.labels.map((noteLabel) => [noteLabel, true])
-    );
-    setNoteLabels(labelsMap);
-  }, [isOpen, note.labels, isClient]);
+    setNoteLabels(new Set(note.labels));
+  }, []);
 
   const handleInputKeyDown = (e) => {
     let temp;
@@ -69,7 +78,7 @@ const ManageLabelsMenu = ({
           return labelData.label.toLowerCase() !== labelSearch.toLowerCase();
         })
       ) {
-        addLabel(temp.uuid, temp.label);
+        addLabel(temp.uuid);
       } else {
         handleCreateLabel();
       }
@@ -83,16 +92,26 @@ const ManageLabelsMenu = ({
     createLabel(newUUID, label, createdAt);
     labelinputRef.current.value = "";
     setLabelSearch("");
-    addLabel(newUUID, label);
+    addLabel(newUUID);
   };
 
-  const addLabel = async (uuid, label) => {
+  const addLabel = async (uuid) => {
     if (noteLabels.has(uuid)) {
-      dispatchNotes({
-        type: "REMOVE_LABEL",
-        note: note,
-        labelUUID: uuid,
+      setNoteLabels((prev) => {
+        const updated = new Set(prev);
+        updated.delete(uuid);
+        return updated;
       });
+      if (filteredlabel !== uuid) {
+        dispatchNotes({
+          type: "REMOVE_LABEL",
+          note: note,
+          labelUUID: uuid,
+        });
+      } else {
+        removedFilteredLabelRef.current = uuid;
+      }
+
       handleLabelNoteCount(uuid, "decrement");
 
       window.dispatchEvent(new Event("loadingStart"));
@@ -102,11 +121,20 @@ const ManageLabelsMenu = ({
       });
       window.dispatchEvent(new Event("loadingEnd"));
     } else {
-      dispatchNotes({
-        type: "ADD_LABEL",
-        note: note,
-        labelUUID: uuid,
+      setNoteLabels((prev) => {
+        const updated = new Set(prev);
+        updated.add(uuid);
+        return updated;
       });
+      if (filteredlabel !== uuid) {
+        dispatchNotes({
+          type: "ADD_LABEL",
+          note: note,
+          labelUUID: uuid,
+        });
+      } else {
+        removedFilteredLabelRef.current = null;
+      }
       handleLabelNoteCount(uuid);
 
       window.dispatchEvent(new Event("loadingStart"));
@@ -163,6 +191,7 @@ const ManageLabelsMenu = ({
           paddingBottom: "0",
           zIndex: "311",
           borderRadius: "0.4rem",
+          pointerEvents: !isOpen && "none"
         }}
         className="menu not-draggable"
       >
@@ -204,7 +233,7 @@ const ManageLabelsMenu = ({
                 return (
                   <div
                     key={index}
-                    onClick={() => addLabel(uuid, labelData.label)}
+                    onClick={() => addLabel(uuid)}
                     className="checkbox-wrapper"
                     style={{
                       wordBreak: "break-all",

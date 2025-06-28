@@ -730,6 +730,7 @@ const page = () => {
     currentSection,
     setCurrentSection,
     modalOpenRef,
+    labelObjRef,
   } = useAppContext();
   const [tooltipAnchor, setTooltipAnchor] = useState(null);
   const [notesState, dispatchNotes] = useReducer(notesReducer, initialStates);
@@ -1386,6 +1387,29 @@ const page = () => {
           },
           fadeNote ? 250 : 0
         );
+      } else if (data.type === "REMOVE_FILTERED_LABEL") {
+        setFadingNotes((prev) => {
+          const updated = new Set(prev);
+          updated.add(data.note.uuid);
+          return updated;
+        });
+        setTimeout(() => {
+          dispatchNotes({
+            type: "REMOVE_LABEL",
+            note: data.note,
+            labelUUID: data.labelUUID,
+          });
+          setFadingNotes((prev) => {
+            const updated = new Set(prev);
+            updated.delete(data.note.uuid);
+            return updated;
+          });
+          setVisibleItems((prev) => {
+            const updated = new Set(prev);
+            updated.delete(data.note.uuid);
+            return updated;
+          });
+        }, 250);
       }
     },
     [currentSection, labelObj, filters]
@@ -2420,6 +2444,7 @@ const page = () => {
       }
       if (currentSection?.toLowerCase() !== "dynamiclabel") {
         setLabelObj(null);
+        labelObjRef.current = null;
         return;
       }
       const hash = window.location.hash.replace("#label/", "");
@@ -2433,6 +2458,7 @@ const page = () => {
 
       if (targetedLabel) {
         setLabelObj(targetedLabel);
+        labelObjRef.current = targetedLabel;
       }
     };
 
