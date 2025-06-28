@@ -39,141 +39,128 @@ const AccountSettings = ({ settingsRef, setIsOpen, user }) => {
     <>
       <motion.div
         ref={containerRef}
-        className="modal-container"
+        className="overlay"
         initial={{
-          backgroundColor: "rgba(0,0,0,0.0)",
-          pointerEvents: "auto",
-          backdropFilter: "blur(0px)",
+          opacity: 0,
         }}
         animate={{
-          backgroundColor: "rgba(0,0,0,0.5)",
-          pointerEvents: "auto",
-          backdropFilter: "blur(3px)",
+          opacity: 1,
         }}
         exit={{
-          backgroundColor: "rgba(0,0,0,0.0)",
-          backdropFilter: "blur(0px)",
+          opacity: 0,
+          pointerEvents: "none",
+          display: "none",
         }}
         transition={{
-          backgroundColor: {
-            type: "tween",
-            duration: 0.03,
-            ease: "linear",
-          },
-          backdropFilter: {
-            type: "tween",
-            duration: 0.03,
-            ease: "linear",
-          },
+          type: "spring",
+          stiffness: 500,
+          damping: 50,
+          mass: 1,
         }}
         onClick={(e) => {
           if (e.target === containerRef.current) setIsOpen(false);
         }}
+      />
+      <motion.div
+        ref={settingsRef}
+        initial={{
+          transform: "translate(-50%, -40%) scale(0.97)",
+          opacity: 0,
+        }}
+        animate={{
+          transform: "translate(-50%, -40%) scale(1)",
+          opacity: 1,
+        }}
+        exit={{
+          transform: "translate(-50%, -40%) scale(0.97)",
+          opacity: 0,
+        }}
+        transition={{ type: "spring", stiffness: 700, damping: 50, mass: 1 }}
+        className="settings-modal"
       >
-        <motion.div
-          ref={settingsRef}
-          initial={{
-            transform: "translate(-50%, -40%) scale(0.97)",
-            opacity: 0,
-          }}
-          animate={{
-            transform: "translate(-50%, -40%) scale(1)",
-            opacity: 1,
-          }}
-          exit={{
-            transform: "translate(-50%, -40%) scale(0.97)",
-            opacity: 0,
-          }}
-          transition={{ type: "spring", stiffness: 700, damping: 50, mass: 1 }}
-          className="settings-modal"
-        >
-          <Button
-            onClick={() => setIsOpen(false)}
-            className="clear-icon acc-close-icon"
-          />
-          <div className="acc-top">
-            <div className="acc-header">
-              <div>Account Settings</div>
-              <div className="update-info">
-                {" "}
-                Update your account information{" "}
+        <Button
+          onClick={() => setIsOpen(false)}
+          className="clear-icon acc-close-icon"
+        />
+        <div className="acc-top">
+          <div className="acc-header">
+            <div>Account Settings</div>
+            <div className="update-info"> Update your account information </div>
+          </div>
+          <div
+            ref={imageRef}
+            onClick={() => setImageMenuOpen((prev) => !prev)}
+            className="acc-img"
+            style={{ pointerEvents: imageMenuOpen && "none" }}
+          >
+            <div className="acc-img-hv" />
+            <img src={user.image} />
+          </div>
+        </div>
+
+        <div className="acc-inputs-container">
+          <div style={{ width: "100%", position: "relative" }}>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <label> Email </label>
+              <div
+                onClick={() => {
+                  setDisabledInput((prev) => ({ ...prev, email: false }));
+                  requestAnimationFrame(() => {
+                    emailRef.current.focus();
+                  });
+                }}
+                className="acc-edit"
+              >
+                Edit
               </div>
             </div>
-            <div
-              ref={imageRef}
-              onClick={() => setImageMenuOpen((prev) => !prev)}
-              className="acc-img"
-              style={{ pointerEvents: imageMenuOpen && "none" }}
-            >
-              <div className="acc-img-hv" />
-              <img src={user.image} />
-            </div>
+            <input
+              ref={emailRef}
+              disabled={disabledInput.email}
+              autoCorrect="false"
+              defaultValue={user.email}
+            />
           </div>
 
-          <div className="acc-inputs-container">
-            <div style={{ width: "100%", position: "relative" }}>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <label> Email </label>
-                <div
-                  onClick={() => {
-                    setDisabledInput((prev) => ({ ...prev, email: false }));
-                    requestAnimationFrame(() => {
-                      emailRef.current.focus();
-                    });
-                  }}
-                  className="acc-edit"
-                >
-                  Edit
-                </div>
+          <div style={{ width: "100%" }}>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <label> Username </label>
+              <div
+                onClick={() => {
+                  setDisabledInput((prev) => ({ ...prev, name: false }));
+                  requestAnimationFrame(() => {
+                    nameRef.current.focus();
+                  });
+                }}
+                className="acc-edit"
+              >
+                Edit
               </div>
-              <input
-                ref={emailRef}
-                disabled={disabledInput.email}
-                autoCorrect="false"
-                defaultValue={user.email}
-              />
             </div>
-
-            <div style={{ width: "100%" }}>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <label> Username </label>
-                <div
-                  onClick={() => {
-                    setDisabledInput((prev) => ({ ...prev, name: false }));
-                    requestAnimationFrame(() => {
-                      nameRef.current.focus();
-                    });
-                  }}
-                  className="acc-edit"
-                >
-                  Edit
-                </div>
-              </div>
-              <input
-                ref={nameRef}
-                disabled={disabledInput.name}
-                autoCorrect="false"
-                defaultValue={user.name}
-              />
-            </div>
-
-            <div style={{ width: "100%" }}>
-              <label> Password </label>
-              <input
-                style={{ cursor: "not-allowed", opacity: "0.7" }}
-                disabled
-                autoCorrect="false"
-                value="••••••••"
-              />
-            </div>
+            <input
+              ref={nameRef}
+              disabled={disabledInput.name}
+              autoCorrect="false"
+              defaultValue={user.name}
+            />
           </div>
 
-          <div>
-            <button disabled className="acc-btn">
-              Save Changes
-            </button>
+          <div style={{ width: "100%" }}>
+            <label> Password </label>
+            <input
+              style={{ cursor: "not-allowed", opacity: "0.7" }}
+              disabled
+              autoCorrect="false"
+              value="••••••••"
+            />
           </div>
-        </motion.div>
+        </div>
+
+        <div>
+          <button disabled className="acc-btn">
+            Save Changes
+          </button>
+        </div>
       </motion.div>
       <AnimatePresence>
         {imageMenuOpen && (

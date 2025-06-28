@@ -439,13 +439,12 @@ const Navbar = ({ user }) => {
     <>
       {tooltipAnchor?.display && <Tooltip anchorEl={tooltipAnchor} />}
       <nav
+        className={isScrolled ? "nav-shadow" : ""}
         style={{
           minWidth: threshold2 && "0",
-          boxShadow:
-            isScrolled &&
-            " rgba(67, 71, 85, 0.27) 0px 0px 0.25em, rgba(90, 125, 188, 0.05) 0px 0.25em 1em",
         }}
       >
+        {/* rgba(67, 71, 85, 0.27) 0px 0px 0.25em, rgba(90, 125, 188, 0.05) 0px 0.25em 1em */}
         <div
           className="logo"
           style={{

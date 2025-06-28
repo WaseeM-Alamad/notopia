@@ -140,7 +140,7 @@ const TopMenuHome = ({
         sharedBG.add(bg);
       });
       setPinNotes(pinned);
-      setArchiveNotes(!archived);
+      setArchiveNotes(archived);
       if (sharedColor.size === 1) {
         setSelectedColor([...sharedColor][0]);
         initialColorRef.current = [...sharedColor][0];
@@ -278,7 +278,7 @@ const TopMenuHome = ({
             type: "BATCH_ARCHIVE/TRASH",
             selectedNotes: selectedNotesIDs,
             property: "isArchived",
-            val: val,
+            val: archiveNotes,
           });
           setFadingNotes(new Set());
           if (fadeNote && !clearSet) {
@@ -300,7 +300,7 @@ const TopMenuHome = ({
         type: "BATCH_ARCHIVE/TRASH",
         selectedNotes: selectedNotesIDs,
         property: "isArchived",
-        val: val,
+        val: archiveNotes,
       }).then(() => window.dispatchEvent(new Event("loadingEnd")));
     };
 
@@ -313,7 +313,7 @@ const TopMenuHome = ({
         type: "UNDO_BATCH_ARCHIVE/TRASH",
         selectedNotes: selectedNotesIDs,
         property: "isArchived",
-        val: val,
+        val: archiveNotes,
       }).then(() => window.dispatchEvent(new Event("loadingEnd")));
       if (fadeNote && !clearSet) {
         setVisibleItems((prev) => {
@@ -329,7 +329,7 @@ const TopMenuHome = ({
         type: "UNDO_BATCH_ARCHIVE/TRASH",
         selectedNotes: selectedNotesIDs,
         property: "isArchived",
-        val: val,
+        val: archiveNotes,
         length: length,
       });
     };
@@ -756,7 +756,7 @@ const TopMenuHome = ({
                     onMouseEnter={(e) =>
                       handleMouseEnter(
                         e,
-                        archiveNotes ? "Archive" : "Unarchive"
+                        archiveNotes ? "Unarchive" : "Archive"
                       )
                     }
                     onMouseLeave={handleMouseLeave}

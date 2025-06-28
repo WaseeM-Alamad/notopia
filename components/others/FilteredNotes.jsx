@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useSearch } from "@/context/SearchContext";
 import FilteredNote from "./FilteredNote";
 import { useAppContext } from "@/context/AppContext";
+import Note from "./Note";
 
 const GUTTER = 15;
 const GAP_BETWEEN_SECTIONS = 88;
@@ -56,7 +57,7 @@ const NoteWrapper = memo(
             } cubic-bezier(0.5, 0.2, 0.3, 1), opacity 0s`,
           }}
         >
-          <FilteredNote
+          <Note
             note={note}
             noteActions={noteActions}
             selectedNotesRef={selectedNotesRef}

@@ -215,8 +215,6 @@ const Modal = ({
       initialStyle.element.style.opacity = "1";
     }
 
-    
-
     if (noFilterMatch || dynamicLabelNoMatch || isArchivePinned) {
       setVisibleItems((prev) => {
         const updated = new Set(prev);
@@ -957,6 +955,7 @@ const Modal = ({
             </div>
           )}
           <NoteImagesLayout
+            setTooltipAnchor={setTooltipAnchor}
             images={localNote?.images}
             // isLoadingImages={isLoadingImages}
             isTrash={localNote?.isTrash}

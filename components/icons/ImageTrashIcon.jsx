@@ -1,13 +1,13 @@
 import React from "react";
 
-const ImageTrashIcon = ({ size }) => {
+const ImageTrashIcon = () => {
   return (
     <svg
       className="delete-icon"
       style={{ margin: "auto" }}
       xmlns="http://www.w3.org/2000/svg"
-      height={size}
-      width={size}
+      height="18"
+      width="18"
       viewBox="0 0 48 48"
       fill="#FFFFFF"
     >

@@ -314,6 +314,7 @@ const FilteredNote = memo(
                 ref={imagesRef}
               >
                 <NoteImagesLayout
+                  setTooltipAnchor={setTooltipAnchor}
                   images={note.images}
                   calculateMasonryLayout={calculateLayout}
                 />
@@ -402,7 +403,6 @@ const FilteredNote = memo(
             setMoreMenuOpen={setMoreMenuOpen}
             images={note.images.length !== 0}
             note={note}
-            isFilteredNote={true}
             anchorEl={anchorEl}
             setAnchorEl={setAnchorEl}
             dispatchNotes={dispatchNotes}

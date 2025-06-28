@@ -11,11 +11,11 @@ import { AnimatePresence } from "framer-motion";
 import DeleteModal from "./DeleteModal";
 import { useAppContext } from "@/context/AppContext";
 import ManageLabelsMenu from "./ManageLabelsMenu";
+import { useSearch } from "@/context/SearchContext";
 
 const NoteTools = ({
   index,
   note = {},
-  isFilteredNote = false,
   anchorEl,
   setFadingNotes,
   setAnchorEl,
@@ -31,18 +31,21 @@ const NoteTools = ({
   setTooltipAnchor,
 }) => {
   const { loadingImages, setLoadingImages } = useAppContext();
+  const { filters } = useSearch();
   const [colorAnchorEl, setColorAnchorEl] = useState(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [labelsOpen, setLabelsOpen] = useState(false);
 
   const inputRef = useRef(null);
 
+  const isColorFiltered = filters.color;
+
   const handleColorClick = async (newColor) => {
     closeToolTip();
-    if (newColor === note.color && !isFilteredNote) return;
+    if (newColor === note.color && !isColorFiltered) return;
     setSelectedColor(newColor);
 
-    if (!isFilteredNote) {
+    if (!isColorFiltered) {
       dispatchNotes({
         type: "UPDATE_COLOR",
         note: note,
@@ -74,7 +77,7 @@ const NoteTools = ({
   };
 
   useEffect(() => {
-    if (!isFilteredNote) return;
+    if (!isColorFiltered) return;
 
     const handler = async () => {
       if (!colorMenuOpen && selectedColor !== note.color) {
@@ -481,7 +484,9 @@ const NoteTools = ({
                   onMouseLeave={handleMouseLeave}
                 />
                 <Button
-                  className="archive-icon btn-hover"
+                  className={`${
+                    note.isArchived ? "unarchive-icon" : "archive-icon"
+                  } btn-hover`}
                   onClick={() => {
                     closeToolTip();
                     noteActions({

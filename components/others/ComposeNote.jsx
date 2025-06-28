@@ -502,6 +502,7 @@ const ComposeNote = ({
             }}
           >
             <NoteImagesLayout
+              setTooltipAnchor={setTooltipAnchor}
               images={note.images}
               deleteSource="AddModal"
               AddNoteImageDelete={AddNoteImageDelete}

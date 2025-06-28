@@ -344,6 +344,7 @@ const Note = memo(
                   ref={imagesRef}
                 >
                   <NoteImagesLayout
+                    setTooltipAnchor={setTooltipAnchor}
                     images={note.images}
                     calculateMasonryLayout={calculateLayout}
                   />
