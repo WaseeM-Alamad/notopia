@@ -12,7 +12,7 @@ import {
   removeLabelAction,
   undoAction,
 } from "@/utils/actions";
-import ModalTools from "./ModalTools";
+import NoteModalTools from "./NoteModalTools";
 import NoteImagesLayout from "../Tools/NoteImagesLayout";
 import { useSession } from "next-auth/react";
 import { useAppContext } from "@/context/AppContext";
@@ -69,6 +69,8 @@ const Modal = ({
   const ignoreTopRef = useRef(false);
   const inputsContainerRef = useRef(null);
   const modalOpenRef = useRef(false);
+
+  const timeoutRef = useRef(null);
 
   const includesTitle = localNote?.title
     .toLowerCase()
@@ -304,7 +306,7 @@ const Modal = ({
       modalRef.current.style.transition =
         "all 0.22s cubic-bezier(0.35, 0.9, 0.25, 1), opacity 0.13s, background-color 0s";
 
-      setTimeout(() => {
+      timeoutRef.current = setTimeout(() => {
         modalRef.current.style.transition =
           "top 0s, opacity 0.13s, background-color 0.25s ease-in-out";
         modalOpenRef.current = true;
@@ -325,6 +327,7 @@ const Modal = ({
         center();
       }
     } else {
+      clearTimeout(timeoutRef.current);
       skipHashChangeRef.current = true;
       ignoreKeysRef.current = false;
       skipSetLabelObjRef.current = true;
@@ -487,8 +490,8 @@ const Modal = ({
         passedNote.isArchived
           ? "Note unarchived"
           : localIsPinned
-          ? "Note unpinned and archived"
-          : "Note Archived"
+            ? "Note unpinned and archived"
+            : "Note Archived"
       }`,
       snackOnUndo: undoArchive,
       snackRedo: () => redo(true),
@@ -977,10 +980,10 @@ const Modal = ({
               opacity: isOpen
                 ? "1"
                 : localNote?.content && !localNote?.title
-                ? "0"
-                : !localNote?.title && !localNote?.content
-                ? "0"
-                : "1",
+                  ? "0"
+                  : !localNote?.title && !localNote?.content
+                    ? "0"
+                    : "1",
             }}
             contentEditable={!localNote?.isTrash}
             dir="auto"
@@ -1001,10 +1004,10 @@ const Modal = ({
               opacity: isOpen
                 ? "1"
                 : !localNote?.content && localNote?.title
-                ? "0"
-                : !localNote?.title && !localNote?.content
-                ? "0"
-                : "1",
+                  ? "0"
+                  : !localNote?.title && !localNote?.content
+                    ? "0"
+                    : "1",
               minHeight: "30px",
               transition: "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)",
             }}
@@ -1084,8 +1087,8 @@ const Modal = ({
               {localNote?.isTrash
                 ? "Note in Trash  •  "
                 : localNote?.isArchived
-                ? "Note in Archive  •  "
-                : ""}
+                  ? "Note in Archive  •  "
+                  : ""}
               <span
                 onMouseEnter={(e) =>
                   handleMouseEnter(e, "Created " + formattedCreatedAtDate)
@@ -1098,7 +1101,7 @@ const Modal = ({
             </div>
           </div>
         </div>
-        <ModalTools
+        <NoteModalTools
           modalOpenRef={modalOpenRef}
           filters={filters}
           delayLabelDispatchRef={delayLabelDispatchRef}

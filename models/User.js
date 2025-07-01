@@ -11,9 +11,10 @@ const LabelSchema = new Schema(
     },
     color: { type: String, default: "Default" },
     isPinned: { type: Boolean, default: false },
-    pinDate: {type: Date, default: Date.now},
+    pinDate: { type: Date, default: Date.now },
     image: { type: String },
     noteCount: { type: Number },
+    default: [],
   },
   {
     timestamps: true,
@@ -26,17 +27,37 @@ const UserSchema = new Schema({
     unique: [true, "Email already exists!"],
     required: [true, "Email is required!"],
   },
+  password: {
+    type: String,
+    select: false,
+  },
+  token: {
+    type: String,
+    select: false,
+    default: null,
+  },
+  tokenExpDate: {
+    type: Date,
+    select: false,
+    default: null,
+  },
+  isVerified: {
+    type: Boolean,
+    default: false,
+  },
   username: {
     type: String,
+    maxlength: [30],
     required: [true, "Username is required!"],
   },
   image: {
     type: String,
+    default: null,
   },
   notesOrder: [
     {
       type: String,
-      unique: [true, "UUID must be unique!"],
+      default: [],
     },
   ],
   labels: [LabelSchema],

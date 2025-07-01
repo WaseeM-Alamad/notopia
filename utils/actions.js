@@ -6,6 +6,144 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "./authOptions";
 import { v4 as uuid } from "uuid";
 import { createClient } from "@supabase/supabase-js";
+import { Resend } from "resend";
+import { nanoid } from "nanoid";
+import bcrypt from "bcryptjs";
+import isEmail from "validator/lib/isEmail";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+const hashPassword = async (plainPassowrd) => {
+  const saltRounds = 10;
+  const hashedPassword = await bcrypt.hash(plainPassowrd, saltRounds);
+  return hashedPassword;
+};
+
+const isPasswordValid = (val) => {
+  return (
+    typeof val === "string" &&
+    val.length >= 8 &&
+    val.trim() === val &&
+    /[a-z]/.test(val) &&
+    /[A-Z]/.test(val) &&
+    /[0-9]/.test(val) &&
+    /[!@#$%^&*(),.?":{}|<>]/.test(val)
+  );
+};
+
+const isUsernameValid = (val) => {
+  return (
+    typeof val === "string" && val.trim() && val.length >= 3 && val.length <= 30
+  );
+};
+
+const isEmailValid = (val) => {
+  return typeof val === "string" && isEmail(val);
+};
+
+export const signUpAction = async (formData) => {
+  try {
+    await connectDB();
+    const email = formData.get("email");
+    const password = formData.get("password");
+    const username = formData.get("username");
+
+    if (!isEmailValid(email))
+      return { success: false, type: "email", message: "Invalid email" };
+    if (!isUsernameValid(username))
+      return { success: false, type: "username", message: "Invalid username" };
+    if (!isPasswordValid(password))
+      return { success: false, type: "password", message: "Invalid password" };
+
+    const hashedPassoword = await hashPassword(password);
+    const token = nanoid(32);
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
+    const user = await User.findOne({ email: email });
+
+    if (user) {
+      return {
+        success: false,
+        type: "email",
+        message: "Email is already registered",
+      };
+    }
+
+    await User.create({
+      email: email,
+      username: username,
+      password: hashedPassoword,
+      token: token,
+      tokenExpDate: expiresAt,
+    });
+
+    const link = `http://localhost:3000/verify?token=${token}`;
+
+    await resend.emails.send({
+      from: "Notopia <noreply@notopia.app>",
+      to: email,
+      subject: "Sign up to Notopia",
+      html: `
+        <div style="font-family:sans-serif;padding:20px;">
+          <h2>🔐 Sign in to Notopia</h2>
+          <p>Click below to verify your email:</p>
+          <a href="${link}" style="display:inline-block;background:#4F46E5;color:white;padding:10px 20px;border-radius:6px;text-decoration:none;">Sign In</a>
+          <p style="font-size:14px;color:#666;">This link expires in 10 minutes.</p>
+        </div>
+      `,
+    });
+
+    return {
+      success: true,
+      type: "email",
+      message: "A verification link has been sent to your email",
+    };
+  } catch (error) {
+    console.log("Couldn't sign up.", error);
+    return {
+      success: false,
+      type: "email",
+      message: "Error creating an account",
+    };
+  }
+};
+
+export const verifyTokenAction = async (receivedToken) => {
+  try {
+    await connectDB();
+
+    const user = await User.findOne({ token: receivedToken }).select(
+      "+tokenExpDate"
+    );
+
+    if (!user)
+      return {
+        success: false,
+        status: 404,
+        message: "User not found.",
+      };
+
+    let result = {
+      success: false,
+      status: 401,
+      message:
+        "Authorization link has expired, please log in to resend the link.",
+    };
+
+    if (user.tokenExpDate && new Date(user.tokenExpDate) > new Date()) {
+      user.isVerified = true;
+      result = { success: true, status: 200, message: "Email verified." };
+
+      user.token = null;
+      user.tokenExpDate = null;
+      await user.save();
+    }
+
+    return result;
+  } catch (error) {
+    console.log("Error verifying", error);
+  }
+};
 
 export const fetchNotes = async () => {
   const session = await getServerSession(authOptions);

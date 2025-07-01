@@ -1,5 +1,5 @@
 "use client";
-import Modal from "@/components/others/Modal";
+import NoteModal from "@/components/others/NoteModal";
 import Archive from "@/components/pages/Archive";
 import Labels from "@/components/pages/Labels";
 import Home from "@/components/pages/Home";
@@ -771,7 +771,6 @@ const page = () => {
   const selectedNotesRef = useRef(new Set());
   const rootContainerRef = useRef(null);
   const prevSelectedRef = useRef(null);
-  const throttleRef = useRef(false);
   const isLoadingNotesRef = useRef(false);
   const skipSetLabelObjRef = useRef(false);
 
@@ -880,13 +879,11 @@ const page = () => {
   const handleNoteClick = useCallback((e, note, index) => {
     if (
       e.target.closest("button") ||
-      !e.currentTarget.classList.contains("grid-item") ||
-      throttleRef.current
+      !e.currentTarget.classList.contains("grid-item")
     ) {
       return;
     }
     const element = e.currentTarget;
-    throttleRef.current = true;
 
     requestAnimationFrame(() => {
       setModalStyle({
@@ -901,9 +898,6 @@ const page = () => {
         requestIdleCallback(() => {
           setSelectedNote(note);
           setIsModalOpen(true);
-          setTimeout(() => {
-            throttleRef.current = false;
-          }, 200);
         });
       });
     });
@@ -983,8 +977,8 @@ const page = () => {
             data.note.isArchived
               ? "Note unarchived"
               : data.note.isPinned
-              ? "Note unpinned and archived"
-              : "Note Archived"
+                ? "Note unpinned and archived"
+                : "Note Archived"
           }`,
           snackOnUndo: undoArchive,
           snackRedo: redo,
@@ -1734,7 +1728,7 @@ const page = () => {
   const Page = components[currentSection];
 
   useEffect(() => {
-    if (!currentSection) return;
+    if (!currentSection || !notesReady || !labelsReady) return;
     notesStateRef.current = notesState;
     requestAnimationFrame(() => {
       if (notesState.order.length === 0 && currentSection === "Trash") {
@@ -1760,7 +1754,13 @@ const page = () => {
         btn.disabled = false;
       }
     });
-  }, [currentSection, notesState.order, notesState.notes]);
+  }, [
+    currentSection,
+    notesState.order,
+    notesState.notes,
+    notesReady,
+    labelsReady,
+  ]);
 
   const handleDeleteLabel = useCallback((data) => {
     setFadingNotes((prev) => new Set(prev).add(data.labelData.uuid));
@@ -2483,17 +2483,12 @@ const page = () => {
       <div
         id="n-overlay"
         onClick={() => {
-          if (throttleRef.current) return;
-          throttleRef.current = true;
           setIsModalOpen(false);
-          setTimeout(() => {
-            throttleRef.current = false;
-          }, 200);
         }}
         className="note-overlay"
       />
 
-      <Modal
+      <NoteModal
         localNote={selectedNote}
         setLocalNote={setSelectedNote}
         setVisibleItems={setVisibleItems}
