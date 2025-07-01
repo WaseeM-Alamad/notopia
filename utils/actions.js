@@ -77,7 +77,8 @@ export const signUpAction = async (formData) => {
       tokenExpDate: expiresAt,
     });
 
-    const link = `http://localhost:3000/verify?token=${token}`;
+    // const link = `http://localhost:3000/auth/verify?token=${token}`;
+    const link = `https://notopia.app/auth/verify?token=${token}`;
 
     await resend.emails.send({
       from: "Notopia <noreply@notopia.app>",
