@@ -1,10 +1,12 @@
 import { CircularProgress } from "@mui/material";
 import { Box } from "@mui/system";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import isEmail from "validator/lib/isEmail";
+import Modal from "../Tools/Modal";
+import { sendResetPassAction } from "@/utils/actions";
 
 const LeftPanel = ({
   isLogin,
@@ -18,6 +20,8 @@ const LeftPanel = ({
   const [isSubmitLoading, setIsSubmitLoading] = useState(false);
   const [emailStatus, setEmailStatus] = useState(null);
   const [PassStatus, setPassStatus] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [isForgotloading, setIsForgotLoading] = useState(false);
 
   const formRef = useRef(null);
 
@@ -30,10 +34,10 @@ const LeftPanel = ({
     setPassStatus(null);
   }, [isLogin]);
 
-  const validateEmail = () => {
+  const validateEmail = (e, isSubmit) => {
     const val = emailRef.current.value;
     if (!val.trim()) {
-      setEmailStatus("Field can't be empty");
+      isSubmit && setEmailStatus("Field can't be empty");
       return false;
     }
 
@@ -48,7 +52,7 @@ const LeftPanel = ({
     event.preventDefault();
     if (isSubmitLoading) return;
 
-    const isEmailValid = validateEmail();
+    const isEmailValid = validateEmail(null, true);
     const isPasswordValid = passRef?.current.value.trim().length > 0;
 
     if (passRef?.current.value.trim().length === 0) {
@@ -95,172 +99,230 @@ const LeftPanel = ({
     }
   }
 
-  const handleForgotPass = () => {
-    const emailVal = emailRef.current.value.trim();
-    if (emailVal) {
+  const handleForgotPass = async () => {
+    const isEmailValid = validateEmail(null, true);
+    if (!isEmailValid) return;
+
+    setIsForgotLoading(true);
+
+    const email = emailRef.current?.value?.trim();
+    const { success, message } = await sendResetPassAction(email);
+
+    if (success) {
+      setModalOpen(isEmailValid);
     } else {
-      setEmailStatus("Please enter email");
+      setEmailStatus(message);
     }
+
+    setIsForgotLoading(false);
   };
 
   return (
-    <motion.div
-      initial={{
-        x: !isLogin ? -40 : 0,
-        opacity: !isLogin ? 0 : 1,
-        // scale: !isLogin ? 0.99 : 1,
-      }}
-      animate={{
-        x: !isLogin ? -40 : 0,
-        opacity: !isLogin ? 0 : 1,
-        // scale: !isLogin ? 0.99 : 1,
-      }}
-      transition={{
-        type: "spring",
-        stiffness: 270,
-        damping: 50,
-        mass: 3,
-        opacity: { duration: 0.35 },
-      }}
-      className="left-panel"
-    >
-      <div>
-        <div className="form-title">Sign in</div>
-      </div>
+    <>
+      <motion.div
+        initial={{
+          x: !isLogin ? -40 : 0,
+          opacity: !isLogin ? 0 : 1,
+          // scale: !isLogin ? 0.99 : 1,
+        }}
+        animate={{
+          x: !isLogin ? -40 : 0,
+          opacity: !isLogin ? 0 : 1,
+          // scale: !isLogin ? 0.99 : 1,
+        }}
+        transition={{
+          type: "spring",
+          stiffness: 270,
+          damping: 50,
+          mass: 3,
+          opacity: { duration: 0.35 },
+        }}
+        className="left-panel"
+      >
+        <div>
+          <div className="form-title">Sign in</div>
+        </div>
 
-      <div className="form-container">
-        <form
-          id="signin-form"
-          ref={formRef}
-          onSubmit={handleLogin}
-          className="login-form"
-        >
-          <div>
-            <label
-              className={`form-label ${emailStatus ? "form-error-color" : ""} `}
-            >
-              Email
-              {emailStatus ? (
-                <span style={{ fontStyle: "italic", fontSize: ".76rem" }}>
-                  {" "}
-                  - {emailStatus}
-                </span>
-              ) : (
-                ""
-              )}
-            </label>
-            <input
-              className="form-input"
-              ref={emailRef}
-              name="email"
-              type="text"
-              onInput={() => setEmailStatus(null)}
-              placeholder="Enter your email"
-              spellCheck="false"
-              autoCapitalize="none"
-              autoCorrect="off"
-            />
-          </div>
-          <div>
-            <label
-              className={`form-label ${PassStatus ? "form-error-color" : ""} `}
-            >
-              Password
-              {PassStatus ? (
-                <span style={{ fontStyle: "italic", fontSize: ".76rem" }}>
-                  {" "}
-                  - {PassStatus}
-                </span>
-              ) : (
-                ""
-              )}
-            </label>
-            <div
-              style={{
-                position: "relative",
-                marginBottom: "0.5rem",
-              }}
-            >
-              <div
-                onClick={() => setShowPassword((prev) => !prev)}
-                className={`show-pass-icon ${!showPassword ? "hide-pass-icon" : ""}`}
-              />
+        <div className="form-container">
+          <form
+            id="signin-form"
+            ref={formRef}
+            onSubmit={handleLogin}
+            className="login-form"
+          >
+            <div>
+              <label
+                className={`form-label ${emailStatus ? "form-error-color" : ""} `}
+              >
+                Email
+                {emailStatus ? (
+                  <span style={{ fontStyle: "italic", fontSize: ".76rem" }}>
+                    {" "}
+                    - {emailStatus}
+                  </span>
+                ) : (
+                  ""
+                )}
+              </label>
               <input
                 className="form-input"
-                ref={passRef}
-                name="password"
-                type={showPassword ? "text" : "password"}
-                onInput={() => setPassStatus(null)}
-                placeholder="Enter your password"
-                style={{ paddingRight: "3rem", marginBottom: "0" }}
+                ref={emailRef}
+                name="email"
+                type="text"
+                onInput={() => setEmailStatus(null)}
+                onBlur={() => validateEmail(null, false)}
+                placeholder="Enter your email"
                 spellCheck="false"
-                autoComplete="off"
+                autoCapitalize="none"
+                autoCorrect="off"
               />
             </div>
-          </div>
-        </form>
-        <div className="form-tools">
-          <div onClick={handleForgotPass} className="forgot-pass">
-            Forgot password?
-          </div>
-        </div>
-        <div className="form-btns-container">
-          <button form="signin-form" type="submit" className="login-btn">
-            {!isSubmitLoading ? (
-              "Sign In"
-            ) : (
-              <CircularProgress
-                sx={{
-                  color: document.documentElement.classList.contains(
-                    "dark-mode"
-                  )
-                    ? " #292929"
-                    : "#dfdfdf",
+            <div>
+              <label
+                className={`form-label ${PassStatus ? "form-error-color" : ""} `}
+              >
+                Password
+                {PassStatus ? (
+                  <span style={{ fontStyle: "italic", fontSize: ".76rem" }}>
+                    {" "}
+                    - {PassStatus}
+                  </span>
+                ) : (
+                  ""
+                )}
+              </label>
+              <div
+                style={{
+                  position: "relative",
+                  marginBottom: "0.5rem",
                 }}
-                size={20}
-                thickness={5}
-              />
-            )}
-          </button>
-          <div
-            onClick={async () => {
-              setGoogleIsLoading(true);
-              await signIn("google");
-              setTimeout(() => {
-                setGoogleIsLoading(false);
-              }, 500);
-            }}
-            className="login-btn border-btn"
-          >
-            {!googleIsLoading ? (
-              <>
-                <div className="google-icon" />
-                Sign in with Google
-              </>
-            ) : (
-              <CircularProgress
-                sx={{
-                  color: document.documentElement.classList.contains(
-                    "dark-mode"
-                  )
-                    ? "#dfdfdf"
-                    : "rgb(110, 110, 110)",
-                }}
-                size={20}
-                thickness={5}
-              />
-            )}
+              >
+                <div
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className={`show-pass-icon ${!showPassword ? "hide-pass-icon" : ""}`}
+                />
+                <input
+                  className="form-input"
+                  ref={passRef}
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  onInput={() => setPassStatus(null)}
+                  onBlur={() => setShowPassword(false)}
+                  placeholder="Enter your password"
+                  style={{ paddingRight: "3rem", marginBottom: "0" }}
+                  spellCheck="false"
+                  autoComplete="off"
+                />
+              </div>
+            </div>
+          </form>
+          <div className="form-tools">
+            <div onClick={handleForgotPass} className="forgot-pass">
+              {!isForgotloading ? "Forgot password?" : "Please wait..."}
+            </div>
+          </div>
+          <div className="form-btns-container">
+            <button form="signin-form" type="submit" className="login-btn">
+              {!isSubmitLoading ? (
+                "Sign In"
+              ) : (
+                <CircularProgress
+                  sx={{
+                    color: document.documentElement.classList.contains(
+                      "dark-mode"
+                    )
+                      ? " #292929"
+                      : "#dfdfdf",
+                  }}
+                  size={20}
+                  thickness={5}
+                />
+              )}
+            </button>
+            <div
+              onClick={async () => {
+                setGoogleIsLoading(true);
+                await signIn("google");
+                setTimeout(() => {
+                  setGoogleIsLoading(false);
+                }, 500);
+              }}
+              className="login-btn border-btn"
+            >
+              {!googleIsLoading ? (
+                <>
+                  <div className="google-icon" />
+                  Sign in with Google
+                </>
+              ) : (
+                <CircularProgress
+                  sx={{
+                    color: document.documentElement.classList.contains(
+                      "dark-mode"
+                    )
+                      ? "#dfdfdf"
+                      : "rgb(110, 110, 110)",
+                  }}
+                  size={20}
+                  thickness={5}
+                />
+              )}
+            </div>
+          </div>
+          <div className="form-bottom">
+            <span className="form-bottom-question">Don't have an account?</span>
+            <span className="slider-trigger" onClick={toggleForm}>
+              {" "}
+              Sign Up
+            </span>
           </div>
         </div>
-        <div className="form-bottom">
-          <span className="form-bottom-question">Don't have an account?</span>
-          <span className="slider-trigger" onClick={toggleForm}>
-            {" "}
-            Sign Up
-          </span>
+      </motion.div>
+      <Modal
+        initial={{
+          scale: 0.95,
+          opacity: 0,
+        }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        transition={{
+          type: "spring",
+          stiffness: 500,
+          damping: 40,
+          mass: 1.05,
+        }}
+        className="instructions-dialog"
+        isOpen={modalOpen}
+        setIsOpen={setModalOpen}
+        overlay={true}
+      >
+        <div
+          style={{
+            fontSize: "1.3rem",
+            fontWeight: "550",
+            marginBottom: "1rem",
+          }}
+        >
+          Instructions sent!
         </div>
-      </div>
-    </motion.div>
+        <div style={{ fontWeight: "500", lineHeight: "1.4rem" }}>
+          We sent instructions to change your password to{" "}
+          <span style={{ fontWeight: "bold" }}>{emailRef?.current?.value}</span>
+          , please check both your inbox and spam folder.
+        </div>
+        <div
+          style={{
+            marginTop: "auto",
+            display: "flex",
+            justifyContent: "flex-end",
+          }}
+        >
+          <div className="okay-btn" onClick={() => setModalOpen(false)}>
+            Okay
+          </div>
+        </div>
+      </Modal>
+    </>
   );
 };
 

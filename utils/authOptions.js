@@ -31,7 +31,7 @@ export const authOptions = {
             hashedPassword
           );
 
-          if (!user || credentials?.password || !user?.password || !isValid) {
+          if (!user || !credentials?.password || !user?.password || !isValid) {
             throw new Error(
               JSON.stringify({
                 type: "both",
@@ -48,7 +48,7 @@ export const authOptions = {
                 (user.tokenExpDate - new Date()) / 1000 / 60
               );
               const unit = timeLeft === 1 ? "minute" : "minutes";
-              const message = `${timeLeft} ${unit} left before you can request another email`;
+              const message = `Verification link has already been sent. Please try again in ${timeLeft} ${unit}`;
               throw new Error(
                 JSON.stringify({
                   type: "email",

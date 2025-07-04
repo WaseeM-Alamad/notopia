@@ -41,6 +41,16 @@ const UserSchema = new Schema({
     select: false,
     default: null,
   },
+  resetToken: {
+    type: String,
+    select: false,
+    default: null,
+  },
+  resetTokenExpDate: {
+    type: Date,
+    select: false,
+    default: null,
+  },
   isVerified: {
     type: Boolean,
     default: false,

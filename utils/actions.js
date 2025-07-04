@@ -31,6 +31,14 @@ const isPasswordValid = (val) => {
   );
 };
 
+const isConfirmPasswordValid = (confirmPassword, originalPassword) => {
+  return (
+    typeof confirmPassword === "string" &&
+    confirmPassword.trim() !== "" &&
+    confirmPassword === originalPassword
+  );
+};
+
 const isUsernameValid = (val) => {
   return (
     typeof val === "string" && val.trim() && val.length >= 3 && val.length <= 30
@@ -109,6 +117,142 @@ export const signUpAction = async (formData) => {
   }
 };
 
+export const resetPasswordAction = async (formData, receivedToken) => {
+  try {
+    await connectDB();
+
+    const password = formData.get("password");
+    const confirmPass = formData.get("confirm-password");
+
+    const user = await User.findOne({ resetToken: receivedToken }).select(
+      "+password +resetTokenExpDate"
+    );
+
+    if (!user) {
+      return { success: false, message: "Invalid or expired link" };
+    }
+
+    const isExpired =
+      user.resetTokenExpDate && new Date(user.resetTokenExpDate) < new Date();
+    if (isExpired) {
+      return { success: false, message: "Reset link has expired" };
+    }
+
+    if (!isPasswordValid(password)) {
+      return { success: false, message: "Weak or invalid password" };
+    }
+
+    if (!isConfirmPasswordValid(confirmPass, password)) {
+      return { success: false, message: "Passwords do not match" };
+    }
+
+    if (user?.password) {
+      const matchesExistingPass = await bcrypt.compare(password, user.password);
+      if (matchesExistingPass)
+        return {
+          success: false,
+          passExists: true,
+          message: "New password matches existing password",
+        };
+    }
+
+    const hashedPassword = await hashPassword(password);
+
+    user.password = hashedPassword;
+    user.token = null;
+    user.tokenExpDate = null;
+    user.resetToken = null;
+    user.resetTokenExpDate = null;
+    user.isVerified = true;
+
+    await user.save();
+
+    return { success: true, message: "Password has been updated successfully" };
+  } catch (error) {
+    console.log("Error resetting password", error);
+    return { success: false, message: "Server error" };
+  }
+};
+
+export const sendResetPassAction = async (receivedEmail) => {
+  try {
+    await connectDB();
+
+    if (!isEmailValid(receivedEmail))
+      return { success: false, type: "email", message: "Invalid email" };
+
+    const user = await User.findOne({ email: receivedEmail }).select(
+      "+password +resetTokenExpDate"
+    );
+
+    if (!user)
+      return {
+        success: false,
+        type: "email",
+        message: "No user with such email",
+      };
+
+    const isRecent = user.resetTokenExpDate > new Date();
+
+    if (isRecent) {
+      const timeLeft = Math.ceil((user.resetTokenExpDate - new Date()) / 1000 / 60);
+      const unit = timeLeft === 1 ? "minute" : "minutes";
+      const message = `Reset password link has already been sent. Please try again in ${timeLeft} ${unit}`;
+      return {
+        success: false,
+        type: "email",
+        message: message,
+      };
+    }
+
+    const token = nanoid(32);
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
+    await User.updateOne(
+      { email: user.email },
+      { $set: { resetToken: token, resetTokenExpDate: expiresAt } },
+      { upsert: true }
+    );
+
+    // const link = `http://localhost:3000/auth/reset-password?token=${token}`;
+    const link = `https://notopia.app/auth/reset-password?token=${token}`;
+
+    await resend.emails.send({
+      from: "Notopia <noreply@notopia.app>",
+      to: user.email,
+      subject: "Reset your Notopia password",
+      html: `
+        <div style="font-family: 'Segoe UI', Roboto, sans-serif; padding: 24px; background-color: #f9fafb; color: #111827;">
+          <div style="max-width: 480px; margin: auto; background: white; padding: 32px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+            <h2 style="margin-bottom: 16px; font-size: 24px; color: #111827;">🔑 Reset your password</h2>
+            <p style="margin-bottom: 24px; font-size: 16px;">
+              We received a request to reset your Notopia password. Click the button below to proceed.
+            </p>
+            <a href="${link}" style="display: inline-block; background-color: #4F46E5; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 500;">
+              Reset Password
+            </a>
+            <p style="margin-top: 24px; font-size: 14px; color: #6b7280;">
+              This link will expire in 15 minutes. If you didn’t request this, you can safely ignore it.
+            </p>
+          </div>
+          <p style="text-align: center; margin-top: 32px; font-size: 12px; color: #9ca3af;">
+            &copy; ${new Date().getFullYear()} Notopia. All rights reserved.
+          </p>
+        </div>
+      `,
+    });
+
+    return { success: true, message: "Reset link sent successfully" };
+  } catch (error) {
+    console.log("Couldn't send reset link", error);
+    return {
+      success: false,
+      type: "email",
+      message: "Something went wrong. Please try again.",
+    };
+  }
+};
+
 export const verifyTokenAction = async (receivedToken) => {
   try {
     await connectDB();
@@ -127,8 +271,7 @@ export const verifyTokenAction = async (receivedToken) => {
     let result = {
       success: false,
       status: 401,
-      message:
-        "Authorization link has expired, please log in to resend the link.",
+      message: "Authorization link has expired",
     };
 
     if (user.tokenExpDate && new Date(user.tokenExpDate) > new Date()) {
@@ -138,6 +281,40 @@ export const verifyTokenAction = async (receivedToken) => {
       user.token = null;
       user.tokenExpDate = null;
       await user.save();
+    }
+
+    return result;
+  } catch (error) {
+    console.log("Error verifying", error);
+  }
+};
+
+export const verifyResetTokenAction = async (receivedToken) => {
+  try {
+    await connectDB();
+
+    const user = await User.findOne({ resetToken: receivedToken }).select(
+      "+resetTokenExpDate"
+    );
+
+    if (!user)
+      return {
+        success: false,
+        status: 404,
+        message: "User not found.",
+      };
+
+    let result = {
+      success: false,
+      status: 401,
+      message: "Reset link has expired",
+    };
+
+    if (
+      user.resetTokenExpDate &&
+      new Date(user.resetTokenExpDate) > new Date()
+    ) {
+      result = { success: true, status: 200, message: "Email verified." };
     }
 
     return result;

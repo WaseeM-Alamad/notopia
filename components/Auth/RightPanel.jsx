@@ -25,7 +25,6 @@ const RightPanel = ({
   const userRef = useRef(null);
   const passRef = useRef(null);
 
-
   useEffect(() => {
     passRef.current.value = "";
     setEmailStatus(null);
@@ -44,26 +43,22 @@ const RightPanel = ({
 
     setIsSubmitLoading(true);
 
-    const { success, type, message } = await signUpAction(formData);
+    const { type, message } = await signUpAction(formData);
 
-    if (!success) {
-      switch (type) {
-        case "email":
-          setEmailStatus(message);
-          break;
-        case "username":
-          setUserStatus(message);
-          break;
-        case "password":
-          setPassStatus(message);
-          break;
-      }
+    switch (type) {
+      case "email":
+        setEmailStatus(message);
+        break;
+      case "username":
+        setUserStatus(message);
+        break;
+      case "password":
+        setPassStatus(message);
+        break;
     }
 
     setIsSubmitLoading(false);
   }
-
-  
 
   const validatePassword = (e, isSubmit = false) => {
     const val = passRef.current.value;
@@ -271,7 +266,10 @@ const RightPanel = ({
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
                 onInput={() => setPassStatus(null)}
-                onBlur={(e) => validatePassword(e, false)}
+                onBlur={(e) => {
+                  setShowPassword(false);
+                  validatePassword(e, false);
+                }}
                 style={{ paddingRight: "3rem", marginBottom: "0" }}
                 spellCheck="false"
                 autoComplete="off"

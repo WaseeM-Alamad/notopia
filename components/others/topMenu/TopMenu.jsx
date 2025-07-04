@@ -177,6 +177,7 @@ const TopMenuHome = ({
   };
 
   const handleOpenColor = (e) => {
+    closeToolTip();
     setColorAnchorEl(e.currentTarget);
     setColorMenuOpen((prev) => !prev);
   };
@@ -227,8 +228,10 @@ const TopMenuHome = ({
             return updated;
           });
         }, 250);
+        setSelectedNotesIDs([]);
+        window.dispatchEvent(new Event("topMenuClose"));
       }
-      setSelectedNotesIDs([]);
+
       initialColorRef.current = null;
     }
   }, [colorMenuOpen]);
@@ -252,6 +255,7 @@ const TopMenuHome = ({
   };
 
   const handleArchive = async () => {
+    closeToolTip();
     const firstItem = selectedNotesIDs[0];
     const val = notes.get(firstItem.uuid).isArchived;
     const length = selectedNotesIDs.length;
@@ -432,6 +436,7 @@ const TopMenuHome = ({
   };
 
   const handleOpenMenu = (e) => {
+    closeToolTip();
     setAnchorEl(e.currentTarget);
     setMoreMenuOpen((prev) => !prev);
     setLabelsOpen(false);

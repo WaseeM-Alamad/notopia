@@ -20,7 +20,6 @@ const Auth = () => {
 
   useEffect(() => {
     const routeName = pathname.replace(/^\/|\/$/g, "").toLowerCase();
-    console.log(routeName);
     setIsLogin(routeName === "auth/login");
   }, [pathname]);
 
