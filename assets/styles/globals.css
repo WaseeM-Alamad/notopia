@@ -1447,6 +1447,7 @@ aside {
   border-radius: 0.7rem;
   margin-left: 0.4rem;
   padding: 0.35rem 0.55rem;
+  will-change: transform;
 }
 
 .right-tooltip::before {
@@ -3757,4 +3758,13 @@ img {
   border-radius: 0.4rem;
   padding: 0.5rem 0.9rem;
   cursor: pointer;
+}
+
+.break-words {
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.break-all {
+  word-break: break-all;
 }

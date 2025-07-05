@@ -31,6 +31,10 @@ const ProfileMenu = forwardRef(
       setIsOpen(false);
     };
 
+    const getBreakClass = (text) => {
+      return /\s/.test(text) ? 'break-words' : 'break-all';
+    };
+
     if (!isClient) {
       return null;
     }
@@ -81,7 +85,7 @@ const ProfileMenu = forwardRef(
                     />
                     <div className="img-edit-icon" />
                   </div>
-                  <span dir="auto" className="username">
+                  <span dir="auto" className={`username ${getBreakClass(user.name)}`}>
                     {user.name}
                   </span>
                 </div>

@@ -20,7 +20,7 @@ const LeftPanel = ({
   const [isSubmitLoading, setIsSubmitLoading] = useState(false);
   const [emailStatus, setEmailStatus] = useState(null);
   const [PassStatus, setPassStatus] = useState(null);
-  const [modalOpen, setModalOpen] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
   const [isForgotloading, setIsForgotLoading] = useState(false);
 
   const formRef = useRef(null);
