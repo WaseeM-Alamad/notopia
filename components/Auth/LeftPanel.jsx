@@ -20,7 +20,7 @@ const LeftPanel = ({
   const [isSubmitLoading, setIsSubmitLoading] = useState(false);
   const [emailStatus, setEmailStatus] = useState(null);
   const [PassStatus, setPassStatus] = useState(null);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(true);
   const [isForgotloading, setIsForgotLoading] = useState(false);
 
   const formRef = useRef(null);
@@ -291,34 +291,38 @@ const LeftPanel = ({
           damping: 40,
           mass: 1.05,
         }}
-        className="instructions-dialog"
+        className="instructions-container"
         isOpen={modalOpen}
         setIsOpen={setModalOpen}
         overlay={true}
       >
-        <div
-          style={{
-            fontSize: "1.3rem",
-            fontWeight: "550",
-            marginBottom: "1rem",
-          }}
-        >
-          Instructions sent!
-        </div>
-        <div style={{ fontWeight: "500", lineHeight: "1.4rem" }}>
-          We sent instructions to change your password to{" "}
-          <span style={{ fontWeight: "bold" }}>{emailRef?.current?.value}</span>
-          , please check both your inbox and spam folder.
-        </div>
-        <div
-          style={{
-            marginTop: "auto",
-            display: "flex",
-            justifyContent: "flex-end",
-          }}
-        >
-          <div className="okay-btn" onClick={() => setModalOpen(false)}>
-            Okay
+        <div className="instructions-dialog">
+          <div
+            style={{
+              fontSize: "1.3rem",
+              fontWeight: "550",
+              marginBottom: "1rem",
+            }}
+          >
+            Instructions sent!
+          </div>
+          <div style={{ fontWeight: "500", lineHeight: "1.4rem" }}>
+            We sent instructions to change your password to{" "}
+            <span style={{ fontWeight: "bold" }}>
+              {emailRef?.current?.value}
+            </span>
+            , please check both your inbox and spam folder.
+          </div>
+          <div
+            style={{
+              marginTop: "auto",
+              display: "flex",
+              justifyContent: "flex-end",
+            }}
+          >
+            <div className="okay-btn" onClick={() => setModalOpen(false)}>
+              Okay
+            </div>
           </div>
         </div>
       </Modal>

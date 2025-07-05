@@ -1,5 +1,6 @@
 "use client";
 
+import HorizontalLoader from "@/components/Tools/horizontalLoader";
 import Modal from "@/components/Tools/Modal";
 import { verifyTokenAction } from "@/utils/actions";
 import { CircularProgress } from "@mui/material";
@@ -17,7 +18,6 @@ const Page = () => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const token = params.get("token");
-    setIsLoading(true);
     if (!token) {
       setIsExpired(true);
       setIsLoading(false);
@@ -58,8 +58,7 @@ const Page = () => {
                     alignItems: "center",
                     justifyContent: "center",
                     height: "100%",
-                    gap: "1rem",
-                    marginBottom: "3rem",
+                    marginBottom: "1rem",
                   }
                 : undefined
             }
@@ -68,6 +67,7 @@ const Page = () => {
               style={{
                 fontSize: isLoading ? "1.7rem" : "1.5rem",
                 marginBottom: "0.4rem",
+                userSelect: "none",
               }}
             >
               {!isLoading
@@ -76,24 +76,15 @@ const Page = () => {
                   : "Email verified"
                 : "Please wait..."}
             </div>
-            {isExpired && !isLoading ? (
-              <div style={{ fontSize: "1rem" }}>
-                Please sign in to resend the link
-              </div>
-            ) : (
-              <CircularProgress
-                sx={{
-                  // marginTop: "5rem",
-                  color: document.documentElement.classList.contains(
-                    "dark-mode"
-                  )
-                    ? "#dfdfdf"
-                    : "#2b2663",
-                }}
-                size={35}
-                thickness={5}
-              />
-            )}
+            {
+              isLoading ? (
+                <HorizontalLoader color="#2b2663" size={0.8} />
+              ) : isExpired ? (
+                <div style={{ fontSize: "1rem" }}>
+                  Please sign in to resend the link
+                </div>
+              ) : null
+            }
           </div>
           {!isLoading && (
             <div

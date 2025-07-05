@@ -1288,11 +1288,7 @@ const page = () => {
 
         const undoCopy = async () => {
           setFadingNotes((prev) => new Set(prev).add(newUUID));
-          setVisibleItems((prev) => {
-            const updated = new Set(prev);
-            updated.delete(newUUID);
-            return updated;
-          });
+
           batchNoteCount(labelsUUIDs);
           setTimeout(async () => {
             dispatchNotes({
@@ -1303,6 +1299,11 @@ const page = () => {
               const newSet = new Set(prev);
               newSet.delete(newUUID);
               return newSet;
+            });
+            setVisibleItems((prev) => {
+              const updated = new Set(prev);
+              updated.delete(newUUID);
+              return updated;
             });
             window.dispatchEvent(new Event("loadingStart"));
             await undoAction({

@@ -152,10 +152,18 @@ export const authOptions = {
       await connectDB();
       const user = await User.findOne({ email: session.user.email });
 
+      function getInitials(username) {
+        if (!username) return "";
+        const clean = username.replace(/[^a-zA-Z0-9]/g, "");
+        return clean.slice(0, 2).toUpperCase();
+      }
+
       if (user) {
         session.user.id = user._id.toString();
         session.user.name = user.username;
-        session.user.image = user.image;
+        session.user.image =
+          user.image ||
+          `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><rect width='100' height='100' fill='%23607fde'/><text x='48' y='50' font-size='40' text-anchor='middle' dominant-baseline='central' fill='white' font-family='Arial'>${getInitials(user.username) || ""}</text></svg>`;
       }
 
       return session;

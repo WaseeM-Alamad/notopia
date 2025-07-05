@@ -1,5 +1,6 @@
 "use client";
 
+import HorizontalLoader from "@/components/Tools/horizontalLoader";
 import Modal from "@/components/Tools/Modal";
 import { resetPasswordAction, verifyResetTokenAction } from "@/utils/actions";
 import { CircularProgress } from "@mui/material";
@@ -354,18 +355,7 @@ const Page = () => {
                     : "Password has been updated!"}
                 </div>
                 {isValidLoading && !PasswordReset ? (
-                  <CircularProgress
-                    sx={{
-                      // marginTop: "5rem",
-                      color: document.documentElement.classList.contains(
-                        "dark-mode"
-                      )
-                        ? "#dfdfdf"
-                        : "#2b2663",
-                    }}
-                    size={35}
-                    thickness={5}
-                  />
+                  <HorizontalLoader color="#2b2663" size={0.8} />
                 ) : (
                   !PasswordReset && (
                     <div style={{ fontSize: "1rem" }}>
