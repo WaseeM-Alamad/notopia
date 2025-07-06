@@ -1,6 +1,6 @@
 "use client";
 
-import HorizontalLoader from "@/components/Tools/horizontalLoader";
+import HorizontalLoader from "@/components/Tools/HorizontalLoader";
 import Modal from "@/components/Tools/Modal";
 import { verifyTokenAction } from "@/utils/actions";
 import { CircularProgress } from "@mui/material";
