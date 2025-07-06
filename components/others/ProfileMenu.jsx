@@ -108,7 +108,7 @@ const ProfileMenu = forwardRef(
                 <div className="menu-btn">
                   <div className="keyboard-icon" /> Keyboard shortcuts
                 </div>
-                <div onClick={() => signOut()} className="menu-btn">
+                <div onClick={() => signOut()} className="menu-btn warning-color">
                   <div className="signout-icon" />
                   Sign out
                 </div>

@@ -22,7 +22,7 @@ import { useSearch } from "@/context/SearchContext";
 import { debounce } from "lodash";
 import { useAppContext } from "@/context/AppContext";
 import Tooltip from "../Tools/Tooltip";
-import AccountSettings from "./AccountSettings";
+import AccountDialog from "./AccountDialog";
 import ListIcon from "../icons/ListIcon";
 import SearchIcon from "../icons/SearchIcon";
 import InputSearchIcon from "../icons/InputSearchIcon";
@@ -751,7 +751,7 @@ const Navbar = ({ user }) => {
 
       <AnimatePresence>
         {settingsOpen && (
-          <AccountSettings
+          <AccountDialog
             settingsRef={settingsRef}
             setIsOpen={setSettingsOpen}
             user={user}
