@@ -93,14 +93,11 @@ const MoreMenu = ({
               maxHeight: "26.96125rem",
               borderRadius: "0.6rem",
               position: "relative",
-              overflow: "visible",
-              border: "1px solid #e5e7eb",
-              boxShadow: "rgba(0, 0, 0, 0.3) 0px 4px 12px",
               paddingTop: navTitle?.trim() && "0",
               pointerEvents: !isOpen && "none"
             }}
             ref={menuRef}
-            className="menu not-draggable"
+            className="menu not-draggable menu-border"
           >
             {navTitle?.trim() && (
               <div className="menu-top-title">{navTitle}</div>

@@ -10,7 +10,7 @@ const Layout = async ({ children }) => {
     <>
       {session && (
         <>
-          <Navbar user={session?.user} />
+          <Navbar initialUser={session?.user} />
           <Sidebar />
           {children}
         </>

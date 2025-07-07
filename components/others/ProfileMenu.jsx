@@ -31,10 +31,6 @@ const ProfileMenu = forwardRef(
       setIsOpen(false);
     };
 
-    const getBreakClass = (text) => {
-      return /\s/.test(text) ? 'break-words' : 'break-all';
-    };
-
     if (!isClient) {
       return null;
     }
@@ -62,7 +58,7 @@ const ProfileMenu = forwardRef(
                 pointerEvents: !isOpen && "none",
               }}
               ref={ref}
-              className="menu"
+              className="menu menu-border"
             >
               <div style={{}} className="menu-upper-section">
                 <div style={{ width: "100%", display: "flex" }}>
@@ -85,7 +81,7 @@ const ProfileMenu = forwardRef(
                     />
                     <div className="img-edit-icon" />
                   </div>
-                  <span dir="auto" className={`username ${getBreakClass(user.name)}`}>
+                  <span dir="auto" className="username">
                     {user.name}
                   </span>
                 </div>
@@ -108,7 +104,10 @@ const ProfileMenu = forwardRef(
                 <div className="menu-btn">
                   <div className="keyboard-icon" /> Keyboard shortcuts
                 </div>
-                <div onClick={() => signOut()} className="menu-btn warning-color">
+                <div
+                  onClick={() => signOut()}
+                  className="menu-btn warning-color"
+                >
                   <div className="signout-icon" />
                   Sign out
                 </div>

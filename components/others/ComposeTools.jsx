@@ -12,6 +12,7 @@ import { v4 as uuid } from "uuid";
 import { AnimatePresence } from "framer-motion";
 
 const AddModalTools = ({
+  isOpen,
   setIsOpen,
   setNote,
   note,
@@ -71,7 +72,7 @@ const AddModalTools = ({
   );
 
   return (
-    <div style={{ opacity: "1" }} className="modal-bottom">
+    <div style={{ opacity: isOpen ? "1": "0" }} className="modal-bottom">
       {/* <p className="date">{FormattedDate}</p> */}
       <div className="modal-bottom-icons">
         <Button

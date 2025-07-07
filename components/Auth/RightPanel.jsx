@@ -126,6 +126,18 @@ const RightPanel = ({
       return false;
     }
 
+    if (!/^[a-zA-Z]/.test(val.trim())) {
+      const message = "Must start with a letter";
+      setUserStatus(message);
+      return false;
+    }
+
+    if (/[=<>\/"]/.test(val)) {
+      const message = "Contains invalid characters";
+      setUserStatus(message);
+      return false;
+    }
+
     return true;
   };
 

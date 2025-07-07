@@ -41,7 +41,12 @@ const isConfirmPasswordValid = (confirmPassword, originalPassword) => {
 
 const isUsernameValid = (val) => {
   return (
-    typeof val === "string" && val.trim() && val.length >= 3 && val.length <= 30
+    typeof val === "string" &&
+    val.trim() === val &&
+    val.length >= 3 &&
+    val.length <= 30 &&
+    /^[a-zA-Z]/.test(val) &&
+    !/[=<>\/"]/.test(val)
   );
 };
 
@@ -195,7 +200,9 @@ export const sendResetPassAction = async (receivedEmail) => {
     const isRecent = user.resetTokenExpDate > new Date();
 
     if (isRecent) {
-      const timeLeft = Math.ceil((user.resetTokenExpDate - new Date()) / 1000 / 60);
+      const timeLeft = Math.ceil(
+        (user.resetTokenExpDate - new Date()) / 1000 / 60
+      );
       const unit = timeLeft === 1 ? "minute" : "minutes";
       const message = `Reset password link has already been sent. Please try again in ${timeLeft} ${unit}`;
       return {
@@ -320,6 +327,35 @@ export const verifyResetTokenAction = async (receivedToken) => {
     return result;
   } catch (error) {
     console.log("Error verifying", error);
+  }
+};
+
+export const updateUsernameAction = async (newUsername) => {
+  const session = await getServerSession(authOptions);
+  const userID = session?.user?.id;
+  try {
+    if (!userID) return;
+
+    await connectDB();
+    const user = await User.findOne({ _id: userID });
+
+    if (user.username.trim() === newUsername)
+      return {
+        success: false,
+        message: "New username cannot be the same as your current username",
+      };
+
+    if (!isUsernameValid(newUsername))
+      return { success: false, message: "Invalid username" };
+
+    user.username = newUsername;
+
+    await user.save();
+
+    return { success: true, message: "Username updated successfully" };
+  } catch (error) {
+    console.log("Error updating username", error);
+    return { success: false, message: "Error updating username" };
   }
 };
 

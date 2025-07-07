@@ -517,10 +517,10 @@ const ComposeNote = ({
               opacity: isOpen
                 ? "1"
                 : note.content && !note.title
-                ? "0"
-                : !note.title && !note.content
-                ? "0"
-                : "1",
+                  ? "0"
+                  : !note.title && !note.content
+                    ? "0"
+                    : "1",
             }}
             contentEditable
             suppressContentEditableWarning
@@ -540,10 +540,10 @@ const ComposeNote = ({
               opacity: isOpen
                 ? "1"
                 : !note.content && note.title
-                ? "0"
-                : !note.title && !note.content
-                ? "0"
-                : "1",
+                  ? "0"
+                  : !note.title && !note.content
+                    ? "0"
+                    : "1",
               minHeight: "30px",
               transition: "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)",
             }}
@@ -561,6 +561,7 @@ const ComposeNote = ({
           />
         </div>
         <ComposeTools
+          isOpen={isOpen}
           setIsOpen={setIsOpen}
           setNote={setNote}
           note={note}

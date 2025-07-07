@@ -2,11 +2,9 @@ import React from "react";
 import "../assets/styles/globals.css";
 import AuthProvider from "@/components/others/AuthProvider";
 import { AppProvider } from "@/context/AppContext";
-import Navbar from "@/components/others/Navbar";
-import Sidebar from "@/components/others/Sidebar";
+import { SearchProvider } from "@/context/SearchContext";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/utils/authOptions";
-import { SearchProvider } from "@/context/SearchContext";
 
 export const metadata = {
   title: "Notopia",
@@ -14,6 +12,8 @@ export const metadata = {
 
 const MainLayout = async ({ children }) => {
   const session = await getServerSession(authOptions);
+  const initialUser = session?.user;
+
   return (
     <html lang="en">
       <head>
@@ -26,7 +26,7 @@ const MainLayout = async ({ children }) => {
       </head>
       <body suppressHydrationWarning>
         <AuthProvider>
-          <AppProvider>
+          <AppProvider initialUser={initialUser}>
             <div id="tooltipPortal" />
             <div id="snackbarPortal" />
             <SearchProvider>

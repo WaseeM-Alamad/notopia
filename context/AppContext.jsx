@@ -19,8 +19,9 @@ import { createClient } from "@supabase/supabase-js";
 
 const AppContext = createContext();
 
-export function AppProvider({ children }) {
+export function AppProvider({ children, initialUser }) {
   const { data: session, status } = useSession();
+  const [user, setUser] = useState(initialUser);
   const [currentSection, setCurrentSection] = useState("Home");
   const [loadingImages, setLoadingImages] = useState(new Set());
   const [labelsReady, setLabelsReady] = useState(false);
@@ -32,7 +33,7 @@ export function AppProvider({ children }) {
   const labelLookUPRef = useRef(new Map());
   const ignoreKeysRef = useRef(null);
   const labelObjRef = useRef(null);
-  
+
   const modalOpenRef = useRef(null);
 
   const getLabels = async () => {
@@ -377,6 +378,8 @@ export function AppProvider({ children }) {
         loadingImages,
         setLoadingImages,
         labelObjRef,
+        user,
+        setUser,
       }}
     >
       {children}

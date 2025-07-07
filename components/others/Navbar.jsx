@@ -28,7 +28,7 @@ import SearchIcon from "../icons/SearchIcon";
 import InputSearchIcon from "../icons/InputSearchIcon";
 import LeftArrow from "../icons/LeftArrow";
 
-const Navbar = ({ user }) => {
+const Navbar = () => {
   const {
     labelSearchTerm,
     setLabelSearchTerm,
@@ -46,6 +46,8 @@ const Navbar = ({ user }) => {
     isFiltered,
     currentSection,
     modalOpenRef,
+    user,
+    setUser,
   } = useAppContext();
   const [isLoading, setIsLoading] = useState(0);
   const [UpToDatetrigger, setUpToDateTrigger] = useState(true);
@@ -225,7 +227,7 @@ const Navbar = ({ user }) => {
     return decodeURIComponent(decodeURIComponent(str));
   };
 
-  const [inputPlaceHolder, setInputPlaceHolder] = useState("Search");
+  const [inputPlaceHolder, setInputPlaceHolder] = useState("Search notes");
 
   useEffect(() => {
     const handler = () => {
@@ -277,7 +279,7 @@ const Navbar = ({ user }) => {
       } else if (currentSection?.toLowerCase() === "labels") {
         setInputPlaceHolder("Search labels");
       } else {
-        setInputPlaceHolder("Search");
+        setInputPlaceHolder("Search notes");
       }
     };
 
@@ -755,6 +757,7 @@ const Navbar = ({ user }) => {
             settingsRef={settingsRef}
             setIsOpen={setSettingsOpen}
             user={user}
+            setUser={setUser}
           />
         )}
       </AnimatePresence>

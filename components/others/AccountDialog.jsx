@@ -7,7 +7,7 @@ import AccountSettings from "./AccountSettings";
 import SecuritySettings from "./SecuritySettings";
 import DeleteAccSettings from "./DeleteAccSettings";
 
-const AccountDialog = ({ settingsRef, setIsOpen, user }) => {
+const AccountDialog = ({ settingsRef, setIsOpen, user, setUser }) => {
   const [isMounted, setIsMounted] = useState(false);
   const containerRef = useRef(null);
 
@@ -142,33 +142,29 @@ const AccountDialog = ({ settingsRef, setIsOpen, user }) => {
             })}
           </div>
         </div>
-        <form className="settings-form">
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              height: "100%",
-              width: "100%",
-            }}
-          >
-            <div className="settings-right-panel">
-              {sections.map((Component, index) => {
-                const selected = index === selectedSection;
-                return (
-                  <Component key={Component} selected={selected} rightHeader={rightHeader} user={user}/>
-                );
-              })}
-            </div>
-            {selectedSection !== 3 && (
-              <div className="settings-bottom-btns">
-                <div className="settings-bottom-btn settings-cancel">
-                  Cancel
-                </div>
-                <div className="settings-bottom-btn">Save Changes</div>
-              </div>
-            )}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            height: "100%",
+            width: "100%",
+          }}
+        >
+          <div className="settings-right-panel">
+            {sections.map((Component, index) => {
+              const selected = index === selectedSection;
+              return (
+                <Component
+                  key={Component}
+                  selected={selected}
+                  rightHeader={rightHeader}
+                  user={user}
+                  setUser={setUser}
+                />
+              );
+            })}
           </div>
-        </form>
+        </div>
       </motion.div>
     </>,
     document.getElementById("modal-portal")
