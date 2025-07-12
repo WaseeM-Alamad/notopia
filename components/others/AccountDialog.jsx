@@ -1,6 +1,5 @@
 import React, { memo, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import "@/assets/styles/modal.css";
 import { motion } from "framer-motion";
 import PhotoSettings from "./PhotoSettings";
 import AccountSettings from "./AccountSettings";
@@ -86,15 +85,15 @@ const AccountDialog = ({ settingsRef, setIsOpen, user, setUser }) => {
       <motion.div
         ref={settingsRef}
         initial={{
-          transform: "translate(-50%, -40%) scale(0.97)",
+          transform: "translate(-50%, -45%) scale(0.97)",
           opacity: 0,
         }}
         animate={{
-          transform: "translate(-50%, -40%) scale(1)",
+          transform: "translate(-50%, -45%) scale(1)",
           opacity: 1,
         }}
         exit={{
-          transform: "translate(-50%, -40%) scale(0.97)",
+          transform: "translate(-50%, -45%) scale(0.97)",
           opacity: 0,
         }}
         transition={{ type: "spring", stiffness: 700, damping: 50, mass: 1 }}
@@ -155,7 +154,7 @@ const AccountDialog = ({ settingsRef, setIsOpen, user, setUser }) => {
               const selected = index === selectedSection;
               return (
                 <Component
-                  key={Component}
+                  key={index}
                   selected={selected}
                   rightHeader={rightHeader}
                   user={user}

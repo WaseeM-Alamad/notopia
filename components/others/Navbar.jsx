@@ -723,9 +723,9 @@ const Navbar = () => {
                 <>
                   <span style={{ fontSize: "0.85rem" }}>Notopia account</span>
                   <div style={{ opacity: "0.7", paddingTop: "0.2rem" }}>
-                    {user.name}
+                    {user?.name}
                     <br />
-                    {user.email}
+                    {user?.email}
                   </div>
                 </>
               )

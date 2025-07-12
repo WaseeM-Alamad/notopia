@@ -97,8 +97,9 @@ export const authOptions = {
           return {
             id: user._id.toString(),
             email: user.email,
+            tempEmail: user.tempEmail,
             name: user.username,
-            image: user.image,
+            image: user?.image,
           };
         } catch (error) {
           console.log("error signing in", error);
@@ -148,9 +149,22 @@ export const authOptions = {
       return true;
     },
 
-    async session({ session }) {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.name = user.name;
+        token.email = user.email;
+        token.picture = user.image;
+        token.tempEmail = user.tempEmail;
+      }
+      return token;
+    },
+
+    async session({ session, token }) {
       await connectDB();
-      const user = await User.findOne({ email: session.user.email });
+
+      const userId = session.user.id || token.id;
+      const user = await User.findById(userId);
 
       function getInitials(username) {
         if (!username) return "";
@@ -158,12 +172,23 @@ export const authOptions = {
         return clean.slice(0, 2).toUpperCase();
       }
 
+      const userImage =
+        user?.image ||
+        `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><rect width='100' height='100' fill='%23607fde'/><text x='48' y='50' font-size='40' text-anchor='middle' dominant-baseline='central' fill='white' font-family='Arial'>${getInitials(user?.username)}</text></svg>`;
+
       if (user) {
         session.user.id = user._id.toString();
         session.user.name = user.username;
-        session.user.image =
-          user.image ||
-          `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><rect width='100' height='100' fill='%23607fde'/><text x='48' y='50' font-size='40' text-anchor='middle' dominant-baseline='central' fill='white' font-family='Arial'>${getInitials(user.username) || ""}</text></svg>`;
+        session.user.email = user.email; // This will be the updated email from DB
+        session.user.image = userImage;
+        session.user.tempEmail = user.tempEmail;
+      } else {
+        // fallback from token if user not found
+        session.user.id = token.id;
+        session.user.name = token.name;
+        session.user.email = token.email;
+        session.user.image = token.picture || userImage;
+        session.user.tempEmail = token.tempEmail;
       }
 
       return session;

@@ -1,23 +1,15 @@
 import React, { memo, useCallback, useRef, useState } from "react";
-import PersonAdd from "../icons/PersonAdd";
-import Bell from "../icons/Bell";
-import ArchiveIcon from "../icons/ArchiveIcon";
-import ImageIcon from "../icons/ImageIcon";
 import Button from "../Tools/Button";
-import ColorIcon from "../icons/ColorIcon";
-import MoreVert from "../icons/MoreVert";
 import ColorSelectMenu from "./ColorSelectMenu";
 import BackIcon from "../icons/BackIcon";
 import { DeleteNoteAction, NoteUpdateAction } from "@/utils/actions";
 import { createClient } from "@supabase/supabase-js";
 import { v4 as uuid } from "uuid";
-import { useSession } from "next-auth/react";
 import { AnimatePresence } from "framer-motion";
-import ModalMenu from "./ModalMenu";
-import ManageLabelsMenu from "./ManageLabelsMenu";
 import ManageModalLabels from "./ManageModalLabels";
 import DeleteModal from "./DeleteModal";
 import { useAppContext } from "@/context/AppContext";
+import MoreMenu from "./MoreMenu";
 
 const ModalTools = ({
   localNote,
@@ -40,15 +32,14 @@ const ModalTools = ({
   handleUndo,
   handleRedo,
 }) => {
-  const { loadingImages, setLoadingImages } = useAppContext();
+  const { setLoadingImages, user } = useAppContext();
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
   const [colorAnchorEl, setColorAnchorEl] = useState(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [labelsOpen, setLabelsOpen] = useState(false);
-  const { data: session } = useSession();
-  const userID = session?.user?.id;
+  const userID = user?.id;
   const closeRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -247,6 +238,160 @@ const ModalTools = ({
     window.dispatchEvent(new Event("loadingEnd"));
   };
 
+  const handleTrashNote = async (e) => {
+    trashRef.current = true;
+    setIsOpen(false);
+    setMoreMenuOpen(false);
+  };
+
+  const handleLabels = () => {
+    setLabelsOpen(true);
+    setMoreMenuOpen(false);
+  };
+
+  const handleMakeCopy = (e) => {
+    noteActions({
+      type: "COPY_NOTE",
+      setMoreMenuOpen: setMoreMenuOpen,
+      note: note,
+    });
+  };
+
+  const handleAddCheckboxes = async () => {
+    const newUUID = uuid();
+    const checkbox = {
+      uuid: newUUID,
+      content: "List item",
+      isCompleted: false,
+      parent: null,
+      children: [],
+    };
+
+    setLocalNote((prev) => ({
+      ...prev,
+      checkboxes: [...prev.checkboxes, checkbox],
+    }));
+
+    setMoreMenuOpen(false);
+
+    window.dispatchEvent(new Event("loadingStart"));
+    await NoteUpdateAction({
+      type: "checkboxes",
+      operation: "ADD",
+      value: checkbox,
+      noteUUIDs: [note.uuid],
+    });
+    window.dispatchEvent(new Event("loadingEnd"));
+  };
+
+  const uncheckAllitems = async () => {
+    const newCheckboxArr = localNote?.checkboxes.map((checkbox) => {
+      if (!checkbox.isCompleted) return checkbox;
+      return { ...checkbox, isCompleted: false };
+    });
+
+    setLocalNote((prev) => ({ ...prev, checkboxes: newCheckboxArr }));
+
+    setMoreMenuOpen(false);
+    window.dispatchEvent(new Event("loadingStart"));
+    await NoteUpdateAction({
+      type: "checkboxes",
+      operation: "UNCHECK_ALL",
+      noteUUIDs: [note.uuid],
+    });
+    window.dispatchEvent(new Event("loadingEnd"));
+  };
+
+  const deleteCheckedItems = async () => {
+    const newCheckboxArr = localNote?.checkboxes.filter(
+      (ch) => !ch.isCompleted
+    );
+
+    setLocalNote((prev) => ({ ...prev, checkboxes: newCheckboxArr }));
+
+    setMoreMenuOpen(false);
+    window.dispatchEvent(new Event("loadingStart"));
+    await NoteUpdateAction({
+      type: "checkboxes",
+      operation: "DELETE_CHECKED",
+      noteUUIDs: [note.uuid],
+    });
+    window.dispatchEvent(new Event("loadingEnd"));
+  };
+
+  const handleCheckboxVis = async () => {
+    setLocalNote((prev) => ({ ...prev, showCheckboxes: !prev.showCheckboxes }));
+    setMoreMenuOpen(false);
+    window.dispatchEvent(new Event("loadingStart"));
+    await NoteUpdateAction({
+      type: "showCheckboxes",
+      value: !note.showCheckboxes,
+      noteUUIDs: [note.uuid],
+    });
+    window.dispatchEvent(new Event("loadingEnd"));
+  };
+
+  const menuItems = [
+    {
+      title: "Delete note",
+      function: handleTrashNote,
+      icon: "trash-menu-icon",
+    },
+    {
+      title: localNote?.labels.length === 0 ? "Add label" : "Change labels",
+      function: handleLabels,
+      icon: "label-menu-icon",
+    },
+    {
+      title: !localNote?.isTrash
+        ? localNote?.checkboxes.some((checkbox) => checkbox.isCompleted)
+          ? "Uncheck all items"
+          : ""
+        : "",
+      function: uncheckAllitems,
+      icon: "uncheck-checkbox-menu-icon",
+    },
+    {
+      title: !localNote?.isTrash
+        ? localNote?.checkboxes.some((checkbox) => checkbox.isCompleted)
+          ? "Delete checked items"
+          : ""
+        : "",
+      function: deleteCheckedItems,
+      icon: "delete-checkbox-menu-icon",
+    },
+    {
+      title: !localNote?.isTrash
+        ? localNote?.checkboxes.length > 0
+          ? localNote?.showCheckboxes
+            ? "Hide checkboxes"
+            : "Show checkboxes"
+          : ""
+        : "",
+      function: handleCheckboxVis,
+      icon:
+        localNote?.checkboxes.length > 0
+          ? localNote?.showCheckboxes
+            ? "hide-checkbox-menu-icon"
+            : "add-checkbox-menu-icon"
+          : "",
+    },
+    {
+      title: !localNote?.isTrash
+        ? localNote?.checkboxes.length === 0
+          ? "Add checkboxes"
+          : ""
+        : "",
+      function: handleAddCheckboxes,
+      icon: "add-checkbox-menu-icon",
+    },
+    {
+      title: "Make a copy",
+      function: handleMakeCopy,
+      icon: "copy-menu-icon",
+    },
+  ];
+
   return (
     <>
       <div style={{ opacity: !isOpen && "0" }} className={`modal-bottom`}>
@@ -354,16 +499,11 @@ const ModalTools = ({
       </div>
       <AnimatePresence>
         {moreMenuOpen && !labelsOpen && (
-          <ModalMenu
+          <MoreMenu
             setIsOpen={setMoreMenuOpen}
-            setModalOpen={setIsOpen}
             anchorEl={anchorEl}
-            trashRef={trashRef}
             isOpen={moreMenuOpen}
-            setLabelsOpen={setLabelsOpen}
-            openSnackFunction={openSnackFunction}
-            note={note}
-            noteActions={noteActions}
+            menuItems={menuItems}
           />
         )}
       </AnimatePresence>

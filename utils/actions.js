@@ -45,7 +45,7 @@ const isUsernameValid = (val) => {
     val.trim() === val &&
     val.length >= 3 &&
     val.length <= 30 &&
-    /^[a-zA-Z]/.test(val) &&
+    /^\p{L}/u.test(val) &&
     !/[=<>\/"]/.test(val)
   );
 };
@@ -68,7 +68,7 @@ export const signUpAction = async (formData) => {
     if (!isPasswordValid(password))
       return { success: false, type: "password", message: "Invalid password" };
 
-    const hashedPassoword = await hashPassword(password);
+    const hashedPassword = await hashPassword(password);
     const token = nanoid(32);
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
@@ -85,7 +85,7 @@ export const signUpAction = async (formData) => {
     await User.create({
       email: email,
       username: username,
-      password: hashedPassoword,
+      password: hashedPassword,
       token: token,
       tokenExpDate: expiresAt,
     });
@@ -238,9 +238,6 @@ export const sendResetPassAction = async (receivedEmail) => {
             <a href="${link}" style="display: inline-block; background-color: #4F46E5; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 500;">
               Reset Password
             </a>
-            <p style="margin-top: 24px; font-size: 14px; color: #6b7280;">
-              This link will expire in 15 minutes. If you didn’t request this, you can safely ignore it.
-            </p>
           </div>
           <p style="text-align: center; margin-top: 32px; font-size: 12px; color: #9ca3af;">
             &copy; ${new Date().getFullYear()} Notopia. All rights reserved.
@@ -275,6 +272,8 @@ export const verifyTokenAction = async (receivedToken) => {
         message: "User not found.",
       };
 
+    const userTempEmail = user.tempEmail;
+
     let result = {
       success: false,
       status: 401,
@@ -284,6 +283,12 @@ export const verifyTokenAction = async (receivedToken) => {
     if (user.tokenExpDate && new Date(user.tokenExpDate) > new Date()) {
       user.isVerified = true;
       result = { success: true, status: 200, message: "Email verified." };
+
+      if (userTempEmail) {
+        user.email = userTempEmail;
+        user.tempEmail = null;
+        result.email = userTempEmail;
+      }
 
       user.token = null;
       user.tokenExpDate = null;
@@ -334,7 +339,11 @@ export const updateUsernameAction = async (newUsername) => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
   try {
-    if (!userID) return;
+    if (!userID)
+      return {
+        success: false,
+        message: "An error has occurred",
+      };
 
     await connectDB();
     const user = await User.findOne({ _id: userID });
@@ -359,6 +368,178 @@ export const updateUsernameAction = async (newUsername) => {
   }
 };
 
+export const updatePasswordAction = async ({
+  currentPass,
+  newPass,
+  confirmNewPass,
+}) => {
+  const session = await getServerSession(authOptions);
+  const userID = session?.user?.id;
+  try {
+    if (!userID)
+      return {
+        success: false,
+        type: "current",
+        message: "An error has occurred",
+      };
+
+    await connectDB();
+
+    if (currentPass === newPass)
+      return {
+        success: false,
+        type: "new",
+        message: "New password cannot be the same as your current password",
+      };
+
+    if (!isPasswordValid(newPass)) {
+      return { success: false, type: "new", message: "Invalid password" };
+    }
+
+    if (!isConfirmPasswordValid(confirmNewPass, newPass)) {
+      return {
+        success: false,
+        type: "confirm",
+        message: "Passwords do not match",
+      };
+    }
+
+    const user = await User.findOne({ _id: userID }).select("+password");
+    const dbPassowrd = user.password;
+
+    if (!dbPassowrd)
+      return {
+        success: false,
+        type: "current",
+        message: "Incorrect password",
+      };
+
+    const isCurrentValid = await bcrypt.compare(currentPass, dbPassowrd);
+
+    if (!isCurrentValid)
+      return {
+        success: false,
+        type: "current",
+        message: "Incorrect password",
+      };
+
+    const hashedPassword = await hashPassword(newPass);
+
+    user.password = hashedPassword;
+
+    await user.save();
+
+    return {
+      success: true,
+      message: "Password updated successfully",
+    };
+  } catch (error) {
+    console.log("Error updating password", error);
+    return {
+      success: false,
+      type: "current",
+      message: "An error has occurred",
+    };
+  }
+};
+
+export const emailNewEmailAction = async ({ password, newEmail }) => {
+  const session = await getServerSession(authOptions);
+  const userID = session?.user?.id;
+  try {
+    if (!userID)
+      return {
+        success: false,
+        type: "both",
+        message: "An error has occurred",
+      };
+
+    if (!isEmailValid(newEmail))
+      return {
+        success: false,
+        type: "email",
+        message: "Invalid email",
+      };
+
+    const user = await User.findOne({ _id: userID }).select(
+      "+password +token +tokenExpDate"
+    );
+
+    if (user.email === newEmail) {
+      return {
+        success: false,
+        type: "email",
+        message: "New email cannot be the same as current email",
+      };
+    }
+
+    const dbPassowrd = user.password;
+
+    if (!dbPassowrd)
+      return {
+        success: false,
+        type: "password",
+        message: "Incorrect password",
+      };
+
+    const isValidPassword = await bcrypt.compare(password, dbPassowrd);
+
+    if (!isValidPassword)
+      return {
+        success: false,
+        type: "password",
+        message: "Incorrect password",
+      };
+
+    const token = nanoid(32);
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
+    user.token = token;
+    user.tokenExpDate = expiresAt;
+    user.tempEmail = newEmail;
+
+    await user.save();
+
+    // const link = `http://localhost:3000/auth/verify?token=${token}`;
+    const link = `https://notopia.app/auth/verify?token=${token}`;
+
+    await resend.emails.send({
+      from: "Notopia <noreply@notopia.app>",
+      to: newEmail,
+      subject: "Verify your new Notopia email address",
+      html: `
+        <div style="font-family: 'Segoe UI', Roboto, sans-serif; padding: 24px; background-color: #f9fafb; color: #111827;">
+          <div style="max-width: 480px; margin: auto; background: white; padding: 32px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+            <h2 style="margin-bottom: 16px; font-size: 24px; color: #111827;">📧 Verify your new email</h2>
+            <p style="margin-bottom: 24px; font-size: 16px;">
+              You requested to update your Notopia account with a new email address. Please click the button below to confirm.
+            </p>
+            <a href="${link}" style="display: inline-block; background-color: #4F46E5; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 500;">
+              Verify Email
+            </a>
+          </div>
+          <p style="text-align: center; margin-top: 32px; font-size: 12px; color: #9ca3af;">
+            &copy; ${new Date().getFullYear()} Notopia. All rights reserved.
+          </p>
+        </div>
+      `,
+    });
+
+    return {
+      success: true,
+      message: "Email sent to new email address successfully",
+      tempEmail: newEmail,
+    };
+  } catch (error) {
+    console.log("Couldn't send verification to new email");
+    return {
+      success: false,
+      type: "both",
+      message: "An error has occurred",
+    };
+  }
+};
+
 export const fetchNotes = async () => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
@@ -370,12 +551,12 @@ export const fetchNotes = async () => {
     await connectDB();
     const notes = await Note.find({ creator: userID }).sort({ createdAt: -1 });
     const user = await User.findById(userID);
-    const order = user.notesOrder;
+    const order = user?.notesOrder || [];
 
     return {
       success: true,
       status: 200,
-      data: JSON.parse(JSON.stringify(notes)),
+      data: JSON.parse(JSON.stringify(notes ?? [])),
       order: order,
     };
   } catch (error) {
@@ -1293,7 +1474,7 @@ export const fetchLabelsAction = async () => {
     await connectDB();
 
     const user = await User.findById(userID);
-    const labels = JSON.parse(JSON.stringify(user?.labels));
+    const labels = JSON.parse(JSON.stringify(user?.labels ?? []));
 
     return {
       success: true,
@@ -1303,6 +1484,7 @@ export const fetchLabelsAction = async () => {
     };
   } catch (error) {
     console.log(error);
+    return { success: false, message: "Couldn't fetch labels", status: 500 };
   }
 };
 

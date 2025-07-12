@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 
 const DeleteAccSettings = ({ rightHeader, selected }) => {
   return (
@@ -6,7 +6,7 @@ const DeleteAccSettings = ({ rightHeader, selected }) => {
       <div className="settings-right-title">{rightHeader().title}</div>
       <div className="settings-right-desc">{rightHeader().desc}</div>
       <div className="settings-delete-account">
-        <div style={{display: 'flex', gap: "1rem"}}>
+        <div style={{ display: "flex", gap: "1rem" }}>
           <div className="red-trash-icon" />
           <div className="delete-acc-info">
             <div
@@ -52,4 +52,4 @@ const DeleteAccSettings = ({ rightHeader, selected }) => {
   );
 };
 
-export default DeleteAccSettings;
+export default memo(DeleteAccSettings);

@@ -27,6 +27,10 @@ const UserSchema = new Schema({
     unique: [true, "Email already exists!"],
     required: [true, "Email is required!"],
   },
+  tempEmail: {
+    type: String,
+    default: null,
+  },
   password: {
     type: String,
     select: false,

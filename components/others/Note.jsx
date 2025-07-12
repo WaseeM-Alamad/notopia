@@ -30,9 +30,8 @@ const Note = memo(
     openSnackFunction,
     index,
   }) => {
-    const { handleLabelNoteCount, labelsRef } = useAppContext();
-    const { data: session } = useSession();
-    const userID = session?.user?.id;
+    const { labelsRef, user } = useAppContext();
+    const userID = user?.id;
     const [colorMenuOpen, setColorMenuOpen] = useState(false);
     const [moreMenuOpen, setMoreMenuOpen] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
@@ -562,8 +561,8 @@ const Note = memo(
               selected
                 ? "element-selected"
                 : note.color === "Default"
-                ? "default-border"
-                : "transparent-border"
+                  ? "default-border"
+                  : "transparent-border"
             }`}
             style={{ opacity: selected ? "1" : "0" }}
           />

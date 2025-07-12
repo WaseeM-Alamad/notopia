@@ -1,6 +1,5 @@
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import "@/assets/styles/modal.css";
 import Button from "../Tools/Button";
 import PinIcon from "../icons/PinIcon";
 import { getNoteFormattedDate } from "@/utils/noteDateFormatter";
@@ -20,7 +19,7 @@ import { v4 as uuid } from "uuid";
 import ListItemsLayout from "./ListitemsLayout";
 import { useSearch } from "@/context/SearchContext";
 
-const Modal = ({
+const NoteModal = ({
   localNote,
   setLocalNote,
   filters,
@@ -40,7 +39,8 @@ const Modal = ({
   labelObj,
   skipSetLabelObjRef,
 }) => {
-  const { handleLabelNoteCount, labelsRef, ignoreKeysRef } = useAppContext();
+  const { handleLabelNoteCount, labelsRef, ignoreKeysRef, user } =
+    useAppContext();
   const { skipHashChangeRef, searchTerm } = useSearch();
   const [isMounted, setIsMounted] = useState(false);
   const [localIsPinned, setLocalIsPinned] = useState(null);
@@ -55,8 +55,7 @@ const Modal = ({
     ? getNoteFormattedDate(note?.createdAt)
     : null;
 
-  const { data: session } = useSession();
-  const userID = session?.user?.id;
+  const userID = user?.id;
   const titleRef = useRef(null);
   const contentRef = useRef(null);
   const modalRef = useRef(null);
@@ -528,8 +527,8 @@ const Modal = ({
           localIsPinned ? "Note unpinned and trashed" : "Note trashed"
         }`,
         snackOnClose: onClose,
+        snackOnUndo: undoTrash,
         unloadWarn: true,
-        showUndo: false,
       });
     }
     trashRef.current = false;
@@ -1129,4 +1128,4 @@ const Modal = ({
   );
 };
 
-export default memo(Modal);
+export default memo(NoteModal);

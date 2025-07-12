@@ -33,10 +33,9 @@ const TopMenuHome = ({
   functionRefs,
   currentSection,
 }) => {
-  const { batchNoteCount } = useAppContext();
+  const { batchNoteCount, user } = useAppContext();
   const { filters } = useSearch();
-  const { data: session } = useSession();
-  const userID = session?.user?.id;
+  const userID = user?.id;
   const [colorAnchorEl, setColorAnchorEl] = useState(null);
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);

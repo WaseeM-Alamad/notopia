@@ -27,9 +27,8 @@ const FilteredNote = memo(
     index,
   }) => {
     const { searchTerm } = useSearch();
-    const { handleLabelNoteCount, labelsRef } = useAppContext();
-    const { data: session } = useSession();
-    const userID = session?.user?.id;
+    const { labelsRef, user } = useAppContext();
+    const userID = user?.id;
     const [colorMenuOpen, setColorMenuOpen] = useState(false);
     const [moreMenuOpen, setMoreMenuOpen] = useState(false);
     const [selected, setSelected] = useState(

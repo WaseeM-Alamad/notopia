@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 
 const PhotoSettings = ({ rightHeader, selected, user }) => {
   return (
@@ -34,22 +34,8 @@ const PhotoSettings = ({ rightHeader, selected, user }) => {
           </div>
         </div>
       </div>
-      <div className="settings-bottom-btns">
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            setIsOpen(false);
-          }}
-          className="settings-bottom-btn settings-cancel"
-        >
-          Cancel
-        </button>
-        <button type="submit" disabled={true} className="settings-bottom-btn">
-          Save Changes
-        </button>
-      </div>
     </div>
   );
 };
 
-export default PhotoSettings;
+export default memo(PhotoSettings);

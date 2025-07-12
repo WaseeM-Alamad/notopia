@@ -1,4 +1,3 @@
-import { useSession } from "next-auth/react";
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Button from "../Tools/Button";
@@ -9,6 +8,10 @@ import { createNoteAction } from "@/utils/actions";
 import { createClient } from "@supabase/supabase-js";
 import ComposeTools from "./ComposeTools";
 import { debounce } from "lodash";
+import { useAppContext } from "@/context/AppContext";
+import { AnimatePresence } from "framer-motion";
+import MoreMenu from "./MoreMenu";
+import ManageLabelsCompose from "./ManageLabelsCompose";
 
 const ComposeNote = ({
   dispatchNotes,
@@ -18,11 +21,11 @@ const ComposeNote = ({
   lastAddedNoteRef,
   openSnackFunction,
 }) => {
-  const { data: session } = useSession();
+  const { user, labelsRef } = useAppContext();
   const [isClient, setIsClient] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isOpen2, setIsOpen2] = useState(false);
-  const userID = session?.user?.id;
+  const userID = user?.id;
   const [note, setNote] = useState({
     uuid: "",
     title: "",
@@ -42,6 +45,9 @@ const ComposeNote = ({
   const [selectedColor, setSelectedColor] = useState("Default");
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  const [labelsOpen, setLabelsOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(false);
   const modalRef = useRef(null);
   const titleRef = useRef(null);
   const contentRef = useRef(null);
@@ -248,7 +254,10 @@ const ComposeNote = ({
         "all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1)";
 
       const noteEmpty =
-        !note.title && !note.content && note.images.length === 0;
+        !note.title &&
+        !note.content &&
+        note.images.length === 0 &&
+        note.labels.length === 0;
 
       if (noteEmpty) {
         modalRef.current.style.marginTop = "-8px";
@@ -462,6 +471,58 @@ const ComposeNote = ({
     }
   };
 
+  const handleMouseEnter = (e, text) => {
+    const target = e.currentTarget;
+    setTooltipAnchor({ anchor: target, text: text, display: true });
+  };
+
+  const handleMouseLeave = () => {
+    setTooltipAnchor((prev) => ({
+      ...prev,
+      display: false,
+    }));
+  };
+
+  const closeToolTip = () => {
+    setTooltipAnchor((prev) => ({
+      anchor: null,
+      text: prev?.text,
+    }));
+  };
+
+  const removeLabel = (labelUUID) => {
+    const newLabels = note?.labels.filter(
+      (noteLabelUUID) => noteLabelUUID !== labelUUID
+    );
+    setNote((prev) => ({ ...prev, labels: newLabels }));
+    // handleLabelNoteCount(labelUUID, "decrement");
+  };
+
+  const handleLabelClick = (e, label) => {
+    e.stopPropagation();
+    setIsOpen(false)
+    const encodedLabel = encodeURIComponent(label);
+    window.location.hash = `label/${encodedLabel.toLowerCase()}`;
+  };
+
+  const handleLabels = () => {
+    setMoreMenuOpen(false);
+    setLabelsOpen(true);
+  };
+
+  const menuItems = [
+    {
+      title: note.labels.length === 0 ? "Add label" : "Change labels",
+      function: handleLabels,
+      icon: "label-menu-icon",
+    },
+    {
+      title: "Show checkboxes",
+      function: () => setMoreMenuOpen(false),
+      icon: "add-checkbox-menu-icon",
+    },
+  ];
+
   if (!isClient) return;
 
   return createPortal(
@@ -559,6 +620,49 @@ const ComposeNote = ({
             aria-label="Note"
             spellCheck="false"
           />
+          {note?.labels?.length > 0 && (
+            <div
+              style={{ paddingBottom: "0.8rem" }}
+              className="note-labels-container"
+            >
+              {note?.labels
+                .sort((a, b) => {
+                  const labelsMap = labelsRef.current;
+                  const labelA = labelsMap.get(a)?.label || "";
+                  const labelB = labelsMap.get(b)?.label || "";
+                  return labelA.localeCompare(labelB);
+                })
+                .map((labelUUID, index) => {
+                  const label = labelsRef.current.get(labelUUID)?.label;
+                  return (
+                    <div
+                      onClick={(e) => handleLabelClick(e, label)}
+                      key={labelUUID}
+                      className={[
+                        "label-wrapper",
+                        !note?.isTrash && "label-wrapper-h",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                    >
+                      <label className="note-label">{label}</label>
+                      <div
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          closeToolTip();
+                          removeLabel(labelUUID);
+                        }}
+                        onMouseEnter={(e) =>
+                          handleMouseEnter(e, "Remove label")
+                        }
+                        onMouseLeave={handleMouseLeave}
+                        className="remove-label"
+                      />
+                    </div>
+                  );
+                })}
+            </div>
+          )}
         </div>
         <ComposeTools
           isOpen={isOpen}
@@ -573,8 +677,32 @@ const ComposeNote = ({
           undoStack={undoStack}
           handleUndo={handleUndo}
           handleRedo={handleRedo}
+          setAnchorEl={setAnchorEl}
+          setMoreMenuOpen={setMoreMenuOpen}
+          setLabelsOpen={setLabelsOpen}
         />
       </div>
+      <AnimatePresence>
+        {moreMenuOpen && !labelsOpen && (
+          <MoreMenu
+            setIsOpen={setMoreMenuOpen}
+            anchorEl={anchorEl}
+            isOpen={moreMenuOpen}
+            menuItems={menuItems}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {labelsOpen && (
+          <ManageLabelsCompose
+            note={note}
+            setNote={setNote}
+            isOpen={labelsOpen}
+            setIsOpen={setLabelsOpen}
+            anchorEl={anchorEl}
+          />
+        )}
+      </AnimatePresence>
     </>,
     document.getElementById("modal-portal")
   );

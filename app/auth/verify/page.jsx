@@ -2,20 +2,27 @@
 
 import HorizontalLoader from "@/components/Tools/HorizontalLoader";
 import Modal from "@/components/Tools/Modal";
+import { useAppContext } from "@/context/AppContext";
 import { verifyTokenAction } from "@/utils/actions";
 import { CircularProgress } from "@mui/material";
 import { motion } from "framer-motion";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 const Page = () => {
   const router = useRouter();
 
+  const { setUser, session, status } = useAppContext();
+
   const [isExpired, setIsExpired] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [loginIsLoading, setLoginIsLoading] = useState(false);
+  const [executedVerify, setExecutedVerify] = useState(false);
 
   useEffect(() => {
+    if (status === "loading" || executedVerify) return;
+    setExecutedVerify(true);
     const params = new URLSearchParams(window.location.search);
     const token = params.get("token");
     if (!token) {
@@ -25,13 +32,16 @@ const Page = () => {
     }
 
     const verify = async () => {
-      const { success } = await verifyTokenAction(token);
+      const { success, email } = await verifyTokenAction(token);
+      if (session && email && success) {
+        setUser((prev) => ({ ...prev, email: email, tempEmail: null }));
+      }
       setIsExpired(!success);
       setIsLoading(false);
     };
 
     verify();
-  }, []);
+  }, [session]);
 
   return (
     <>
@@ -76,15 +86,13 @@ const Page = () => {
                   : "Email verified"
                 : "Please wait..."}
             </div>
-            {
-              isLoading ? (
-                <HorizontalLoader color="#2b2663" size={0.8} />
-              ) : isExpired ? (
-                <div style={{ fontSize: "1rem" }}>
-                  Please sign in to resend the link
-                </div>
-              ) : null
-            }
+            {isLoading ? (
+              <HorizontalLoader color="#2b2663" size={0.8} />
+            ) : isExpired ? (
+              <div style={{ fontSize: "1rem" }}>
+                Please sign in to resend the link
+              </div>
+            ) : null}
           </div>
           {!isLoading && (
             <div

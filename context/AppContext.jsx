@@ -49,6 +49,11 @@ export function AppProvider({ children, initialUser }) {
   };
 
   useEffect(() => {
+    setUser(session?.user);
+  }, [session, status]);
+
+  useEffect(() => {
+    console.log("user", initialUser);
     const savedLayout = localStorage.getItem("layout");
     if (!savedLayout) {
       localStorage.setItem("layout", "grid");
@@ -380,6 +385,8 @@ export function AppProvider({ children, initialUser }) {
         labelObjRef,
         user,
         setUser,
+        session,
+        status,
       }}
     >
       {children}

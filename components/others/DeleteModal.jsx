@@ -1,6 +1,5 @@
 import React, { memo, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import "@/assets/styles/modal.css";
 import { motion } from "framer-motion";
 
 const DeleteModal = ({ setIsOpen, handleDelete, title, message }) => {

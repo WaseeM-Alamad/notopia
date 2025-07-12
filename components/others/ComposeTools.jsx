@@ -24,6 +24,9 @@ const AddModalTools = ({
   undoStack,
   handleUndo,
   handleRedo,
+  setAnchorEl,
+  setMoreMenuOpen,
+  setLabelsOpen,
 }) => {
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
   const [colorAnchorEl, setColorAnchorEl] = useState();
@@ -72,7 +75,7 @@ const AddModalTools = ({
   );
 
   return (
-    <div style={{ opacity: isOpen ? "1": "0" }} className="modal-bottom">
+    <div style={{ opacity: isOpen ? "1" : "0" }} className="modal-bottom">
       {/* <p className="date">{FormattedDate}</p> */}
       <div className="modal-bottom-icons">
         <Button
@@ -157,6 +160,12 @@ const AddModalTools = ({
           )}
         </AnimatePresence>
         <Button
+          onClick={(e) => {
+            closeToolTip();
+            setAnchorEl(e.currentTarget);
+            setMoreMenuOpen((prev) => !prev);
+            setLabelsOpen(false);
+          }}
           onMouseEnter={(e) => handleMouseEnter(e, "More")}
           onMouseLeave={handleMouseLeave}
           className="more-icon btn-hover"
