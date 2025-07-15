@@ -594,6 +594,10 @@ svg {
   height: 100dvh;
 }
 
+.dark-mode .auth-background {
+  background-color: #3a5bb5;
+}
+
 .login-container {
   height: 95%;
   width: 95%;
@@ -1851,10 +1855,6 @@ aside {
 
 .dark-mode .default-border {
   border-color: rgb(95, 99, 104) !important;
-}
-
-.transparent-border {
-  border-color: transparent;
 }
 
 .starting-div-header {
@@ -4487,4 +4487,70 @@ img {
   font-size: 0.9rem;
   font-weight: 500;
   color: #646769;
+}
+
+.drop-overlay {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 99;
+  border-radius: 0.7rem;
+}
+
+.drop-zone-content {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 1rem;
+  box-sizing: border-box;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  border-radius: 0.7rem;
+}
+
+.dark-mode .drop-zone-content {
+  background-color: rgb(23, 23, 23);
+}
+
+.drop-text {
+  font-size: 1.15rem;
+  font-weight: bold;
+  color: #6c8dd3;
+}
+
+.drop-zone-outline {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.animated-dash {
+  fill: none;
+  stroke: #6c8dd3;
+  stroke-width: 3;
+  stroke-dasharray: 10 5;
+  animation: dash-move 3s linear infinite;
+}
+
+@keyframes dash-move {
+  to {
+    stroke-dashoffset: -60;
+  }
+}
+
+.transparent-border {
+  border-color: transparent !important;
 }

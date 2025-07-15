@@ -10,6 +10,7 @@ import { Resend } from "resend";
 import { nanoid } from "nanoid";
 import bcrypt from "bcryptjs";
 import isEmail from "validator/lib/isEmail";
+import cloudinary from "@/config/cloudinary";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -571,17 +572,12 @@ export const createNoteAction = async (note) => {
   if (!session) {
     return new Response("Unauthorized", { status: 401 });
   }
-  const starter =
-    "https://fopkycgspstkfctmhyyq.supabase.co/storage/v1/object/public/notopia";
-  const images = note.images.map((image) => ({
-    url: `${starter}/${userID}/${note.uuid}/${image.uuid}`,
-    uuid: image.uuid,
-  }));
+
   try {
     await connectDB();
     const noteData = {
       ...note,
-      images: images,
+      images: [],
       creator: userID,
     };
     const newNote = new Note(noteData);
@@ -951,18 +947,14 @@ export const NoteImageDeleteAction = async (filePath, noteUUID, imageID) => {
   if (!session) {
     return new Response("Unauthorized", { status: 401 });
   }
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_SUPABASE_SERVICE_ROLE_KEY
-  );
-
   try {
     await connectDB();
     await Note.updateOne(
       { uuid: noteUUID, "images.uuid": imageID, creator: userID },
       { $pull: { images: { uuid: imageID } } }
     );
-    await supabase.storage.from("notopia").remove([filePath]);
+
+    await cloudinary.uploader.destroy(filePath);
   } catch (error) {
     console.log("Error removing note.", error);
   }
@@ -974,11 +966,6 @@ export const DeleteNoteAction = async (noteUUID) => {
   if (!session) {
     return new Response("Unauthorized", { status: 401 });
   }
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_SUPABASE_SERVICE_ROLE_KEY
-  );
-
   try {
     await connectDB();
     const note = await Note.findOne({ uuid: noteUUID, creator: userID });
@@ -1003,18 +990,8 @@ export const DeleteNoteAction = async (noteUUID) => {
     }
 
     if (note.images.length !== 0) {
-      const folderPath = `${userID}/${noteUUID}/`;
-      const bucketName = "notopia";
-      const { data: files, error: listError } = await supabase.storage
-        .from(bucketName)
-        .list(folderPath);
-
-      if (listError) {
-        throw listError;
-      }
-
-      const filesToDelete = files.map((file) => `${folderPath}${file.name}`);
-      await supabase.storage.from(bucketName).remove(filesToDelete);
+      const folderPath = `${userID}/${note.uuid}/`;
+      await cloudinary.api.delete_resources_by_prefix(folderPath);
     }
 
     return { success: true, message: "Note deleted successfully" };
@@ -1030,10 +1007,6 @@ export const emptyTrashAction = async () => {
   if (!session) {
     return new Response("Unauthorized", { status: 401 });
   }
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_SUPABASE_SERVICE_ROLE_KEY
-  );
   try {
     await connectDB();
 
@@ -1045,10 +1018,8 @@ export const emptyTrashAction = async () => {
     deletedNotes.map((note) => {
       deletedUUIDs.push(note.uuid);
       deletedLabels.push(...note.labels);
-      note.images.map((imageData) => {
-        const filePath = `${userID}/${note.uuid}/${imageData.uuid}`;
-        deletedImages.push(filePath);
-      });
+      const filePath = `${userID}/${note.uuid}/`;
+      deletedImages.push(filePath);
     });
 
     const labelCountsMap = deletedLabels.reduce((acc, label) => {
@@ -1079,8 +1050,11 @@ export const emptyTrashAction = async () => {
     await User.bulkWrite(bulkOperations);
 
     if (deletedImages.length !== 0) {
-      const bucketName = "notopia";
-      await supabase.storage.from(bucketName).remove(deletedImages);
+      await Promise.all(
+        deletedImages.map((path) => {
+          return cloudinary.api.delete_resources_by_prefix(path);
+        })
+      );
     }
 
     return { success: true, message: "Trash emptied successfully" };
@@ -1166,11 +1140,6 @@ export const undoAction = async (data) => {
       user.notesOrder = updatedOrder;
       await user.save();
     } else if (data.type === "UNDO_COPY") {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL,
-        process.env.NEXT_SUPABASE_SERVICE_ROLE_KEY
-      );
-
       const note = await Note.findOne({ uuid: data.noteUUID, creator: userID });
 
       await User.updateOne(
@@ -1199,17 +1168,7 @@ export const undoAction = async (data) => {
 
       if (data.isImages) {
         const folderPath = `${userID}/${data.noteUUID}/`;
-        const bucketName = "notopia";
-        const { data: files, error: listError } = await supabase.storage
-          .from(bucketName)
-          .list(folderPath);
-
-        if (listError) {
-          throw listError;
-        }
-
-        const filesToDelete = files.map((file) => `${folderPath}${file.name}`);
-        await supabase.storage.from(bucketName).remove(filesToDelete);
+        await cloudinary.api.delete_resources_by_prefix(folderPath);
       }
     } else if (data.type === "UNDO_BATCH_ARCHIVE/TRASH") {
       const updatedOrder = notesOrder.slice(data.selectedNotes.length);
@@ -1251,11 +1210,6 @@ export const undoAction = async (data) => {
       user.notesOrder = updatedOrder;
       await user.save();
     } else if (data.type === "UNDO_BATCH_COPY") {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL,
-        process.env.NEXT_SUPABASE_SERVICE_ROLE_KEY
-      );
-
       const labelCountsMap = data.labelsUUIDs.reduce((acc, label) => {
         acc[label] = acc[label] ? acc[label] + 1 : 1;
         return acc;
@@ -1281,8 +1235,11 @@ export const undoAction = async (data) => {
       ];
 
       if (data.imagesToDel.length !== 0) {
-        const bucketName = "notopia";
-        await supabase.storage.from(bucketName).remove(data.imagesToDel);
+        await Promise.all(
+          data.imagesToDel.map((path) => {
+            return cloudinary.api.delete_resources_by_prefix(path);
+          })
+        );
       }
 
       await Note.deleteMany({
@@ -1302,35 +1259,40 @@ export const copyNoteAction = async (data) => {
   if (!session) {
     return new Response("Unauthorized", { status: 401 });
   }
-  const starter =
-    "https://fopkycgspstkfctmhyyq.supabase.co/storage/v1/object/public/notopia";
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_SUPABASE_SERVICE_ROLE_KEY
-    );
     await connectDB();
     const copiedNote = data.note;
-    const sourceFolder = `${userID}/${data.originalNoteUUID}`;
-    const destinationFolder = `${userID}/${data.newNoteUUID}`;
     let copiedImages = [];
 
     if (copiedNote.images.length !== 0) {
-      for (let i = 0; i < copiedNote.images.length; i++) {
+      const copyPromises = copiedNote.images.map(async (img, i) => {
+        const originalImageUUID = img.uuid;
+        const originalUrl = cloudinary.url(
+          `${userID}/${data.originalNoteUUID}/${originalImageUUID}`
+        );
+
         const newImageUUID = data.newImages[i].uuid;
-        const { error: copyError } = await supabase.storage
-          .from("notopia")
-          .copy(
-            `${sourceFolder}/${copiedNote.images[i].uuid}`,
-            `${destinationFolder}/${newImageUUID}`
-          );
-        if (copyError) throw copyError;
-        const newImage = {
-          url: `${starter}/${userID}/${data.newNoteUUID}/${newImageUUID}`,
-          uuid: newImageUUID,
-        };
-        copiedImages.push(newImage);
-      }
+        const newPublicId = `${userID}/${data.newNoteUUID}/${newImageUUID}`;
+        const newUrl = cloudinary.url(
+          `${userID}/${data.newNoteUUID}/${newImageUUID}`
+        );
+
+        try {
+          await cloudinary.uploader.upload(originalUrl, {
+            public_id: newPublicId,
+            resource_type: "image",
+          });
+
+          copiedImages.push({
+            url: newUrl,
+            uuid: newImageUUID,
+          });
+        } catch (error) {
+          console.warn(`Skipping image ${originalImageUUID}:`, error.message);
+        }
+      });
+
+      await Promise.all(copyPromises);
     }
 
     const noteData = {
@@ -1390,13 +1352,7 @@ export const batchCopyNoteAction = async (data) => {
   if (!session) {
     return new Response("Unauthorized", { status: 401 });
   }
-  const starter =
-    "https://fopkycgspstkfctmhyyq.supabase.co/storage/v1/object/public/notopia";
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_SUPABASE_SERVICE_ROLE_KEY
-    );
     await connectDB();
 
     const allLabels = [];
@@ -1412,14 +1368,24 @@ export const batchCopyNoteAction = async (data) => {
           await Promise.all(
             n.images.map(async (image) => {
               const sourceDes = data.imagesMap.get(image.uuid);
-              const { error: copyError } = await supabase.storage
-                .from("notopia")
-                .copy(
-                  `${userID}/${sourceDes}`,
-                  `${destinationFolder}/${image.uuid}`
+              const originalPublicId = `${userID}/${sourceDes}`;
+              const originalUrl = cloudinary.url(originalPublicId);
+              const destinationPublicId = `${destinationFolder}/${image.uuid}`;
+              const newUrl = cloudinary.url(destinationPublicId);
+
+              try {
+                await cloudinary.uploader.upload(originalUrl, {
+                  public_id: destinationPublicId,
+                  resource_type: "image",
+                });
+
+                image.url = newUrl;
+              } catch (error) {
+                console.warn(
+                  `Skipping image ${originalPublicId}:`,
+                  error.message
                 );
-              if (copyError) throw copyError;
-              image.url = `${starter}/${destinationFolder}/${image.uuid}`;
+              }
             })
           );
         }
@@ -1782,10 +1748,6 @@ export const batchDeleteNotes = async (data) => {
   if (!session) {
     return new Response("Unauthorized", { status: 401 });
   }
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_SUPABASE_SERVICE_ROLE_KEY
-  );
   try {
     await connectDB();
 
@@ -1799,10 +1761,8 @@ export const batchDeleteNotes = async (data) => {
 
     deletedNotes.map((note) => {
       deletedLabels.push(...note.labels);
-      note.images.map((imageData) => {
-        const filePath = `${userID}/${note.uuid}/${imageData.uuid}`;
-        deletedImages.push(filePath);
-      });
+      const filePath = `${userID}/${note.uuid}/`;
+      deletedImages.push(filePath);
     });
 
     const labelCountsMap = deletedLabels.reduce((acc, label) => {
@@ -1836,8 +1796,11 @@ export const batchDeleteNotes = async (data) => {
     await User.bulkWrite(bulkOperations);
 
     if (deletedImages.length !== 0) {
-      const bucketName = "notopia";
-      await supabase.storage.from(bucketName).remove(deletedImages);
+      await Promise.all(
+        deletedImages.map((path) => {
+          return cloudinary.api.delete_resources_by_prefix(path);
+        })
+      );
     }
 
     return { success: true, message: "Trash emptied successfully" };

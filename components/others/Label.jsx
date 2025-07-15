@@ -9,6 +9,7 @@ import DeleteModal from "./DeleteModal";
 import ColorSelectMenu from "./ColorSelectMenu";
 import MoreMenu from "./MoreMenu";
 import { useSearch } from "@/context/SearchContext";
+import ImageDropZone from "../Tools/ImageDropZone";
 
 const Label = ({
   labelData,
@@ -34,6 +35,7 @@ const Label = ({
   } = useAppContext();
   const { labelSearchTerm } = useSearch();
   const [mounted, setMounted] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
   const [anchorEl, setAnchorEL] = useState(null);
   const [colorAnchorEl, setColorAnchorEl] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -425,8 +427,8 @@ const Label = ({
             selected
               ? "element-selected"
               : labelData.color === "Default"
-              ? "default-border"
-              : "transparent-border"
+                ? "default-border"
+                : "transparent-border"
           } ${fadingNotes.has(labelData.uuid) ? "fade-out" : ""} `}
         >
           <div
@@ -643,6 +645,7 @@ const Label = ({
             </div>
           </div>
         </div>
+        <AnimatePresence>{isDragOver && <ImageDropZone />}</AnimatePresence>
       </motion.div>
       <input
         className="labelInput"

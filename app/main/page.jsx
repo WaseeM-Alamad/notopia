@@ -407,13 +407,10 @@ function notesReducer(state, action) {
         notes: updatedNotes,
       };
     }
-    case "ADD_IMAGE": {
+    case "ADD_IMAGES": {
       const newNote = {
         ...state.notes.get(action.note.uuid),
-        images: [
-          ...action.note.images,
-          { url: action.imageURL, uuid: action.newImageUUID },
-        ],
+        images: [...action.note.images, ...action.newImages],
       };
       const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
 
@@ -435,12 +432,13 @@ function notesReducer(state, action) {
         notes: updatedNotes,
       };
     }
-    case "UPDATE_IMAGE": {
+    case "UPDATE_IMAGES": {
       const note = state.notes.get(action.note.uuid);
+      const imagesMap = action.imagesMap;
       const newNote = {
         ...note,
         images: note.images.map((img) => {
-          if (img.uuid === action.newImage.uuid) return action.newImage;
+          if (imagesMap.has(img.uuid)) return imagesMap.get(img.uuid);
           return img;
         }),
       };
@@ -731,6 +729,7 @@ const page = () => {
     setCurrentSection,
     modalOpenRef,
     labelObjRef,
+    setLoadingImages,
   } = useAppContext();
   const [tooltipAnchor, setTooltipAnchor] = useState(null);
   const [notesState, dispatchNotes] = useReducer(notesReducer, initialStates);
@@ -1271,6 +1270,12 @@ const page = () => {
 
           setVisibleItems((prev) => new Set([...prev, newUUID]));
 
+          setLoadingImages((prev) => {
+            const newSet = new Set(prev);
+            newImages.forEach(({ uuid }) => newSet.add(uuid));
+            return newSet;
+          });
+
           window.dispatchEvent(new Event("loadingStart"));
           const received = await copyNoteAction({
             originalNoteUUID: note.uuid,
@@ -1280,6 +1285,12 @@ const page = () => {
           });
           const receivedNote = received.note;
           window.dispatchEvent(new Event("loadingEnd"));
+
+          setLoadingImages((prev) => {
+            const newSet = new Set(prev);
+            newImages.forEach(({ uuid }) => newSet.delete(uuid));
+            return newSet;
+          });
 
           dispatchNotes({ type: "SET_NOTE", note: receivedNote });
         };

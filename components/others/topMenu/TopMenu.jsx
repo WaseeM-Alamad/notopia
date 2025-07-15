@@ -574,7 +574,7 @@ const TopMenuHome = ({
           const newImageUUID = uuid();
           const newImage = { uuid: newImageUUID, url: image.url };
           imagesMap.set(newImageUUID, `${note.uuid}/${image.uuid}`);
-          imagesToDel.push(`${userID}/${newNoteUUID}/${newImageUUID}`);
+          imagesToDel.push(`${userID}/${newNoteUUID}/`);
           newImages.push(newImage);
         });
       }

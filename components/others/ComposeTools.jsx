@@ -1,15 +1,10 @@
 import React, { memo, useCallback, useRef, useState } from "react";
-import PersonAdd from "../icons/PersonAdd";
-import Bell from "../icons/Bell";
-import ArchiveIcon from "../icons/ArchiveIcon";
-import ImageIcon from "../icons/ImageIcon";
 import Button from "../Tools/Button";
-import ColorIcon from "../icons/ColorIcon";
-import MoreVert from "../icons/MoreVert";
 import ColorSelectMenu from "./ColorSelectMenu";
 import BackIcon from "../icons/BackIcon";
 import { v4 as uuid } from "uuid";
 import { AnimatePresence } from "framer-motion";
+import { validateImageFile } from "@/utils/validateImage";
 
 const AddModalTools = ({
   isOpen,
@@ -27,12 +22,12 @@ const AddModalTools = ({
   setAnchorEl,
   setMoreMenuOpen,
   setLabelsOpen,
+  inputRef,
 }) => {
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
   const [colorAnchorEl, setColorAnchorEl] = useState();
   const colorButtonRef = useRef(null);
   const closeRef = useRef(null);
-  const inputRef = useRef(null);
 
   const handleColorClick = (color) => {
     if (color === selectedColor) return;
@@ -73,6 +68,45 @@ const AddModalTools = ({
     },
     [note?.background]
   );
+
+  const handleOnChange = async (event) => {
+    const files = Array.from(event.target?.files || []);
+
+    if (files.length === 0) return;
+
+    const imageFiles = [];
+    const imageObjs = [];
+    let isInvalidFile = false;
+
+    for (const file of files) {
+      const { valid } = await validateImageFile(file);
+      if (!valid) {
+        isInvalidFile = true;
+        continue;
+      }
+      const imageURL = URL.createObjectURL(file);
+      const imageUUID = uuid();
+      imageFiles.push({ file: file, uuid: imageUUID });
+      imageObjs.push({ url: imageURL, uuid: imageUUID });
+    }
+
+    if (isInvalidFile) {
+      openSnackFunction({
+        snackMessage:
+          "Can’t upload this file. We accept GIF, JPEG, JPG, PNG files less than 10MB and 25 megapixels.",
+        showUndo: false,
+      });
+    }
+
+    setNote((prevNote) => {
+      return {
+        ...prevNote,
+        images: imageObjs,
+        imageFiles: imageFiles,
+      };
+    });
+    inputRef.current.value = "";
+  };
 
   return (
     <div style={{ opacity: isOpen ? "1" : "0" }} className="modal-bottom">
@@ -117,25 +151,8 @@ const AddModalTools = ({
             ref={inputRef}
             style={{ display: "none" }}
             type="file"
-            onChange={(event) => {
-              const file = event.target?.files[0];
-              const imageURL = URL.createObjectURL(file);
-              setNote((prevNote) => {
-                const newUUID = uuid();
-                return {
-                  ...prevNote,
-                  images: [
-                    ...prevNote.images,
-                    { url: imageURL, uuid: newUUID },
-                  ],
-                  imageFiles: [
-                    ...prevNote.imageFiles,
-                    { file: file, uuid: newUUID },
-                  ],
-                };
-              });
-              inputRef.current.value = "";
-            }}
+            multiple
+            onChange={handleOnChange}
           />
         </Button>
         <Button

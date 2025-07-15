@@ -18,6 +18,8 @@ import { useAppContext } from "@/context/AppContext";
 import { v4 as uuid } from "uuid";
 import ListItemsLayout from "./ListitemsLayout";
 import { useSearch } from "@/context/SearchContext";
+import { AnimatePresence } from "framer-motion";
+import ImageDropZone from "../Tools/ImageDropZone";
 
 const NoteModal = ({
   localNote,
@@ -42,6 +44,7 @@ const NoteModal = ({
   const { handleLabelNoteCount, labelsRef, ignoreKeysRef, user } =
     useAppContext();
   const { skipHashChangeRef, searchTerm } = useSearch();
+  const [isDragOver, setIsDragOver] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [localIsPinned, setLocalIsPinned] = useState(null);
   const note = initialStyle?.initialNote;
@@ -63,11 +66,12 @@ const NoteModal = ({
   const trashRef = useRef(false);
   const delayLabelDispatchRef = useRef(false);
   const delayImageDispatchRef = useRef(false);
-  const imagesChangedRef = useRef(false);
   const prevHash = useRef(null);
   const ignoreTopRef = useRef(false);
   const inputsContainerRef = useRef(null);
   const modalOpenRef = useRef(false);
+  const inputRef = useRef(null);
+  const dragCounter = useRef(0);
 
   const timeoutRef = useRef(null);
 
@@ -609,16 +613,12 @@ const NoteModal = ({
         }, []),
       }));
 
-      imagesChangedRef.current = true;
-
       const undo = async () => {
         setLocalNote((prev) => {
           const updatedImages = [...prev.images];
           updatedImages.splice(imageIndex, 0, imageObject);
           return { ...prev, images: updatedImages };
         });
-
-        imagesChangedRef.current = false;
       };
 
       const onClose = async () => {
@@ -770,46 +770,6 @@ const NoteModal = ({
     [note?.content, note?.title, localNote?.isTrash, undoStack]
   );
 
-  const checkForChanges = () => {
-    // if (
-    //   localNote?.title !== note?.title ||
-    //   localNote?.content !== note?.content
-    // ) {
-    //   dispatchNotes({
-    //     type: "UPDATE_TEXT",
-    //     note: note,
-    //     newTitle: localNote?.title,
-    //     newContent: localNote?.content,
-    //   });
-    // }
-    // if (imagesChangedRef.current) {
-    //   setTimeout(
-    //     () => {
-    //       dispatchNotes({
-    //         type: "UPDATE_IMAGES",
-    //         note: note,
-    //         newImages: localNote?.images,
-    //       });
-    //     },
-    //     delayImageDispatchRef.current ? 210 : 0
-    //   );
-    // }
-    // const labelsChange =
-    //   JSON.stringify(localNote?.labels) === JSON.stringify(note?.labels);
-    // if (!labelsChange) {
-    //   setTimeout(
-    //     () => {
-    //       dispatchNotes({
-    //         type: "UPDATE_NOTE_LABELS",
-    //         note: note,
-    //         newLabels: localNote?.labels,
-    //       });
-    //     },
-    //     delayLabelDispatchRef.current ? 220 : 0
-    //   );
-    // }
-  };
-
   const closeToolTip = () => {
     setTooltipAnchor((prev) => ({
       anchor: null,
@@ -913,11 +873,54 @@ const NoteModal = ({
     });
   };
 
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    dragCounter.current -= 1;
+    if (dragCounter.current === 0) {
+      setIsDragOver(false);
+    }
+  };
+
+  const handleNoteMouseLeave = (e) => {
+    setIsDragOver(false);
+    dragCounter.current = 0;
+  };
+
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    dragCounter.current += 1;
+  };
+
+  const handleOnDrop = (e) => {
+    e.preventDefault();
+    if (!inputRef.current) return;
+    setIsDragOver(false);
+    const files = Array.from(e.dataTransfer.files);
+
+    if (files.length > 0) {
+      const dt = new DataTransfer();
+      files.forEach((file) => dt.items.add(file));
+      inputRef.current.files = dt.files;
+      const event = new Event("change", { bubbles: true });
+      inputRef.current.dispatchEvent(event);
+    }
+  };
+
   if (!isMounted) return;
 
   return createPortal(
     <>
       <div
+        onDragOver={handleDragOver}
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDrop={handleOnDrop}
+        onMouseLeave={handleNoteMouseLeave}
         ref={modalRef}
         className={[
           "modall",
@@ -1116,12 +1119,13 @@ const NoteModal = ({
           isOpen={isOpen}
           setIsOpen={setIsOpen}
           setModalStyle={setModalStyle}
-          imagesChangedRef={imagesChangedRef}
           undoStack={undoStack}
           redoStack={redoStack}
           handleUndo={handleUndo}
           handleRedo={handleRedo}
+          inputRef={inputRef}
         />
+        <AnimatePresence>{isDragOver && <ImageDropZone />}</AnimatePresence>
       </div>
     </>,
     document.getElementById("modal-portal")

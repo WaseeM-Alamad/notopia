@@ -15,6 +15,8 @@ import NoteImagesLayout from "../Tools/NoteImagesLayout";
 import { useSession } from "next-auth/react";
 import CheckMark from "../icons/CheckMark";
 import { useAppContext } from "@/context/AppContext";
+import ImageDropZone from "../Tools/ImageDropZone";
+import { AnimatePresence } from "framer-motion";
 
 const Note = memo(
   ({
@@ -32,6 +34,7 @@ const Note = memo(
   }) => {
     const { labelsRef, user } = useAppContext();
     const userID = user?.id;
+    const [isDragOver, setIsDragOver] = useState(false);
     const [colorMenuOpen, setColorMenuOpen] = useState(false);
     const [moreMenuOpen, setMoreMenuOpen] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
@@ -43,10 +46,12 @@ const Note = memo(
     const checkedItems = note?.checkboxes.filter((cb) => cb.isCompleted);
     const noteDataRef = useRef(null);
     const inputsRef = useRef(null);
+    const inputRef = useRef(null);
     const imagesRef = useRef(null);
     const titleRef = useRef(null);
     const contentRef = useRef(null);
     const checkRef = useRef(null);
+    const dragCounter = useRef(0);
 
     const handlePinClick = async (e) => {
       closeToolTip();
@@ -212,12 +217,55 @@ const Note = memo(
     };
 
     const noteClassName = useMemo(() => {
-      return `note ${note.color} n-bg-${note.background}`;
-    }, [note.color, note.background, selected]);
+      return `note ${note.color} n-bg-${note.background} ${isDragOver ? "transparent-border" : ""}`;
+    }, [note.color, note.background, selected, isDragOver]);
+
+    const handleDragOver = (e) => {
+      e.preventDefault();
+      setIsDragOver(true);
+    };
+
+    const handleDragLeave = (e) => {
+      e.preventDefault();
+      dragCounter.current -= 1;
+      if (dragCounter.current === 0) {
+        setIsDragOver(false);
+      }
+    };
+
+    const handleNoteMouseLeave = (e) => {
+      setIsDragOver(false);
+      dragCounter.current = 0;
+    };
+
+    const handleDragEnter = (e) => {
+      e.preventDefault();
+      dragCounter.current += 1;
+    };
+
+    const handleOnDrop = (e) => {
+      e.preventDefault();
+      if (!inputRef.current) return;
+      setIsDragOver(false);
+      const files = Array.from(e.dataTransfer.files);
+
+      if (files.length > 0) {
+        const dt = new DataTransfer();
+        files.forEach((file) => dt.items.add(file));
+        inputRef.current.files = dt.files;
+        const event = new Event("change", { bubbles: true });
+        inputRef.current.dispatchEvent(event);
+      }
+    };
 
     return (
       <>
         <div
+          onDragOver={handleDragOver}
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+          onDrop={handleOnDrop}
+          onMouseLeave={handleNoteMouseLeave}
           onContextMenu={(e) => {
             e.preventDefault();
             closeToolTip();
@@ -555,6 +603,7 @@ const Note = memo(
             openSnackFunction={openSnackFunction}
             noteActions={noteActions}
             index={index}
+            inputRef={inputRef}
           />
           <div
             className={`note-border ${
@@ -564,8 +613,9 @@ const Note = memo(
                   ? "default-border"
                   : "transparent-border"
             }`}
-            style={{ opacity: selected ? "1" : "0" }}
+            style={{ opacity: selected && !isDragOver ? "1" : "0" }}
           />
+          <AnimatePresence>{isDragOver && <ImageDropZone />}</AnimatePresence>
         </div>
       </>
     );

@@ -12,6 +12,7 @@ import { useAppContext } from "@/context/AppContext";
 import { AnimatePresence } from "framer-motion";
 import MoreMenu from "./MoreMenu";
 import ManageLabelsCompose from "./ManageLabelsCompose";
+import ImageDropZone from "../Tools/ImageDropZone";
 
 const ComposeNote = ({
   dispatchNotes,
@@ -21,7 +22,8 @@ const ComposeNote = ({
   lastAddedNoteRef,
   openSnackFunction,
 }) => {
-  const { user, labelsRef } = useAppContext();
+  const { user, labelsRef, setLoadingImages } = useAppContext();
+  const [isDragOver, setIsDragOver] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isOpen2, setIsOpen2] = useState(false);
@@ -51,6 +53,8 @@ const ComposeNote = ({
   const modalRef = useRef(null);
   const titleRef = useRef(null);
   const contentRef = useRef(null);
+  const inputRef = useRef(null);
+  const dragCounter = useRef(0);
 
   useEffect(() => {
     if (titleRef.current) titleRef.current.textContent = "";
@@ -101,31 +105,57 @@ const ComposeNote = ({
     modal.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
   };
 
-  const UploadImagesAction = async (images, noteUUID) => {
-    if (images.length === 0) return;
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    );
+  const UploadImagesAction = async (noteUUID) => {
+    const formData = new FormData();
+    const files = note.imageFiles;
 
-    try {
-      const bucketName = "notopia";
+    if (files.length === 0) return;
 
-      for (const image of images) {
-        const filePath = `${userID}/${noteUUID}/${image.uuid}`;
-        const { data, error } = await supabase.storage
-          .from(bucketName)
-          .upload(filePath, image.file, {
-            cacheControl: "0",
-          });
+    const imageUUIDs = [];
 
-        if (error) {
-          console.error("Error uploading file:", error);
-          continue;
-        }
-      }
-    } catch (error) {
-      console.log("couldn't upload images", error);
+    formData.append("userID", userID);
+    formData.append("noteUUID", noteUUID);
+
+    files.forEach(({ file, uuid }) => {
+      const imageUUID = uuid;
+      imageUUIDs.push(imageUUID);
+
+      formData.append("files", file);
+      formData.append("imageUUIDs", imageUUID);
+    });
+
+    setLoadingImages((prev) => {
+      const newSet = new Set(prev);
+      imageUUIDs.forEach((id) => newSet.add(id));
+      return newSet;
+    });
+
+    const res = await fetch("/api/note/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await res.json();
+
+    setLoadingImages((prev) => {
+      const newSet = new Set(prev);
+      imageUUIDs.forEach((id) => newSet.delete(id));
+      return newSet;
+    });
+
+    if (data.error) {
+      console.error("Upload error:", data.error);
+    } else {
+      const updatedImages = data;
+      const imagesMap = new Map();
+      updatedImages.forEach((imageData) => {
+        imagesMap.set(imageData.uuid, imageData);
+      });
+      dispatchNotes({
+        type: "UPDATE_IMAGES",
+        note: { uuid: noteUUID },
+        imagesMap: imagesMap,
+      });
     }
   };
 
@@ -158,10 +188,12 @@ const ComposeNote = ({
     setVisibleItems((prev) => new Set([...prev, newUUID]));
 
     window.dispatchEvent(new Event("loadingStart"));
-
-    await createNoteAction(newNote);
-    await UploadImagesAction(note.imageFiles, newNote.uuid);
-    window.dispatchEvent(new Event("loadingEnd"));
+    try {
+      await createNoteAction(newNote);
+      await UploadImagesAction(newNote.uuid);
+    } finally {
+      window.dispatchEvent(new Event("loadingEnd"));
+    }
   };
 
   const reset = () => {
@@ -281,14 +313,15 @@ const ComposeNote = ({
           const lastNote = lastAddedNoteRef.current;
           if (!lastNote) return;
           requestAnimationFrame(() => {
-            const rect = lastNote.getBoundingClientRect();
-            positionModal(rect);
-            lastNote.style.opacity = "0";
+            requestAnimationFrame(() => {
+              const rect = lastNote.getBoundingClientRect();
+              positionModal(rect);
+              lastNote.style.opacity = "0";
+            });
           });
-          observer.disconnect(); // Clean up after firing once
+          observer.disconnect();
         });
 
-        // Observe the notes container
         observer.observe(containerRef.current, {
           childList: true,
           subtree: false,
@@ -338,7 +371,7 @@ const ComposeNote = ({
 
     setNote((restOfNote) => {
       const filteredImageFiles = restOfNote.imageFiles.reduce(
-        (acc, imageFile, index) => {
+        (acc, imageFile) => {
           if (imageFile.uuid === imageUUID) {
             imageFileObject = { file: imageFile.file, uuid: imageUUID };
             return acc;
@@ -500,7 +533,7 @@ const ComposeNote = ({
 
   const handleLabelClick = (e, label) => {
     e.stopPropagation();
-    setIsOpen(false)
+    setIsOpen(false);
     const encodedLabel = encodeURIComponent(label);
     window.location.hash = `label/${encodedLabel.toLowerCase()}`;
   };
@@ -523,11 +556,54 @@ const ComposeNote = ({
     },
   ];
 
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    dragCounter.current -= 1;
+    if (dragCounter.current === 0) {
+      setIsDragOver(false);
+    }
+  };
+
+  const handleNoteMouseLeave = (e) => {
+    setIsDragOver(false);
+    dragCounter.current = 0;
+  };
+
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    dragCounter.current += 1;
+  };
+
+  const handleOnDrop = (e) => {
+    e.preventDefault();
+    if (!inputRef.current) return;
+    setIsDragOver(false);
+    const files = Array.from(e.dataTransfer.files);
+
+    if (files.length > 0) {
+      const dt = new DataTransfer();
+      files.forEach((file) => dt.items.add(file));
+      inputRef.current.files = dt.files;
+      const event = new Event("change", { bubbles: true });
+      inputRef.current.dispatchEvent(event);
+    }
+  };
+
   if (!isClient) return;
 
   return createPortal(
     <>
       <div
+        onDragOver={handleDragOver}
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDrop={handleOnDrop}
+        onMouseLeave={handleMouseLeave}
         ref={modalRef}
         className={[
           "add-modal",
@@ -680,7 +756,9 @@ const ComposeNote = ({
           setAnchorEl={setAnchorEl}
           setMoreMenuOpen={setMoreMenuOpen}
           setLabelsOpen={setLabelsOpen}
+          inputRef={inputRef}
         />
+        <AnimatePresence>{isDragOver && <ImageDropZone />}</AnimatePresence>
       </div>
       <AnimatePresence>
         {moreMenuOpen && !labelsOpen && (

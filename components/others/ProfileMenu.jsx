@@ -3,22 +3,15 @@ import { signOut } from "next-auth/react";
 import React, { forwardRef, memo, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Edit } from "../icons/EditIcon";
+import { useAppContext } from "@/context/AppContext";
 
 const ProfileMenu = forwardRef(
   ({ user, isOpen, setIsOpen, menuPosition, setSettingsOpen }, ref) => {
+    const { isDarkModeRef } = useAppContext();
     const [isClient, setIsClient] = useState(false);
-    const isDarkModeRef = useRef(false);
 
     useEffect(() => {
       setIsClient(true);
-    }, []);
-
-    useEffect(() => {
-      const savedTheme = localStorage.getItem("theme");
-      if (savedTheme === "dark") {
-        document.documentElement.classList.add("dark-mode");
-        isDarkModeRef.current = true;
-      }
     }, []);
 
     const toggleDarkMode = () => {

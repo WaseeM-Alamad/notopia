@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { signIn } from "next-auth/react";
 import React, { useEffect, useRef, useState } from "react";
 import isEmail from "validator/lib/isEmail";
+import HorizontalLoader2 from "../Tools/HorizontalLoader2";
 
 const RightPanel = ({
   isLogin,
@@ -294,17 +295,7 @@ const RightPanel = ({
             {!isSubmitLoading ? (
               "Sign Up"
             ) : (
-              <CircularProgress
-                sx={{
-                  color: document.documentElement.classList.contains(
-                    "dark-mode"
-                  )
-                    ? " #292929"
-                    : "#dfdfdf",
-                }}
-                size={20}
-                thickness={5}
-              />
+              <HorizontalLoader2 size={0.55} />
             )}
           </button>
           <div

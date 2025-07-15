@@ -59,6 +59,9 @@ const UserSchema = new Schema({
     type: Boolean,
     default: false,
   },
+  googleID: {
+    type: String,
+  },
   username: {
     type: String,
     maxlength: [30],

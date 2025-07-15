@@ -35,6 +35,15 @@ export function AppProvider({ children, initialUser }) {
   const labelObjRef = useRef(null);
 
   const modalOpenRef = useRef(null);
+  const isDarkModeRef = useRef(false);
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "dark") {
+      document.documentElement.classList.add("dark-mode");
+      isDarkModeRef.current = true;
+    }
+  }, []);
 
   const getLabels = async () => {
     const fetchedLables = await fetchLabelsAction();
@@ -49,11 +58,10 @@ export function AppProvider({ children, initialUser }) {
   };
 
   useEffect(() => {
-    setUser(session?.user);
+    session && setUser(session?.user);
   }, [session, status]);
 
   useEffect(() => {
-    console.log("user", initialUser);
     const savedLayout = localStorage.getItem("layout");
     if (!savedLayout) {
       localStorage.setItem("layout", "grid");
@@ -387,6 +395,7 @@ export function AppProvider({ children, initialUser }) {
         setUser,
         session,
         status,
+        isDarkModeRef,
       }}
     >
       {children}

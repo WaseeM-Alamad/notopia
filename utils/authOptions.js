@@ -5,6 +5,7 @@ import User from "@/models/User";
 import bcrypt from "bcryptjs";
 import { Resend } from "resend";
 import { nanoid } from "nanoid";
+import mongoose from "mongoose";
 
 export const authOptions = {
   providers: [
@@ -142,7 +143,13 @@ export const authOptions = {
             username,
             image: profile.picture,
             isVerified: true,
+            googleId: profile.id,
           });
+        }
+
+        if (userExists && !userExists.googleId) {
+          userExists.googleId = profile.id;
+          await userExists.save();
         }
       }
 
@@ -151,7 +158,10 @@ export const authOptions = {
 
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
+        if (mongoose.Types.ObjectId.isValid(user.id)) {
+          token.id = user.id;
+        }
+
         token.name = user.name;
         token.email = user.email;
         token.picture = user.image;
@@ -164,7 +174,13 @@ export const authOptions = {
       await connectDB();
 
       const userId = session.user.id || token.id;
-      const user = await User.findById(userId);
+      let user = null;
+
+      if (mongoose.Types.ObjectId.isValid(userId)) {
+        user = await User.findById(userId);
+      } else {
+        user = await User.findOne({ email: token.email });
+      }
 
       function getInitials(username) {
         if (!username) return "";

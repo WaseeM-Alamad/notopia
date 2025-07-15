@@ -3,13 +3,13 @@ import Button from "../Tools/Button";
 import ColorSelectMenu from "./ColorSelectMenu";
 import BackIcon from "../icons/BackIcon";
 import { DeleteNoteAction, NoteUpdateAction } from "@/utils/actions";
-import { createClient } from "@supabase/supabase-js";
 import { v4 as uuid } from "uuid";
 import { AnimatePresence } from "framer-motion";
 import ManageModalLabels from "./ManageModalLabels";
 import DeleteModal from "./DeleteModal";
 import { useAppContext } from "@/context/AppContext";
 import MoreMenu from "./MoreMenu";
+import { validateImageFile } from "@/utils/validateImage";
 
 const ModalTools = ({
   localNote,
@@ -31,6 +31,7 @@ const ModalTools = ({
   redoStack,
   handleUndo,
   handleRedo,
+  inputRef,
 }) => {
   const { setLoadingImages, user } = useAppContext();
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
@@ -41,7 +42,6 @@ const ModalTools = ({
   const [labelsOpen, setLabelsOpen] = useState(false);
   const userID = user?.id;
   const closeRef = useRef(null);
-  const inputRef = useRef(null);
 
   const handleColorClick = useCallback(async (color) => {
     if (color === localNote?.color) return;
@@ -77,80 +77,108 @@ const ModalTools = ({
     [localNote?.background]
   );
 
-  const UploadImageAction = async (image) => {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    );
-
-    try {
-      const bucketName = "notopia";
-
-      const filePath = `${userID}/${note.uuid}/${image.id}`;
-      const { data, error } = await supabase.storage
-        .from(bucketName)
-        .upload(filePath, image.file, {
-          cacheControl: "0",
-        });
-
-      if (error) {
-        console.error("Error uploading file:", error);
-      }
-    } catch (error) {
-      console.log("couldn't upload images", error);
-    }
-  };
-
   const handleOnChange = async (event) => {
-    imagesChangedRef.current = true;
-    const file = event.target?.files[0];
-    const imageURL = URL.createObjectURL(file);
-    const newUUID = uuid();
+    const formData = new FormData();
+    const files = Array.from(event.target?.files || []);
+
+    if (files.length === 0) return;
+
+    const imageUUIDs = [];
+    const newImages = [];
+    let isInvalidFile = false;
+    let invalidCount = 0;
+
+    formData.append("userID", userID);
+    formData.append("noteUUID", note.uuid);
+
+    for (const file of files) {
+      const { valid } = await validateImageFile(file);
+
+      if (!valid) {
+        isInvalidFile = true;
+        invalidCount++;
+        continue;
+      }
+
+      const imageUUID = uuid();
+      imageUUIDs.push(imageUUID);
+
+      formData.append("files", file);
+      formData.append("imageUUIDs", imageUUID);
+
+      const imageURL = URL.createObjectURL(file);
+
+      newImages.push({ url: imageURL, uuid: imageUUID });
+    }
+
+    if (isInvalidFile) {
+      openSnackFunction({
+        snackMessage:
+          "Can’t upload this file. We accept GIF, JPEG, JPG, PNG files less than 10MB and 25 megapixels.",
+        showUndo: false,
+      });
+    }
+
+    if (invalidCount === files.length) {
+      return;
+    }
 
     setLocalNote((prev) => ({
       ...prev,
-      images: [...prev.images, { url: imageURL, uuid: newUUID }],
+      images: [...prev.images, ...newImages],
     }));
-    inputRef.current.value = "";
+
+    setLoadingImages((prev) => {
+      const newSet = new Set(prev);
+      imageUUIDs.forEach((id) => newSet.add(id));
+      return newSet;
+    });
+
     window.dispatchEvent(new Event("loadingStart"));
-    const starter =
-      "https://fopkycgspstkfctmhyyq.supabase.co/storage/v1/object/public/notopia";
-    const path = `${starter}/${userID}/${note.uuid}/${newUUID}`;
-    setLoadingImages((prev) => {
-      const newSet = new Set(prev);
-      newSet.add(newUUID);
-      return newSet;
-    });
-    const updatedImage = await NoteUpdateAction({
-      type: "images",
-      value: { url: path, uuid: newUUID },
-      noteUUIDs: [note.uuid],
+
+    const res = await fetch("/api/note/upload", {
+      method: "POST",
+      body: formData,
     });
 
-    await UploadImageAction({ file: file, id: newUUID }, note.uuid);
-    if (!modalOpenRef.current) {
-      dispatchNotes({
-        type: "UPDATE_IMAGE",
-        note: note,
-        newImage: updatedImage,
-      });
-    } else {
-      setLocalNote((prev) => ({
-        ...prev,
-        images: prev.images.map((img) => {
-          if (img.uuid === newUUID) return updatedImage;
-          return img;
-        }),
-      }));
-    }
-
-    setLoadingImages((prev) => {
-      const newSet = new Set(prev);
-      newSet.delete(newUUID);
-      return newSet;
-    });
+    const data = await res.json();
 
     window.dispatchEvent(new Event("loadingEnd"));
+
+    setLoadingImages((prev) => {
+      const newSet = new Set(prev);
+      imageUUIDs.forEach((id) => newSet.delete(id));
+      return newSet;
+    });
+
+    if (data.error) {
+      console.error("Upload error:", data.error);
+    } else {
+      const updatedImages = data;
+      const imagesMap = new Map();
+
+      updatedImages.forEach((imageData) => {
+        imagesMap.set(imageData.uuid, imageData);
+      });
+
+      if (!modalOpenRef.current) {
+        dispatchNotes({
+          type: "UPDATE_IMAGES",
+          note: note,
+          imagesMap: imagesMap,
+        });
+      } else {
+        const modalUpdatedImages = [...note.images, ...newImages].map((img) => {
+          if (imagesMap.has(img.uuid)) return imagesMap.get(img.uuid);
+          return img;
+        });
+
+        setLocalNote((prev) => ({
+          ...prev,
+          images: modalUpdatedImages,
+        }));
+      }
+    }
   };
 
   const restoreNote = async () => {

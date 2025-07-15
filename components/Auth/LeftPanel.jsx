@@ -7,6 +7,7 @@ import React, { useEffect, useRef, useState } from "react";
 import isEmail from "validator/lib/isEmail";
 import Modal from "../Tools/Modal";
 import { sendResetPassAction } from "@/utils/actions";
+import HorizontalLoader2 from "../Tools/HorizontalLoader2";
 
 const LeftPanel = ({
   isLogin,
@@ -226,17 +227,7 @@ const LeftPanel = ({
               {!isSubmitLoading ? (
                 "Sign In"
               ) : (
-                <CircularProgress
-                  sx={{
-                    color: document.documentElement.classList.contains(
-                      "dark-mode"
-                    )
-                      ? " #292929"
-                      : "#dfdfdf",
-                  }}
-                  size={20}
-                  thickness={5}
-                />
+                <HorizontalLoader2 size={0.55} />
               )}
             </button>
             <div
