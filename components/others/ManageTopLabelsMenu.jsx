@@ -1,6 +1,6 @@
 import { useAppContext } from "@/context/AppContext";
 import { useSearch } from "@/context/SearchContext";
-import { createLabelForNotesAction } from "@/utils/actions";
+import { batchManageLabelsAction } from "@/utils/actions";
 import { Popper } from "@mui/material";
 import { motion } from "framer-motion";
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
@@ -17,8 +17,7 @@ const ManageTopLabelsMenu = ({
   setFadingNotes,
   setVisibleItems,
 }) => {
-  const { createLabelForNotes, labelsRef, handleLabelsTop, labelObjRef } =
-    useAppContext();
+  const { labelsRef, labelObjRef } = useAppContext();
   const { filters } = useSearch();
   const [isClient, setIsClient] = useState();
   const [labelSearch, setLabelSearch] = useState("");
@@ -76,12 +75,10 @@ const ManageTopLabelsMenu = ({
     const newUUID = generateUUID();
     const label = labelSearch;
     const notesUUIDs = selectedNotesIDs.map((n) => n.uuid);
-    const count = selectedNotesIDs.length;
 
     const labelObj = {
       uuid: newUUID,
       label: label,
-      noteCount: count,
       createdAt: new Date(),
       color: "Default",
     };
@@ -89,7 +86,6 @@ const ManageTopLabelsMenu = ({
     createLabelForNotes({
       labelUUID: newUUID,
       label: label,
-      count: count,
     });
 
     dispatchNotes({
@@ -107,11 +103,10 @@ const ManageTopLabelsMenu = ({
     window.dispatchEvent(new Event("loadingEnd"));
   };
 
-  const addLabel = (uuid) => {
+  const addLabel = async (uuid) => {
     if (notesLabels.has(uuid)) {
       if (notesLabels.get(uuid) === selectedNotesIDs.length) {
         const notesUUIDs = selectedNotesIDs.map((n) => n.uuid);
-        const count = selectedNotesIDs.length;
 
         const delay = filteredlabel === uuid;
 
@@ -153,16 +148,16 @@ const ManageTopLabelsMenu = ({
 
         delay && setSelectedNotesIDs([]);
 
-        handleLabelsTop({
-          operation: "dec",
+        window.dispatchEvent(new Event("loadingStart"));
+        await batchManageLabelsAction({
+          operation: "remove",
           case: "shared",
           notesUUIDs: notesUUIDs,
-          uuid: uuid,
-          count: count,
+          labelUUID: uuid,
         });
+        window.dispatchEvent(new Event("loadingEnd"));
       } else {
         const notesUUIDs = [];
-        const count = selectedNotesIDs.length - notesLabels.get(uuid);
         const updatedNotes = new Map(notes);
 
         selectedNotesIDs.forEach(({ uuid: noteUUID }) => {
@@ -181,16 +176,16 @@ const ManageTopLabelsMenu = ({
           updatedNotes: updatedNotes,
         });
 
-        handleLabelsTop({
+        window.dispatchEvent(new Event("loadingStart"));
+        await batchManageLabelsAction({
           case: "unshared",
           notesUUIDs: notesUUIDs,
-          uuid: uuid,
-          count: count,
+          labelUUID: uuid,
         });
+        window.dispatchEvent(new Event("loadingEnd"));
       }
     } else {
       const notesUUIDs = selectedNotesIDs.map((n) => n.uuid);
-      const count = selectedNotesIDs.length;
 
       dispatchNotes({
         type: "BATCH_ADD_LABEL",
@@ -199,13 +194,14 @@ const ManageTopLabelsMenu = ({
         uuid: uuid,
       });
 
-      handleLabelsTop({
-        operation: "inc",
+      window.dispatchEvent(new Event("loadingStart"));
+      await batchManageLabelsAction({
+        operation: "add",
         case: "shared",
         notesUUIDs: notesUUIDs,
-        uuid: uuid,
-        count: count,
+        labelUUID: uuid,
       });
+      window.dispatchEvent(new Event("loadingEnd"));
     }
   };
 
@@ -285,7 +281,7 @@ const ManageTopLabelsMenu = ({
           paddingBottom: "0",
           zIndex: "311",
           borderRadius: "0.4rem",
-          pointerEvents: !isOpen && "none"
+          pointerEvents: !isOpen && "none",
         }}
         className="menu not-draggable"
       >

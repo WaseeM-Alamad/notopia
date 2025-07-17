@@ -12,7 +12,6 @@ import RefreshIcon from "../icons/RefreshIcon";
 import SettingsIcon from "../icons/SettingsIcon";
 import GridIcon from "../icons/GridIcon";
 import { CircularProgress } from "@mui/material";
-import { Box } from "@mui/system";
 import CloudIcon from "../icons/CloudIcon";
 import { AnimatePresence, motion } from "framer-motion";
 import Button from "../Tools/Button";
@@ -669,7 +668,6 @@ const Navbar = () => {
                     transition={{ duration: 0.15 }}
                     style={{ position: "absolute", marginTop: "4px" }}
                   >
-                    <Box>
                       <CircularProgress
                         sx={{
                           color: document.documentElement.classList.contains(
@@ -681,7 +679,6 @@ const Navbar = () => {
                         size={20}
                         thickness={5}
                       />
-                    </Box>
                   </motion.div>
                 )}
               </AnimatePresence>

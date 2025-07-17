@@ -1,16 +1,26 @@
-import { borderRadius } from "@mui/system";
-import React, { memo, useRef } from "react";
+import React, { memo } from "react";
 
 const Button = ({
   children,
   onClick,
   disabled,
-  className = '',
+  className = "",
   ref,
   style,
   ...props
 }) => {
-  return <button {...props} disabled={disabled} className={`${className} btn`} ref={ref} onClick={onClick} style={style}>{children}</button>;
+  return (
+    <button
+      {...props}
+      disabled={disabled}
+      className={`${className} btn`}
+      ref={ref}
+      onClick={onClick}
+      style={style}
+    >
+      {children}
+    </button>
+  );
 };
 
 export default memo(Button);

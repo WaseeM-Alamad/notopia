@@ -17,6 +17,8 @@ const GUTTER = 15;
 
 const Labels = memo(
   ({
+    notes,
+    order,
     setTooltipAnchor,
     visibleItems,
     setVisibleItems,
@@ -207,6 +209,8 @@ const Labels = memo(
                     setVisibleItems={setVisibleItems}
                     calculateLayout={calculateLayout}
                     openSnackFunction={openSnackFunction}
+                    notes={notes}
+                    order={order}
                   />
                 );
               })}

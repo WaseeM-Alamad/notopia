@@ -17,9 +17,7 @@ const ManageLabelsMenu = ({
 }) => {
   const {
     createLabel,
-    handleLabelNoteCount,
     labelsRef,
-    currentSection,
     labelObjRef,
   } = useAppContext();
   const { filters } = useSearch();
@@ -112,8 +110,6 @@ const ManageLabelsMenu = ({
         removedFilteredLabelRef.current = uuid;
       }
 
-      handleLabelNoteCount(uuid, "decrement");
-
       window.dispatchEvent(new Event("loadingStart"));
       await removeLabelAction({
         noteUUID: note.uuid,
@@ -135,7 +131,6 @@ const ManageLabelsMenu = ({
       } else {
         removedFilteredLabelRef.current = null;
       }
-      handleLabelNoteCount(uuid);
 
       window.dispatchEvent(new Event("loadingStart"));
       await addLabelAction({

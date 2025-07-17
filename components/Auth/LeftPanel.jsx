@@ -1,6 +1,5 @@
 import { CircularProgress } from "@mui/material";
-import { Box } from "@mui/system";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";

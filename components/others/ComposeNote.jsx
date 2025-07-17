@@ -5,7 +5,6 @@ import PinIcon from "../icons/PinIcon";
 import NoteImagesLayout from "../Tools/NoteImagesLayout";
 import { v4 as uuid } from "uuid";
 import { createNoteAction } from "@/utils/actions";
-import { createClient } from "@supabase/supabase-js";
 import ComposeTools from "./ComposeTools";
 import { debounce } from "lodash";
 import { useAppContext } from "@/context/AppContext";
@@ -113,7 +112,6 @@ const ComposeNote = ({
 
     const imageUUIDs = [];
 
-    formData.append("userID", userID);
     formData.append("noteUUID", noteUUID);
 
     files.forEach(({ file, uuid }) => {
@@ -528,7 +526,6 @@ const ComposeNote = ({
       (noteLabelUUID) => noteLabelUUID !== labelUUID
     );
     setNote((prev) => ({ ...prev, labels: newLabels }));
-    // handleLabelNoteCount(labelUUID, "decrement");
   };
 
   const handleLabelClick = (e, label) => {

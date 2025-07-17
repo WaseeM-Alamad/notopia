@@ -1,8 +1,7 @@
 "use client";
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { useSearch } from "@/context/SearchContext";
-import FilteredNote from "./FilteredNote";
 import { useAppContext } from "@/context/AppContext";
 import Note from "./Note";
 

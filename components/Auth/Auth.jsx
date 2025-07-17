@@ -5,8 +5,6 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import RightPanel from "./RightPanel";
 import LeftPanel from "./LeftPanel";
-import zxcvbn from "zxcvbn";
-import { isStrongPassword } from "validator";
 
 const Auth = () => {
   const pathname = usePathname();

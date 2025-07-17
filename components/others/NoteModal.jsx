@@ -41,7 +41,7 @@ const NoteModal = ({
   labelObj,
   skipSetLabelObjRef,
 }) => {
-  const { handleLabelNoteCount, labelsRef, ignoreKeysRef, user } =
+  const { labelsRef, ignoreKeysRef, user } =
     useAppContext();
   const { skipHashChangeRef, searchTerm } = useSearch();
   const [isDragOver, setIsDragOver] = useState(false);
@@ -794,7 +794,6 @@ const NoteModal = ({
       (noteLabelUUID) => noteLabelUUID !== labelUUID
     );
     setLocalNote((prev) => ({ ...prev, labels: newLabels }));
-    handleLabelNoteCount(labelUUID, "decrement");
     window.dispatchEvent(new Event("loadingStart"));
     await removeLabelAction({
       noteUUID: note.uuid,

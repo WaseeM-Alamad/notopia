@@ -717,12 +717,10 @@ const page = () => {
     setFilters,
   } = useSearch();
   const {
-    batchNoteCount,
     removeLabel,
     labelsRef,
     labelsReady,
     ignoreKeysRef,
-    handleLabelNoteCount,
     layout,
     setIsFiltered,
     currentSection,
@@ -1106,7 +1104,6 @@ const page = () => {
         }
         data.setIsOpen(false);
       } else if (data.type === "DELETE_NOTE") {
-        batchNoteCount(data.note.labels);
         setFadingNotes((prev) => new Set(prev).add(data.note.uuid));
 
         setTimeout(() => {
@@ -1203,7 +1200,6 @@ const page = () => {
         const note = data.note;
         const newImages = [];
         const newCheckboxes = [];
-        const labelsUUIDs = [];
         const oldToNewCBMap = new Map();
 
         if (note.images.length > 0) {
@@ -1256,13 +1252,7 @@ const page = () => {
           images: newImages,
         };
 
-        note.labels.forEach((labelUUID) => {
-          labelsUUIDs.push(labelUUID);
-        });
-
         const redo = async () => {
-          batchNoteCount(labelsUUIDs, "inc");
-
           dispatchNotes({
             type: "ADD_NOTE",
             newNote: newNote,
@@ -1300,7 +1290,6 @@ const page = () => {
         const undoCopy = async () => {
           setFadingNotes((prev) => new Set(prev).add(newUUID));
 
-          batchNoteCount(labelsUUIDs);
           setTimeout(async () => {
             dispatchNotes({
               type: "UNDO_COPY",
@@ -1360,7 +1349,6 @@ const page = () => {
           },
           fadeNote ? 250 : 0
         );
-        handleLabelNoteCount(data.labelUUID, "decrement");
         window.dispatchEvent(new Event("loadingStart"));
         await removeLabelAction({
           noteUUID: data.note.uuid,
@@ -1796,7 +1784,10 @@ const page = () => {
       data.triggerReRender((prev) => !prev);
       window.dispatchEvent(new Event("refreshPinnedLabels"));
       window.dispatchEvent(new Event("loadingStart"));
-      await deleteLabelAction({ labelUUID: data.labelData.uuid });
+      await deleteLabelAction({
+        labelUUID: data.labelData.uuid,
+        hasImage: data.labelData.image,
+      });
       window.dispatchEvent(new Event("loadingEnd"));
     }, 250);
   }, []);
@@ -2427,7 +2418,15 @@ const page = () => {
     requestAnimationFrame(() => {
       resetAndLoad(false);
     });
-  }, [filters, labelSearchTerm]);
+  }, [labelSearchTerm]);
+
+  useEffect(() => {
+    if (isFirstRenderRef.current || currentSection.toLowerCase() !== "search")
+      return;
+    requestAnimationFrame(() => {
+      resetAndLoad(false);
+    });
+  }, [filters]);
 
   useEffect(() => {
     if (isFirstRenderRef.current || !labelObj || !notesReady || !labelsReady)

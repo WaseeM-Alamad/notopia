@@ -88,7 +88,6 @@ const ModalTools = ({
     let isInvalidFile = false;
     let invalidCount = 0;
 
-    formData.append("userID", userID);
     formData.append("noteUUID", note.uuid);
 
     for (const file of files) {

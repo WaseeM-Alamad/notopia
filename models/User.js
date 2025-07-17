@@ -12,8 +12,7 @@ const LabelSchema = new Schema(
     color: { type: String, default: "Default" },
     isPinned: { type: Boolean, default: false },
     pinDate: { type: Date, default: Date.now },
-    image: { type: String },
-    noteCount: { type: Number },
+    image: { type: String, default: null },
     default: [],
   },
   {

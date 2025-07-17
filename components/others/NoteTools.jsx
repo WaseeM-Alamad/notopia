@@ -147,7 +147,6 @@ const NoteTools = ({
     let isInvalidFile = false;
     let invalidCount = 0;
 
-    formData.append("userID", userID);
     formData.append("noteUUID", note.uuid);
 
     for (const file of files) {
@@ -211,9 +210,7 @@ const NoteTools = ({
       return newSet;
     });
 
-    if (data.error) {
-      console.error("Upload error:", data.error);
-    } else {
+    if (!data.error) {
       const updatedImages = data;
       const imagesMap = new Map();
       updatedImages.forEach((imageData) => {

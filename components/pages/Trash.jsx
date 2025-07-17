@@ -99,7 +99,7 @@ const Trash = memo(
     containerRef,
     isGrid,
   }) => {
-    const { batchNoteCount, layout } = useAppContext();
+    const { layout } = useAppContext();
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const COLUMN_WIDTH = layout === "grid" ? 240 : 600;
     const resizeTimeoutRef = useRef(null);
@@ -205,19 +205,13 @@ const Trash = memo(
 
     const handleEmptyTrash = async () => {
       let deletedNotesUUIDs = [];
-      let labelsToDec = [];
 
       order.map((uuid) => {
         const note = notes.get(uuid);
         if (note.isTrash) {
           deletedNotesUUIDs.push(uuid);
-          if (note.labels.length > 0) {
-            labelsToDec.push(...note.labels);
-          }
         }
       });
-
-      batchNoteCount(labelsToDec);
 
       setFadingNotes(new Set(deletedNotesUUIDs));
 

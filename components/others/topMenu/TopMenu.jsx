@@ -33,7 +33,7 @@ const TopMenuHome = ({
   functionRefs,
   currentSection,
 }) => {
-  const { batchNoteCount, user } = useAppContext();
+  const { user } = useAppContext();
   const { filters } = useSearch();
   const userID = user?.id;
   const [colorAnchorEl, setColorAnchorEl] = useState(null);
@@ -522,17 +522,12 @@ const TopMenuHome = ({
 
   const handleDeleteNotes = async () => {
     let selectedUUIDs = [];
-    let labelsToDec = [];
 
     selectedNotesIDs.forEach(({ uuid }) => {
       selectedUUIDs.push(uuid);
       const note = notes.get(uuid);
-      if (note.labels.length > 0) {
-        labelsToDec.push(...note.labels);
-      }
     });
 
-    batchNoteCount(labelsToDec);
 
     setFadingNotes(new Set(selectedUUIDs));
     setTimeout(() => {
@@ -555,7 +550,6 @@ const TopMenuHome = ({
     const newNotesUUIDs = [];
     const selectedUUIDs = [];
     const newUUIDs = [];
-    const labelsUUIDs = [];
     const imagesMap = new Map();
     const imagesToDel = [];
     const length = selectedNotesIDs.length;
@@ -622,7 +616,6 @@ const TopMenuHome = ({
       };
       selectedUUIDs.push(noteUUID);
       newNotes.push(newNote);
-      labelsUUIDs.push(...note.labels);
       newUUIDs.push(newNoteUUID);
       newNotesUUIDs.push(newNoteUUID);
     });
@@ -630,8 +623,6 @@ const TopMenuHome = ({
     setMoreMenuOpen(false);
 
     const redo = async () => {
-      batchNoteCount(labelsUUIDs, "inc");
-
       dispatchNotes({
         type: "BATCH_COPY_NOTE",
         newNotes: newNotes,
@@ -648,7 +639,6 @@ const TopMenuHome = ({
 
     const undo = async () => {
       setFadingNotes(new Set(newUUIDs));
-      batchNoteCount(labelsUUIDs);
       setTimeout(() => {
         dispatchNotes({
           type: "UNDO_BATCH_COPY",
@@ -662,7 +652,6 @@ const TopMenuHome = ({
         type: "UNDO_BATCH_COPY",
         imagesToDel: imagesToDel,
         notesUUIDs: newNotesUUIDs,
-        labelsUUIDs: labelsUUIDs,
       });
       window.dispatchEvent(new Event("loadingEnd"));
     };

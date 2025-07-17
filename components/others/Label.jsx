@@ -10,6 +10,7 @@ import ColorSelectMenu from "./ColorSelectMenu";
 import MoreMenu from "./MoreMenu";
 import { useSearch } from "@/context/SearchContext";
 import ImageDropZone from "../Tools/ImageDropZone";
+import { validateImageFile } from "@/utils/validateImage";
 
 const Label = ({
   labelData,
@@ -17,13 +18,14 @@ const Label = ({
   isGrid,
   triggerReRender,
   fadingNotes,
-  dispatchNotes,
   setVisibleItems,
   setFadingNotes,
   index,
   calculateLayout,
   openSnackFunction,
   handleDeleteLabel,
+  notes,
+  order,
 }) => {
   const {
     updateLabel,
@@ -32,6 +34,7 @@ const Label = ({
     updateLabelImage,
     deleteLabelImage,
     labelLookUPRef,
+    loadingImages,
   } = useAppContext();
   const { labelSearchTerm } = useSearch();
   const [mounted, setMounted] = useState(false);
@@ -44,7 +47,6 @@ const Label = ({
   const [charCount, setCharCount] = useState(0);
   const [selected, setSelected] = useState(false);
   const [height, setHeight] = useState(0);
-  const [isImageLoading, setIsImageLoading] = useState(false);
   const [labelExists, setLabelExists] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const labelDate = getNoteFormattedDate(labelData.createdAt);
@@ -57,6 +59,13 @@ const Label = ({
   const imageRef = useRef(null);
   const inputRef = useRef(null);
   const isFirstRender = useRef(true);
+
+  const noteCount = order.filter((uuid) => {
+    const note = notes.get(uuid);
+    if (note.isTrash) return false;
+
+    if (note.labels.includes(labelData.uuid)) return true;
+  }).length;
 
   useEffect(() => {
     requestAnimationFrame(() => {
@@ -271,10 +280,19 @@ const Label = ({
     const imageFile = event.target?.files[0];
 
     inputRef.current.value = "";
-    setIsImageLoading(true);
-    updateLabelImage(labelData.uuid, imageFile).then(() => {
-      setIsImageLoading(false);
-    });
+
+    const { valid } = await validateImageFile(imageFile);
+
+    if (!valid) {
+      openSnackFunction({
+        snackMessage:
+          "Can’t upload this file. We accept GIF, JPEG, JPG, PNG files less than 10MB and 25 megapixels.",
+        showUndo: false,
+      });
+      return;
+    }
+
+    updateLabelImage(labelData.uuid, imageFile).then(() => {});
     if (imageRef.current) {
       imageRef.current.src = labelData.image + `?v=${new Date().getTime()}`;
     }
@@ -351,7 +369,10 @@ const Label = ({
     },
     {
       title: labelData.image ? "Change image" : "Add image",
-      function: () => inputRef.current.click(),
+      function: () => {
+        inputRef.current.click();
+        setIsOpen(false);
+      },
       icon: "image-menu-icon",
     },
     {
@@ -459,13 +480,13 @@ const Label = ({
                 style={{
                   width: "100%",
                   display: "block",
-                  opacity: !isImageLoading ? "1" : "0.5",
+                  opacity: !loadingImages.has(labelData.uuid) ? "1" : "0.5",
                   transition: "opacity 0.2s ease",
                 }}
                 src={labelData.image}
               />
               <AnimatePresence>
-                {isImageLoading && (
+                {loadingImages.has(labelData.uuid) && (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -633,11 +654,11 @@ const Label = ({
                 style={{ opacity: (isOpen || colorMenuOpen) && "1" }}
               >
                 {labelDate}
-                {labelData?.noteCount > 0 && (
+                {noteCount > 0 && (
                   <>
                     ,
                     <span style={{ paddingLeft: "0.4rem" }}>
-                      {labelData?.noteCount + " notes"}
+                      {noteCount + " notes"}
                     </span>
                   </>
                 )}

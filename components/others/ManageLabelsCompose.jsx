@@ -16,7 +16,6 @@ const ManageLabelsCompose = ({
 }) => {
   const {
     createLabel,
-    handleLabelNoteCount,
     labelsRef,
     currentSection,
     labelObjRef,
@@ -103,7 +102,6 @@ const ManageLabelsCompose = ({
         labels: prev.labels.filter((labelUUID) => !labelUUID === uuid),
       }));
 
-      //   handleLabelNoteCount(uuid, "decrement");
     } else {
       setNoteLabels((prev) => {
         const updated = new Set(prev);
@@ -111,7 +109,6 @@ const ManageLabelsCompose = ({
         return updated;
       });
       setNote((prev) => ({ ...prev, labels: [...prev.labels, uuid] }));
-      //   handleLabelNoteCount(uuid);
     }
   };
 

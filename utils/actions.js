@@ -5,7 +5,6 @@ import User from "@/models/User";
 import { getServerSession } from "next-auth";
 import { authOptions } from "./authOptions";
 import { v4 as uuid } from "uuid";
-import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import { nanoid } from "nanoid";
 import bcrypt from "bcryptjs";
@@ -584,20 +583,7 @@ export const createNoteAction = async (note) => {
 
     await User.updateOne(
       { _id: userID },
-      {
-        $inc: { "labels.$[elem].noteCount": 1 },
-        $push: {
-          notesOrder: { $each: [newNote.uuid], $position: 0 },
-        },
-      },
-      {
-        arrayFilters: [
-          {
-            "elem.uuid": { $in: newNote.labels },
-            "elem.noteCount": { $gt: 0 },
-          },
-        ],
-      }
+      { $push: { notesOrder: { $each: [newNote.uuid], $position: 0 } } }
     );
 
     await newNote.save();
@@ -975,20 +961,6 @@ export const DeleteNoteAction = async (noteUUID) => {
       return { success: false, message: "Note not found" };
     }
 
-    if (note.labels.length > 0) {
-      await User.updateOne(
-        { _id: userID },
-        {
-          $inc: { "labels.$[elem].noteCount": -1 },
-        },
-        {
-          arrayFilters: [
-            { "elem.uuid": { $in: note.labels }, "elem.noteCount": { $gt: 0 } },
-          ],
-        }
-      );
-    }
-
     if (note.images.length !== 0) {
       const folderPath = `${userID}/${note.uuid}/`;
       await cloudinary.api.delete_resources_by_prefix(folderPath);
@@ -1012,42 +984,23 @@ export const emptyTrashAction = async () => {
 
     const deletedNotes = await Note.find({ isTrash: true, creator: userID });
     let deletedUUIDs = [];
-    let deletedLabels = [];
     let deletedImages = [];
 
     deletedNotes.map((note) => {
       deletedUUIDs.push(note.uuid);
-      deletedLabels.push(...note.labels);
       const filePath = `${userID}/${note.uuid}/`;
       deletedImages.push(filePath);
     });
 
-    const labelCountsMap = deletedLabels.reduce((acc, label) => {
-      acc[label] = acc[label] ? acc[label] + 1 : 1;
-      return acc;
-    }, {});
-
-    const bulkOperations = [
-      {
-        updateOne: {
-          filter: { _id: userID },
-          update: {
-            $pull: {
-              notesOrder: { $in: deletedUUIDs },
-            },
-          },
-        },
-      },
-      ...Object.entries(labelCountsMap).map(([label, count]) => ({
-        updateOne: {
-          filter: { "labels.uuid": label },
-          update: { $inc: { "labels.$.noteCount": -count } },
-        },
-      })),
-    ];
-
     await Note.deleteMany({ isTrash: true, creator: userID });
-    await User.bulkWrite(bulkOperations);
+    await User.updateOne(
+      { _id: userID },
+      {
+        $pull: {
+          notesOrder: { $in: deletedUUIDs },
+        },
+      }
+    );
 
     if (deletedImages.length !== 0) {
       await Promise.all(
@@ -1140,22 +1093,9 @@ export const undoAction = async (data) => {
       user.notesOrder = updatedOrder;
       await user.save();
     } else if (data.type === "UNDO_COPY") {
-      const note = await Note.findOne({ uuid: data.noteUUID, creator: userID });
-
       await User.updateOne(
         { _id: userID },
-        {
-          $inc: { "labels.$[elem].noteCount": -1 },
-          $pull: { notesOrder: data.noteUUID },
-        },
-        {
-          arrayFilters: [
-            {
-              "elem.uuid": { $in: note.labels },
-              "elem.noteCount": { $gt: 0 },
-            },
-          ],
-        }
+        { $pull: { notesOrder: data.noteUUID } }
       );
 
       const result = await Note.deleteOne({
@@ -1210,30 +1150,6 @@ export const undoAction = async (data) => {
       user.notesOrder = updatedOrder;
       await user.save();
     } else if (data.type === "UNDO_BATCH_COPY") {
-      const labelCountsMap = data.labelsUUIDs.reduce((acc, label) => {
-        acc[label] = acc[label] ? acc[label] + 1 : 1;
-        return acc;
-      }, {});
-
-      const bulkOperations = [
-        {
-          updateOne: {
-            filter: { _id: userID },
-            update: {
-              $pull: {
-                notesOrder: { $in: data.notesUUIDs },
-              },
-            },
-          },
-        },
-        ...Object.entries(labelCountsMap).map(([label, count]) => ({
-          updateOne: {
-            filter: { "labels.uuid": label },
-            update: { $inc: { "labels.$.noteCount": -count } },
-          },
-        })),
-      ];
-
       if (data.imagesToDel.length !== 0) {
         await Promise.all(
           data.imagesToDel.map((path) => {
@@ -1246,7 +1162,14 @@ export const undoAction = async (data) => {
         uuid: { $in: data.notesUUIDs },
         creator: userID,
       });
-      await User.bulkWrite(bulkOperations);
+      await User.updateOne(
+        { _id: userID },
+        {
+          $pull: {
+            notesOrder: { $in: data.notesUUIDs },
+          },
+        }
+      );
     }
   } catch (error) {
     console.log(error);
@@ -1316,20 +1239,7 @@ export const copyNoteAction = async (data) => {
 
     await User.updateOne(
       { _id: userID },
-      {
-        $inc: { "labels.$[elem].noteCount": 1 },
-        $push: {
-          notesOrder: { $each: [newNote.uuid], $position: 0 },
-        },
-      },
-      {
-        arrayFilters: [
-          {
-            "elem.uuid": { $in: copiedNote.labels },
-            "elem.noteCount": { $gt: 0 },
-          },
-        ],
-      }
+      { $push: { notesOrder: { $each: [newNote.uuid], $position: 0 } } }
     );
 
     await newNote.save();
@@ -1355,13 +1265,11 @@ export const batchCopyNoteAction = async (data) => {
   try {
     await connectDB();
 
-    const allLabels = [];
     const notesUUIDs = [];
 
     await Promise.all(
       data.newNotes.map(async (n) => {
         notesUUIDs.unshift(n.uuid);
-        allLabels.push(...n.labels);
         n.creator = userID;
         const destinationFolder = `${userID}/${n.uuid}`;
         if (n.images.length > 0) {
@@ -1392,32 +1300,15 @@ export const batchCopyNoteAction = async (data) => {
       })
     );
 
-    const labelCountsMap = allLabels.reduce((acc, label) => {
-      acc[label] = acc[label] ? acc[label] + 1 : 1;
-      return acc;
-    }, {});
-
-    const bulkOperations = [
-      {
-        updateOne: {
-          filter: { _id: userID },
-          update: {
-            $push: {
-              notesOrder: { $each: notesUUIDs, $position: 0 },
-            },
-          },
-        },
-      },
-      ...Object.entries(labelCountsMap).map(([label, count]) => ({
-        updateOne: {
-          filter: { "labels.uuid": label },
-          update: { $inc: { "labels.$.noteCount": +count } },
-        },
-      })),
-    ];
-
     await Note.insertMany(data.newNotes);
-    await User.bulkWrite(bulkOperations);
+    await User.updateOne(
+      { _id: userID },
+      {
+        $push: {
+          notesOrder: { $each: notesUUIDs, $position: 0 },
+        },
+      }
+    );
 
     return {
       success: true,
@@ -1622,46 +1513,17 @@ export const updateLabelAction = async (data) => {
         status: 201,
       };
     } else if (data.type === "delete_image") {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL,
-        process.env.NEXT_SUPABASE_SERVICE_ROLE_KEY
-      );
-
       await User.findOneAndUpdate(
         { _id: userID, "labels.uuid": data.uuid },
         { $set: { "labels.$.image": null } }
       );
 
-      const filePath = `${userID}/labels/${data.uuid}`;
-
-      await supabase.storage.from("notopia").remove([filePath]);
+      const publicId = `${userID}/labels/${data.uuid}`;
+      await cloudinary.uploader.destroy(publicId);
 
       return {
         success: true,
         message: "Label image deleted successfully!",
-        status: 201,
-      };
-    } else if (data.type === "note_count") {
-      const user = await User.findOne(
-        { _id: userID, "labels.uuid": data.uuid },
-        { "labels.$": 1 }
-      );
-      const noteCount = user.labels[0].noteCount ?? 0;
-
-      const newNoteCount =
-        data.operation === "decrement"
-          ? noteCount > 0
-            ? noteCount - 1
-            : 0
-          : noteCount + 1;
-
-      await User.findOneAndUpdate(
-        { _id: userID, "labels.uuid": data.uuid },
-        { $set: { "labels.$.noteCount": newNoteCount } }
-      );
-      return {
-        success: true,
-        message: "Label note count updated successfully!",
         status: 201,
       };
     } else if (data.type === "label_pin") {
@@ -1710,11 +1572,6 @@ export const deleteLabelAction = async (data) => {
     return { success: false, message: "Unauthorized", status: 401 };
   }
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_SUPABASE_SERVICE_ROLE_KEY
-  );
-
   try {
     await connectDB();
 
@@ -1728,8 +1585,10 @@ export const deleteLabelAction = async (data) => {
       { $pull: { labels: data.labelUUID } }
     );
 
-    const filePath = `${userID}/labels/${data.labelUUID}`;
-    await supabase.storage.from("notopia").remove([filePath]);
+    if (data.hasImage) {
+      const publicId = `${userID}/labels/${data.labelUUID}`;
+      await cloudinary.uploader.destroy(publicId);
+    }
 
     return {
       success: true,
@@ -1756,44 +1615,25 @@ export const batchDeleteNotes = async (data) => {
       creator: userID,
     });
 
-    let deletedLabels = [];
     let deletedImages = [];
 
     deletedNotes.map((note) => {
-      deletedLabels.push(...note.labels);
       const filePath = `${userID}/${note.uuid}/`;
       deletedImages.push(filePath);
     });
-
-    const labelCountsMap = deletedLabels.reduce((acc, label) => {
-      acc[label] = acc[label] ? acc[label] + 1 : 1;
-      return acc;
-    }, {});
-
-    const bulkOperations = [
-      {
-        updateOne: {
-          filter: { _id: userID },
-          update: {
-            $pull: {
-              notesOrder: { $in: data.deletedUUIDs },
-            },
-          },
-        },
-      },
-      ...Object.entries(labelCountsMap).map(([label, count]) => ({
-        updateOne: {
-          filter: { "labels.uuid": label },
-          update: { $inc: { "labels.$.noteCount": -count } },
-        },
-      })),
-    ];
 
     await Note.deleteMany({
       uuid: { $in: data.deletedUUIDs },
       creator: userID,
     });
-    await User.bulkWrite(bulkOperations);
+    await User.updateOne(
+      { _id: userID },
+      {
+        $pull: {
+          notesOrder: { $in: data.deletedUUIDs },
+        },
+      }
+    );
 
     if (deletedImages.length !== 0) {
       await Promise.all(
@@ -1810,42 +1650,42 @@ export const batchDeleteNotes = async (data) => {
   }
 };
 
-export const editLabelCountAction = async (data) => {
+export const batchManageLabelsAction = async (data) => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
+
   if (!session) {
     return new Response("Unauthorized", { status: 401 });
   }
-
   try {
     await connectDB();
 
-    if (data.operation === "dec" && data.case === "shared") {
-      await Note.updateMany(
-        {
-          uuid: { $in: data.notesUUIDs },
-          labels: data.labelUUID,
-          creator: userID,
-        },
-        { $pull: { labels: data.labelUUID } }
-      );
-
-      await User.updateOne(
-        { _id: userID },
-        {
-          $inc: { "labels.$[elem].noteCount": -data.count },
-        },
-        {
-          arrayFilters: [
+    if (data.case === "shared") {
+      switch (data.operation) {
+        case "remove": {
+          await Note.updateMany(
             {
-              "elem.uuid": data.labelUUID,
-              "elem.noteCount": { $gte: data.count },
+              uuid: { $in: data.notesUUIDs },
+              labels: data.labelUUID,
+              creator: userID,
             },
-          ],
+            { $pull: { labels: data.labelUUID } }
+          );
+          return { success: true, message: "Label removed successfully" };
         }
-      );
-      return { success: true, message: "Label decremented successfully" };
-    } else if (data.operation === "inc" && data.case === "shared") {
+
+        case "add": {
+          await Note.updateMany(
+            {
+              uuid: { $in: data.notesUUIDs },
+              creator: userID,
+            },
+            { $push: { labels: data.labelUUID } }
+          );
+          return { success: true, message: "Label added successfully" };
+        }
+      }
+    } else {
       await Note.updateMany(
         {
           uuid: { $in: data.notesUUIDs },
@@ -1853,40 +1693,9 @@ export const editLabelCountAction = async (data) => {
         },
         { $push: { labels: data.labelUUID } }
       );
-
-      await User.updateOne(
-        { _id: userID },
-        {
-          $inc: { "labels.$[elem].noteCount": data.count },
-        },
-        {
-          arrayFilters: [{ "elem.uuid": data.labelUUID }],
-        }
-      );
-      return { success: true, message: "Label incremented successfully" };
-    }
-
-    if (data.case === "unshared") {
-      await Note.updateMany(
-        {
-          uuid: { $in: data.notesUUIDs },
-          creator: userID,
-        },
-        { $push: { labels: data.labelUUID } }
-      );
-
-      await User.updateOne(
-        { _id: userID },
-        {
-          $inc: { "labels.$[elem].noteCount": data.count },
-        },
-        {
-          arrayFilters: [{ "elem.uuid": data.labelUUID }],
-        }
-      );
-      return { success: true, message: "Label incremented successfully" };
+      return { success: true, message: "Label added successfully" };
     }
   } catch (error) {
-    return { success: false, message: "Error updating label" };
+    return { success: false, message: "Error managing labels" };
   }
 };
