@@ -14,7 +14,6 @@ import { validateImageFile } from "@/utils/validateImage";
 
 const Label = ({
   labelData,
-  setTooltipAnchor,
   isGrid,
   triggerReRender,
   fadingNotes,
@@ -22,7 +21,6 @@ const Label = ({
   setFadingNotes,
   index,
   calculateLayout,
-  openSnackFunction,
   handleDeleteLabel,
   notes,
   order,
@@ -35,6 +33,10 @@ const Label = ({
     deleteLabelImage,
     labelLookUPRef,
     loadingImages,
+    showTooltip,
+    hideTooltip,
+    closeToolTip,
+    openSnackRef,
   } = useAppContext();
   const { labelSearchTerm } = useSearch();
   const [mounted, setMounted] = useState(false);
@@ -152,7 +154,7 @@ const Label = ({
     dateRef.current.classList.remove("zero-opacity");
     labelTitleRef.current.style.removeProperty("pointer-events");
     if (labelTitleRef.current.innerText.trim() === "") {
-      openSnackFunction({
+      openSnackRef.current({
         snackMessage: "Label cannot be empty",
         showUndo: false,
       });
@@ -165,7 +167,7 @@ const Label = ({
       const labelToCheck = labelTitleRef.current.innerText.toLowerCase().trim();
       if (labelLookUPRef.current.has(labelToCheck)) {
         if (!labelExists) {
-          openSnackFunction({
+          openSnackRef.current({
             snackMessage: "Label already exists!",
             showUndo: false,
           });
@@ -251,25 +253,6 @@ const Label = ({
     });
   };
 
-  const closeToolTip = () => {
-    setTooltipAnchor((prev) => ({
-      anchor: null,
-      text: prev?.text,
-    }));
-  };
-
-  const handleMouseEnter = (e, text) => {
-    const target = e.currentTarget;
-    setTooltipAnchor({ anchor: target, text: text, display: true });
-  };
-
-  const handleMouseLeave = () => {
-    setTooltipAnchor((prev) => ({
-      ...prev,
-      display: false,
-    }));
-  };
-
   const handleLabelClick = () => {
     const encodedLabel = encodeURIComponent(labelData.label);
     window.location.hash = `label/${encodedLabel.toLowerCase()}`;
@@ -284,7 +267,7 @@ const Label = ({
     const { valid } = await validateImageFile(imageFile);
 
     if (!valid) {
-      openSnackFunction({
+      openSnackRef.current({
         snackMessage:
           "Can’t upload this file. We accept GIF, JPEG, JPG, PNG files less than 10MB and 25 megapixels.",
         showUndo: false,
@@ -329,7 +312,7 @@ const Label = ({
       setIsOpen(false);
     };
 
-    openSnackFunction({
+    openSnackRef.current({
       snackMessage: "Image deleted",
       snackOnUndo: undo,
       snackOnClose: onClose,
@@ -459,8 +442,8 @@ const Label = ({
           <div className="label-more-icon">
             <Button
               onClick={handleMoreClick}
-              onMouseEnter={(e) => handleMouseEnter(e, "Options")}
-              onMouseLeave={handleMouseLeave}
+              onMouseEnter={(e) => showTooltip(e, "Options")}
+              onMouseLeave={hideTooltip}
               ref={moreRef}
               className="btn-hover"
               style={{
@@ -704,7 +687,6 @@ const Label = ({
             handleColorClick={handleColorClick}
             anchorEl={colorAnchorEl}
             selectedColor={selectedColor}
-            setTooltipAnchor={setTooltipAnchor}
             isOpen={colorMenuOpen}
             setIsOpen={setColorMenuOpen}
           />

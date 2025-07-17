@@ -2,8 +2,10 @@ import React, { memo, useEffect, useRef, useState } from "react";
 import HorizontalLoader2 from "../Tools/HorizontalLoader2";
 import { AnimatePresence, motion } from "framer-motion";
 import { updatePasswordAction } from "@/utils/actions";
+import { useAppContext } from "@/context/AppContext";
 
 const SecuritySettings = ({ rightHeader, selected }) => {
+  const { openSnackRef } = useAppContext();
   const [reRender, triggerRerender] = useState(false);
   const [currentPassStatus, setCurrentPassStatus] = useState(null);
   const [newPassStatus, setNewPassStatus] = useState(null);
@@ -142,6 +144,10 @@ const SecuritySettings = ({ rightHeader, selected }) => {
       }
       return;
     }
+    openSnackRef.current({
+      snackMessage: "Password has been successfully updated!",
+      showUndo: false,
+    });
     reset();
   };
 

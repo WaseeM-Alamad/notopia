@@ -447,6 +447,9 @@ export const emailNewEmailAction = async ({ password, newEmail }) => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
   try {
+
+    await connectDB();
+
     if (!userID)
       return {
         success: false,
@@ -459,6 +462,19 @@ export const emailNewEmailAction = async ({ password, newEmail }) => {
         success: false,
         type: "email",
         message: "Invalid email",
+      };
+
+    const isEmailUsed = await User.findOne({
+      $or: [{ email: newEmail }, { tempMail: newEmail }],
+    });
+
+    console.log("IS EMAIL USED", isEmailUsed)
+
+    if (isEmailUsed)
+      return {
+        success: false,
+        type: "email",
+        message: "Email is already in use",
       };
 
     const user = await User.findOne({ _id: userID }).select(
@@ -500,8 +516,8 @@ export const emailNewEmailAction = async ({ password, newEmail }) => {
 
     await user.save();
 
-    // const link = `http://localhost:3000/auth/verify?token=${token}`;
-    const link = `https://notopia.app/auth/verify?token=${token}`;
+    const link = `http://localhost:3000/auth/verify?token=${token}`;
+    // const link = `https://notopia.app/auth/verify?token=${token}`;
 
     await resend.emails.send({
       from: "Notopia <noreply@notopia.app>",
@@ -531,7 +547,7 @@ export const emailNewEmailAction = async ({ password, newEmail }) => {
       tempEmail: newEmail,
     };
   } catch (error) {
-    console.log("Couldn't send verification to new email");
+    console.log("Couldn't send verification to new email", error);
     return {
       success: false,
       type: "both",

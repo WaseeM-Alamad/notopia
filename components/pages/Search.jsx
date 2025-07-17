@@ -10,8 +10,6 @@ const Search = ({
   selectedNotesRef,
   order,
   dispatchNotes,
-  setTooltipAnchor,
-  openSnackFunction,
   setSelectedNotesIDs,
   handleNoteClick,
   handleSelectNote,
@@ -33,7 +31,8 @@ const Search = ({
     setFilters,
     skipHashChangeRef,
   } = useSearch();
-  const { labelsRef, setIsFiltered } = useAppContext();
+  const { labelsRef, setIsFiltered, showTooltip, hideTooltip, closeToolTip } =
+    useAppContext();
   const [colorsSet, setColorsSet] = useState(new Set());
   const [labelsSet, setLabelsSet] = useState(new Set());
   const [typesSet, setTypesSet] = useState(new Set());
@@ -154,33 +153,6 @@ const Search = ({
     return encodeURIComponent(encodeURIComponent(str));
   };
 
-  const tripleDecode = (str) => {
-    return decodeURIComponent(decodeURIComponent(decodeURIComponent(str)));
-  };
-
-  const doubleDecode = (str) => {
-    return decodeURIComponent(decodeURIComponent(str));
-  };
-
-  const closeToolTip = () => {
-    setTooltipAnchor((prev) => ({
-      anchor: null,
-      text: prev?.text,
-    }));
-  };
-
-  const handleMouseEnter = (e, text) => {
-    const target = e.currentTarget;
-    setTooltipAnchor({ anchor: target, text: text, display: true });
-  };
-
-  const handleMouseLeave = () => {
-    setTooltipAnchor((prev) => ({
-      ...prev,
-      display: false,
-    }));
-  };
-
   const filtersToRender = [
     { title: "Types", function: typeClick, set: typesSet },
     { title: "Labels", function: labelClick, set: labelsSet },
@@ -262,9 +234,9 @@ const Search = ({
                           }}
                           onMouseEnter={(e) => {
                             if (item.title !== "Colors") return;
-                            handleMouseEnter(e, setItem);
+                            showTooltip(e, setItem);
                           }}
-                          onMouseLeave={handleMouseLeave}
+                          onMouseLeave={hideTooltip}
                           key={setItem}
                         >
                           <div
@@ -272,10 +244,10 @@ const Search = ({
                               item.title === "Colors"
                                 ? setItem + " filter-color"
                                 : item.title === "Labels"
-                                ? "filter-label"
-                                : item.title === "Types"
-                                ? "filter-" + setItem.toLowerCase()
-                                : ""
+                                  ? "filter-label"
+                                  : item.title === "Types"
+                                    ? "filter-" + setItem.toLowerCase()
+                                    : ""
                             }`}
                             aria-label={ariaLabel}
                           />
@@ -295,8 +267,6 @@ const Search = ({
             notes={notes}
             order={order}
             dispatchNotes={dispatchNotes}
-            setTooltipAnchor={setTooltipAnchor}
-            openSnackFunction={openSnackFunction}
             setSelectedNotesIDs={setSelectedNotesIDs}
             handleNoteClick={handleNoteClick}
             handleSelectNote={handleSelectNote}

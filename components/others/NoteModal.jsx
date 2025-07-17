@@ -32,17 +32,22 @@ const NoteModal = ({
   isOpen,
   setIsOpen,
   rootContainerRef,
-  setTooltipAnchor,
   dispatchNotes,
-  openSnackFunction,
   setModalStyle,
   currentSection,
   setVisibleItems,
   labelObj,
   skipSetLabelObjRef,
 }) => {
-  const { labelsRef, ignoreKeysRef, user } =
-    useAppContext();
+  const {
+    labelsRef,
+    ignoreKeysRef,
+    user,
+    showTooltip,
+    hideTooltip,
+    closeToolTip,
+    openSnackRef,
+  } = useAppContext();
   const { skipHashChangeRef, searchTerm } = useSearch();
   const [isDragOver, setIsDragOver] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -488,7 +493,7 @@ const NoteModal = ({
     redo(false);
 
     archiveRef.current = false;
-    openSnackFunction({
+    openSnackRef.current({
       snackMessage: `${
         passedNote.isArchived
           ? "Note unarchived"
@@ -526,7 +531,7 @@ const NoteModal = ({
     };
 
     if (!localNote?.isTrash) {
-      openSnackFunction({
+      openSnackRef.current({
         snackMessage: `${
           localIsPinned ? "Note unpinned and trashed" : "Note trashed"
         }`,
@@ -585,7 +590,7 @@ const NoteModal = ({
           window.dispatchEvent(new Event("loadingEnd"));
         };
 
-        openSnackFunction({
+        openSnackRef.current({
           snackMessage: "Note unarchived and pinned",
           snackOnUndo: undo,
           snackRedo: redo,
@@ -628,7 +633,7 @@ const NoteModal = ({
         window.dispatchEvent(new Event("loadingEnd"));
       };
 
-      openSnackFunction({
+      openSnackRef.current({
         snackMessage: "Image deleted",
         snackOnUndo: undo,
         snackOnClose: onClose,
@@ -770,25 +775,6 @@ const NoteModal = ({
     [note?.content, note?.title, localNote?.isTrash, undoStack]
   );
 
-  const closeToolTip = () => {
-    setTooltipAnchor((prev) => ({
-      anchor: null,
-      text: prev?.text,
-    }));
-  };
-
-  const handleMouseEnter = (e, text) => {
-    const target = e.currentTarget;
-    setTooltipAnchor({ anchor: target, text: text, display: true });
-  };
-
-  const handleMouseLeave = () => {
-    setTooltipAnchor((prev) => ({
-      ...prev,
-      display: false,
-    }));
-  };
-
   const removeLabel = async (labelUUID) => {
     const newLabels = localNote?.labels.filter(
       (noteLabelUUID) => noteLabelUUID !== labelUUID
@@ -852,7 +838,7 @@ const NoteModal = ({
     const restore = async () => {
       setLocalNote((prev) => ({ ...prev, isTrash: false }));
       window.dispatchEvent(new Event("loadingStart"));
-      openSnackFunction({
+      openSnackRef.current({
         snackMessage: "Note restored",
         snackOnUndo: undo,
         snackRedo: restore,
@@ -865,7 +851,7 @@ const NoteModal = ({
       window.dispatchEvent(new Event("loadingEnd"));
     };
 
-    openSnackFunction({
+    openSnackRef.current({
       snackMessage: "Can't edit in Trash",
       snackOnUndo: restore,
       noActionUndone: true,
@@ -959,7 +945,6 @@ const NoteModal = ({
             </div>
           )}
           <NoteImagesLayout
-            setTooltipAnchor={setTooltipAnchor}
             images={localNote?.images}
             // isLoadingImages={isLoadingImages}
             isTrash={localNote?.isTrash}
@@ -1031,7 +1016,6 @@ const NoteModal = ({
               setLocalNote={setLocalNote}
               ignoreTopRef={ignoreTopRef}
               dispatchNotes={dispatchNotes}
-              setTooltipAnchor={setTooltipAnchor}
               isOpen={isOpen}
             />
           )}
@@ -1068,10 +1052,8 @@ const NoteModal = ({
                           closeToolTip();
                           removeLabel(labelUUID);
                         }}
-                        onMouseEnter={(e) =>
-                          handleMouseEnter(e, "Remove label")
-                        }
-                        onMouseLeave={handleMouseLeave}
+                        onMouseEnter={(e) => showTooltip(e, "Remove label")}
+                        onMouseLeave={hideTooltip}
                         className="remove-label"
                       />
                     </div>
@@ -1092,9 +1074,9 @@ const NoteModal = ({
                   : ""}
               <span
                 onMouseEnter={(e) =>
-                  handleMouseEnter(e, "Created " + formattedCreatedAtDate)
+                  showTooltip(e, "Created " + formattedCreatedAtDate)
                 }
-                onMouseLeave={handleMouseLeave}
+                onMouseLeave={hideTooltip}
               >
                 Edited
                 {" " + formattedEditedDate}
@@ -1110,8 +1092,6 @@ const NoteModal = ({
           trashRef={trashRef}
           setLocalNote={setLocalNote}
           localNote={localNote}
-          setTooltipAnchor={setTooltipAnchor}
-          openSnackFunction={openSnackFunction}
           note={note}
           noteActions={noteActions}
           dispatchNotes={dispatchNotes}

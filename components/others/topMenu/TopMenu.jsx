@@ -23,17 +23,16 @@ const TopMenuHome = ({
   visibleItems,
   setVisibleItems,
   dispatchNotes,
-  openSnackFunction,
   setFadingNotes,
   selectedNotesIDs,
   setSelectedNotesIDs,
-  setTooltipAnchor,
   isDraggingRef,
   rootContainerRef,
   functionRefs,
   currentSection,
 }) => {
-  const { user } = useAppContext();
+  const { user, showTooltip, hideTooltip, closeToolTip, openSnackRef } =
+    useAppContext();
   const { filters } = useSearch();
   const userID = user?.id;
   const [colorAnchorEl, setColorAnchorEl] = useState(null);
@@ -155,25 +154,6 @@ const TopMenuHome = ({
       }
     }
   }, [selectedNotesIDs.length]);
-
-  const handleMouseEnter = (e, text) => {
-    const target = e.currentTarget;
-    setTooltipAnchor({ anchor: target, text: text, display: true });
-  };
-
-  const handleMouseLeave = () => {
-    setTooltipAnchor((prev) => ({
-      ...prev,
-      display: false,
-    }));
-  };
-
-  const closeToolTip = () => {
-    setTooltipAnchor((prev) => ({
-      anchor: null,
-      text: prev?.text,
-    }));
-  };
 
   const handleOpenColor = (e) => {
     closeToolTip();
@@ -340,7 +320,7 @@ const TopMenuHome = ({
     const snackMessage =
       length === 1 ? "Note archived" : `${length} notes archived`;
 
-    openSnackFunction({
+    openSnackRef.current({
       snackMessage: snackMessage,
       snackOnUndo: undo,
       snackRedo: redo,
@@ -400,7 +380,7 @@ const TopMenuHome = ({
             ? "Note unarchived and pinned"
             : `${length} notes unarchived and pinned`;
 
-        openSnackFunction({
+        openSnackRef.current({
           snackMessage: snackMessage,
           snackOnUndo: undo,
         });
@@ -511,7 +491,7 @@ const TopMenuHome = ({
         ? `Note ${val ? "restored" : "trashed"}`
         : `${length} notes ${val ? "restored" : "trashed"}`;
 
-    openSnackFunction({
+    openSnackRef.current({
       snackMessage: snackMessage,
       snackOnUndo: undo,
       snackRedo: redo,
@@ -527,7 +507,6 @@ const TopMenuHome = ({
       selectedUUIDs.push(uuid);
       const note = notes.get(uuid);
     });
-
 
     setFadingNotes(new Set(selectedUUIDs));
     setTimeout(() => {
@@ -656,7 +635,7 @@ const TopMenuHome = ({
       window.dispatchEvent(new Event("loadingEnd"));
     };
 
-    openSnackFunction({
+    openSnackRef.current({
       snackMessage: `${
         length === 1 ? "Note created" : length + " notes created"
       }`,
@@ -716,8 +695,8 @@ const TopMenuHome = ({
           >
             <Button
               onClick={handleClose}
-              onMouseEnter={(e) => handleMouseEnter(e, "Clear selection")}
-              onMouseLeave={handleMouseLeave}
+              onMouseEnter={(e) => showTooltip(e, "Clear selection")}
+              onMouseLeave={hideTooltip}
               className="clear-icon"
               style={{
                 display: "flex",
@@ -732,43 +711,38 @@ const TopMenuHome = ({
                 <>
                   <Button
                     onMouseEnter={(e) =>
-                      handleMouseEnter(e, pinNotes ? "Unpin" : "Pin")
+                      showTooltip(e, pinNotes ? "Unpin" : "Pin")
                     }
-                    onMouseLeave={handleMouseLeave}
+                    onMouseLeave={hideTooltip}
                     onClick={handlePin}
                     className={pinNotes ? "top-pinned-icon" : "top-pin-icon"}
                     style={{ width: "45px", height: "45px" }}
                   />
                   <Button
-                    onMouseEnter={(e) => handleMouseEnter(e, "Remind me")}
-                    onMouseLeave={handleMouseLeave}
+                    onMouseEnter={(e) => showTooltip(e, "Remind me")}
+                    onMouseLeave={hideTooltip}
                     className="top-reminder-icon"
                     style={{ width: "45px", height: "45px" }}
                   />
                   <Button
                     onMouseEnter={(e) =>
-                      handleMouseEnter(
-                        e,
-                        archiveNotes ? "Unarchive" : "Archive"
-                      )
+                      showTooltip(e, archiveNotes ? "Unarchive" : "Archive")
                     }
-                    onMouseLeave={handleMouseLeave}
+                    onMouseLeave={hideTooltip}
                     onClick={handleArchive}
                     className="top-archive-icon"
                     style={{ width: "45px", height: "45px" }}
                   />
                   <Button
-                    onMouseEnter={(e) =>
-                      handleMouseEnter(e, "Background options")
-                    }
-                    onMouseLeave={handleMouseLeave}
+                    onMouseEnter={(e) => showTooltip(e, "Background options")}
+                    onMouseLeave={hideTooltip}
                     onClick={handleOpenColor}
                     className="top-color-icon"
                     style={{ width: "45px", height: "45px" }}
                   />
                   <Button
-                    onMouseEnter={(e) => handleMouseEnter(e, "More")}
-                    onMouseLeave={handleMouseLeave}
+                    onMouseEnter={(e) => showTooltip(e, "More")}
+                    onMouseLeave={hideTooltip}
                     onClick={handleOpenMenu}
                     className="top-more-icon"
                     style={{ width: "45px", height: "45px" }}
@@ -812,7 +786,6 @@ const TopMenuHome = ({
             selectedColor={selectedColor}
             selectedBG={selectedBG}
             setSelectedBG={setSelectedBG}
-            setTooltipAnchor={setTooltipAnchor}
             isOpen={colorMenuOpen}
             setIsOpen={setColorMenuOpen}
           />

@@ -17,7 +17,6 @@ const GAP_BETWEEN_SECTIONS = 88;
 const NoteWrapper = memo(
   ({
     dispatchNotes,
-    openSnackFunction,
     selectedNotesRef,
     isGrid,
     note,
@@ -28,7 +27,6 @@ const NoteWrapper = memo(
     setSelectedNotesIDs,
     index,
     handleSelectNote,
-    setTooltipAnchor,
     handleNoteClick,
   }) => {
     const [mounted, setMounted] = useState(false);
@@ -65,12 +63,10 @@ const NoteWrapper = memo(
             note={note}
             noteActions={noteActions}
             selectedNotesRef={selectedNotesRef}
-            setTooltipAnchor={setTooltipAnchor}
             calculateLayout={calculateLayout}
             setFadingNotes={setFadingNotes}
             setSelectedNotesIDs={setSelectedNotesIDs}
             handleSelectNote={handleSelectNote}
-            openSnackFunction={openSnackFunction}
             index={index}
           />
         </div>
@@ -92,8 +88,6 @@ const DynamicLabel = ({
   fadingNotes,
   setFadingNotes,
   rootContainerRef,
-  setTooltipAnchor,
-  openSnackFunction,
   setSelectedNotesIDs,
   handleNoteClick,
   handleSelectNote,
@@ -347,8 +341,6 @@ const DynamicLabel = ({
                 setFadingNotes={setFadingNotes}
                 index={index}
                 dispatchNotes={dispatchNotes}
-                setTooltipAnchor={setTooltipAnchor}
-                openSnackFunction={openSnackFunction}
                 setSelectedNotesIDs={setSelectedNotesIDs}
                 handleNoteClick={handleNoteClick}
                 handleSelectNote={handleSelectNote}

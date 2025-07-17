@@ -3,6 +3,7 @@
 import { useSession } from "next-auth/react";
 import React, {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useRef,
@@ -12,21 +13,23 @@ import {
   fetchLabelsAction,
   createLabelAction,
   updateLabelAction,
-  deleteLabelAction,
-  editLabelCountAction,
 } from "@/utils/actions";
+import { useSearch } from "./SearchContext";
 
 const AppContext = createContext();
 
 export function AppProvider({ children, initialUser }) {
   const { data: session, status } = useSession();
+  const { setFilters } = useSearch();
   const [user, setUser] = useState(initialUser);
   const [currentSection, setCurrentSection] = useState("Home");
   const [loadingImages, setLoadingImages] = useState(new Set());
   const [labelsReady, setLabelsReady] = useState(false);
   const [isFiltered, setIsFiltered] = useState(false);
   const [layout, setLayout] = useState(null);
-  const userID = session?.user?.id;
+
+  const openSnackRef = useRef(null);
+  const setTooltipRef = useRef(null);
 
   const labelsRef = useRef(new Map());
   const labelLookUPRef = useRef(new Map());
@@ -43,6 +46,12 @@ export function AppProvider({ children, initialUser }) {
       isDarkModeRef.current = true;
     }
   }, []);
+
+  useEffect(() => {
+    if (currentSection?.toLowerCase() === "search") return;
+    setIsFiltered(false);
+    setFilters({ image: null, color: null, label: null });
+  }, [currentSection]);
 
   const getLabels = async () => {
     const fetchedLables = await fetchLabelsAction();
@@ -282,6 +291,25 @@ export function AppProvider({ children, initialUser }) {
     }
   };
 
+  const showTooltip = useCallback((e, text) => {
+    const target = e.currentTarget;
+    setTooltipRef.current({ anchor: target, text: text, display: true });
+  }, []);
+
+  const hideTooltip = useCallback(() => {
+    setTooltipRef.current((prev) => ({
+      ...prev,
+      display: false,
+    }));
+  }, []);
+
+  const closeToolTip = useCallback(() => {
+    setTooltipRef.current((prev) => ({
+      anchor: null,
+      text: prev?.text,
+    }));
+  }, []);
+
   return (
     <AppContext.Provider
       value={{
@@ -313,6 +341,11 @@ export function AppProvider({ children, initialUser }) {
         session,
         status,
         isDarkModeRef,
+        openSnackRef,
+        setTooltipRef,
+        showTooltip,
+        hideTooltip,
+        closeToolTip,
       }}
     >
       {children}

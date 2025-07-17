@@ -7,8 +7,10 @@ import HorizontalLoader from "../Tools/HorizontalLoader";
 import Modal from "../Tools/Modal";
 import HorizontalLoader2 from "../Tools/HorizontalLoader2";
 import isEmail from "validator/lib/isEmail";
+import { useAppContext } from "@/context/AppContext";
 
 const AccountSettings = ({ rightHeader, selected, user, setUser }) => {
+  const { openSnackRef } = useAppContext();
   const [reRender, triggerRerender] = useState(false);
   const [isNameDisabled, setIsNameDisabled] = useState(true);
   const [userStatus, setUserStatus] = useState(null);
@@ -159,10 +161,21 @@ const AccountSettings = ({ rightHeader, selected, user, setUser }) => {
       return;
     }
 
+    openSnackRef.current({
+      snackMessage: "A verification link has been sent to the new email",
+      showUndo: false,
+    });
     setUser((prev) => ({ ...prev, tempEmail: tempEmail }));
     emailRef.current.value = tempEmail;
     setIsEmailOpen(false);
   };
+
+  useEffect(() => {
+    if (!isEmailOpen) {
+      setEmailPassStatus(null);
+      setNewEmailStatus(null);
+    }
+  }, [isEmailOpen]);
 
   return (
     <>

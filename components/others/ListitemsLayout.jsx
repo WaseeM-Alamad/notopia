@@ -17,7 +17,6 @@ const ListItemsLayout = ({
   ignoreTopRef,
   dispatchNotes,
   isOpen,
-  setTooltipAnchor,
 }) => {
   const renderCBdivider =
     localNote?.checkboxes.some((cb) => cb.isCompleted) &&
@@ -571,7 +570,6 @@ const ListItemsLayout = ({
               if (checkbox.isCompleted) return null;
               return (
                 <ListItem
-                  setTooltipAnchor={setTooltipAnchor}
                   key={checkbox.uuid}
                   itemRefs={itemRefs}
                   overIndexRef={overIndexRef}
@@ -626,7 +624,6 @@ const ListItemsLayout = ({
             completedParentItems.map((parent, index) => (
               <div key={`completed-parent-item-${parent.uuid}`}>
                 <ListItem
-                  setTooltipAnchor={setTooltipAnchor}
                   no={true}
                   dispatchNotes={dispatchNotes}
                   handleCheckboxClick={handleCheckboxClick}
@@ -642,7 +639,6 @@ const ListItemsLayout = ({
 
                 {getCompletedChildren(parent.uuid).map((child, childIndex) => (
                   <ListItem
-                    setTooltipAnchor={setTooltipAnchor}
                     key={child.uuid}
                     no={true}
                     dispatchNotes={dispatchNotes}
@@ -669,7 +665,6 @@ const ListItemsLayout = ({
             return (
               <div key={`active-parent-item-${parent.uuid}`}>
                 <ListItem
-                  setTooltipAnchor={setTooltipAnchor}
                   no={true}
                   dispatchNotes={dispatchNotes}
                   handleCheckboxClick={handleCheckboxClick}
@@ -685,7 +680,6 @@ const ListItemsLayout = ({
 
                 {completedChildren.map((child, childIndex) => (
                   <ListItem
-                    setTooltipAnchor={setTooltipAnchor}
                     key={child.uuid}
                     no={true}
                     dispatchNotes={dispatchNotes}

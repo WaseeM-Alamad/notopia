@@ -26,11 +26,15 @@ const NoteTools = ({
   setMoreMenuOpen,
   userID,
   noteActions,
-  setTooltipAnchor,
   inputRef,
-  openSnackFunction,
 }) => {
-  const { loadingImages, setLoadingImages } = useAppContext();
+  const {
+    showTooltip,
+    hideTooltip,
+    closeToolTip,
+    setLoadingImages,
+    openSnackRef,
+  } = useAppContext();
   const { filters } = useSearch();
   const [colorAnchorEl, setColorAnchorEl] = useState(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -129,13 +133,6 @@ const NoteTools = ({
     setColorMenuOpen(!colorMenuOpen);
   };
 
-  const closeToolTip = () => {
-    setTooltipAnchor((prev) => ({
-      anchor: null,
-      text: prev?.text,
-    }));
-  };
-
   const handleOnChange = async (event) => {
     const formData = new FormData();
     const files = Array.from(event.target?.files || []);
@@ -170,7 +167,7 @@ const NoteTools = ({
     }
 
     if (isInvalidFile) {
-      openSnackFunction({
+      openSnackRef.current({
         snackMessage:
           "Can’t upload this file. We accept GIF, JPEG, JPG, PNG files less than 10MB and 25 megapixels.",
         showUndo: false,
@@ -266,18 +263,6 @@ const NoteTools = ({
       index: index,
     });
     setMoreMenuOpen(false);
-  };
-
-  const handleMouseEnter = (e, text) => {
-    const target = e.currentTarget;
-    setTooltipAnchor({ anchor: target, text: text, display: true });
-  };
-
-  const handleMouseLeave = () => {
-    setTooltipAnchor((prev) => ({
-      ...prev,
-      display: false,
-    }));
   };
 
   const containerClick = useCallback((e) => {
@@ -495,13 +480,13 @@ const NoteTools = ({
               <>
                 <Button
                   className="reminder-icon btn-hover"
-                  onMouseEnter={(e) => handleMouseEnter(e, "Remind me")}
-                  onMouseLeave={handleMouseLeave}
+                  onMouseEnter={(e) => showTooltip(e, "Remind me")}
+                  onMouseLeave={hideTooltip}
                 />
                 <Button
                   className="person-add-icon btn-hover"
-                  onMouseEnter={(e) => handleMouseEnter(e, "Collaborator")}
-                  onMouseLeave={handleMouseLeave}
+                  onMouseEnter={(e) => showTooltip(e, "Collaborator")}
+                  onMouseLeave={hideTooltip}
                 />
                 <Button
                   className={`${
@@ -517,24 +502,21 @@ const NoteTools = ({
                     });
                   }}
                   onMouseEnter={(e) =>
-                    handleMouseEnter(
+                    showTooltip(
                       e,
                       `${note.isArchived ? "Unarchive" : "Archive"}`
                     )
                   }
-                  onMouseLeave={handleMouseLeave}
+                  onMouseLeave={hideTooltip}
                 />
                 <Button
                   className="image-icon btn-hover"
                   onClick={() => {
-                    setTooltipAnchor((prev) => ({
-                      ...prev,
-                      display: false,
-                    }));
+                    closeToolTip();
                     inputRef.current.click();
                   }}
-                  onMouseEnter={(e) => handleMouseEnter(e, "Add image")}
-                  onMouseLeave={handleMouseLeave}
+                  onMouseEnter={(e) => showTooltip(e, "Add image")}
+                  onMouseLeave={hideTooltip}
                 >
                   <input
                     ref={inputRef}
@@ -547,10 +529,8 @@ const NoteTools = ({
                 <Button
                   className="color-icon btn-hover"
                   onClick={toggleMenu}
-                  onMouseEnter={(e) =>
-                    handleMouseEnter(e, "Background options")
-                  }
-                  onMouseLeave={handleMouseLeave}
+                  onMouseEnter={(e) => showTooltip(e, "Background options")}
+                  onMouseLeave={hideTooltip}
                 />
                 <AnimatePresence>
                   {colorMenuOpen && (
@@ -560,7 +540,6 @@ const NoteTools = ({
                       anchorEl={colorAnchorEl}
                       selectedColor={selectedColor}
                       selectedBG={note.background}
-                      setTooltipAnchor={setTooltipAnchor}
                       isOpen={colorMenuOpen}
                       setIsOpen={setColorMenuOpen}
                     />
@@ -569,8 +548,8 @@ const NoteTools = ({
                 <Button
                   className="more-icon btn-hover"
                   onClick={handleMoreClick}
-                  onMouseEnter={(e) => handleMouseEnter(e, "More")}
-                  onMouseLeave={handleMouseLeave}
+                  onMouseEnter={(e) => showTooltip(e, "More")}
+                  onMouseLeave={hideTooltip}
                 />
               </>
             ) : (

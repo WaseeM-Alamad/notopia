@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import Button from "./Button";
 import XIcon from "../icons/XIcon";
+import { useAppContext } from "@/context/AppContext";
 
 const Snackbar = ({
   snackbarState,
@@ -12,9 +13,9 @@ const Snackbar = ({
   noActionUndone,
   setNoActionUndone,
   setUnloadWarn,
-  setTooltipAnchor,
   onClose,
 }) => {
+  const { showTooltip, hideTooltip, closeToolTip } = useAppContext();
   const [isMounted, setIsMounted] = useState(false);
   const timeoutRef = useRef(null);
   useEffect(() => {
@@ -41,18 +42,6 @@ const Snackbar = ({
   useEffect(() => {
     setIsMounted(true);
   }, []);
-
-  const handleMouseEnter = (e, text) => {
-    const target = e.currentTarget;
-    setTooltipAnchor({ anchor: target, text: text, display: true });
-  };
-
-  const handleMouseLeave = () => {
-    setTooltipAnchor((prev) => ({
-      ...prev,
-      display: false,
-    }));
-  };
 
   const openActionUndone = () => {
     setSnackbarState((prev) => ({
@@ -103,20 +92,16 @@ const Snackbar = ({
             </button>
           )}
           <Button
-            onMouseEnter={(e) => handleMouseEnter(e, "Dismiss")}
-            onMouseLeave={handleMouseLeave}
+            onMouseEnter={(e) => showTooltip(e, "Dismiss")}
+            onMouseLeave={hideTooltip}
             onClick={() => {
+              closeToolTip();
               setSnackbarState((prev) => ({
                 ...prev,
                 snackOpen: false,
               }));
-              setTooltipAnchor((prev) => ({
-                anchor: null,
-                text: prev?.text,
-              }));
-              // if (snackbarState.showUndo) {
+
               onClose.current();
-              // }
             }}
           >
             <XIcon color="white" />

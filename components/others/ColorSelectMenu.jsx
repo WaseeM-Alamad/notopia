@@ -2,6 +2,7 @@ import React, { memo, useEffect, useRef, useState } from "react";
 import DoneRoundedIcon from "@mui/icons-material/DoneRounded";
 import { AnimatePresence, motion } from "framer-motion";
 import { Popper } from "@mui/material";
+import { useAppContext } from "@/context/AppContext";
 
 const colors = [
   "Default",
@@ -40,8 +41,8 @@ const ColorSelectMenu = ({
   isOpen,
   setIsOpen,
   anchorEl,
-  setTooltipAnchor,
 }) => {
+  const { showTooltip, hideTooltip } = useAppContext();
   const [hoveredItem, setHoveredItem] = useState(false);
   const menuRef = useRef(null);
 
@@ -68,18 +69,6 @@ const ColorSelectMenu = ({
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-  const handleMouseEnter = (e, color) => {
-    const target = e.currentTarget;
-    setTooltipAnchor({ anchor: target, text: color, display: true });
-  };
-
-  const handleMouseLeave = () => {
-    setTooltipAnchor((prev) => ({
-      ...prev,
-      display: false,
-    }));
-  };
 
   return (
     <Popper
@@ -125,22 +114,22 @@ const ColorSelectMenu = ({
               hoveredItem === color && selectedColor !== color
                 ? "hovered-item"
                 : color === selectedColor
-                ? "menu-item-selected"
-                : color === "Default"
-                ? "menu-item-default"
-                : "";
+                  ? "menu-item-selected"
+                  : color === "Default"
+                    ? "menu-item-default"
+                    : "";
 
             return (
               <button
                 onClick={() => handleColorClick(color)}
                 onMouseEnter={(e) => {
-                  handleMouseEnter(e, color);
+                  showTooltip(e, color);
 
                   setHoveredItem(color);
                 }}
                 onMouseLeave={() => {
                   setHoveredItem(null);
-                  handleMouseLeave();
+                  hideTooltip();
                 }}
                 disabled={!isOpen}
                 key={index}
@@ -191,24 +180,21 @@ const ColorSelectMenu = ({
                 hoveredItem === name && selectedBG !== name
                   ? "hovered-item"
                   : name === selectedBG
-                  ? "menu-item-selected"
-                  : name === "DefaultBG"
-                  ? "menu-item-default"
-                  : "";
+                    ? "menu-item-selected"
+                    : name === "DefaultBG"
+                      ? "menu-item-default"
+                      : "";
               return (
                 <button
                   onClick={() => handleBackground(name)}
                   onMouseEnter={(e) => {
-                    handleMouseEnter(
-                      e,
-                      name === "DefaultBG" ? "Default" : name
-                    );
+                    showTooltip(e, name === "DefaultBG" ? "Default" : name);
 
                     setHoveredItem(name);
                   }}
                   onMouseLeave={() => {
                     setHoveredItem(null);
-                    handleMouseLeave();
+                    hideTooltip();
                   }}
                   className={`menu-bg-btn menu-bg-${name} ${itemClass}`}
                   key={name}

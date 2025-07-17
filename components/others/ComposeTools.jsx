@@ -5,6 +5,7 @@ import BackIcon from "../icons/BackIcon";
 import { v4 as uuid } from "uuid";
 import { AnimatePresence } from "framer-motion";
 import { validateImageFile } from "@/utils/validateImage";
+import { useAppContext } from "@/context/AppContext";
 
 const AddModalTools = ({
   isOpen,
@@ -13,8 +14,6 @@ const AddModalTools = ({
   note,
   selectedColor,
   setSelectedColor,
-  setTooltipAnchor,
-  openSnackFunction,
   redoStack,
   undoStack,
   handleUndo,
@@ -24,6 +23,7 @@ const AddModalTools = ({
   setLabelsOpen,
   inputRef,
 }) => {
+  const { showTooltip, hideTooltip, closeToolTip } = useAppContext();
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
   const [colorAnchorEl, setColorAnchorEl] = useState();
   const colorButtonRef = useRef(null);
@@ -39,25 +39,6 @@ const AddModalTools = ({
     closeToolTip();
     setColorAnchorEl(e.currentTarget);
     setColorMenuOpen((prev) => !prev);
-  };
-
-  const handleMouseEnter = (e, text) => {
-    const target = e.currentTarget;
-    setTooltipAnchor({ anchor: target, text: text, display: true });
-  };
-
-  const handleMouseLeave = () => {
-    setTooltipAnchor((prev) => ({
-      ...prev,
-      display: false,
-    }));
-  };
-
-  const closeToolTip = () => {
-    setTooltipAnchor((prev) => ({
-      anchor: null,
-      text: prev?.text,
-    }));
   };
 
   const handleBackground = useCallback(
@@ -91,7 +72,7 @@ const AddModalTools = ({
     }
 
     if (isInvalidFile) {
-      openSnackFunction({
+      openSnackRef.current({
         snackMessage:
           "Can’t upload this file. We accept GIF, JPEG, JPG, PNG files less than 10MB and 25 megapixels.",
         showUndo: false,
@@ -114,13 +95,13 @@ const AddModalTools = ({
       <div className="modal-bottom-icons">
         <Button
           className="reminder-icon btn-hover"
-          onMouseEnter={(e) => handleMouseEnter(e, "Remind me")}
-          onMouseLeave={handleMouseLeave}
+          onMouseEnter={(e) => showTooltip(e, "Remind me")}
+          onMouseLeave={hideTooltip}
         />
         <Button
           className="person-add-icon btn-hover"
-          onMouseEnter={(e) => handleMouseEnter(e, "Collaborator")}
-          onMouseLeave={handleMouseLeave}
+          onMouseEnter={(e) => showTooltip(e, "Collaborator")}
+          onMouseLeave={hideTooltip}
         />
         <Button
           className="archive-icon btn-hover"
@@ -128,7 +109,7 @@ const AddModalTools = ({
             const undoArchive = () => {
               setNote((prev) => ({ ...prev, isArchived: !prev.isArchived }));
             };
-            openSnackFunction({
+            openSnackRef.current({
               snackMessage: `${
                 note.isArchived
                   ? "Note will be archived"
@@ -138,13 +119,13 @@ const AddModalTools = ({
             });
             setNote((prev) => ({ ...prev, isArchived: !prev.isArchived }));
           }}
-          onMouseEnter={(e) => handleMouseEnter(e, "Archive")}
-          onMouseLeave={handleMouseLeave}
+          onMouseEnter={(e) => showTooltip(e, "Archive")}
+          onMouseLeave={hideTooltip}
         />
         <Button
           className="image-icon btn-hover"
-          onMouseEnter={(e) => handleMouseEnter(e, "Add image")}
-          onMouseLeave={handleMouseLeave}
+          onMouseEnter={(e) => showTooltip(e, "Add image")}
+          onMouseLeave={hideTooltip}
           onClick={() => inputRef.current.click()}
         >
           <input
@@ -157,8 +138,8 @@ const AddModalTools = ({
         </Button>
         <Button
           className="color-icon btn-hover"
-          onMouseEnter={(e) => handleMouseEnter(e, "Background options")}
-          onMouseLeave={handleMouseLeave}
+          onMouseEnter={(e) => showTooltip(e, "Background options")}
+          onMouseLeave={hideTooltip}
           ref={colorButtonRef}
           onClick={toggleMenu}
         />
@@ -168,7 +149,6 @@ const AddModalTools = ({
               handleColorClick={handleColorClick}
               handleBackground={handleBackground}
               anchorEl={colorAnchorEl}
-              setTooltipAnchor={setTooltipAnchor}
               selectedColor={selectedColor}
               isOpen={colorMenuOpen}
               setIsOpen={setColorMenuOpen}
@@ -183,8 +163,8 @@ const AddModalTools = ({
             setMoreMenuOpen((prev) => !prev);
             setLabelsOpen(false);
           }}
-          onMouseEnter={(e) => handleMouseEnter(e, "More")}
-          onMouseLeave={handleMouseLeave}
+          onMouseEnter={(e) => showTooltip(e, "More")}
+          onMouseLeave={hideTooltip}
           className="more-icon btn-hover"
         />
         <Button onClick={handleUndo} disabled={undoStack.length === 0}>

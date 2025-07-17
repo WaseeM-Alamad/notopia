@@ -18,11 +18,9 @@ const ModalTools = ({
   filters,
   setLocalNote,
   dispatchNotes,
-  openSnackFunction,
   delayDispatchRef,
   note,
   noteActions,
-  setTooltipAnchor,
   archiveRef,
   trashRef,
   imagesChangedRef,
@@ -33,7 +31,14 @@ const ModalTools = ({
   handleRedo,
   inputRef,
 }) => {
-  const { setLoadingImages, user } = useAppContext();
+  const {
+    setLoadingImages,
+    user,
+    showTooltip,
+    hideTooltip,
+    closeToolTip,
+    openSnackRef,
+  } = useAppContext();
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
   const [colorAnchorEl, setColorAnchorEl] = useState(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -111,7 +116,7 @@ const ModalTools = ({
     }
 
     if (isInvalidFile) {
-      openSnackFunction({
+      openSnackRef.current({
         snackMessage:
           "Can’t upload this file. We accept GIF, JPEG, JPG, PNG files less than 10MB and 25 megapixels.",
         showUndo: false,
@@ -207,30 +212,11 @@ const ModalTools = ({
 
     redo();
 
-    openSnackFunction({
+    openSnackRef.current({
       snackMessage: "Note restored",
       snackOnUndo: undo,
       snackRedo: redo,
     });
-  };
-
-  const handleMouseEnter = (e, text) => {
-    const target = e.currentTarget;
-    setTooltipAnchor({ anchor: target, text: text, display: true });
-  };
-
-  const handleMouseLeave = () => {
-    setTooltipAnchor((prev) => ({
-      ...prev,
-      display: false,
-    }));
-  };
-
-  const closeToolTip = () => {
-    setTooltipAnchor((prev) => ({
-      anchor: null,
-      text: prev?.text,
-    }));
   };
 
   const toggleColorMenu = (e) => {
@@ -430,8 +416,8 @@ const ModalTools = ({
               <Button
                 className="close archive-icon btn-hover"
                 onClick={handleModalArchive}
-                onMouseEnter={(e) => handleMouseEnter(e, "Archive")}
-                onMouseLeave={handleMouseLeave}
+                onMouseEnter={(e) => showTooltip(e, "Archive")}
+                onMouseLeave={hideTooltip}
               />
               <Button
                 className="image-icon btn-hover"
@@ -439,8 +425,8 @@ const ModalTools = ({
                   closeToolTip();
                   inputRef.current.click();
                 }}
-                onMouseEnter={(e) => handleMouseEnter(e, "Add image")}
-                onMouseLeave={handleMouseLeave}
+                onMouseEnter={(e) => showTooltip(e, "Add image")}
+                onMouseLeave={hideTooltip}
               >
                 <input
                   ref={inputRef}
@@ -452,8 +438,8 @@ const ModalTools = ({
               <Button
                 className="color-icon btn-hover"
                 onClick={toggleColorMenu}
-                onMouseEnter={(e) => handleMouseEnter(e, "Background options")}
-                onMouseLeave={handleMouseLeave}
+                onMouseEnter={(e) => showTooltip(e, "Background options")}
+                onMouseLeave={hideTooltip}
               />
               <AnimatePresence>
                 {colorMenuOpen && (
@@ -463,7 +449,6 @@ const ModalTools = ({
                     anchorEl={colorAnchorEl}
                     selectedColor={localNote?.color}
                     selectedBG={localNote?.background}
-                    setTooltipAnchor={setTooltipAnchor}
                     isOpen={colorMenuOpen}
                     setIsOpen={setColorMenuOpen}
                   />
@@ -476,23 +461,23 @@ const ModalTools = ({
                   setMoreMenuOpen((prev) => !prev);
                   setLabelsOpen(false);
                 }}
-                onMouseEnter={(e) => handleMouseEnter(e, "More")}
-                onMouseLeave={handleMouseLeave}
+                onMouseEnter={(e) => showTooltip(e, "More")}
+                onMouseLeave={hideTooltip}
                 className="more-icon btn-hover"
               />
               <>
                 <Button
                   onClick={handleUndo}
-                  onMouseEnter={(e) => handleMouseEnter(e, "Undo")}
-                  onMouseLeave={handleMouseLeave}
+                  onMouseEnter={(e) => showTooltip(e, "Undo")}
+                  onMouseLeave={hideTooltip}
                   disabled={undoStack.length === 0}
                 >
                   <BackIcon />
                 </Button>
                 <Button
                   onClick={handleRedo}
-                  onMouseEnter={(e) => handleMouseEnter(e, "Redo")}
-                  onMouseLeave={handleMouseLeave}
+                  onMouseEnter={(e) => showTooltip(e, "Redo")}
+                  onMouseLeave={hideTooltip}
                   disabled={redoStack.length === 0}
                 >
                   <BackIcon direction="1" />
@@ -503,14 +488,14 @@ const ModalTools = ({
             <>
               <Button
                 className="note-delete-icon"
-                onMouseEnter={(e) => handleMouseEnter(e, "Delete forever")}
-                onMouseLeave={handleMouseLeave}
+                onMouseEnter={(e) => showTooltip(e, "Delete forever")}
+                onMouseLeave={hideTooltip}
                 onClick={handleDeleteClick}
               />
               <Button
                 className="note-restore-icon"
-                onMouseEnter={(e) => handleMouseEnter(e, "Restore")}
-                onMouseLeave={handleMouseLeave}
+                onMouseEnter={(e) => showTooltip(e, "Restore")}
+                onMouseLeave={hideTooltip}
                 onClick={restoreNote}
               />
             </>

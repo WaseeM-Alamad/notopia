@@ -20,7 +20,6 @@ import ProfileMenu from "./ProfileMenu";
 import { useSearch } from "@/context/SearchContext";
 import { debounce } from "lodash";
 import { useAppContext } from "@/context/AppContext";
-import Tooltip from "../Tools/Tooltip";
 import AccountDialog from "./AccountDialog";
 import ListIcon from "../icons/ListIcon";
 import SearchIcon from "../icons/SearchIcon";
@@ -47,10 +46,12 @@ const Navbar = () => {
     modalOpenRef,
     user,
     setUser,
+    showTooltip,
+    hideTooltip,
+    closeToolTip,
   } = useAppContext();
   const [isLoading, setIsLoading] = useState(0);
   const [UpToDatetrigger, setUpToDateTrigger] = useState(true);
-  const [tooltipAnchor, setTooltipAnchor] = useState(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -365,25 +366,6 @@ const Navbar = () => {
     []
   );
 
-  const closeToolTip = () => {
-    setTooltipAnchor((prev) => ({
-      anchor: null,
-      text: prev?.text,
-    }));
-  };
-
-  const handleMouseEnter = (e, text) => {
-    const target = e.currentTarget;
-    setTooltipAnchor({ anchor: target, text: text, display: true });
-  };
-
-  const handleMouseLeave = () => {
-    setTooltipAnchor((prev) => ({
-      ...prev,
-      display: false,
-    }));
-  };
-
   const toggleLayout = () => {
     closeToolTip();
     if (layout === "grid") {
@@ -438,7 +420,6 @@ const Navbar = () => {
 
   return (
     <>
-      {tooltipAnchor?.display && <Tooltip anchorEl={tooltipAnchor} />}
       <nav
         className={isScrolled ? "nav-shadow" : ""}
         style={{
@@ -519,9 +500,9 @@ const Navbar = () => {
                       : inputClick
                   }
                   onMouseEnter={(e) =>
-                    handleMouseEnter(e, threshold1 ? "Close search" : "Search")
+                    showTooltip(e, threshold1 ? "Close search" : "Search")
                   }
-                  onMouseLeave={handleMouseLeave}
+                  onMouseLeave={hideTooltip}
                   className="nav-btn nav-search-icon"
                 >
                   {threshold1 ? <LeftArrow /> : <InputSearchIcon />}
@@ -546,8 +527,8 @@ const Navbar = () => {
                 <Button
                   onClick={handleClearSearch}
                   className="clear-search-icon"
-                  onMouseEnter={(e) => handleMouseEnter(e, "Clear search")}
-                  onMouseLeave={handleMouseLeave}
+                  onMouseEnter={(e) => showTooltip(e, "Clear search")}
+                  onMouseLeave={hideTooltip}
                 />
               </div>
               <div
@@ -573,14 +554,14 @@ const Navbar = () => {
                       : "filter-search-icon"
                   }
                   onMouseEnter={(e) =>
-                    handleMouseEnter(
+                    showTooltip(
                       e,
                       labelSearchTerm.trim()
                         ? "Clear search"
                         : "Advanced filters"
                     )
                   }
-                  onMouseLeave={handleMouseLeave}
+                  onMouseLeave={hideTooltip}
                 />
               </div>
             </div>
@@ -617,20 +598,17 @@ const Navbar = () => {
                 });
               }}
               style={{ display: showInput && "none" }}
-              onMouseEnter={(e) => handleMouseEnter(e, "Search")}
-              onMouseLeave={handleMouseLeave}
+              onMouseEnter={(e) => showTooltip(e, "Search")}
+              onMouseLeave={hideTooltip}
               className="nav-btn"
             >
               <SearchIcon />
             </Button>
             <Button
               onMouseEnter={(e) =>
-                handleMouseEnter(
-                  e,
-                  layout === "grid" ? "List view" : "Grid view"
-                )
+                showTooltip(e, layout === "grid" ? "List view" : "Grid view")
               }
-              onMouseLeave={handleMouseLeave}
+              onMouseLeave={hideTooltip}
               onClick={toggleLayout}
               className="nav-btn"
               style={{
@@ -643,8 +621,8 @@ const Navbar = () => {
               disabled={(isLoading && UpToDatetrigger) || !UpToDatetrigger}
               className="nav-btn"
               onClick={handleRefresh}
-              onMouseEnter={(e) => handleMouseEnter(e, "Refresh")}
-              onMouseLeave={handleMouseLeave}
+              onMouseEnter={(e) => showTooltip(e, "Refresh")}
+              onMouseLeave={hideTooltip}
             >
               <AnimatePresence>
                 {!isLoading && UpToDatetrigger && (
@@ -668,17 +646,17 @@ const Navbar = () => {
                     transition={{ duration: 0.15 }}
                     style={{ position: "absolute", marginTop: "4px" }}
                   >
-                      <CircularProgress
-                        sx={{
-                          color: document.documentElement.classList.contains(
-                            "dark-mode"
-                          )
-                            ? "#dfdfdf"
-                            : "#292929",
-                        }}
-                        size={20}
-                        thickness={5}
-                      />
+                    <CircularProgress
+                      sx={{
+                        color: document.documentElement.classList.contains(
+                          "dark-mode"
+                        )
+                          ? "#dfdfdf"
+                          : "#292929",
+                      }}
+                      size={20}
+                      thickness={5}
+                    />
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -715,7 +693,7 @@ const Navbar = () => {
             className="btn"
             onClick={handleProfileOpen}
             onMouseEnter={(e) =>
-              handleMouseEnter(
+              showTooltip(
                 e,
                 <>
                   <span style={{ fontSize: "0.85rem" }}>Notopia account</span>
@@ -727,7 +705,7 @@ const Navbar = () => {
                 </>
               )
             }
-            onMouseLeave={handleMouseLeave}
+            onMouseLeave={hideTooltip}
             ref={imageRef}
           >
             <img

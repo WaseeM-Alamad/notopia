@@ -19,13 +19,11 @@ const Labels = memo(
   ({
     notes,
     order,
-    setTooltipAnchor,
     visibleItems,
     setVisibleItems,
     setFadingNotes,
     dispatchNotes,
     fadingNotes,
-    openSnackFunction,
     handleDeleteLabel,
     rootContainerRef,
     containerRef,
@@ -197,7 +195,6 @@ const Labels = memo(
                 return (
                   <Label
                     index={index === 0 ? index : ""}
-                    setTooltipAnchor={setTooltipAnchor}
                     handleDeleteLabel={handleDeleteLabel}
                     key={uuid}
                     isGrid={isGrid}
@@ -208,7 +205,6 @@ const Labels = memo(
                     triggerReRender={triggerReRender}
                     setVisibleItems={setVisibleItems}
                     calculateLayout={calculateLayout}
-                    openSnackFunction={openSnackFunction}
                     notes={notes}
                     order={order}
                   />

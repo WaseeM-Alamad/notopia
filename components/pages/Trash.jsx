@@ -19,8 +19,6 @@ const NoteWrapper = memo(
     dispatchNotes,
     selectedNotes,
     index,
-    setTooltipAnchor,
-    openSnackFunction,
     handleSelectNote,
     handleNoteClick,
     calculateLayout,
@@ -63,8 +61,6 @@ const NoteWrapper = memo(
             setSelectedNotesIDs={setSelectedNotesIDs}
             selectedNotes={selectedNotes}
             dispatchNotes={dispatchNotes}
-            setTooltipAnchor={setTooltipAnchor}
-            openSnackFunction={openSnackFunction}
             handleSelectNote={handleSelectNote}
             index={index}
             calculateLayout={calculateLayout}
@@ -86,8 +82,6 @@ const Trash = memo(
     notes,
     order,
     dispatchNotes,
-    setTooltipAnchor,
-    openSnackFunction,
     setSelectedNotesIDs,
     handleSelectNote,
     handleNoteClick,
@@ -181,24 +175,6 @@ const Trash = memo(
       }, 100);
     }, [calculateLayout]);
 
-    // useEffect(() => {
-    //   if (
-    //     visibleItems.size === 0 &&
-    //     order.length > 0 &&
-    //     isFirstRenderRef.current
-    //   ) {
-    //     requestAnimationFrame(() => {
-    //       loadNextBatch({
-    //         currentSet: new Set(),
-    //         notes: notes,
-    //         order: order,
-    //         version: layoutVersionRef.current,
-    //       });
-    //     });
-    //     isFirstRenderRef.current = false;
-    //   }
-    // }, [order, notes, visibleItems]);
-
     useEffect(() => {
       calculateLayout();
     }, [visibleItems]);
@@ -284,8 +260,6 @@ const Trash = memo(
                     dispatchNotes={dispatchNotes}
                     index={index}
                     setSelectedNotesIDs={setSelectedNotesIDs}
-                    setTooltipAnchor={setTooltipAnchor}
-                    openSnackFunction={openSnackFunction}
                     handleSelectNote={handleSelectNote}
                     handleNoteClick={handleNoteClick}
                     calculateLayout={calculateLayout}

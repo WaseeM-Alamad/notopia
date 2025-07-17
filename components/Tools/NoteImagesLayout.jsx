@@ -11,9 +11,8 @@ const NoteImagesLayout = ({
   deleteSource,
   noteImageDelete,
   AddNoteImageDelete,
-  setTooltipAnchor,
 }) => {
-  const { loadingImages } = useAppContext();
+  const { loadingImages, showTooltip, hideTooltip, closeToolTip } = useAppContext();
   const containerRef = useRef(null);
   const [layout, setLayout] = useState([]);
   const [loadedImages, setLoadedImages] = useState([]);
@@ -142,25 +141,6 @@ const NoteImagesLayout = ({
     }
   };
 
-  const handleMouseEnter = (e, text) => {
-    const target = e.currentTarget;
-    setTooltipAnchor({ anchor: target, text: text, display: true });
-  };
-
-  const handleMouseLeave = () => {
-    setTooltipAnchor((prev) => ({
-      ...prev,
-      display: false,
-    }));
-  };
-
-  const closeToolTip = () => {
-    setTooltipAnchor((prev) => ({
-      anchor: null,
-      text: prev?.text,
-    }));
-  };
-
   if (images?.length === 0 || !images) return;
 
   return (
@@ -200,12 +180,12 @@ const NoteImagesLayout = ({
                 {modalOpen && !isTrash && (
                   <div
                     onMouseEnter={(e) =>
-                      handleMouseEnter(
+                      showTooltip(
                         e,
                         "Remove image"
                       )
                     }
-                    onMouseLeave={handleMouseLeave}
+                    onMouseLeave={hideTooltip}
                     onClick={() => handleImageDeletion(item.id, item.src)}
                     className="img-delete"
                   >

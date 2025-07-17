@@ -15,9 +15,9 @@ const LabelMenu = ({
   setDeleteModalOpen,
   imageRef,
   setIsImageLoading,
-  openSnackFunction,
 }) => {
-  const { handlePin, updateLabelImage, deleteLabelImage } = useAppContext();
+  const { handlePin, updateLabelImage, deleteLabelImage, openSnackRef } =
+    useAppContext();
   const menuRef = useRef(null);
   const inputRef = useRef(null);
   const [isMounted, setIsMounted] = useState(false);
@@ -93,7 +93,7 @@ const LabelMenu = ({
       setIsOpen(false);
     };
 
-    openSnackFunction({
+    openSnackRef.current({
       snackMessage: "Image deleted",
       snackOnUndo: undo,
       snackOnClose: onClose,
@@ -148,7 +148,7 @@ const LabelMenu = ({
             borderRadius: "0.4rem",
             maxWidth: "14.0625rem",
             maxHeight: "26.96125rem",
-            pointerEvents: !isOpen && "none"
+            pointerEvents: !isOpen && "none",
           }}
           ref={menuRef}
           className="menu not-draggable"

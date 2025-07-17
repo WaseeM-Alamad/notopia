@@ -19,8 +19,6 @@ const NoteWrapper = memo(
     selectedNotes,
     isGrid,
     index,
-    setTooltipAnchor,
-    openSnackFunction,
     handleNoteClick,
     handleSelectNote,
     calculateLayout,
@@ -63,8 +61,6 @@ const NoteWrapper = memo(
             setSelectedNotesIDs={setSelectedNotesIDs}
             selectedNotes={selectedNotes}
             dispatchNotes={dispatchNotes}
-            setTooltipAnchor={setTooltipAnchor}
-            openSnackFunction={openSnackFunction}
             handleNoteClick={handleNoteClick}
             handleSelectNote={handleSelectNote}
             index={index}
@@ -87,8 +83,6 @@ const FilteredNotes = memo(
     selectedNotesRef,
     filteredNotes,
     dispatchNotes,
-    setTooltipAnchor,
-    openSnackFunction,
     setSelectedNotesIDs,
     handleNoteClick,
     handleSelectNote,
@@ -459,8 +453,6 @@ const FilteredNotes = memo(
                 isGrid={isGrid}
                 index={index}
                 setSelectedNotesIDs={setSelectedNotesIDs}
-                setTooltipAnchor={setTooltipAnchor}
-                openSnackFunction={openSnackFunction}
                 handleNoteClick={handleNoteClick}
                 handleSelectNote={handleSelectNote}
                 calculateLayout={calculateLayout}

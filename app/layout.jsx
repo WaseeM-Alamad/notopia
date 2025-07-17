@@ -26,17 +26,18 @@ const MainLayout = async ({ children }) => {
       </head>
       <body suppressHydrationWarning>
         <AuthProvider>
-          <AppProvider initialUser={initialUser}>
-            <div id="tooltipPortal" />
-            <div id="snackbarPortal" />
-            <SearchProvider>
+          <SearchProvider>
+            <AppProvider initialUser={initialUser}>
+              <div id="tooltipPortal" />
+              <div id="snackbarPortal" />
 
               {children}
-            </SearchProvider>
-            <div id="menu" />
-            <div id="modal-portal" />
-            <div id="selectionBox" />
-          </AppProvider>
+
+              <div id="menu" />
+              <div id="modal-portal" />
+              <div id="selectionBox" />
+            </AppProvider>
+          </SearchProvider>
         </AuthProvider>
       </body>
     </html>

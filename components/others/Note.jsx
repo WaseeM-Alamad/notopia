@@ -28,11 +28,10 @@ const Note = memo(
     setSelectedNotesIDs,
     setFadingNotes,
     handleSelectNote,
-    setTooltipAnchor,
-    openSnackFunction,
     index,
   }) => {
-    const { labelsRef, user } = useAppContext();
+    const { labelsRef, user, showTooltip, hideTooltip, closeToolTip } =
+      useAppContext();
     const userID = user?.id;
     const [isDragOver, setIsDragOver] = useState(false);
     const [colorMenuOpen, setColorMenuOpen] = useState(false);
@@ -146,25 +145,6 @@ const Note = memo(
         window.removeEventListener("deselectNote", handleDeselect);
       };
     }, []);
-
-    const handleMouseEnter = (e, text) => {
-      const target = e.currentTarget;
-      setTooltipAnchor({ anchor: target, text: text, display: true });
-    };
-
-    const handleMouseLeave = () => {
-      setTooltipAnchor((prev) => ({
-        ...prev,
-        display: false,
-      }));
-    };
-
-    const closeToolTip = () => {
-      setTooltipAnchor((prev) => ({
-        anchor: null,
-        text: prev?.text,
-      }));
-    };
 
     const handleLabelClick = (e, label) => {
       e.stopPropagation();
@@ -306,12 +286,9 @@ const Note = memo(
               })
             }
             onMouseEnter={(e) =>
-              handleMouseEnter(
-                e,
-                `${selected ? "Deselect note" : "Select note"}`
-              )
+              showTooltip(e, `${selected ? "Deselect note" : "Select note"}`)
             }
-            onMouseLeave={handleMouseLeave}
+            onMouseLeave={hideTooltip}
           >
             <CheckMark
               color={selected ? "note-checkmark-selected" : note.color}
@@ -366,12 +343,9 @@ const Note = memo(
                   {!note.isTrash && (
                     <Button
                       onMouseEnter={(e) =>
-                        handleMouseEnter(
-                          e,
-                          `${note.isPinned ? "Unpin" : "Pin"}`
-                        )
+                        showTooltip(e, `${note.isPinned ? "Unpin" : "Pin"}`)
                       }
-                      onMouseLeave={handleMouseLeave}
+                      onMouseLeave={hideTooltip}
                       onClick={handlePinClick}
                       tabIndex="-1"
                     >
@@ -391,7 +365,6 @@ const Note = memo(
                   ref={imagesRef}
                 >
                   <NoteImagesLayout
-                    setTooltipAnchor={setTooltipAnchor}
                     images={note.images}
                     calculateMasonryLayout={calculateLayout}
                   />
@@ -565,9 +538,9 @@ const Note = memo(
                                   removeLabel(labelUUID);
                                 }}
                                 onMouseEnter={(e) =>
-                                  handleMouseEnter(e, "Remove label")
+                                  showTooltip(e, "Remove label")
                                 }
-                                onMouseLeave={handleMouseLeave}
+                                onMouseLeave={hideTooltip}
                                 className="remove-label"
                               />
                             </div>
@@ -589,7 +562,6 @@ const Note = memo(
           <NoteTools
             colorMenuOpen={colorMenuOpen}
             setColorMenuOpen={handleMenuIsOpenChange}
-            setTooltipAnchor={setTooltipAnchor}
             moreMenuOpen={moreMenuOpen}
             setFadingNotes={setFadingNotes}
             anchorEl={anchorEl}
@@ -600,7 +572,6 @@ const Note = memo(
             note={note}
             dispatchNotes={dispatchNotes}
             userID={userID}
-            openSnackFunction={openSnackFunction}
             noteActions={noteActions}
             index={index}
             inputRef={inputRef}

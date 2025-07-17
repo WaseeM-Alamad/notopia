@@ -1,6 +1,7 @@
 import React, { memo, useEffect, useRef } from "react";
 import Button from "../Tools/Button";
 import { NoteUpdateAction } from "@/utils/actions";
+import { useAppContext } from "@/context/AppContext";
 
 const ListItem = ({
   no = false,
@@ -15,8 +16,8 @@ const ListItem = ({
   setLocalNote,
   modalOpen,
   index,
-  setTooltipAnchor,
 }) => {
+  const { showTooltip, hideTooltip, closeToolTip } = useAppContext();
   const listItemRef = useRef(null);
   const containerRef = useRef(null);
   const inputTimeoutRef = useRef(null);
@@ -132,25 +133,6 @@ const ListItem = ({
     overIndexRef.current = index;
   };
 
-  const closeToolTip = () => {
-    setTooltipAnchor((prev) => ({
-      anchor: null,
-      text: prev?.text,
-    }));
-  };
-
-  const handleMouseEnterT = (e, text) => {
-    const target = e.currentTarget;
-    setTooltipAnchor({ anchor: target, text: text, display: true });
-  };
-
-  const handleMouseLeave = () => {
-    setTooltipAnchor((prev) => ({
-      ...prev,
-      display: false,
-    }));
-  };
-
   return (
     <div
       onMouseEnter={handleMouseEnter}
@@ -168,8 +150,8 @@ const ListItem = ({
       >
         {!no && <div onMouseDown={handleMouseDown} className="drag-db-area" />}
         <Button
-          onMouseEnter={(e) => handleMouseEnterT(e, "Delete")}
-          onMouseLeave={handleMouseLeave}
+          onMouseEnter={(e) => showTooltip(e, "Delete")}
+          onMouseLeave={hideTooltip}
           onClick={handleDelete}
           className="delete-list-item"
         />

@@ -16,12 +16,18 @@ import ImageDropZone from "../Tools/ImageDropZone";
 const ComposeNote = ({
   dispatchNotes,
   setVisibleItems,
-  setTooltipAnchor,
   containerRef,
   lastAddedNoteRef,
-  openSnackFunction,
 }) => {
-  const { user, labelsRef, setLoadingImages } = useAppContext();
+  const {
+    user,
+    labelsRef,
+    setLoadingImages,
+    showTooltip,
+    hideTooltip,
+    closeToolTip,
+    openSnackRef,
+  } = useAppContext();
   const [isDragOver, setIsDragOver] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -395,7 +401,7 @@ const ComposeNote = ({
       });
     };
 
-    openSnackFunction({ snackMessage: "Image deleted", snackOnUndo: undo });
+    openSnackRef.current({ snackMessage: "Image deleted", snackOnUndo: undo });
   };
 
   const titleDebouncedSetUndo = useCallback(
@@ -502,25 +508,6 @@ const ComposeNote = ({
     }
   };
 
-  const handleMouseEnter = (e, text) => {
-    const target = e.currentTarget;
-    setTooltipAnchor({ anchor: target, text: text, display: true });
-  };
-
-  const handleMouseLeave = () => {
-    setTooltipAnchor((prev) => ({
-      ...prev,
-      display: false,
-    }));
-  };
-
-  const closeToolTip = () => {
-    setTooltipAnchor((prev) => ({
-      anchor: null,
-      text: prev?.text,
-    }));
-  };
-
   const removeLabel = (labelUUID) => {
     const newLabels = note?.labels.filter(
       (noteLabelUUID) => noteLabelUUID !== labelUUID
@@ -600,7 +587,7 @@ const ComposeNote = ({
         onDragEnter={handleDragEnter}
         onDragLeave={handleDragLeave}
         onDrop={handleOnDrop}
-        onMouseLeave={handleMouseLeave}
+        onMouseLeave={handleNoteMouseLeave}
         ref={modalRef}
         className={[
           "add-modal",
@@ -636,7 +623,6 @@ const ComposeNote = ({
             }}
           >
             <NoteImagesLayout
-              setTooltipAnchor={setTooltipAnchor}
               images={note.images}
               deleteSource="AddModal"
               AddNoteImageDelete={AddNoteImageDelete}
@@ -726,9 +712,9 @@ const ComposeNote = ({
                           removeLabel(labelUUID);
                         }}
                         onMouseEnter={(e) =>
-                          handleMouseEnter(e, "Remove label")
+                          showTooltip(e, "Remove label")
                         }
-                        onMouseLeave={handleMouseLeave}
+                        onMouseLeave={hideTooltip}
                         className="remove-label"
                       />
                     </div>
@@ -744,8 +730,6 @@ const ComposeNote = ({
           note={note}
           selectedColor={selectedColor}
           setSelectedColor={setSelectedColor}
-          setTooltipAnchor={setTooltipAnchor}
-          openSnackFunction={openSnackFunction}
           redoStack={redoStack}
           undoStack={undoStack}
           handleUndo={handleUndo}

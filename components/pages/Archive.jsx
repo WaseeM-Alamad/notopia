@@ -21,9 +21,7 @@ const NoteWrapper = memo(
     calculateLayout,
     setFadingNotes,
     dispatchNotes,
-    setTooltipAnchor,
     noteActions,
-    openSnackFunction,
   }) => {
     const [mounted, setMounted] = useState(false);
 
@@ -63,10 +61,8 @@ const NoteWrapper = memo(
             noteActions={noteActions}
             calculateLayout={calculateLayout}
             handleSelectNote={handleSelectNote}
-            setTooltipAnchor={setTooltipAnchor}
             setSelectedNotesIDs={setSelectedNotesIDs}
             selectedNotes={selectedNotes}
-            openSnackFunction={openSnackFunction}
           />
           {/* <p>{index}</p> */}
         </div>
@@ -85,8 +81,6 @@ const Archive = memo(
     notes,
     order,
     dispatchNotes,
-    setTooltipAnchor,
-    openSnackFunction,
     setSelectedNotesIDs,
     handleNoteClick,
     handleSelectNote,
@@ -247,9 +241,7 @@ const Archive = memo(
                     fadingNotes={fadingNotes}
                     setFadingNotes={setFadingNotes}
                     noteActions={noteActions}
-                    setTooltipAnchor={setTooltipAnchor}
                     setSelectedNotesIDs={setSelectedNotesIDs}
-                    openSnackFunction={openSnackFunction}
                   />
                 );
             })}

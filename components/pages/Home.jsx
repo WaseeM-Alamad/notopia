@@ -14,7 +14,6 @@ const NoteWrapper = memo(
     isGrid,
     dispatchNotes,
     selectedNotesRef,
-    openSnackFunction,
     note,
     overIndexRef,
     overIsPinnedRef,
@@ -27,7 +26,6 @@ const NoteWrapper = memo(
     handleDragStart,
     index,
     handleSelectNote,
-    setTooltipAnchor,
     handleNoteClick,
   }) => {
     const [mounted, setMounted] = useState(false);
@@ -113,12 +111,10 @@ const NoteWrapper = memo(
             selectedNotesRef={selectedNotesRef}
             note={note}
             noteActions={noteActions}
-            setTooltipAnchor={setTooltipAnchor}
             calculateLayout={calculateLayout}
             setFadingNotes={setFadingNotes}
             setSelectedNotesIDs={setSelectedNotesIDs}
             handleSelectNote={handleSelectNote}
-            openSnackFunction={openSnackFunction}
             index={index}
           />
           {/* <p>{index}</p> */}
@@ -132,7 +128,6 @@ NoteWrapper.displayName = "NoteWrapper";
 
 const Home = memo(
   ({
-    layoutVersionRef,
     visibleItems,
     selectedNotesRef,
     setVisibleItems,
@@ -142,8 +137,6 @@ const Home = memo(
     fadingNotes,
     setFadingNotes,
     dispatchNotes,
-    setTooltipAnchor,
-    openSnackFunction,
     handleNoteClick,
     setSelectedNotesIDs,
     handleSelectNote,
@@ -535,9 +528,7 @@ const Home = memo(
                     index={index}
                     noteActions={noteActions}
                     dispatchNotes={dispatchNotes}
-                    setTooltipAnchor={setTooltipAnchor}
                     handleDragStart={handleDragStart}
-                    openSnackFunction={openSnackFunction}
                     setSelectedNotesIDs={setSelectedNotesIDs}
                     handleNoteClick={handleNoteClick}
                     handleSelectNote={handleSelectNote}
@@ -587,8 +578,6 @@ const Home = memo(
           setVisibleItems={setVisibleItems}
           containerRef={containerRef}
           lastAddedNoteRef={lastAddedNoteRef}
-          setTooltipAnchor={setTooltipAnchor}
-          openSnackFunction={openSnackFunction}
         />
       </>
     );
