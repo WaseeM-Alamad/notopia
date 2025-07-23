@@ -479,16 +479,23 @@ const NoteTools = ({
             {!note.isTrash ? (
               <>
                 <Button
+                  tabIndex="0"
                   className="reminder-icon btn-hover"
                   onMouseEnter={(e) => showTooltip(e, "Remind me")}
                   onMouseLeave={hideTooltip}
+                  onFocus={(e) => showTooltip(e, "Remind me")}
+                  onBlur={hideTooltip}
                 />
                 <Button
+                  tabIndex="0"
                   className="person-add-icon btn-hover"
                   onMouseEnter={(e) => showTooltip(e, "Collaborator")}
                   onMouseLeave={hideTooltip}
+                  onFocus={(e) => showTooltip(e, "Collaborator")}
+                  onBlur={hideTooltip}
                 />
                 <Button
+                  tabIndex="0"
                   className={`${
                     note.isArchived ? "unarchive-icon" : "archive-icon"
                   } btn-hover`}
@@ -508,8 +515,16 @@ const NoteTools = ({
                     )
                   }
                   onMouseLeave={hideTooltip}
+                  onFocus={(e) =>
+                    showTooltip(
+                      e,
+                      `${note.isArchived ? "Unarchive" : "Archive"}`
+                    )
+                  }
+                  onBlur={hideTooltip}
                 />
                 <Button
+                  tabIndex="0"
                   className="image-icon btn-hover"
                   onClick={() => {
                     closeToolTip();
@@ -517,6 +532,8 @@ const NoteTools = ({
                   }}
                   onMouseEnter={(e) => showTooltip(e, "Add image")}
                   onMouseLeave={hideTooltip}
+                  onFocus={(e) => showTooltip(e, "Add image")}
+                  onBlur={hideTooltip}
                 >
                   <input
                     ref={inputRef}
@@ -527,10 +544,13 @@ const NoteTools = ({
                   />
                 </Button>
                 <Button
+                  tabIndex="0"
                   className="color-icon btn-hover"
                   onClick={toggleMenu}
                   onMouseEnter={(e) => showTooltip(e, "Background options")}
                   onMouseLeave={hideTooltip}
+                  onFocus={(e) => showTooltip(e, "Background options")}
+                  onBlur={hideTooltip}
                 />
                 <AnimatePresence>
                   {colorMenuOpen && (
@@ -546,21 +566,34 @@ const NoteTools = ({
                   )}
                 </AnimatePresence>
                 <Button
+                  tabIndex="0"
                   className="more-icon btn-hover"
                   onClick={handleMoreClick}
                   onMouseEnter={(e) => showTooltip(e, "More")}
                   onMouseLeave={hideTooltip}
+                  onFocus={(e) => showTooltip(e, "More")}
+                  onBlur={hideTooltip}
                 />
               </>
             ) : (
               <>
                 <Button
+                  tabIndex="0"
                   className="note-delete-icon"
                   onClick={() => setDeleteModalOpen(true)}
+                  onMouseEnter={(e) => showTooltip(e, "Delete forever")}
+                  onMouseLeave={hideTooltip}
+                  onFocus={(e) => showTooltip(e, "Delete forever")}
+                  onBlur={hideTooltip}
                 />
                 <Button
+                  tabIndex="0"
                   className="note-restore-icon"
                   onClick={handleRestoreNote}
+                  onMouseEnter={(e) => showTooltip(e, "Restore")}
+                  onMouseLeave={hideTooltip}
+                  onFocus={(e) => showTooltip(e, "Restore")}
+                  onBlur={hideTooltip}
                 />
                 <AnimatePresence>
                   {deleteModalOpen && (

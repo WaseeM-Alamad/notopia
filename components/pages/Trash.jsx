@@ -21,7 +21,6 @@ const NoteWrapper = memo(
     index,
     handleSelectNote,
     handleNoteClick,
-    calculateLayout,
     fadingNotes,
   }) => {
     const [mounted, setMounted] = useState(false);
@@ -44,6 +43,11 @@ const NoteWrapper = memo(
             fadingNotes.has(note.uuid) ? "fade-out" : ""
           }`}
           onClick={(e) => handleNoteClick(e, note, index)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              handleNoteClick(e, note, index);
+            }
+          }}
           style={{
             maxWidth: `${isGrid ? 240 : 600}px`,
             minWidth: !isGrid && "15rem",
@@ -63,7 +67,6 @@ const NoteWrapper = memo(
             dispatchNotes={dispatchNotes}
             handleSelectNote={handleSelectNote}
             index={index}
-            calculateLayout={calculateLayout}
           />
           {/* <p>{index}</p> */}
         </div>
@@ -93,7 +96,7 @@ const Trash = memo(
     containerRef,
     isGrid,
   }) => {
-    const { layout } = useAppContext();
+    const { layout, calculateLayoutRef } = useAppContext();
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const COLUMN_WIDTH = layout === "grid" ? 240 : 600;
     const resizeTimeoutRef = useRef(null);
@@ -174,6 +177,10 @@ const Trash = memo(
         calculateLayout();
       }, 100);
     }, [calculateLayout]);
+
+    useEffect(() => {
+      calculateLayoutRef.current = calculateLayout;
+    }, [calculateLayout, layout]);
 
     useEffect(() => {
       calculateLayout();
@@ -262,7 +269,6 @@ const Trash = memo(
                     setSelectedNotesIDs={setSelectedNotesIDs}
                     handleSelectNote={handleSelectNote}
                     handleNoteClick={handleNoteClick}
-                    calculateLayout={calculateLayout}
                     fadingNotes={fadingNotes}
                   />
                 );

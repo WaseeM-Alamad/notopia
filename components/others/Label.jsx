@@ -20,7 +20,6 @@ const Label = ({
   setVisibleItems,
   setFadingNotes,
   index,
-  calculateLayout,
   handleDeleteLabel,
   notes,
   order,
@@ -37,6 +36,7 @@ const Label = ({
     hideTooltip,
     closeToolTip,
     openSnackRef,
+    calculateLayoutRef,
   } = useAppContext();
   const { labelSearchTerm } = useSearch();
   const [mounted, setMounted] = useState(false);
@@ -234,7 +234,7 @@ const Label = ({
       isFirstRender.current = false;
       return;
     }
-    calculateLayout();
+    calculateLayoutRef.current();
   }, [height]);
 
   const handleColorClick = (color) => {

@@ -20,6 +20,7 @@ import ListItemsLayout from "./ListitemsLayout";
 import { useSearch } from "@/context/SearchContext";
 import { AnimatePresence } from "framer-motion";
 import ImageDropZone from "../Tools/ImageDropZone";
+import TextLabelMenu from "./TextLabelMenu";
 
 const NoteModal = ({
   localNote,
@@ -47,6 +48,7 @@ const NoteModal = ({
     hideTooltip,
     closeToolTip,
     openSnackRef,
+    setTooltipRef,
   } = useAppContext();
   const { skipHashChangeRef, searchTerm } = useSearch();
   const [isDragOver, setIsDragOver] = useState(false);
@@ -55,6 +57,8 @@ const NoteModal = ({
   const note = initialStyle?.initialNote;
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
+  const [labelAnchor, setLabelAnchor] = useState(null);
+  const [labelSearch, setLabelSearch] = useState("");
   const formattedEditedDate = isOpen
     ? getNoteFormattedDate(localNote?.textUpdatedAt)
     : null;
@@ -729,13 +733,72 @@ const NoteModal = ({
     window.dispatchEvent(new Event("loadingEnd"));
   };
 
+  const getCaretCharacterOffsetWithin = (element) => {
+    const selection = window.getSelection();
+    if (!selection.rangeCount) return 0;
+
+    const range = selection.getRangeAt(0);
+    const preRange = range.cloneRange();
+
+    preRange.selectNodeContents(element);
+    preRange.setEnd(range.endContainer, range.endOffset);
+
+    return preRange.toString().length;
+  };
+
+  function getVirtualAnchorAtHash(container, hashIndex) {
+    const textNode = container.firstChild;
+    if (!textNode || textNode.nodeType !== 3) return null;
+
+    const range = document.createRange();
+    range.setStart(textNode, hashIndex);
+    range.setEnd(textNode, hashIndex);
+
+    const rect = range.getClientRects()[0];
+    if (!rect) return null;
+
+    return {
+      getBoundingClientRect: () => new DOMRect(rect.left, rect.top, 0, 0),
+      contextElement: container,
+    };
+  }
+
+  const handleLabelMenu = (container, text) => {
+    const caretPos = getCaretCharacterOffsetWithin(container);
+
+    const textBeforeCaret = text.slice(0, caretPos);
+    const hashIndex = textBeforeCaret.lastIndexOf("#");
+
+    if (hashIndex === -1) {
+      setLabelAnchor(false);
+      setLabelSearch("");
+      return;
+    }
+
+    const afterHash = text.slice(hashIndex);
+    const match = afterHash.match(/#(\w*)$/);
+    const hashEnd = hashIndex + (match ? match[0].length : 1);
+
+    if (caretPos >= hashIndex && caretPos <= hashEnd) {
+      setLabelSearch(match ? match[1] : "");
+      const virtualAnchor = getVirtualAnchorAtHash(container, hashIndex);
+      setLabelAnchor(virtualAnchor);
+    } else {
+      setLabelAnchor(false);
+      setLabelSearch("");
+    }
+  };
+
   const handleTitleInput = useCallback(
     (e) => {
       if (localNote?.isTrash) return;
       const text = e.target.innerText;
       const t = text === "\n" ? "" : text;
       titleDebouncedSetUndo({ title: t, content: localNote?.content });
-      // updateEditedDate();
+
+      const container = e.currentTarget;
+
+      handleLabelMenu(container, t);
 
       setLocalNote((prev) => ({
         ...prev,
@@ -759,7 +822,6 @@ const NoteModal = ({
       const t = text === "\n" ? "" : text;
 
       contentDebouncedSetUndo({ title: localNote?.title, content: t });
-      // updateEditedDate();
       setLocalNote((prev) => ({
         ...prev,
         content: t,
@@ -1105,6 +1167,16 @@ const NoteModal = ({
           inputRef={inputRef}
         />
         <AnimatePresence>{isDragOver && <ImageDropZone />}</AnimatePresence>
+        <AnimatePresence>
+          {labelAnchor && (
+            <TextLabelMenu
+              anchor={labelAnchor}
+              setAnchor={setLabelAnchor}
+              labelSearch={labelSearch}
+              setLabelSearch={setLabelSearch}
+            />
+          )}
+        </AnimatePresence>
       </div>
     </>,
     document.getElementById("modal-portal")

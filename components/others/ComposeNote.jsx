@@ -18,6 +18,7 @@ const ComposeNote = ({
   setVisibleItems,
   containerRef,
   lastAddedNoteRef,
+  labelObj,
 }) => {
   const {
     user,
@@ -31,8 +32,8 @@ const ComposeNote = ({
   const [isDragOver, setIsDragOver] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const [isOpen2, setIsOpen2] = useState(false);
   const userID = user?.id;
+
   const [note, setNote] = useState({
     uuid: "",
     title: "",
@@ -62,6 +63,10 @@ const ComposeNote = ({
   const dragCounter = useRef(0);
 
   useEffect(() => {
+    if (labelObj) {
+      setNote((prev) => ({ ...prev, labels: [labelObj.uuid] }));
+    }
+
     if (titleRef.current) titleRef.current.textContent = "";
     if (contentRef.current) contentRef.current.textContent = "";
 
@@ -74,7 +79,6 @@ const ComposeNote = ({
 
   useEffect(() => {
     const handler = () => {
-      setIsOpen2(true);
       setIsOpen(true);
     };
 
@@ -266,53 +270,45 @@ const ComposeNote = ({
   }, [isOpen]);
 
   useEffect(() => {
-    if (!modalRef.current || !isOpen2) return;
+    if (!modalRef.current) return;
     const overlay = document.getElementById("n-overlay");
     if (isOpen) {
       modalRef.current.style.display = "flex";
       centerModal();
 
+      requestAnimationFrame(() => {
+        contentRef.current.focus();
+      });
       modalRef.current.style.opacity = 0;
-      modalRef.current.style.marginTop = "-8px";
+      modalRef.current.style.transform = "scale(0.95)";
       modalRef.current.style.transition =
         "all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1), left 0s, top .13s, background-color 0.25s ease-in-out";
       modalRef.current.offsetHeight;
       modalRef.current.style.opacity = "1";
-      modalRef.current.style.marginTop = "0px";
+      modalRef.current.style.transform = "scale(1)";
 
       overlay.style.display = "block";
       overlay.offsetHeight;
       overlay.style.opacity = "1";
     } else {
-      setIsOpen2(false);
       overlay.style.opacity = "0";
       modalRef.current.style.transition =
         "all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1)";
 
       const noteEmpty =
-        !note.title &&
-        !note.content &&
-        note.images.length === 0 &&
-        note.labels.length === 0;
+        !note.title && !note.content && note.images.length === 0;
 
       if (noteEmpty) {
-        modalRef.current.style.marginTop = "-8px";
+        modalRef.current.style.transform = "scale(0.95)";
         modalRef.current.style.opacity = "0";
-
-        const handler = (e) => {
-          if (e.propertyName === "margin-top") {
-            modalRef.current.removeEventListener("transitionend", handler);
-            modalRef.current.removeAttribute("style");
-            overlay.removeAttribute("style");
-            reset();
-          }
-        };
-
-        modalRef.current.removeEventListener("transitionend", handler);
-        modalRef.current.addEventListener("transitionend", handler);
+        setTimeout(() => {
+          modalRef.current.removeAttribute("style");
+          overlay.removeAttribute("style");
+          reset();
+        }, 220);
       } else {
         handleCreateNote();
-
+        modalRef.current.style.transformOrigin = "top left";
         const observer = new MutationObserver(() => {
           const lastNote = lastAddedNoteRef.current;
           if (!lastNote) return;
@@ -331,21 +327,15 @@ const ComposeNote = ({
           subtree: false,
         });
 
-        const handler = (e) => {
-          if (e.propertyName === "transform") {
-            modalRef.current.removeEventListener("transitionend", handler);
-            requestAnimationFrame(() => {
-              const lastNote = lastAddedNoteRef.current;
-              modalRef.current.removeAttribute("style");
-              overlay.removeAttribute("style");
-              lastNote.style.removeProperty("opacity");
-              reset();
-            });
-          }
-        };
-
-        modalRef.current.removeEventListener("transitionend", handler);
-        modalRef.current.addEventListener("transitionend", handler);
+        setTimeout(() => {
+          requestAnimationFrame(() => {
+            const lastNote = lastAddedNoteRef.current;
+            modalRef.current.removeAttribute("style");
+            overlay.removeAttribute("style");
+            lastNote.style.removeProperty("opacity");
+            reset();
+          });
+        }, 220);
       }
     }
   }, [isOpen]);
@@ -676,7 +666,7 @@ const ComposeNote = ({
             role="textbox"
             tabIndex="0"
             aria-multiline="true"
-            aria-label="Note"
+            aria-label="Take a note..."
             spellCheck="false"
           />
           {note?.labels?.length > 0 && (
@@ -711,9 +701,7 @@ const ComposeNote = ({
                           closeToolTip();
                           removeLabel(labelUUID);
                         }}
-                        onMouseEnter={(e) =>
-                          showTooltip(e, "Remove label")
-                        }
+                        onMouseEnter={(e) => showTooltip(e, "Remove label")}
                         onMouseLeave={hideTooltip}
                         className="remove-label"
                       />

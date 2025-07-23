@@ -20,8 +20,6 @@ const NoteWrapper = memo(
     noteActions,
     fadingNotes,
     setFadingNotes,
-    lastAddedNoteRef,
-    calculateLayout,
     setSelectedNotesIDs,
     handleDragStart,
     index,
@@ -30,11 +28,6 @@ const NoteWrapper = memo(
   }) => {
     const [mounted, setMounted] = useState(false);
     const noteRef = useRef(null);
-
-    const setRefs = (element) => {
-      noteRef.current = element;
-      if (lastAddedNoteRef) lastAddedNoteRef.current = element;
-    };
 
     useEffect(() => {
       requestAnimationFrame(() => {
@@ -89,10 +82,15 @@ const NoteWrapper = memo(
         transition={{ duration: 0.2, type: "tween" }}
       >
         <div
-          ref={setRefs}
+          ref={noteRef}
           onMouseDown={handleMouseDown}
           onMouseEnter={handleMouseEnter}
           onClick={(e) => handleNoteClick(e, note, index)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              handleNoteClick(e, note, index);
+            }
+          }}
           className={`grid-item ${
             fadingNotes.has(note.uuid) ? "fade-out" : ""
           }`}
@@ -111,7 +109,6 @@ const NoteWrapper = memo(
             selectedNotesRef={selectedNotesRef}
             note={note}
             noteActions={noteActions}
-            calculateLayout={calculateLayout}
             setFadingNotes={setFadingNotes}
             setSelectedNotesIDs={setSelectedNotesIDs}
             handleSelectNote={handleSelectNote}
@@ -146,13 +143,12 @@ const Home = memo(
     rootContainerRef,
     isGrid,
   }) => {
-    const { layout } = useAppContext();
+    const { layout, calculateLayoutRef } = useAppContext();
     const [pinnedHeight, setPinnedHeight] = useState(null);
     const lastAddedNoteRef = useRef(null);
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
     const [layoutReady, setLayoutReady] = useState(false);
-    const [columnsNumber, setColumnsNumber] = useState(null);
     const COLUMN_WIDTH = layout === "grid" ? 240 : 600;
 
     const hasPinned = [...visibleItems].some((uuid) => {
@@ -193,11 +189,6 @@ const Home = memo(
         const contentWidth = !isGrid
           ? COLUMN_WIDTH
           : columns * (COLUMN_WIDTH + GUTTER) - GUTTER;
-
-        // const columns = 1;
-
-        // const contentWidth = COLUMN_WIDTH;
-        setColumnsNumber(columns);
 
         container.style.width = `${contentWidth}px`;
         container.style.maxWidth = isGrid ? "100%" : "90%";
@@ -271,6 +262,10 @@ const Home = memo(
         });
       });
     }, [isGrid]);
+
+    useEffect(() => {
+      calculateLayoutRef.current = calculateLayout;
+    }, [calculateLayout, layout]);
 
     const debouncedCalculateLayout = useCallback(() => {
       if (resizeTimeoutRef.current) {
@@ -479,6 +474,22 @@ const Home = memo(
       calculateLayout();
     }, [visibleItems]);
 
+    const getLastRef = () => {
+      let lastRef = null;
+      for (let uuid of order) {
+        const note = notes.get(uuid);
+        if (!note.isArchived && !note.isTrash) {
+          lastRef = note.ref.current;
+          lastAddedNoteRef.current = lastRef;
+          return lastRef;
+        }
+      }
+    };
+
+    useEffect(() => {
+      getLastRef();
+    }, [notes, order]);
+
     return (
       <>
         <div ref={rootContainerRef} className="starting-div">
@@ -508,6 +519,7 @@ const Home = memo(
             >
               OTHERS
             </p>
+
             {order.map((uuid, index) => {
               const note = notes.get(uuid);
               if (!visibleItems.has(note.uuid)) return null;
@@ -516,7 +528,6 @@ const Home = memo(
                 !note.isArchived &&
                 !note.isTrash && (
                   <NoteWrapper
-                    lastAddedNoteRef={index === 0 ? lastAddedNoteRef : null}
                     selectedNotesRef={selectedNotesRef}
                     key={note.uuid}
                     note={note}
@@ -532,7 +543,6 @@ const Home = memo(
                     setSelectedNotesIDs={setSelectedNotesIDs}
                     handleNoteClick={handleNoteClick}
                     handleSelectNote={handleSelectNote}
-                    calculateLayout={calculateLayout}
                   />
                 )
               );

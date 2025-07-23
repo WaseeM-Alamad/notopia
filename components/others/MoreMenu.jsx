@@ -41,11 +41,19 @@ const MoreMenu = ({
       setIsOpen(false);
     };
 
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        setIsOpen(false);
+      }
+    };
+
     document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
     window.addEventListener("resize", handleResize);
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("resize", handleResize);
     };
   }, [isOpen, anchorEl]);
@@ -94,7 +102,7 @@ const MoreMenu = ({
               borderRadius: "0.6rem",
               position: "relative",
               paddingTop: navTitle?.trim() && "0",
-              pointerEvents: !isOpen && "none"
+              pointerEvents: !isOpen && "none",
             }}
             ref={menuRef}
             className="menu not-draggable menu-border"

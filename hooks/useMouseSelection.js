@@ -1,7 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 
 export function useMouseSelection({
   notesStateRef,
+  visibleItems,
   selectedNotesRef,
   selectionBoxRef,
   ctrlDownRef,
@@ -11,13 +12,109 @@ export function useMouseSelection({
   const dragStartRef = useRef({ x: 0, y: 0 });
   const isMouseDown = useRef(false);
   const prevSelectedRef = useRef(null);
+  const animationFrameRef = useRef(null);
+  const notePositionsRef = useRef(new Map());
+  const pendingChangesRef = useRef({ select: new Set(), deselect: new Set() });
+  const lastUpdateTime = useRef(0);
   
-  const handleMouseMove = (e) => {
-    if (isMouseDown.current) {
+  // Cache note positions to avoid expensive getBoundingClientRect calls
+  const cacheNotePositions = useCallback(() => {
+    notePositionsRef.current.clear();
+    if (!notesStateRef.current?.order) return;
+    
+    notesStateRef.current.order.forEach((noteUUID) => {
+      const note = notesStateRef.current.notes.get(noteUUID);
+      if (note?.ref?.current) {
+        const rect = note.ref.current.getBoundingClientRect();
+        notePositionsRef.current.set(noteUUID, {
+          left: rect.left + window.scrollX,
+          top: rect.top + window.scrollY,
+          right: rect.left + window.scrollX + rect.width,
+          bottom: rect.top + window.scrollY + rect.height,
+        });
+      }
+    });
+  }, [notesStateRef]);
+
+  // Batch apply selection changes to reduce DOM events
+  const applyPendingChanges = useCallback(() => {
+    const { select, deselect } = pendingChangesRef.current;
+    
+    if (select.size === 0 && deselect.size === 0) return;
+    
+    // Apply changes to the ref
+    select.forEach(uuid => selectedNotesRef.current.add(uuid));
+    deselect.forEach(uuid => selectedNotesRef.current.delete(uuid));
+    
+    // Single batch event instead of individual events
+    if (select.size > 0 || deselect.size > 0) {
+      window.dispatchEvent(new CustomEvent("batchSelection", {
+        detail: { 
+          select: Array.from(select), 
+          deselect: Array.from(deselect) 
+        }
+      }));
+    }
+    
+    // Clear pending changes
+    pendingChangesRef.current = { select: new Set(), deselect: new Set() };
+  }, [selectedNotesRef]);
+
+  // Optimized collision detection with spatial filtering
+  const updateSelection = useCallback((selectionRect) => {
+    const { left: newX, top: newY, width, height } = selectionRect;
+    
+    // Early exit for tiny selections
+    if (width < 5 || height < 5) return;
+    
+    const selectionRight = newX + width;
+    const selectionBottom = newY + height;
+    
+    // Only check notes that could possibly intersect (spatial filtering)
+    notePositionsRef.current.forEach((pos, noteUUID) => {
+      const note = notesStateRef.current.notes.get(noteUUID);
+      if (!note) return;
+      
+      // Quick AABB intersection test
+      const overlaps = !(
+        pos.right < newX || 
+        pos.left > selectionRight || 
+        pos.bottom < newY || 
+        pos.top > selectionBottom
+      );
+
+      const isCurrentlySelected = selectedNotesRef.current.has(noteUUID);
+      const wasPreviouslySelected = prevSelectedRef.current?.has(noteUUID);
+
+      if (overlaps && !isCurrentlySelected) {
+        pendingChangesRef.current.select.add(noteUUID);
+        pendingChangesRef.current.deselect.delete(noteUUID);
+      } else if (!overlaps && isCurrentlySelected) {
+        // Don't deselect if Ctrl is held and note was previously selected
+        const shouldSkip = ctrlDownRef.current && wasPreviouslySelected;
+        
+        if (!shouldSkip) {
+          pendingChangesRef.current.deselect.add(noteUUID);
+          pendingChangesRef.current.select.delete(noteUUID);
+        }
+      }
+    });
+  }, [notesStateRef, selectedNotesRef, ctrlDownRef]);
+
+  // Throttled mousemove handler
+  const handleMouseMove = useCallback((e) => {
+    if (!isMouseDown.current) return;
+    
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+    
+    animationFrameRef.current = requestAnimationFrame(() => {
       const pageX = e.pageX;
       const pageY = e.pageY;
       const start = dragStartRef.current;
 
+      // Minimum distance threshold before starting selection
       if (Math.abs(pageX - start.x) < 15 && Math.abs(pageY - start.y) < 15) {
         return;
       }
@@ -26,6 +123,8 @@ export function useMouseSelection({
       document.body.style.userSelect = "none";
 
       const box = selectionBoxRef.current;
+      if (!box) return;
+      
       box.style.display = "block";
 
       const newX = Math.min(pageX, start.x);
@@ -33,60 +132,30 @@ export function useMouseSelection({
       const width = Math.abs(pageX - start.x);
       const height = Math.abs(pageY - start.y);
 
+      // Update selection box position
       box.style.left = newX + "px";
       box.style.top = newY + "px";
       box.style.width = width + "px";
       box.style.height = height + "px";
 
-      notesStateRef.current.order.forEach((noteUUID) => {
-        const note = notesStateRef.current.notes.get(noteUUID);
-        const noteRef = note?.ref;
-        if (noteRef?.current) {
-          const noteRect = noteRef.current.getBoundingClientRect();
-          const noteLeft = noteRect.left + window.scrollX;
-          const noteTop = noteRect.top + window.scrollY;
-          const noteRight = noteLeft + noteRect.width;
-          const noteBottom = noteTop + noteRect.height;
+      // Throttle selection updates (max 60fps)
+      const now = performance.now();
+      if (now - lastUpdateTime.current >= 16) { // ~60fps
+        updateSelection({ left: newX, top: newY, width, height });
+        applyPendingChanges();
+        lastUpdateTime.current = now;
+      }
+    });
+  }, [updateSelection, applyPendingChanges, visibleItems]);
 
-          const overlaps =
-            noteRight > newX &&
-            noteLeft < newX + width &&
-            noteBottom > newY &&
-            noteTop < newY + height;
-
-          if (overlaps) {
-            if (selectedNotesRef.current.has(note.uuid)) return;
-            selectedNotesRef.current.add(note.uuid);
-            window.dispatchEvent(
-              new CustomEvent("selectNote", {
-                detail: { uuid: note.uuid },
-              })
-            );
-          } else {
-            const shouldSkip =
-              ctrlDownRef.current && prevSelectedRef.current.has(note.uuid);
-
-            if (!shouldSkip) {
-              selectedNotesRef.current.delete(note.uuid);
-              window.dispatchEvent(
-                new CustomEvent("deselectNote", {
-                  detail: { uuid: note.uuid },
-                })
-              );
-            }
-          }
-        }
-      });
-    }
-  };
-
-  const handleMouseDown = (e) => {
-    if (e.button !== 0) return;
+  const handleMouseDown = useCallback((e) => {
+    if (e.button !== 0) return; // Only handle left mouse button
 
     const parent = rootContainerRef.current;
-    const container =
-      rootContainerRef.current?.querySelector(".section-container");
+    const container = rootContainerRef.current?.querySelector(".section-container");
     const target = e.target;
+    
+    // Elements that should not trigger selection
     const nav = document.body.querySelector("nav");
     const aside = document.body.querySelector("aside");
     const menu = document.getElementById("menu");
@@ -103,6 +172,9 @@ export function useMouseSelection({
 
     if (skip) return;
 
+    // Cache note positions at start of selection
+    cacheNotePositions();
+    
     isMouseDown.current = true;
     prevSelectedRef.current = new Set(selectedNotesRef.current);
     dragStartRef.current = {
@@ -110,32 +182,72 @@ export function useMouseSelection({
       y: e.pageY,
     };
 
+    // Initialize selection box
     const box = selectionBoxRef.current;
-    box.style.left = e.pageX + "px";
-    box.style.top = e.pageY + "px";
-  };
+    if (box) {
+      box.style.left = e.pageX + "px";
+      box.style.top = e.pageY + "px";
+      box.style.width = "0px";
+      box.style.height = "0px";
+    }
+  }, [cacheNotePositions, selectedNotesRef, rootContainerRef]);
 
-  const handleMouseUp = () => {
+  const handleMouseUp = useCallback(() => {
     isMouseDown.current = false;
     document.body.style.removeProperty("user-select");
 
-    const box = selectionBoxRef.current;
-    box.removeAttribute("style");
+    // Cancel any pending animation frame
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
 
+    // Apply any remaining pending changes
+    applyPendingChanges();
+
+    // Clean up selection box
+    const box = selectionBoxRef.current;
+    if (box) {
+      box.removeAttribute("style");
+    }
+
+    // Small delay to prevent click events from firing immediately
     setTimeout(() => {
       isDraggingRef.current = false;
     }, 10);
-  };
+  }, [applyPendingChanges]);
+
+  // Handle window scroll during selection
+  const handleScroll = useCallback(() => {
+    if (isMouseDown.current) {
+      // Recache positions on scroll during selection
+      cacheNotePositions();
+    }
+  }, [cacheNotePositions]);
 
   useEffect(() => {
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mousedown", handleMouseDown);
-    window.addEventListener("mouseup", handleMouseUp);
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
+    window.addEventListener("mousedown", handleMouseDown, { passive: true });
+    window.addEventListener("mouseup", handleMouseUp, { passive: true });
+    window.addEventListener("scroll", handleScroll, { passive: true });
 
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mousedown", handleMouseDown);
       window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("scroll", handleScroll);
+      
+      // Clean up any pending animation frame
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
     };
-  }, []);
+  }, [handleMouseMove, handleMouseDown, handleMouseUp, handleScroll]);
+
+  // Expose method to manually refresh positions (useful after layout changes)
+  const refreshPositions = useCallback(() => {
+    cacheNotePositions();
+  }, [cacheNotePositions]);
+
+  return { refreshPositions };
 }

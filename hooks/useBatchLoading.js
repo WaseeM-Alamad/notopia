@@ -16,7 +16,8 @@ export function useBatchLoading({
   containerRef,
   matchesFilters,
 }) {
-  const { labelsRef, layout, labelsReady } = useAppContext();
+  const { labelsRef, layout, labelsReady, calculateLayoutRef } =
+    useAppContext();
   const {
     filters,
     labelSearchTerm,
@@ -24,7 +25,7 @@ export function useBatchLoading({
     searchRef,
     searchTerm,
   } = useSearch();
-  const isLoadingNotesRef = useRef(false);
+  const isLoadingRef = useRef(false);
   const isFirstRenderRef = useRef(true);
   const layoutTimeoutRef = useRef(null);
   const layoutVersionRef = useRef(0);
@@ -34,7 +35,7 @@ export function useBatchLoading({
     const { currentSet: currentVisibleSet, version } = data;
     const container = containerRef.current;
     if (!container) {
-      isLoadingNotesRef.current = false;
+      isLoadingRef.current = false;
       return;
     }
     const scrollY = window.scrollY;
@@ -45,11 +46,11 @@ export function useBatchLoading({
       totalHeight > viewportHeight + scrollY + 700 ||
       version !== layoutVersionRef.current
     ) {
-      isLoadingNotesRef.current = false;
+      isLoadingRef.current = false;
       return;
     }
 
-    isLoadingNotesRef.current = true;
+    isLoadingRef.current = true;
 
     const currentNotes = data.notes || notesStateRef.current.notes;
     const currentOrder = data.order || notesStateRef.current.order;
@@ -114,11 +115,16 @@ export function useBatchLoading({
 
         setTimeout(() => {
           if (version !== layoutVersionRef.current) return;
-          loadNextBatch({
-            currentSet: updated,
-            version: version,
+
+          requestAnimationFrame(() => {
+            setTimeout(() => {
+              loadNextBatch({
+                currentSet: updated,
+                version: version,
+              });
+            }, 800);
           });
-        }, 800);
+        }, 50);
 
         return updated;
       });
@@ -174,10 +180,10 @@ export function useBatchLoading({
       const viewportHeight = window.innerHeight;
       const fullHeight = document.body.offsetHeight;
       const version = layoutVersionRef.current;
-      if (scrollTop + viewportHeight >= fullHeight - 600) {
+      if (scrollTop + viewportHeight >= fullHeight - 700) {
         requestAnimationFrame(() => {
           setTimeout(() => {
-            if (isLoadingNotesRef.current) return;
+            if (isLoadingRef.current) return;
             loadNextBatch({
               currentSet: visibleItems,
               version: version,
@@ -278,4 +284,64 @@ export function useBatchLoading({
       setLabelSearchTerm("");
     }
   }, [currentSection, notesReady, labelsReady]);
+
+  useEffect(() => {
+    const handler = () => {
+      const scrollTop = window.scrollY;
+      const viewportHeight = window.innerHeight;
+      const fullHeight = document.body.offsetHeight;
+      const version = layoutVersionRef.current;
+      if (scrollTop + viewportHeight >= fullHeight - 700) {
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            if (isLoadingRef.current) return;
+            loadNextBatch({
+              currentSet: visibleItems,
+              version: version,
+            });
+          }, 0);
+        });
+      }
+    };
+
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, [visibleItems, layout]);
+
+  // useEffect(() => {
+  //   const handler = () => {
+  //     const order = notesStateRef.current.order;
+  //     const notes = notesStateRef.current.notes;
+  //     let stopID = null;
+
+  //     for (let uuid of order) {
+  //       const note = notes.get(uuid);
+  //       if (!note?.ref?.current) continue;
+
+  //       const noteElement = note.ref.current;
+  //       const scrollTop = window.scrollY;
+  //       const viewportHeight = window.innerHeight;
+  //       const noteBottom =
+  //         noteElement.getBoundingClientRect().bottom + scrollTop;
+
+  //       if (noteBottom  > scrollTop + viewportHeight + 700) {
+  //         console.log(noteBottom)
+  //         stopID = note.uuid;
+  //         break;
+  //       }
+  //     }
+  //     const newSet = new Set();
+
+  //     for (let uuid of visibleItems) {
+  //       newSet.add(uuid);
+  //       if (uuid === stopID) break;
+  //     }
+
+  //     // setVisibleItems(newSet);
+  //     // console.log(newSet.size);
+  //   };
+
+  //   window.addEventListener("focus", handler);
+  //   return () => window.removeEventListener("focus", handler);
+  // }, [visibleItems]);
 }

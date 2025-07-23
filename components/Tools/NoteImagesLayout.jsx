@@ -5,14 +5,20 @@ import { useAppContext } from "@/context/AppContext";
 
 const NoteImagesLayout = ({
   images = [],
-  calculateMasonryLayout,
   modalOpen,
   isTrash = false,
   deleteSource,
   noteImageDelete,
   AddNoteImageDelete,
 }) => {
-  const { loadingImages, showTooltip, hideTooltip, closeToolTip } = useAppContext();
+  const {
+    loadingImages,
+    showTooltip,
+    hideTooltip,
+    closeToolTip,
+    calculateLayoutRef,
+  } = useAppContext();
+  const calculateMasonryLayout = calculateLayoutRef.current;
   const containerRef = useRef(null);
   const [layout, setLayout] = useState([]);
   const [loadedImages, setLoadedImages] = useState([]);
@@ -179,12 +185,7 @@ const NoteImagesLayout = ({
                 )}
                 {modalOpen && !isTrash && (
                   <div
-                    onMouseEnter={(e) =>
-                      showTooltip(
-                        e,
-                        "Remove image"
-                      )
-                    }
+                    onMouseEnter={(e) => showTooltip(e, "Remove image")}
                     onMouseLeave={hideTooltip}
                     onClick={() => handleImageDeletion(item.id, item.src)}
                     className="img-delete"

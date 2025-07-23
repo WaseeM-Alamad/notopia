@@ -35,6 +35,7 @@ const TopMenuHome = ({
     useAppContext();
   const { filters } = useSearch();
   const userID = user?.id;
+  const [selectedNumber, setSelectedNumber] = useState(false);
   const [colorAnchorEl, setColorAnchorEl] = useState(null);
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
@@ -104,6 +105,11 @@ const TopMenuHome = ({
   }, [selectedNotesIDs]);
 
   useEffect(() => {
+    requestIdleCallback(() => {
+      requestAnimationFrame(() => {
+        setSelectedNumber(selectedNotesIDs.length);
+      });
+    });
     if (selectedNotesIDs.length > 0) {
       selectedNotesRef.current = selectedNotesIDs;
     } else {
@@ -677,21 +683,21 @@ const TopMenuHome = ({
   return (
     <>
       <AnimatePresence>
-        {selectedNotesIDs.length > 0 && (
+        {selectedNumber > 0 && (
           <motion.div
             ref={topMenuRef}
             className="top-menu"
             initial={{ opacity: 0, y: -20 }}
             animate={{
-              opacity: selectedNotesIDs.length > 0 ? 1 : 0,
-              y: selectedNotesIDs.length > 0 ? 0 : -20,
+              opacity: selectedNumber > 0 ? 1 : 0,
+              y: selectedNumber > 0 ? 0 : -20,
             }}
             exit={{ opacity: 0, y: -20 }}
             transition={{
               opacity: { duration: 0.2, ease: "easeIn" },
               y: { duration: 0.3, stiffness: 120, damping: 20 },
             }}
-            style={{ pointerEvents: selectedNotesIDs.length === 0 && "none" }}
+            style={{ pointerEvents: selectedNumber === 0 && "none" }}
           >
             <Button
               onClick={handleClose}
@@ -705,7 +711,7 @@ const TopMenuHome = ({
                 margin: "0 0.9rem 0 0.8rem",
               }}
             />
-            <span>{selectedNotesIDs.length} Selected</span>
+            <span>{selectedNumber} Selected</span>
             <div className="top-menu-tools">
               {!inTrash ? (
                 <>

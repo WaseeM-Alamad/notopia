@@ -17,6 +17,7 @@ import CheckMark from "../icons/CheckMark";
 import { useAppContext } from "@/context/AppContext";
 import ImageDropZone from "../Tools/ImageDropZone";
 import { AnimatePresence } from "framer-motion";
+import { useLastInputWasKeyboard } from "@/hooks/useLastInputWasKeyboard";
 
 const Note = memo(
   ({
@@ -24,14 +25,19 @@ const Note = memo(
     noteActions,
     selectedNotesRef,
     dispatchNotes,
-    calculateLayout,
     setSelectedNotesIDs,
     setFadingNotes,
     handleSelectNote,
     index,
   }) => {
-    const { labelsRef, user, showTooltip, hideTooltip, closeToolTip } =
-      useAppContext();
+    const {
+      labelsRef,
+      user,
+      showTooltip,
+      hideTooltip,
+      closeToolTip,
+      focusedNoteRef,
+    } = useAppContext();
     const userID = user?.id;
     const [isDragOver, setIsDragOver] = useState(false);
     const [colorMenuOpen, setColorMenuOpen] = useState(false);
@@ -51,6 +57,8 @@ const Note = memo(
     const contentRef = useRef(null);
     const checkRef = useRef(null);
     const dragCounter = useRef(0);
+
+    const lastInputWasKeyboard = useLastInputWasKeyboard();
 
     const handlePinClick = async (e) => {
       closeToolTip();
@@ -109,12 +117,13 @@ const Note = memo(
         setSelected(true);
       };
 
-      const handleSelect = (e) => {
-        const receivedUUID = e.detail.uuid;
-        if (noteDataRef.current.uuid === receivedUUID) {
+      const handleBatchSelection = (e) => {
+        const { select, deselect } = e.detail;
+
+        if (select.includes(note.uuid)) {
           setSelected(true);
           handleSelectNote({
-            source: "idk",
+            source: "batch_select",
             e: e,
             selected: selected,
             setSelected: setSelected,
@@ -123,11 +132,7 @@ const Note = memo(
             isPinned: noteDataRef.current.isPinned,
           });
         }
-      };
-
-      const handleDeselect = (e) => {
-        const receivedUUID = e.detail.uuid;
-        if (note.uuid === receivedUUID) {
+        if (deselect.includes(note.uuid)) {
           setSelected(false);
           setSelectedNotesIDs((prev) =>
             prev.filter((noteData) => noteData.uuid !== note.uuid)
@@ -136,15 +141,12 @@ const Note = memo(
       };
 
       window.addEventListener("selectAllNotes", handleSelectAllNotes);
-      window.addEventListener("selectNote", handleSelect);
-      window.addEventListener("deselectNote", handleDeselect);
-
+      window.addEventListener("batchSelection", handleBatchSelection);
       return () => {
+        window.removeEventListener("batchSelection", handleBatchSelection);
         window.removeEventListener("selectAllNotes", handleSelectAllNotes);
-        window.removeEventListener("selectNote", handleSelect);
-        window.removeEventListener("deselectNote", handleDeselect);
       };
-    }, []);
+    }, [note.uuid]);
 
     const handleLabelClick = (e, label) => {
       e.stopPropagation();
@@ -238,9 +240,47 @@ const Note = memo(
       }
     };
 
+    const handleOnFocus = () => {
+      if (!lastInputWasKeyboard.current) return;
+
+      focusedNoteRef.current = {
+        ...note,
+        index,
+        selected,
+        setSelected,
+      };
+    };
+
     return (
       <>
         <div
+          tabIndex="0"
+          onClick={(e) =>
+            handleSelectNote({
+              source: "note",
+              e: e,
+              selected: selected,
+              setSelected: setSelected,
+              uuid: note.uuid,
+              index: index,
+              isPinned: note.isPinned,
+            })
+          }
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              handleSelectNote({
+                source: "note",
+                e: e,
+                selected: selected,
+                setSelected: setSelected,
+                uuid: note.uuid,
+                index: index,
+                isPinned: note.isPinned,
+              });
+            }
+          }}
+          onMouseDown={(e) => e.preventDefault()}
+          onFocus={handleOnFocus}
           onDragOver={handleDragOver}
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
@@ -307,17 +347,6 @@ const Note = memo(
                   : "0px  ",
             }}
             className={noteClassName}
-            onClick={(e) =>
-              handleSelectNote({
-                source: "note",
-                e: e,
-                selected: selected,
-                setSelected: setSelected,
-                uuid: note.uuid,
-                index: index,
-                isPinned: note.isPinned,
-              })
-            }
           >
             <div>
               <div>
@@ -346,8 +375,12 @@ const Note = memo(
                         showTooltip(e, `${note.isPinned ? "Unpin" : "Pin"}`)
                       }
                       onMouseLeave={hideTooltip}
+                      onFocus={(e) =>
+                        showTooltip(e, `${note.isPinned ? "Unpin" : "Pin"}`)
+                      }
+                      onBlur={hideTooltip}
                       onClick={handlePinClick}
-                      tabIndex="-1"
+                      tabIndex="0"
                     >
                       <PinIcon
                         isPinned={note.isPinned}
@@ -364,10 +397,7 @@ const Note = memo(
                   }}
                   ref={imagesRef}
                 >
-                  <NoteImagesLayout
-                    images={note.images}
-                    calculateMasonryLayout={calculateLayout}
-                  />
+                  <NoteImagesLayout images={note.images} />
                   {false && note.images.length > 0 && (
                     <div className="linear-loader" />
                   )}

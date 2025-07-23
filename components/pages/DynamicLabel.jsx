@@ -10,6 +10,7 @@ import React, {
 import Note from "../others/Note";
 import { motion } from "framer-motion";
 import { getNoteFormattedDate } from "@/utils/noteDateFormatter";
+import ComposeNote from "../others/ComposeNote";
 
 const GUTTER = 15;
 const GAP_BETWEEN_SECTIONS = 88;
@@ -23,7 +24,6 @@ const NoteWrapper = memo(
     noteActions,
     fadingNotes,
     setFadingNotes,
-    calculateLayout,
     setSelectedNotesIDs,
     index,
     handleSelectNote,
@@ -45,6 +45,11 @@ const NoteWrapper = memo(
       >
         <div
           onClick={(e) => handleNoteClick(e, note, index)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              handleNoteClick(e, note, index);
+            }
+          }}
           className={`grid-item ${
             fadingNotes.has(note.uuid) ? "fade-out" : ""
           }`}
@@ -63,7 +68,6 @@ const NoteWrapper = memo(
             note={note}
             noteActions={noteActions}
             selectedNotesRef={selectedNotesRef}
-            calculateLayout={calculateLayout}
             setFadingNotes={setFadingNotes}
             setSelectedNotesIDs={setSelectedNotesIDs}
             handleSelectNote={handleSelectNote}
@@ -92,16 +96,16 @@ const DynamicLabel = ({
   handleNoteClick,
   handleSelectNote,
   labelObj,
-  setLabelObj,
   containerRef,
   isGrid,
 }) => {
-  const { layout } = useAppContext();
+  const { layout, calculateLayoutRef } = useAppContext();
   const [pinnedHeight, setPinnedHeight] = useState(null);
   const [sectionsHeight, setSectionsHeight] = useState(null);
   const [layoutReady, setLayoutReady] = useState(false);
   const resizeTimeoutRef = useRef(null);
   const layoutFrameRef = useRef(null);
+  const lastAddedNoteRef = useRef(null);
   const COLUMN_WIDTH = layout === "grid" ? 240 : 600;
 
   const hasPinned = [...visibleItems].some((uuid) => {
@@ -264,6 +268,10 @@ const DynamicLabel = ({
   }, [calculateLayout, labelObj]);
 
   useEffect(() => {
+    calculateLayoutRef.current = calculateLayout;
+  }, [calculateLayout, layout]);
+
+  useEffect(() => {
     calculateLayout();
     window.addEventListener("resize", debouncedCalculateLayout);
 
@@ -288,6 +296,22 @@ const DynamicLabel = ({
   useEffect(() => {
     calculateLayout();
   }, [visibleItems]);
+
+  const getLastRef = () => {
+    let lastRef = null;
+    for (let uuid of order) {
+      const note = notes.get(uuid);
+      if (note.labels.includes(labelObj?.uuid) && !note.isTrash) {
+        lastRef = note.ref.current;
+        lastAddedNoteRef.current = lastRef;
+        return lastRef;
+      }
+    }
+  };
+
+  useEffect(() => {
+    getLastRef();
+  }, [notes, order]);
 
   return (
     <>
@@ -344,7 +368,6 @@ const DynamicLabel = ({
                 setSelectedNotesIDs={setSelectedNotesIDs}
                 handleNoteClick={handleNoteClick}
                 handleSelectNote={handleSelectNote}
-                calculateLayout={calculateLayout}
               />
             );
           })}
@@ -384,6 +407,13 @@ const DynamicLabel = ({
           )}
         </div>
       </div>
+      <ComposeNote
+        dispatchNotes={dispatchNotes}
+        setVisibleItems={setVisibleItems}
+        containerRef={containerRef}
+        lastAddedNoteRef={lastAddedNoteRef}
+        labelObj={labelObj}
+      />
     </>
   );
 };

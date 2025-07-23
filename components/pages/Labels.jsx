@@ -29,7 +29,8 @@ const Labels = memo(
     containerRef,
     isGrid,
   }) => {
-    const { createLabel, labelsRef, labelsReady, layout } = useAppContext();
+    const { createLabel, labelsRef, labelsReady, layout, calculateLayoutRef } =
+      useAppContext();
     const { labelSearchTerm } = useSearch();
     const [reRender, triggerReRender] = useState(false);
     const resizeTimeoutRef = useRef(null);
@@ -116,6 +117,10 @@ const Labels = memo(
         calculateLayout();
       }, 100);
     }, [calculateLayout, reRender]);
+
+    useEffect(() => {
+      calculateLayoutRef.current = calculateLayout;
+    }, [calculateLayout, layout]);
 
     const handleCreateLabel = () => {
       const newUUID = uuid();
@@ -204,7 +209,6 @@ const Labels = memo(
                     labelData={labelData}
                     triggerReRender={triggerReRender}
                     setVisibleItems={setVisibleItems}
-                    calculateLayout={calculateLayout}
                     notes={notes}
                     order={order}
                   />

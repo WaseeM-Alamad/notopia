@@ -21,9 +21,13 @@ import SideBtn from "./SideBtn";
 import RightTooltip from "../Tools/RightTooltip";
 
 const Sidebar = memo(() => {
-  const { labelsRef, labelsReady, swapPinnedLabels, currentSection } =
-    useAppContext();
-  const addButtonRef = useRef(null);
+  const {
+    labelsRef,
+    labelsReady,
+    swapPinnedLabels,
+    currentSection,
+    addButtonRef,
+  } = useAppContext();
   const containerRef = useRef(null);
   const [tooltipAnchor, setTooltipAnchor] = useState(null);
   const [currentHash, setCurrentHash] = useState(null);
@@ -114,7 +118,7 @@ const Sidebar = memo(() => {
     if (section === "labels") {
       window.dispatchEvent(new Event("addLabel"));
       return;
-    } else if (section === "home") {
+    } else if (section === "home" || section === "dynamiclabel") {
       window.dispatchEvent(new Event("openModal"));
       return;
     } else if (section === "trash") {

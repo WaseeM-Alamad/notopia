@@ -30,11 +30,10 @@ import { useBatchLoading } from "@/hooks/useBatchLoading";
 import { useHashRouting } from "@/hooks/useHashRouting";
 
 const page = () => {
-  const { searchTerm, searchRef, filters } = useSearch();
+  const { searchTerm, filters } = useSearch();
   const {
     removeLabel,
     labelsReady,
-    ignoreKeysRef,
     layout,
     currentSection,
     setCurrentSection,
@@ -42,6 +41,8 @@ const page = () => {
     setLoadingImages,
     openSnackRef,
     setTooltipRef,
+    calculateLayoutRef,
+    focusedNoteRef,
   } = useAppContext();
   const [tooltipAnchor, setTooltipAnchor] = useState(null);
   const [notesState, dispatchNotes] = useReducer(notesReducer, initialStates);
@@ -195,8 +196,8 @@ const page = () => {
 
       rootContainerRef.current.classList.add("modal-open");
       requestAnimationFrame(() => {
-        element.style.opacity = "0";
         requestIdleCallback(() => {
+          element.style.opacity = "0";
           setSelectedNote(note);
           setIsModalOpen(true);
         });
@@ -304,7 +305,7 @@ const page = () => {
       window.dispatchEvent(new Event("topMenuClose"));
       return;
     }
-    data.e.stopPropagation();
+    data?.e?.stopPropagation();
 
     setTooltipAnchor((prev) => ({
       anchor: null,
@@ -326,6 +327,13 @@ const page = () => {
       ]);
 
       selectedNotesRef.current.add(data.uuid);
+    }
+
+    if (focusedNoteRef.current && focusedNoteRef.current?.uuid === data.uuid) {
+      focusedNoteRef.current = {
+        ...focusedNoteRef.current,
+        selected: !data.selected,
+      };
     }
   }, []);
 
@@ -401,23 +409,26 @@ const page = () => {
     selectedNotesRef,
     setSelectedNotesIDs,
     notesStateRef,
-    searchRef,
-    layout,
-    currentSection,
-    ignoreKeysRef,
     ctrlDownRef,
     keyThrottleRef,
     undoFunction,
     allowUndoRef,
     allowRedoRef,
     redoFunction,
+    batchArchiveRef,
+    batchPinRef,
+    noteActions,
+    batchDeleteRef,
     setSnackbarState,
     matchesFilters,
     setIsModalOpen,
+    dispatchNotes,
+    handleSelectNote,
   });
 
   useMouseSelection({
     notesStateRef,
+    visibleItems,
     selectedNotesRef,
     selectionBoxRef,
     ctrlDownRef,
@@ -508,6 +519,18 @@ const page = () => {
         currentSection={currentSection}
       />
 
+      {/* <button
+        style={{
+          left: "1rem",
+          top: "1rem",
+          position: "fixed",
+          zIndex: "100000",
+        }}
+        onClick={()=> console.log(containerRef.current.offsetHeight)}
+      >
+        {" "}
+        gg
+      </button> */}
       <Page
         dispatchNotes={dispatchNotes}
         visibleItems={visibleItems}
@@ -529,7 +552,6 @@ const page = () => {
         containerRef={containerRef}
         rootContainerRef={rootContainerRef}
         labelObj={labelObj}
-        setLabelObj={setLabelObj}
       />
 
       <SelectionBox ref={selectionBoxRef} />

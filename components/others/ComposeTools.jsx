@@ -23,7 +23,7 @@ const AddModalTools = ({
   setLabelsOpen,
   inputRef,
 }) => {
-  const { showTooltip, hideTooltip, closeToolTip } = useAppContext();
+  const { showTooltip, hideTooltip, closeToolTip, openSnackRef } = useAppContext();
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
   const [colorAnchorEl, setColorAnchorEl] = useState();
   const colorButtonRef = useRef(null);

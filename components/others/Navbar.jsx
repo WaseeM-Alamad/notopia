@@ -474,7 +474,6 @@ const Navbar = () => {
                     : "calc(100% - 110px)"
                   : null,
               }}
-              tabIndex="0"
               className="search-wrapper"
               onBlur={(e) => {
                 const width = window.innerWidth;
@@ -490,6 +489,7 @@ const Navbar = () => {
             >
               <div style={{ padding: "0 0.5rem" }}>
                 <Button
+                  tabIndex="-1"
                   onClick={
                     threshold1
                       ? () => {
@@ -503,6 +503,10 @@ const Navbar = () => {
                     showTooltip(e, threshold1 ? "Close search" : "Search")
                   }
                   onMouseLeave={hideTooltip}
+                  onFocus={(e) =>
+                    showTooltip(e, threshold1 ? "Close search" : "Search")
+                  }
+                  onBlur={hideTooltip}
                   className="nav-btn nav-search-icon"
                 >
                   {threshold1 ? <LeftArrow /> : <InputSearchIcon />}
@@ -529,6 +533,8 @@ const Navbar = () => {
                   className="clear-search-icon"
                   onMouseEnter={(e) => showTooltip(e, "Clear search")}
                   onMouseLeave={hideTooltip}
+                  onFocus={(e) => showTooltip(e, "Clear search")}
+                  onBlur={hideTooltip}
                 />
               </div>
               <div
@@ -562,6 +568,15 @@ const Navbar = () => {
                     )
                   }
                   onMouseLeave={hideTooltip}
+                  onFocus={(e) =>
+                    showTooltip(
+                      e,
+                      labelSearchTerm.trim()
+                        ? "Clear search"
+                        : "Advanced filters"
+                    )
+                  }
+                  onBlur={hideTooltip}
                 />
               </div>
             </div>
@@ -600,6 +615,8 @@ const Navbar = () => {
               style={{ display: showInput && "none" }}
               onMouseEnter={(e) => showTooltip(e, "Search")}
               onMouseLeave={hideTooltip}
+              onFocus={(e) => showTooltip(e, "Search")}
+              onBlur={hideTooltip}
               className="nav-btn"
             >
               <SearchIcon />
@@ -609,6 +626,10 @@ const Navbar = () => {
                 showTooltip(e, layout === "grid" ? "List view" : "Grid view")
               }
               onMouseLeave={hideTooltip}
+              onFocus={(e) =>
+                showTooltip(e, layout === "grid" ? "List view" : "Grid view")
+              }
+              onBlur={hideTooltip}
               onClick={toggleLayout}
               className="nav-btn"
               style={{
@@ -623,6 +644,8 @@ const Navbar = () => {
               onClick={handleRefresh}
               onMouseEnter={(e) => showTooltip(e, "Refresh")}
               onMouseLeave={hideTooltip}
+              onFocus={(e) => showTooltip(e, "Refresh")}
+              onBlur={hideTooltip}
             >
               <AnimatePresence>
                 {!isLoading && UpToDatetrigger && (

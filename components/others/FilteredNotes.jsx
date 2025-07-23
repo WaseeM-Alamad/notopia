@@ -21,7 +21,6 @@ const NoteWrapper = memo(
     index,
     handleNoteClick,
     handleSelectNote,
-    calculateLayout,
     fadingNotes,
   }) => {
     const [mounted, setMounted] = useState(false);
@@ -44,6 +43,11 @@ const NoteWrapper = memo(
             fadingNotes.has(note.uuid) ? "fade-out" : ""
           }`}
           onClick={(e) => handleNoteClick(e, note, index)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              handleNoteClick(e, note, index);
+            }
+          }}
           style={{
             maxWidth: `${isGrid ? 240 : 600}px`,
             minWidth: !isGrid && "15rem",
@@ -64,7 +68,6 @@ const NoteWrapper = memo(
             handleNoteClick={handleNoteClick}
             handleSelectNote={handleSelectNote}
             index={index}
-            calculateLayout={calculateLayout}
           />
           {/* <p>{index}</p> */}
         </div>
@@ -93,7 +96,7 @@ const FilteredNotes = memo(
     isGrid,
   }) => {
     const { searchTerm, filters } = useSearch();
-    const { layout } = useAppContext();
+    const { layout, calculateLayoutRef } = useAppContext();
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
     const [layoutReady, setLayoutReady] = useState(false); // New state to track layout completion
@@ -254,98 +257,6 @@ const FilteredNotes = memo(
       });
     }, [isGrid]);
 
-    // const calculateLayout = useCallback(() => {
-    //   if (layoutFrameRef.current) {
-    //     cancelAnimationFrame(layoutFrameRef.current);
-    //   }
-
-    //   layoutFrameRef.current = requestAnimationFrame(() => {
-    //     const container = containerRef.current;
-    //     if (!container) return;
-
-    //     const parent = container.parentElement;
-    //     const parentWidth = parent.clientWidth;
-    //     const style = window.getComputedStyle(parent);
-    //     const paddingLeft = parseFloat(style.paddingLeft) || 0;
-    //     const paddingRight = parseFloat(style.paddingRight) || 0;
-    //     const availableWidth = parentWidth - paddingLeft - paddingRight;
-
-    //     const columns = !isGrid
-    //       ? 1
-    //       : Math.max(1, Math.floor(availableWidth / (COLUMN_WIDTH + GUTTER)));
-    //     const contentWidth = !isGrid
-    //       ? COLUMN_WIDTH
-    //       : columns * (COLUMN_WIDTH + GUTTER) - GUTTER;
-
-    //     container.style.width = `${contentWidth}px`;
-    //     container.style.maxWidth = isGrid ? "100%" : "90%";
-    //     container.style.position = "relative";
-    //     container.style.left = "50%";
-    //     container.style.transform = "translateX(-50%)";
-
-    //     // Get all the items in the container
-    //     // const items = Array.from(container.children);
-    //     const items = notesStateRef.current.order.map((uuid, index) => {
-    //       const note = notesStateRef.current.notes.get(uuid);
-    //       return { ...note, index: index };
-    //     });
-
-    //     // Sort items based on their position value (ascending order)
-    //     const sortedItems = items.sort((a, b) => {
-    //       return a.index - b.index; // Ascending order
-    //     });
-
-    //     // Filter out pinned and unpinned items
-    //     const unarchivedItems = sortedItems.filter((item) => {
-    //       if (!filteredNotesRef.current.has(item.uuid)) return false;
-    //       return item.isArchived === false;
-    //     });
-    //     const archivedItems = sortedItems.filter((item) => {
-    //       if (!filteredNotesRef.current.has(item.uuid)) return false;
-    //       return item.isArchived === true;
-    //     });
-
-    //     const positionItems = (itemList, startY = 0) => {
-    //       const columnHeights = new Array(columns).fill(startY);
-
-    //       itemList.forEach((item) => {
-    //         const wrapper = item.ref?.current?.parentElement;
-
-    //         if (!wrapper) {
-    //           return;
-    //         }
-
-    //         const minColumnIndex = columnHeights.indexOf(
-    //           Math.min(...columnHeights)
-    //         );
-    //         const x = minColumnIndex * (COLUMN_WIDTH + GUTTER);
-    //         const y = columnHeights[minColumnIndex];
-
-    //         wrapper.style.transform = `translate(${x}px, ${y}px)`;
-    //         wrapper.style.position = "absolute";
-
-    //         columnHeights[minColumnIndex] += wrapper.offsetHeight + GUTTER;
-    //       });
-
-    //       return Math.max(...columnHeights);
-    //     };
-
-    //     // Gap between pinned and unpinned sections
-    //     const gapBetweenSections =
-    //       unarchivedItems.length > 0 ? GAP_BETWEEN_SECTIONS : 0;
-
-    //     const unarchivedHeight = positionItems(unarchivedItems, 0);
-    //     const archivedHeight = positionItems(
-    //       archivedItems,
-    //       unarchivedHeight + gapBetweenSections
-    //     );
-
-    //     setUnarchivedHeight(unarchivedHeight);
-    //     container.style.height = `${archivedHeight}px`;
-    //     setLayoutReady(true);
-    //   });
-    // }, [isGrid]);
-
     const debouncedCalculateLayout = useCallback(() => {
       if (resizeTimeoutRef.current) {
         clearTimeout(resizeTimeoutRef.current);
@@ -354,6 +265,10 @@ const FilteredNotes = memo(
         calculateLayout();
       }, 100);
     }, [calculateLayout]);
+
+    useEffect(() => {
+      calculateLayoutRef.current = calculateLayout;
+    }, [calculateLayout, layout]);
 
     // Initialize layout on component mount
     useEffect(() => {
@@ -455,7 +370,6 @@ const FilteredNotes = memo(
                 setSelectedNotesIDs={setSelectedNotesIDs}
                 handleNoteClick={handleNoteClick}
                 handleSelectNote={handleSelectNote}
-                calculateLayout={calculateLayout}
                 fadingNotes={fadingNotes}
               />
             );

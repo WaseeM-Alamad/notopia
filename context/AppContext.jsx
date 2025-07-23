@@ -27,6 +27,7 @@ export function AppProvider({ children, initialUser }) {
   const [labelsReady, setLabelsReady] = useState(false);
   const [isFiltered, setIsFiltered] = useState(false);
   const [layout, setLayout] = useState(null);
+  const focusedNoteRef = useRef(null);
 
   const openSnackRef = useRef(null);
   const setTooltipRef = useRef(null);
@@ -35,9 +36,10 @@ export function AppProvider({ children, initialUser }) {
   const labelLookUPRef = useRef(new Map());
   const ignoreKeysRef = useRef(null);
   const labelObjRef = useRef(null);
-
+  const calculateLayoutRef = useRef(null);
   const modalOpenRef = useRef(null);
   const isDarkModeRef = useRef(false);
+  const addButtonRef = useRef(null);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
@@ -48,6 +50,7 @@ export function AppProvider({ children, initialUser }) {
   }, []);
 
   useEffect(() => {
+    focusedNoteRef.current = null;
     if (currentSection?.toLowerCase() === "search") return;
     setIsFiltered(false);
     setFilters({ image: null, color: null, label: null });
@@ -155,22 +158,17 @@ export function AppProvider({ children, initialUser }) {
 
     const data = await res.json();
 
+    if (!data.error) {
+      const newLabel = { ...labelsRef.current.get(uuid), image: data.url };
+      labelsRef.current.set(uuid, newLabel);
+    } else {
+    }
+
     setLoadingImages((prev) => {
       const newSet = new Set(prev);
       newSet.delete(uuid);
       return newSet;
     });
-
-    if (!data.error) {
-      console.log(data);
-      // const updatedImages = data;
-      // const imagesMap = new Map();
-      // updatedImages.forEach((imageData) => {
-      //   imagesMap.set(imageData.uuid, imageData);
-      // });
-
-      //set new url
-    }
 
     window.dispatchEvent(new Event("loadingEnd"));
   };
@@ -346,6 +344,9 @@ export function AppProvider({ children, initialUser }) {
         showTooltip,
         hideTooltip,
         closeToolTip,
+        calculateLayoutRef,
+        focusedNoteRef,
+        addButtonRef,
       }}
     >
       {children}

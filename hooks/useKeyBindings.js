@@ -1,29 +1,42 @@
 "use client";
 
+import { useAppContext } from "@/context/AppContext";
 import { useSearch } from "@/context/SearchContext";
+import { NoteUpdateAction } from "@/utils/actions";
 import { useEffect } from "react";
 
 export function useKeyBindings({
   selectedNotesRef,
   setSelectedNotesIDs,
   notesStateRef,
-  searchRef,
-  layout,
-  currentSection,
-  ignoreKeysRef,
+  batchArchiveRef,
+  batchPinRef,
+  batchDeleteRef,
   ctrlDownRef,
   keyThrottleRef,
   undoFunction,
   allowUndoRef,
+  noteActions,
   allowRedoRef,
   redoFunction,
   setSnackbarState,
   matchesFilters,
   setIsModalOpen,
+  dispatchNotes,
+  handleSelectNote,
 }) {
-  const { filters } = useSearch();
+  const {
+    labelsRef,
+    currentSection,
+    ignoreKeysRef,
+    layout,
+    setLayout,
+    focusedNoteRef,
+    addButtonRef,
+  } = useAppContext();
+  const { filters, searchRef } = useSearch();
   useEffect(() => {
-    const handleKeyDown = (event) => {
+    const handleKeyDown = async (event) => {
       if (event.key === "Escape") {
         setIsModalOpen(false);
         if (selectedNotesRef.current.size > 0) {
@@ -45,10 +58,22 @@ export function useKeyBindings({
         ctrlDownRef.current = true;
       }
 
-      if (event.ctrlKey && event.code === "KeyA") {
+      if (
+        event.ctrlKey &&
+        event.code === "KeyA" &&
+        !event.metaKey &&
+        !event.altKey &&
+        !event.shiftKey
+      ) {
         if (ignoreKeysRef.current) {
           return;
         }
+
+        if (currentSection.toLowerCase() === "labels") {
+          event.preventDefault();
+          return;
+        }
+
         event.preventDefault();
         const selectedNotes = [];
 
@@ -110,13 +135,39 @@ export function useKeyBindings({
         window.dispatchEvent(new Event("selectAllNotes"));
       }
 
-      if (event.code === "KeyE") {
+      if (
+        event.code === "KeyC" &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.altKey &&
+        !event.shiftKey
+      ) {
+        addButtonRef.current.click();
+      }
+
+      if (
+        event.code === "KeyE" &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.altKey &&
+        !event.shiftKey
+      ) {
         if (ignoreKeysRef.current) {
           return;
         }
-        const hash = window.location.hash.replace("#", "");
-        if (selectedNotesRef.current.size > 0 && !hash.startsWith("trash")) {
-          batchArchiveRef.current();
+        const section = currentSection.toLowerCase();
+        if (selectedNotesRef.current.size > 0) {
+          section !== "trash" && batchArchiveRef.current();
+        } else {
+          if (!focusedNoteRef.current) return;
+          const { index, selected, setSelected, ...note } =
+            focusedNoteRef.current;
+          noteActions({
+            type: "archive",
+            index: index,
+            note: note,
+            noteRef: note.ref,
+          });
         }
       }
 
@@ -124,23 +175,122 @@ export function useKeyBindings({
         if (ignoreKeysRef.current) {
           return;
         }
-        const hash = window.location.hash.replace("#", "");
-        if (selectedNotesRef.current.size > 0 && !hash.startsWith("trash")) {
-          batchDeleteRef.current();
+        const section = currentSection.toLowerCase();
+        if (selectedNotesRef.current.size > 0) {
+          section !== "trash" && batchDeleteRef.current();
+        } else {
+          if (!focusedNoteRef.current) return;
+          const { index, selected, setSelected, ...note } =
+            focusedNoteRef.current;
+          noteActions({
+            type: "TRASH_NOTE",
+            note: note,
+            index: index,
+            noteRef: note.ref,
+            setIsOpen: () => {},
+          });
         }
       }
 
-      if (event.code === "KeyF") {
+      if (
+        event.code === "KeyF" &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.altKey &&
+        !event.shiftKey
+      ) {
         if (ignoreKeysRef.current) {
           return;
         }
-        const hash = window.location.hash.replace("#", "");
-        if (selectedNotesRef.current.size > 0 && !hash.startsWith("trash")) {
-          batchPinRef.current();
+        const section = currentSection.toLowerCase();
+        if (selectedNotesRef.current.size > 0) {
+          section !== "trash" && batchPinRef.current();
+        } else {
+          if (!focusedNoteRef.current) return;
+          const { index, selected, setSelected, ...note } =
+            focusedNoteRef.current;
+          dispatchNotes({
+            type: "PIN_NOTE",
+            note: note,
+          });
         }
       }
 
-      if (event.ctrlKey && event.code === "KeyZ" && !event.shiftKey) {
+      if (
+        event.code === "KeyX" &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.altKey &&
+        !event.shiftKey
+      ) {
+        if (ignoreKeysRef.current || !focusedNoteRef.current) {
+          return;
+        }
+        const { index, selected, setSelected, ...note } =
+          focusedNoteRef.current;
+        handleSelectNote({
+          source: "keybind",
+          e: null,
+          selected: selected,
+          setSelected: setSelected,
+          uuid: note.uuid,
+          index: note.index,
+          isPinned: note.isPinned,
+        });
+      }
+
+      if (
+        event.ctrlKey &&
+        event.shiftKey &&
+        event.code === "Digit8" &&
+        !event.metaKey &&
+        !event.altKey
+      ) {
+        if (ignoreKeysRef.current || !focusedNoteRef.current) {
+          return;
+        }
+        const { index, selected, setSelected, ...note } =
+          focusedNoteRef.current;
+        if (note.checkboxes.length === 0) return;
+        dispatchNotes({
+          type: "CHECKBOX_VIS",
+          noteUUID: note.uuid,
+        });
+        window.dispatchEvent(new Event("loadingStart"));
+        await NoteUpdateAction({
+          type: "showCheckboxes",
+          value: !note.showCheckboxes,
+          noteUUIDs: [note.uuid],
+        });
+        window.dispatchEvent(new Event("loadingEnd"));
+      }
+
+      if (
+        event.code === "KeyG" &&
+        event.ctrlKey &&
+        !event.metaKey &&
+        !event.altKey &&
+        !event.shiftKey
+      ) {
+        event.preventDefault();
+        const width = window.innerWidth;
+        if (width < 605) return;
+        if (layout === "grid") {
+          localStorage.setItem("layout", "list");
+          setLayout("list");
+        } else {
+          localStorage.setItem("layout", "grid");
+          setLayout("grid");
+        }
+      }
+
+      if (
+        event.ctrlKey &&
+        event.code === "KeyZ" &&
+        !event.shiftKey &&
+        !event.metaKey &&
+        !event.altKey
+      ) {
         if (
           ignoreKeysRef.current ||
           !allowUndoRef.current ||
@@ -171,8 +321,16 @@ export function useKeyBindings({
       }
 
       if (
-        (event.ctrlKey && event.code === "KeyZ" && event.shiftKey) ||
-        (event.ctrlKey && event.code === "KeyY")
+        (event.ctrlKey &&
+          event.code === "KeyZ" &&
+          event.shiftKey &&
+          !event.metaKey &&
+          !event.altKey) ||
+        (event.ctrlKey &&
+          event.code === "KeyY" &&
+          !event.metaKey &&
+          !event.altKey &&
+          !event.shiftKey)
       ) {
         if (
           ignoreKeysRef.current ||

@@ -18,8 +18,6 @@ const NoteWrapper = memo(
     handleNoteClick,
     handleSelectNote,
     fadingNotes,
-    calculateLayout,
-    setFadingNotes,
     dispatchNotes,
     noteActions,
   }) => {
@@ -43,6 +41,11 @@ const NoteWrapper = memo(
             fadingNotes.has(note.uuid) ? "fade-out" : ""
           }`}
           onClick={(e) => handleNoteClick(e, note, index)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              handleNoteClick(e, note, index);
+            }
+          }}
           style={{
             maxWidth: `${isGrid ? 240 : 600}px`,
             minWidth: !isGrid && "15rem",
@@ -59,7 +62,6 @@ const NoteWrapper = memo(
             index={index}
             selectedNotesRef={selectedNotesRef}
             noteActions={noteActions}
-            calculateLayout={calculateLayout}
             handleSelectNote={handleSelectNote}
             setSelectedNotesIDs={setSelectedNotesIDs}
             selectedNotes={selectedNotes}
@@ -92,7 +94,7 @@ const Archive = memo(
     containerRef,
     isGrid,
   }) => {
-    const { layout } = useAppContext();
+    const { layout, calculateLayoutRef } = useAppContext();
     const COLUMN_WIDTH = layout === "grid" ? 240 : 600;
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
@@ -173,6 +175,10 @@ const Archive = memo(
     }, [calculateLayout]);
 
     useEffect(() => {
+      calculateLayoutRef.current = calculateLayout;
+    }, [calculateLayout, layout]);
+
+    useEffect(() => {
       calculateLayout();
     }, [visibleItems]);
 
@@ -237,7 +243,6 @@ const Archive = memo(
                     index={index}
                     handleNoteClick={handleNoteClick}
                     handleSelectNote={handleSelectNote}
-                    calculateLayout={calculateLayout}
                     fadingNotes={fadingNotes}
                     setFadingNotes={setFadingNotes}
                     noteActions={noteActions}
