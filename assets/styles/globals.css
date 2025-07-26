@@ -50,17 +50,13 @@ svg {
 
 ::-webkit-scrollbar-track {
   border-radius: 2px;
-  outline: solid 1px #d6d6d6;
-}
-
-.dark-mode ::-webkit-scrollbar-track {
-  outline: solid 1px #383838;
+  outline: none;
 }
 
 ::-webkit-scrollbar-thumb {
   background: #c0c0c0;
 
-  /* border-radius: 0.3em; */
+  border-radius: 0.3em;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -4183,7 +4179,7 @@ img {
   border: 1px solid #e5e7eb;
   left: 50%;
   top: 45%;
-  border-radius: 1.5rem;
+  border-radius: 1.2rem;
   user-select: none;
   box-shadow: -1px -2px 32px -10px rgba(173, 173, 173, 0.75);
   -webkit-box-shadow: -1px -2px 32px -10px rgba(173, 173, 173, 0.75);
@@ -4602,4 +4598,101 @@ img {
     justify-content: center;
     gap: 0.6rem;
   }
+}
+
+.keybinds-modal {
+  position: fixed;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -40%);
+  width: 95%;
+  max-width: 520px;
+  background-color: white;
+  padding: 1.5rem 0;
+  box-sizing: border-box;
+  border-radius: 1.2rem;
+  overflow: hidden;
+}
+
+.dark-mode .keybinds-modal {
+  background-color: #1e1e1e;
+}
+
+.keybinds-header {
+  display: flex;
+  align-items: center;
+  padding: 0 3rem 1.125rem 1.5rem;
+  font-size: 120%;
+  font-weight: 600;
+  border-bottom: 1px solid transparent;
+  transition: border-bottom 0.1s ease;
+}
+
+.dark-mode .keybinds-header {
+  color: rgb(211, 211, 211);
+}
+
+.keybinds-modal table {
+  display: block;
+  padding: 0 1.5rem;
+  width: 100%;
+  text-align: left;
+  box-sizing: border-box;
+  border-collapse: collapse;
+  max-height: 510px;
+  overflow-y: auto;
+}
+
+.keybinds-modal th {
+  padding: 1.7rem 0 0.5rem 0;
+  font-size: 1rem;
+}
+
+.dark-mode .keybinds-modal {
+  color: rgb(211, 211, 211);
+}
+
+.keybinds-modal tr:first-child th {
+  padding: 0.9rem 0 0.5rem 0;
+  /* width: 60%; */
+}
+
+.keybinds-modal tr {
+  font-size: 0.85rem;
+}
+
+.keybind-item {
+  border-bottom: 1px solid rgb(218, 220, 224);
+}
+
+.dark-mode .keybind-item {
+  color: rgb(207, 208, 211);
+  border-bottom: 1px solid rgb(131, 131, 131);
+}
+
+.keybind-item > :nth-child(2) {
+  padding: 0.6rem 3rem 0.6rem 5rem;
+  font-weight: 600;
+}
+
+.dark-mode .keybind-item > :nth-child(2) {
+  color: rgb(232, 234, 237);
+}
+
+.close-dialog-btn {
+  background-size: 1rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  position: absolute;
+  right: 1.2rem;
+  top: 1rem;
+  padding: 0;
+}
+
+.keybinds-container-scrolled {
+  border-bottom: 1px solid rgb(218, 220, 224);
+}
+
+.dark-mode .keybinds-container-scrolled {
+  border-bottom: 1px solid rgb(87, 88, 88);
 }

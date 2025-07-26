@@ -66,9 +66,10 @@ export function notesReducer(state, action) {
     }
 
     case "PIN_NOTE": {
+      const note = state.notes.get(action.note.uuid);
       const newNote = {
         ...state.notes.get(action.note.uuid),
-        isPinned: !action.note.isPinned,
+        isPinned: !note.isPinned,
         isArchived: false,
       };
       const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
@@ -666,9 +667,16 @@ export function notesReducer(state, action) {
     }
 
     case "DND": {
+      const initialIndex = action.initialIndex;
+      const finalIndex = action.finalIndex;
+      if (initialIndex === null || finalIndex === null) return null;
+
+      const updatedOrder = [...state.order];
+      const [draggedNote] = updatedOrder.splice(initialIndex, 1);
+      updatedOrder.splice(finalIndex, 0, draggedNote);
       return {
         ...state,
-        order: action.updatedOrder,
+        order: updatedOrder,
       };
     }
   }

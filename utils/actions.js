@@ -662,14 +662,12 @@ export const NoteUpdateAction = async (data) => {
         { uuid: data.noteUUIDs[0], creator: userID },
         { $set: { [data.type]: data.value } }
       );
-      if (!data.first) {
         const user = await User.findById(userID);
         const { notesOrder } = user;
         const order = notesOrder.filter((uuid) => uuid !== data.noteUUIDs[0]);
         const updatedOrder = [data.noteUUIDs[0], ...order];
         user.notesOrder = updatedOrder;
         await user.save();
-      }
     } else if (data.type === "isTrash") {
       await Note.updateOne(
         { uuid: data.noteUUIDs[0], creator: userID },

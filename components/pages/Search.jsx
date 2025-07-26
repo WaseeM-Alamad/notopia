@@ -31,8 +31,14 @@ const Search = ({
     setFilters,
     skipHashChangeRef,
   } = useSearch();
-  const { labelsRef, setIsFiltered, showTooltip, hideTooltip, closeToolTip } =
-    useAppContext();
+  const {
+    labelsRef,
+    setIsFiltered,
+    showTooltip,
+    hideTooltip,
+    closeToolTip,
+    focusedIndex,
+  } = useAppContext();
   const [colorsSet, setColorsSet] = useState(new Set());
   const [labelsSet, setLabelsSet] = useState(new Set());
   const [typesSet, setTypesSet] = useState(new Set());
@@ -74,9 +80,15 @@ const Search = ({
   };
 
   const filteredNotes = new Set(
-    order.filter((uuid) => {
+    order.filter((uuid, index) => {
       const note = notes.get(uuid);
-      return note && matchesFilters(note) && filtersExist;
+      if (note && matchesFilters(note) && filtersExist) {
+        if (!focusedIndex.current) {
+          focusedIndex.current = index;
+        }
+        return true;
+      }
+      return false;
     })
   );
 

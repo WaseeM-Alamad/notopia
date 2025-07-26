@@ -94,14 +94,17 @@ const Archive = memo(
     containerRef,
     isGrid,
   }) => {
-    const { layout, calculateLayoutRef } = useAppContext();
+    const { layout, calculateLayoutRef, focusedIndex } = useAppContext();
     const COLUMN_WIDTH = layout === "grid" ? 240 : 600;
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
 
-    const notesExist = order.some((uuid) => {
+    const notesExist = order.some((uuid, index) => {
       const note = notes.get(uuid);
       if (!note.isArchived || note.isTrash) return false;
+      if (!focusedIndex.current) {
+        focusedIndex.current = index;
+      }
       return true;
     });
 

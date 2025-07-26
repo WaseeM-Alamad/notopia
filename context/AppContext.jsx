@@ -27,7 +27,7 @@ export function AppProvider({ children, initialUser }) {
   const [labelsReady, setLabelsReady] = useState(false);
   const [isFiltered, setIsFiltered] = useState(false);
   const [layout, setLayout] = useState(null);
-  const focusedNoteRef = useRef(null);
+  const focusedIndex = useRef(null);
 
   const openSnackRef = useRef(null);
   const setTooltipRef = useRef(null);
@@ -40,6 +40,7 @@ export function AppProvider({ children, initialUser }) {
   const modalOpenRef = useRef(null);
   const isDarkModeRef = useRef(false);
   const addButtonRef = useRef(null);
+  const setBindsOpenRef = useRef(null);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
@@ -50,7 +51,7 @@ export function AppProvider({ children, initialUser }) {
   }, []);
 
   useEffect(() => {
-    focusedNoteRef.current = null;
+    focusedIndex.current = null;
     if (currentSection?.toLowerCase() === "search") return;
     setIsFiltered(false);
     setFilters({ image: null, color: null, label: null });
@@ -345,8 +346,9 @@ export function AppProvider({ children, initialUser }) {
         hideTooltip,
         closeToolTip,
         calculateLayoutRef,
-        focusedNoteRef,
+        focusedIndex,
         addButtonRef,
+        setBindsOpenRef,
       }}
     >
       {children}

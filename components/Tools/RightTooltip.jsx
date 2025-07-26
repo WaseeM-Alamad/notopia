@@ -59,7 +59,7 @@ const RightTooltip = ({ anchorEl, margin = "20" }) => {
         opacity: display ? 1 : 0,
       }}
       transition={{
-        marginLeft: { type: "spring", stiffness: 900, damping: 50, mass: 1 },
+        marginLeft: { type: "spring", stiffness: 500, damping: 40, mass: 1.05 },
         opacity: { type: "spring", stiffness: 800, damping: 50, mass: 1 },
         display: { duration: 0 },
         left: { duration: 0 },

@@ -143,7 +143,7 @@ const Home = memo(
     rootContainerRef,
     isGrid,
   }) => {
-    const { layout, calculateLayoutRef } = useAppContext();
+    const { layout, calculateLayoutRef, focusedIndex } = useAppContext();
     const [pinnedHeight, setPinnedHeight] = useState(null);
     const lastAddedNoteRef = useRef(null);
     const resizeTimeoutRef = useRef(null);
@@ -161,9 +161,12 @@ const Home = memo(
       return !note?.isPinned;
     });
 
-    const notesExist = order.some((uuid) => {
+    const notesExist = order.some((uuid, index) => {
       const note = notes.get(uuid);
       if (note?.isArchived || note?.isTrash) return false;
+      if (!focusedIndex.current) {
+        focusedIndex.current = index;
+      }
       return true;
     });
 
@@ -436,20 +439,12 @@ const Home = memo(
 
       lastSwapRef.current = now;
 
-      if (draggedIndexRef.current === null || overIndexRef.current === null)
-        return null;
-      endIndexRef.current = overIndexRef.current;
-
-      // Copy notes to avoid mutating state directly
-      const updatedOrder = [...order];
-      const [draggedNote] = updatedOrder.splice(draggedIndexRef.current, 1);
-      updatedOrder.splice(overIndexRef.current, 0, draggedNote);
-
       dispatchNotes({
         type: "DND",
-        updatedOrder,
+        initialIndex: draggedIndexRef.current,
+        finalIndex: overIndexRef.current
       });
-
+      endIndexRef.current = overIndexRef.current;
       overIndexRef.current = draggedIndexRef.current;
       draggedIndexRef.current = endIndexRef.current;
     };

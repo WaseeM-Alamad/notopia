@@ -99,7 +99,7 @@ const DynamicLabel = ({
   containerRef,
   isGrid,
 }) => {
-  const { layout, calculateLayoutRef } = useAppContext();
+  const { layout, calculateLayoutRef, focusedIndex } = useAppContext();
   const [pinnedHeight, setPinnedHeight] = useState(null);
   const [sectionsHeight, setSectionsHeight] = useState(null);
   const [layoutReady, setLayoutReady] = useState(false);
@@ -123,9 +123,12 @@ const DynamicLabel = ({
     return note?.isArchived;
   });
 
-  const notesExist = order.some((uuid) => {
+  const notesExist = order.some((uuid, index) => {
     const note = notes.get(uuid);
     if (!note?.labels?.includes(labelObj?.uuid) || note.isTrash) return false;
+    if (!focusedIndex.current) {
+      focusedIndex.current = index;
+    }
     return true;
   });
 

@@ -96,16 +96,19 @@ const Trash = memo(
     containerRef,
     isGrid,
   }) => {
-    const { layout, calculateLayoutRef } = useAppContext();
+    const { layout, calculateLayoutRef, focusedIndex } = useAppContext();
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const COLUMN_WIDTH = layout === "grid" ? 240 : 600;
     const resizeTimeoutRef = useRef(null);
     const isFirstRenderRef = useRef(true);
     const layoutFrameRef = useRef(null);
 
-    const notesExist = order.some((uuid) => {
+    const notesExist = order.some((uuid, index) => {
       const note = notes.get(uuid);
       if (!note.isTrash) return false;
+      if (!focusedIndex.current) {
+        focusedIndex.current = index;
+      }
       return true;
     });
 

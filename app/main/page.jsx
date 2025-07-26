@@ -41,8 +41,7 @@ const page = () => {
     setLoadingImages,
     openSnackRef,
     setTooltipRef,
-    calculateLayoutRef,
-    focusedNoteRef,
+    focusedIndex,
   } = useAppContext();
   const [tooltipAnchor, setTooltipAnchor] = useState(null);
   const [notesState, dispatchNotes] = useReducer(notesReducer, initialStates);
@@ -69,7 +68,6 @@ const page = () => {
   const allowRedoRef = useRef(null);
   const onCloseFunction = useRef(() => {});
   const closeRef = useRef(null);
-  const keyThrottleRef = useRef(false);
   const areNotesSelectedRef = useRef(false);
   const ctrlDownRef = useRef(false);
   const batchArchiveRef = useRef(() => {});
@@ -328,13 +326,6 @@ const page = () => {
 
       selectedNotesRef.current.add(data.uuid);
     }
-
-    if (focusedNoteRef.current && focusedNoteRef.current?.uuid === data.uuid) {
-      focusedNoteRef.current = {
-        ...focusedNoteRef.current,
-        selected: !data.selected,
-      };
-    }
   }, []);
 
   useEffect(() => {
@@ -408,9 +399,9 @@ const page = () => {
   useKeyBindings({
     selectedNotesRef,
     setSelectedNotesIDs,
+    notesState,
     notesStateRef,
     ctrlDownRef,
-    keyThrottleRef,
     undoFunction,
     allowUndoRef,
     allowRedoRef,
@@ -423,7 +414,6 @@ const page = () => {
     matchesFilters,
     setIsModalOpen,
     dispatchNotes,
-    handleSelectNote,
   });
 
   useMouseSelection({
@@ -463,6 +453,21 @@ const page = () => {
 
   return (
     <>
+      {/* <button
+        style={{
+          left: "12rem",
+          top: "1rem",
+          position: "fixed",
+          zIndex: "1000000",
+        }}
+        onClick={() => {
+          const uuid = notesState.order[focusedIndex.current];
+          const note = notesState.notes.get(uuid);
+          console.log(note, note.ref.current);
+        }}
+      >
+        ggg
+      </button> */}
       <div
         id="n-overlay"
         onClick={() => {

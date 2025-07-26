@@ -2,18 +2,18 @@
 
 import { useAppContext } from "@/context/AppContext";
 import { useSearch } from "@/context/SearchContext";
-import { NoteUpdateAction } from "@/utils/actions";
-import { useEffect } from "react";
+import { NoteUpdateAction, updateOrderAction } from "@/utils/actions";
+import { useEffect, useRef } from "react";
 
 export function useKeyBindings({
   selectedNotesRef,
   setSelectedNotesIDs,
+  notesState,
   notesStateRef,
   batchArchiveRef,
   batchPinRef,
   batchDeleteRef,
   ctrlDownRef,
-  keyThrottleRef,
   undoFunction,
   allowUndoRef,
   noteActions,
@@ -23,7 +23,6 @@ export function useKeyBindings({
   matchesFilters,
   setIsModalOpen,
   dispatchNotes,
-  handleSelectNote,
 }) {
   const {
     labelsRef,
@@ -31,10 +30,48 @@ export function useKeyBindings({
     ignoreKeysRef,
     layout,
     setLayout,
-    focusedNoteRef,
+    focusedIndex,
     addButtonRef,
+    labelObjRef,
+    setBindsOpenRef,
   } = useAppContext();
   const { filters, searchRef } = useSearch();
+  const actionThrottle = useRef(false);
+  const dndThrottle = useRef(false);
+
+  const checkInSection = (note) => {
+    switch (currentSection?.toLowerCase()) {
+      case "home":
+        return !note.isArchived && !note.isTrash;
+      case "archive":
+        return note.isArchived && !note.isTrash;
+      case "trash":
+        return note.isTrash;
+      case "search":
+        return matchesFilters(note);
+      case "dynamiclabel":
+        return (
+          note?.labels?.includes(labelObjRef.current?.uuid) && !note.isTrash
+        );
+    }
+  };
+
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      const notes = notesState.notes;
+      const order = notesState.order;
+      const currentUUID = order[focusedIndex.current];
+      const currentNote = notes.get(currentUUID);
+      if (!currentNote) return;
+      if (checkInSection(currentNote)) return;
+      const firstIndex = order.findIndex((uuid) => {
+        const note = notes.get(uuid);
+        return checkInSection(note);
+      });
+      focusedIndex.current = firstIndex;
+    });
+  }, [notesState]);
+
   useEffect(() => {
     const handleKeyDown = async (event) => {
       if (event.key === "Escape") {
@@ -44,6 +81,9 @@ export function useKeyBindings({
           window.dispatchEvent(new Event("topMenuClose"));
         }
       }
+
+      const notes = notesStateRef.current.notes;
+      const order = notesStateRef.current.order;
 
       const target = event.target;
 
@@ -136,6 +176,188 @@ export function useKeyBindings({
       }
 
       if (
+        event.code === "KeyK" &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.altKey &&
+        !event.shiftKey
+      ) {
+        const notes = notesStateRef.current.notes;
+        const order = notesStateRef.current.order;
+
+        const index = focusedIndex.current;
+
+        let nextUUID = null;
+
+        for (let i = index + 1; i < order.length; i++) {
+          const tempUUID = order[i];
+          const note = notes.get(tempUUID);
+          if (!note) break;
+          if (checkInSection(note)) {
+            nextUUID = tempUUID;
+            break;
+          }
+        }
+
+        if (!nextUUID) return;
+
+        const newNote = notes.get(nextUUID);
+
+        if (!newNote?.ref?.current) return;
+
+        newNote.ref.current.focus();
+      }
+
+      if (
+        event.code === "KeyK" &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.altKey &&
+        event.shiftKey
+      ) {
+        if (dndThrottle.current || currentSection.toLowerCase() !== "home")
+          return;
+
+        setTimeout(() => {
+          dndThrottle.current = false;
+        }, 100);
+
+        dndThrottle.current = true;
+
+        const notes = notesStateRef.current.notes;
+        const order = notesStateRef.current.order;
+
+        const initialIndex = focusedIndex.current;
+
+        let finalIndex = null;
+
+        for (let i = initialIndex + 1; i < order.length; i++) {
+          const noteUUID = order[i];
+          const note = notes.get(noteUUID);
+          if (!note) break;
+          if (checkInSection(note)) {
+            finalIndex = i;
+            break;
+          }
+        }
+
+        const initialNote = notes.get(order[initialIndex]);
+        const finalNote = notes.get(order[finalIndex]);
+
+        if (
+          finalIndex === null ||
+          initialNote?.isPinned !== finalNote?.isPinned ||
+          initialNote?.isArchived !== finalNote?.isArchived
+        )
+          return;
+
+        dispatchNotes({
+          type: "DND",
+          initialIndex,
+          finalIndex,
+        });
+        focusedIndex.current = finalIndex;
+
+        window.dispatchEvent(new Event("loadingStart"));
+        await updateOrderAction({
+          initialIndex,
+          endIndex: finalIndex,
+        });
+        window.dispatchEvent(new Event("loadingEnd"));
+      }
+
+      if (
+        event.code === "KeyJ" &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.altKey &&
+        !event.shiftKey
+      ) {
+        const notes = notesStateRef.current.notes;
+        const order = notesStateRef.current.order;
+
+        const index = focusedIndex.current;
+
+        let nextUUID = null;
+
+        for (let i = index - 1; i < order.length; i--) {
+          const tempUUID = order[i];
+          const note = notes.get(tempUUID);
+          if (!note) break;
+          if (checkInSection(note)) {
+            nextUUID = tempUUID;
+            break;
+          }
+        }
+
+        if (!nextUUID) return;
+
+        const newNote = notes.get(nextUUID);
+
+        if (!newNote?.ref?.current) return;
+
+        newNote.ref.current.focus();
+      }
+
+      if (
+        event.code === "KeyJ" &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.altKey &&
+        event.shiftKey
+      ) {
+        if (dndThrottle.current || currentSection.toLowerCase() !== "home")
+          return;
+
+        setTimeout(() => {
+          dndThrottle.current = false;
+        }, 100);
+
+        dndThrottle.current = true;
+
+        const notes = notesStateRef.current.notes;
+        const order = notesStateRef.current.order;
+
+        const initialIndex = focusedIndex.current;
+
+        let finalIndex = null;
+
+        for (let i = initialIndex - 1; i < order.length; i++) {
+          const noteUUID = order[i];
+          const note = notes.get(noteUUID);
+          if (!note) break;
+          if (checkInSection(note)) {
+            finalIndex = i;
+            break;
+          }
+        }
+
+        const initialNote = notes.get(order[initialIndex]);
+        const finalNote = notes.get(order[finalIndex]);
+
+        if (
+          finalIndex === null ||
+          initialNote?.isPinned !== finalNote?.isPinned ||
+          initialNote?.isArchived !== finalNote?.isArchived
+        )
+          return;
+
+        dispatchNotes({
+          type: "DND",
+          initialIndex,
+          finalIndex,
+        });
+        focusedIndex.current = finalIndex;
+
+        window.dispatchEvent(new Event("loadingStart"));
+        await updateOrderAction({
+          initialIndex,
+          endIndex: finalIndex,
+        });
+        window.dispatchEvent(new Event("loadingEnd"));
+      }
+
+      if (
         event.code === "KeyC" &&
         !event.ctrlKey &&
         !event.metaKey &&
@@ -159,9 +381,26 @@ export function useKeyBindings({
         if (selectedNotesRef.current.size > 0) {
           section !== "trash" && batchArchiveRef.current();
         } else {
-          if (!focusedNoteRef.current) return;
-          const { index, selected, setSelected, ...note } =
-            focusedNoteRef.current;
+          if (
+            focusedIndex.current === null ||
+            focusedIndex.current === undefined ||
+            actionThrottle.current
+          )
+            return;
+
+          setTimeout(() => {
+            actionThrottle.current = false;
+          }, 400);
+
+          actionThrottle.current = true;
+
+          const index = focusedIndex.current;
+          const uuid = order[index];
+
+          if (!uuid) return;
+
+          const note = notes.get(uuid);
+          if (note.isTrash) return;
           noteActions({
             type: "archive",
             index: index,
@@ -169,6 +408,17 @@ export function useKeyBindings({
             noteRef: note.ref,
           });
         }
+      }
+
+      if (
+        event.key === "?" ||
+        (event.ctrlKey &&
+          event.key === "/" &&
+          !event.metaKey &&
+          !event.altKey &&
+          !event.shiftKey)
+      ) {
+        setBindsOpenRef.current(true);
       }
 
       if (event.key.toLowerCase() === "delete" || event.key === "#") {
@@ -179,9 +429,24 @@ export function useKeyBindings({
         if (selectedNotesRef.current.size > 0) {
           section !== "trash" && batchDeleteRef.current();
         } else {
-          if (!focusedNoteRef.current) return;
-          const { index, selected, setSelected, ...note } =
-            focusedNoteRef.current;
+          if (
+            focusedIndex.current === null ||
+            focusedIndex.current === undefined ||
+            actionThrottle.current
+          )
+            return;
+          setTimeout(() => {
+            actionThrottle.current = false;
+          }, 400);
+
+          actionThrottle.current = true;
+
+          const index = focusedIndex.current;
+          const uuid = order[index];
+          if (!uuid) return;
+
+          const note = notes.get(uuid);
+          if (note.isTrash) return;
           noteActions({
             type: "TRASH_NOTE",
             note: note,
@@ -199,20 +464,53 @@ export function useKeyBindings({
         !event.altKey &&
         !event.shiftKey
       ) {
-        if (ignoreKeysRef.current) {
+        if (ignoreKeysRef.current || actionThrottle.current) {
           return;
         }
+        setTimeout(() => {
+          actionThrottle.current = false;
+        }, 400);
+
+        actionThrottle.current = true;
         const section = currentSection.toLowerCase();
         if (selectedNotesRef.current.size > 0) {
           section !== "trash" && batchPinRef.current();
         } else {
-          if (!focusedNoteRef.current) return;
-          const { index, selected, setSelected, ...note } =
-            focusedNoteRef.current;
-          dispatchNotes({
-            type: "PIN_NOTE",
-            note: note,
-          });
+          if (
+            focusedIndex.current === null ||
+            focusedIndex.current === undefined
+          )
+            return;
+          const index = focusedIndex.current;
+          const uuid = order[index];
+          if (!uuid) return;
+
+          const note = notes.get(uuid);
+
+          if (note.isTrash) return;
+
+          const section = currentSection.toLowerCase();
+
+          if (section === "archive") {
+            noteActions({
+              type: "PIN_ARCHIVED_NOTE",
+              note: note,
+              noteRef: note.ref,
+              index: index,
+            });
+          } else {
+            dispatchNotes({
+              type: "PIN_NOTE",
+              note: note,
+            });
+            window.dispatchEvent(new Event("loadingStart"));
+            await NoteUpdateAction({
+              type: "isPinned",
+              value: !note.isPinned,
+              noteUUIDs: [note.uuid],
+            });
+            window.dispatchEvent(new Event("loadingEnd"));
+          }
         }
       }
 
@@ -223,20 +521,25 @@ export function useKeyBindings({
         !event.altKey &&
         !event.shiftKey
       ) {
-        if (ignoreKeysRef.current || !focusedNoteRef.current) {
+        if (ignoreKeysRef.current) {
           return;
         }
-        const { index, selected, setSelected, ...note } =
-          focusedNoteRef.current;
-        handleSelectNote({
-          source: "keybind",
-          e: null,
-          selected: selected,
-          setSelected: setSelected,
-          uuid: note.uuid,
-          index: note.index,
-          isPinned: note.isPinned,
-        });
+        if (focusedIndex.current === null || focusedIndex.current === undefined)
+          return;
+        const index = focusedIndex.current;
+        const uuid = order[index];
+        if (!uuid) return;
+
+        const note = notes.get(uuid);
+
+        window.dispatchEvent(
+          new CustomEvent("batchSelection", {
+            detail: {
+              select: [note.uuid],
+              deselect: [],
+            },
+          })
+        );
       }
 
       if (
@@ -246,11 +549,17 @@ export function useKeyBindings({
         !event.metaKey &&
         !event.altKey
       ) {
-        if (ignoreKeysRef.current || !focusedNoteRef.current) {
+        if (ignoreKeysRef.current) {
           return;
         }
-        const { index, selected, setSelected, ...note } =
-          focusedNoteRef.current;
+        if (focusedIndex.current === null || focusedIndex.current === undefined)
+          return;
+        const index = focusedIndex.current;
+        const uuid = order[index];
+        if (!uuid) return;
+
+        const note = notes.get(uuid);
+
         if (note.checkboxes.length === 0) return;
         dispatchNotes({
           type: "CHECKBOX_VIS",
@@ -298,7 +607,6 @@ export function useKeyBindings({
         )
           return;
         event.preventDefault();
-        keyThrottleRef.current = true;
         requestAnimationFrame(() => {
           undoFunction.current();
         });
@@ -313,11 +621,6 @@ export function useKeyBindings({
             snackOpen: true,
           });
         }, 80);
-
-        // Release throttle
-        setTimeout(() => {
-          keyThrottleRef.current = false;
-        }, 300);
       }
 
       if (
@@ -340,7 +643,6 @@ export function useKeyBindings({
           return;
 
         event.preventDefault();
-        keyThrottleRef.current = true;
         requestAnimationFrame(() => {
           redoFunction.current();
         });
@@ -355,14 +657,15 @@ export function useKeyBindings({
             snackOpen: true,
           });
         }, 80);
-
-        // Release throttle
-        setTimeout(() => {
-          keyThrottleRef.current = false;
-        }, 300);
       }
 
-      if (event.code === "Slash") {
+      if (
+        event.code === "Slash" &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.altKey &&
+        !event.shiftKey
+      ) {
         event.preventDefault();
         searchRef.current.click();
         searchRef.current.focus();

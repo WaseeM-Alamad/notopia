@@ -25,6 +25,7 @@ import ListIcon from "../icons/ListIcon";
 import SearchIcon from "../icons/SearchIcon";
 import InputSearchIcon from "../icons/InputSearchIcon";
 import LeftArrow from "../icons/LeftArrow";
+import KeybindsTable from "./KeybindsTable";
 
 const Navbar = () => {
   const {
@@ -49,12 +50,14 @@ const Navbar = () => {
     showTooltip,
     hideTooltip,
     closeToolTip,
+    setBindsOpenRef,
   } = useAppContext();
   const [isLoading, setIsLoading] = useState(0);
   const [UpToDatetrigger, setUpToDateTrigger] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [bindsOpen, setBindsOpen] = useState(true);
   const [isClient, setIsClient] = useState(false);
   const [showInput, setShowInput] = useState(() => {
     const width = window.innerWidth;
@@ -73,6 +76,7 @@ const Navbar = () => {
   const imageRef = useRef(null);
   const menuRef = useRef(null);
   const settingsRef = useRef(null);
+  const keybindsRef = useRef(null);
 
   useEffect(() => {
     requestAnimationFrame(() => {
@@ -80,6 +84,10 @@ const Navbar = () => {
     });
     setIsClient(true);
   }, []);
+
+  useEffect(()=> {
+    setBindsOpenRef.current = setBindsOpen
+  }, [])
 
   useEffect(() => {
     ignoreKeysRef.current = settingsOpen;
@@ -107,6 +115,33 @@ const Navbar = () => {
       if (nav) nav.style.paddingRight = "0px";
     };
   }, [settingsOpen]);
+
+  useEffect(() => {
+    ignoreKeysRef.current = bindsOpen;
+    const nav = document.querySelector("nav");
+    const scrollbarWidth =
+      window.innerWidth - document.documentElement.clientWidth;
+
+    if (bindsOpen) {
+      document.body.style.overflow = "hidden";
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+      if (nav) nav.style.paddingRight = `${scrollbarWidth}px`;
+    } else {
+      document.body.style.overflow = "auto";
+      document.body.style.paddingRight = "";
+      if (nav) nav.style.paddingRight = "0px";
+
+      if (keybindsRef.current) {
+        keybindsRef.current.style.marginLeft = `${scrollbarWidth / 2}px`;
+      }
+    }
+
+    return () => {
+      document.body.style.overflow = "auto";
+      document.body.style.paddingRight = "";
+      if (nav) nav.style.paddingRight = "0px";
+    };
+  }, [bindsOpen]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -747,6 +782,7 @@ const Navbar = () => {
         isOpen={isMenuOpen}
         setIsOpen={setIsMenuOpen}
         setSettingsOpen={setSettingsOpen}
+        setBindsOpen={setBindsOpen}
       />
 
       <AnimatePresence>
@@ -757,6 +793,12 @@ const Navbar = () => {
             user={user}
             setUser={setUser}
           />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {bindsOpen && (
+          <KeybindsTable keybindsRef={keybindsRef} setIsOpen={setBindsOpen} />
         )}
       </AnimatePresence>
     </>

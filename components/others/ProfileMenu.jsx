@@ -6,7 +6,10 @@ import { Edit } from "../icons/EditIcon";
 import { useAppContext } from "@/context/AppContext";
 
 const ProfileMenu = forwardRef(
-  ({ user, isOpen, setIsOpen, menuPosition, setSettingsOpen }, ref) => {
+  (
+    { user, isOpen, setIsOpen, menuPosition, setSettingsOpen, setBindsOpen },
+    ref
+  ) => {
     const { isDarkModeRef } = useAppContext();
     const [isClient, setIsClient] = useState(false);
 
@@ -94,7 +97,13 @@ const ProfileMenu = forwardRef(
                   <div className="theme-icon" />
                   {`${!isDarkModeRef.current ? "Dark theme" : "Light theme"}`}
                 </div>
-                <div className="menu-btn">
+                <div
+                  onClick={() => {
+                    setBindsOpen(true);
+                    setIsOpen(false);
+                  }}
+                  className="menu-btn"
+                >
                   <div className="keyboard-icon" /> Keyboard shortcuts
                 </div>
                 <div

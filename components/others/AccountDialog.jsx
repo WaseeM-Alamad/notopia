@@ -96,7 +96,12 @@ const AccountDialog = ({ settingsRef, setIsOpen, user, setUser }) => {
           transform: "translate(-50%, -45%) scale(0.97)",
           opacity: 0,
         }}
-        transition={{ type: "spring", stiffness: 700, damping: 50, mass: 1 }}
+        transition={{
+          type: "spring",
+          stiffness: 500,
+          damping: 40,
+          mass: 1.05,
+        }}
         className="acc-settings-container"
       >
         <div className="settings-left-panel">

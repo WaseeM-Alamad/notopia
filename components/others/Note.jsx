@@ -36,7 +36,7 @@ const Note = memo(
       showTooltip,
       hideTooltip,
       closeToolTip,
-      focusedNoteRef,
+      focusedIndex,
     } = useAppContext();
     const userID = user?.id;
     const [isDragOver, setIsDragOver] = useState(false);
@@ -72,12 +72,10 @@ const Note = memo(
         });
 
         try {
-          const first = index === 0;
           await NoteUpdateAction({
             type: "isPinned",
             value: !note.isPinned,
             noteUUIDs: [note.uuid],
-            first: first,
           });
         } finally {
           window.dispatchEvent(new Event("loadingEnd"));
@@ -146,7 +144,7 @@ const Note = memo(
         window.removeEventListener("batchSelection", handleBatchSelection);
         window.removeEventListener("selectAllNotes", handleSelectAllNotes);
       };
-    }, [note.uuid]);
+    }, [note.uuid, selected]);
 
     const handleLabelClick = (e, label) => {
       e.stopPropagation();
@@ -243,12 +241,7 @@ const Note = memo(
     const handleOnFocus = () => {
       if (!lastInputWasKeyboard.current) return;
 
-      focusedNoteRef.current = {
-        ...note,
-        index,
-        selected,
-        setSelected,
-      };
+      focusedIndex.current = index;
     };
 
     return (

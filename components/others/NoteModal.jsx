@@ -1069,7 +1069,7 @@ const NoteModal = ({
             role="textbox"
             tabIndex="0"
             aria-multiline="true"
-            aria-label={!localNote?.isTrash ? "Note" : ""}
+            aria-label={!localNote?.isTrash ? "Take a note..." : ""}
             spellCheck="false"
           />
           {localNote?.checkboxes && (

@@ -95,7 +95,7 @@ const FilteredNotes = memo(
     containerRef,
     isGrid,
   }) => {
-    const { searchTerm, filters } = useSearch();
+    const { searchTerm } = useSearch();
     const { layout, calculateLayoutRef } = useAppContext();
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
