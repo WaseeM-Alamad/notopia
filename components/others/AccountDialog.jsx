@@ -5,8 +5,10 @@ import PhotoSettings from "./PhotoSettings";
 import AccountSettings from "./AccountSettings";
 import SecuritySettings from "./SecuritySettings";
 import DeleteAccSettings from "./DeleteAccSettings";
+import { useAppContext } from "@/context/AppContext";
 
 const AccountDialog = ({ settingsRef, setIsOpen, user, setUser }) => {
+  const { showTooltip, hideTooltip, closeToolTip } = useAppContext();
   const [isMounted, setIsMounted] = useState(false);
   const containerRef = useRef(null);
 
@@ -104,6 +106,15 @@ const AccountDialog = ({ settingsRef, setIsOpen, user, setUser }) => {
         }}
         className="acc-settings-container"
       >
+        <div
+          onClick={() => {
+            closeToolTip();
+            setIsOpen(false);
+          }}
+          onMouseEnter={(e) => showTooltip(e, "Close")}
+          onMouseLeave={hideTooltip}
+          className="clear-icon btn close-dialog-btn"
+        />
         <div className="settings-left-panel">
           <div
             style={{

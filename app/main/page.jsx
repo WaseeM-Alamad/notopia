@@ -366,6 +366,29 @@ const page = () => {
     return true;
   };
 
+  useEffect(() => {
+    const handleOnline = () => {
+      openSnackFunction({
+        snackMessage: "Back online",
+        showUndo: false,
+      });
+    };
+    const handleOffline = () => {
+      openSnackFunction({
+        snackMessage: "Offline mode",
+        showUndo: false,
+      });
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
   useHashRouting({
     setCurrentSection,
     setSelectedNotesIDs,

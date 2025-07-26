@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 const KeybindsTable = ({ keybindsRef, setIsOpen }) => {
-  const { showTooltip, hideTooltip } = useAppContext();
+  const { showTooltip, hideTooltip, closeToolTip } = useAppContext();
   const [isScrolled, setIsScrolled] = useState(false);
 
   const tableRef = useRef(null);
@@ -54,7 +54,7 @@ const KeybindsTable = ({ keybindsRef, setIsOpen }) => {
     },
     {
       type: "item",
-      title: "Compose a new note",
+      title: "Compose a new note/label",
       keybind: "c",
     },
     {
@@ -64,7 +64,7 @@ const KeybindsTable = ({ keybindsRef, setIsOpen }) => {
     },
     {
       type: "item",
-      title: "Search notes",
+      title: "Search notes/labels",
       keybind: "/",
     },
     {
@@ -100,6 +100,21 @@ const KeybindsTable = ({ keybindsRef, setIsOpen }) => {
       type: "item",
       title: "Select note",
       keybind: "x",
+    },
+    {
+      type: "item",
+      title: "Undo action",
+      keybind: "Ctrl + z",
+    },
+    {
+      type: "item",
+      title: "Redo action",
+      keybind: "Ctrl + shift + z",
+    },
+    {
+      type: "item",
+      title: "Redo action",
+      keybind: "ctrl + y",
     },
     {
       type: "item",
@@ -161,6 +176,10 @@ const KeybindsTable = ({ keybindsRef, setIsOpen }) => {
         ref={keybindsRef}
       >
         <div
+          onClick={() => {
+            closeToolTip();
+            setIsOpen(false);
+          }}
           onMouseEnter={(e) => showTooltip(e, "Close")}
           onMouseLeave={hideTooltip}
           className="clear-icon btn close-dialog-btn"
@@ -168,7 +187,7 @@ const KeybindsTable = ({ keybindsRef, setIsOpen }) => {
         <div
           className={`keybinds-header ${isScrolled ? "keybinds-container-scrolled" : ""}`}
         >
-          <div className="keyboard-icon" />
+          <div className="keyboard-dialog-icon" />
           Keyboard Shortcuts
         </div>
         <table ref={tableRef}>
@@ -182,7 +201,7 @@ const KeybindsTable = ({ keybindsRef, setIsOpen }) => {
                 );
               else
                 return (
-                  <tr className="keybind-item" key={data.title}>
+                  <tr className="keybind-item" key={data.keybind}>
                     <td>{data.title}</td>
                     <td>{data.keybind}</td>
                   </tr>

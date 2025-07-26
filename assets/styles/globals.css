@@ -447,11 +447,12 @@ svg {
   width: 100%;
   box-sizing: border-box;
   z-index: 11;
+  margin-top: 4px;
   transition: opacity 0.15s ease;
 }
 
 .bottom-box-shadow {
-  box-shadow: 0px -3px 3px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease;
 }
 
@@ -4611,11 +4612,17 @@ img {
   padding: 1.5rem 0;
   box-sizing: border-box;
   border-radius: 1.2rem;
+  box-shadow:
+    0 1px 3px 0 rgba(60, 64, 67, 0.3),
+    0 4px 8px 3px rgba(60, 64, 67, 0.15);
   overflow: hidden;
 }
 
 .dark-mode .keybinds-modal {
   background-color: #1e1e1e;
+  box-shadow:
+    0 1px 3px 0 rgba(0, 0, 0, 0.6),
+    0 4px 8px 3px rgba(0, 0, 0, 0.3);
 }
 
 .keybinds-header {
@@ -4686,6 +4693,7 @@ img {
   position: absolute;
   right: 1.2rem;
   top: 1rem;
+  z-index: 10;
   padding: 0;
 }
 
@@ -4695,4 +4703,20 @@ img {
 
 .dark-mode .keybinds-container-scrolled {
   border-bottom: 1px solid rgb(87, 88, 88);
+}
+
+.keyboard-dialog-icon {
+  display: inline-block;
+  text-align: center;
+  background-image: url("data:image/svg+xml;utf8,<svg width='15' height='11' viewBox='0 0 15 11' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M13.5 1.57143V9.42857H1.5V1.57143H13.5ZM13.5 0H1.5C0.675 0 0.00749999 0.707143 0.00749999 1.57143L0 9.42857C0 10.2929 0.675 11 1.5 11H13.5C14.325 11 15 10.2929 15 9.42857V1.57143C15 0.707143 14.325 0 13.5 0ZM6.75 2.35714H8.25V3.92857H6.75V2.35714ZM6.75 4.71429H8.25V6.28571H6.75V4.71429ZM4.5 2.35714H6V3.92857H4.5V2.35714ZM4.5 4.71429H6V6.28571H4.5V4.71429ZM2.25 4.71429H3.75V6.28571H2.25V4.71429ZM2.25 2.35714H3.75V3.92857H2.25V2.35714ZM4.5 7.07143H10.5V8.64286H4.5V7.07143ZM9 4.71429H10.5V6.28571H9V4.71429ZM9 2.35714H10.5V3.92857H9V2.35714ZM11.25 4.71429H12.75V6.28571H11.25V4.71429ZM11.25 2.35714H12.75V3.92857H11.25V2.35714Z' fill='%23212121'/></svg>");
+  background-repeat: no-repeat;
+  background-size: contain;
+  margin-right: 0.95rem;
+  width: 19px;
+  height: 19px;
+  background-position: center;
+}
+
+.dark-mode .keyboard-dialog-icon {
+  background-image: url("data:image/svg+xml;utf8,<svg width='15' height='11' viewBox='0 0 15 11' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M13.5 1.57143V9.42857H1.5V1.57143H13.5ZM13.5 0H1.5C0.675 0 0.00749999 0.707143 0.00749999 1.57143L0 9.42857C0 10.2929 0.675 11 1.5 11H13.5C14.325 11 15 10.2929 15 9.42857V1.57143C15 0.707143 14.325 0 13.5 0ZM6.75 2.35714H8.25V3.92857H6.75V2.35714ZM6.75 4.71429H8.25V6.28571H6.75V4.71429ZM4.5 2.35714H6V3.92857H4.5V2.35714ZM4.5 4.71429H6V6.28571H4.5V4.71429ZM2.25 4.71429H3.75V6.28571H2.25V4.71429ZM2.25 2.35714H3.75V3.92857H2.25V2.35714ZM4.5 7.07143H10.5V8.64286H4.5V7.07143ZM9 4.71429H10.5V6.28571H9V4.71429ZM9 2.35714H10.5V3.92857H9V2.35714ZM11.25 4.71429H12.75V6.28571H11.25V4.71429ZM11.25 2.35714H12.75V3.92857H11.25V2.35714Z' fill='%23d3d3d3'/></svg>");
 }

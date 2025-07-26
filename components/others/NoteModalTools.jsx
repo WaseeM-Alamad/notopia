@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useRef, useState } from "react";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import Button from "../Tools/Button";
 import ColorSelectMenu from "./ColorSelectMenu";
 import BackIcon from "../icons/BackIcon";
@@ -30,6 +30,7 @@ const ModalTools = ({
   handleUndo,
   handleRedo,
   inputRef,
+  inputsContainerRef,
 }) => {
   const {
     setLoadingImages,
@@ -45,8 +46,29 @@ const ModalTools = ({
   const [anchorEl, setAnchorEl] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [labelsOpen, setLabelsOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const userID = user?.id;
   const closeRef = useRef(null);
+
+  useEffect(() => {
+    const inputsContainer = inputsContainerRef.current;
+    if (!inputsContainer || !isOpen) return;
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = inputsContainer;
+      const isAtBottom = scrollTop + clientHeight >= scrollHeight - 1;
+      setIsScrolled(isAtBottom);
+    };
+
+    inputsContainer.addEventListener("scroll", handleScroll);
+    requestAnimationFrame(() => {
+      handleScroll();
+    });
+
+    return () => {
+      inputsContainer.removeEventListener("scroll", handleScroll);
+    };
+  }, [isOpen]);
 
   const handleColorClick = useCallback(async (color) => {
     if (color === localNote?.color) return;
@@ -407,7 +429,10 @@ const ModalTools = ({
 
   return (
     <>
-      <div style={{ opacity: !isOpen && "0" }} className={`modal-bottom`}>
+      <div
+        style={{ opacity: !isOpen && "0" }}
+        className={`modal-bottom ${!isScrolled ? "bottom-box-shadow" : ""}`}
+      >
         <div className="modal-bottom-icons">
           {!localNote?.isTrash ? (
             <>

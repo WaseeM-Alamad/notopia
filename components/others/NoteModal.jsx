@@ -1165,6 +1165,7 @@ const NoteModal = ({
           handleUndo={handleUndo}
           handleRedo={handleRedo}
           inputRef={inputRef}
+          inputsContainerRef={inputsContainerRef}
         />
         <AnimatePresence>{isDragOver && <ImageDropZone />}</AnimatePresence>
         <AnimatePresence>
