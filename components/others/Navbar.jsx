@@ -57,7 +57,7 @@ const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [bindsOpen, setBindsOpen] = useState(true);
+  const [bindsOpen, setBindsOpen] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [showInput, setShowInput] = useState(() => {
     const width = window.innerWidth;
