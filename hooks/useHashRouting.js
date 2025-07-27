@@ -8,7 +8,6 @@ export function useHashRouting({
   setCurrentSection,
   setSelectedNotesIDs,
   setTooltipAnchor,
-  openSnackFunction,
   undoFunction,
   allowUndoRef,
   allowRedoRef,
@@ -22,9 +21,14 @@ export function useHashRouting({
   selectedNote,
   skipSetLabelObjRef,
 }) {
-  const { labelsReady, labelsRef, labelObjRef } = useAppContext();
-  const { setFilters, setSearchTerm, searchTerm, skipHashChangeRef, searchRef } =
-    useSearch();
+  const { labelsReady, labelsRef, labelObjRef, openSnackRef } = useAppContext();
+  const {
+    setFilters,
+    setSearchTerm,
+    searchTerm,
+    skipHashChangeRef,
+    searchRef,
+  } = useSearch();
 
   const firstRun = useRef(true);
   const emptySearchRef = useRef(false);
@@ -44,7 +48,7 @@ export function useHashRouting({
   const handleHashChange = useCallback(() => {
     setSelectedNotesIDs([]);
     setTooltipAnchor(null);
-    openSnackFunction({ close: true });
+    openSnackRef.current({ close: true });
     undoFunction.current = null;
     allowUndoRef.current = true;
     allowRedoRef.current = false;

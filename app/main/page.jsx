@@ -28,6 +28,9 @@ import { useKeyBindings } from "@/hooks/useKeyBindings";
 import { useMouseSelection } from "@/hooks/useMouseSelection";
 import { useBatchLoading } from "@/hooks/useBatchLoading";
 import { useHashRouting } from "@/hooks/useHashRouting";
+import { useDataManager } from "@/hooks/useDataManager";
+import { useSnackbar } from "@/hooks/useSnackbar";
+import { useConnection } from "@/hooks/useConnection";
 
 const page = () => {
   const { searchTerm, filters } = useSearch();
@@ -39,14 +42,13 @@ const page = () => {
     setCurrentSection,
     modalOpenRef,
     setLoadingImages,
-    openSnackRef,
     setTooltipRef,
-    focusedIndex,
+    notesStateRef,
+    openSnackRef,
   } = useAppContext();
   const [tooltipAnchor, setTooltipAnchor] = useState(null);
   const [notesState, dispatchNotes] = useReducer(notesReducer, initialStates);
   const [visibleItems, setVisibleItems] = useState(new Set());
-  const notesStateRef = useRef(notesState);
   const [modalStyle, setModalStyle] = useState(null);
   const [selectedNote, setSelectedNote] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -80,54 +82,9 @@ const page = () => {
   const skipSetLabelObjRef = useRef(false);
   const containerRef = useRef(null);
 
-  const fadeNote =
-    currentSection !== "DynamicLabel" && currentSection !== "Search";
-
-  const openSnackFunction = useCallback((data) => {
-    const showUndo = data.showUndo ?? true;
-    const noAction = data.noActionUndone ?? false;
-    if (data.close) {
-      setSnackbarState((prev) => ({
-        ...prev,
-        snackOpen: false,
-      }));
-      onCloseFunction.current();
-    } else {
-      setSnackbarState((prev) => ({
-        ...prev,
-        snackOpen: false,
-      }));
-      onCloseFunction.current();
-
-      setTimeout(() => {
-        setSnackbarState({
-          message: data.snackMessage,
-          showUndo: showUndo,
-          snackOpen: true,
-        });
-        if (data.snackOnUndo !== undefined) {
-          allowUndoRef.current = true;
-          allowRedoRef.current = false;
-          undoFunction.current = data.snackOnUndo;
-        }
-        if (data.snackRedo !== undefined) {
-          redoFunction.current = data.snackRedo;
-        }
-        if (data.snackOnClose !== undefined) {
-          onCloseFunction.current = data.snackOnClose;
-        }
-        if (data.unloadWarn) {
-          setUnloadWarn(true);
-        }
-
-        setNoActionUndone(noAction);
-      }, 80);
-    }
-  }, []);
-
   useEffect(() => {
-    openSnackRef.current = openSnackFunction;
     setTooltipRef.current = setTooltipAnchor;
+    notesStateRef.current = notesState;
   }, []);
 
   useEffect(() => {
@@ -146,35 +103,6 @@ const page = () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [unloadWarn]);
-
-  const getNotes = async () => {
-    requestAnimationFrame(async () => {
-      window.dispatchEvent(new Event("loadingStart"));
-      window.dispatchEvent(new Event("loadLabels"));
-      const fetchedNotes = await fetchNotes();
-      window.dispatchEvent(new Event("loadingEnd"));
-
-      const notesMap = new Map(
-        fetchedNotes.data.map((note) => [
-          note.uuid,
-          { ...note, ref: createRef() },
-        ])
-      );
-      dispatchNotes({
-        type: "SET_INITIAL_DATA",
-        notes: notesMap,
-        order: fetchedNotes.order,
-      });
-      setNotesReady(true);
-    });
-  };
-
-  useEffect(() => {
-    getNotes();
-    window.addEventListener("refresh", getNotes);
-
-    return () => window.removeEventListener("refresh", getNotes);
-  }, []);
 
   const handleNoteClick = useCallback((e, note, index) => {
     if (
@@ -235,10 +163,11 @@ const page = () => {
   }, [searchTerm]);
 
   useEffect(() => {
-    if (!currentSection || !notesReady || !labelsReady) return;
-    notesStateRef.current = notesState;
+    if (!notesReady || !labelsReady || !currentSection) return;
+    const order = notesStateRef.current.order;
+    const notes = notesStateRef.current.notes;
     requestAnimationFrame(() => {
-      if (notesState.order.length === 0 && currentSection === "Trash") {
+      if (order.length === 0 && currentSection === "Trash") {
         const btn = document.body.querySelector("#add-btn");
         if (btn) {
           btn.disabled = true;
@@ -246,9 +175,7 @@ const page = () => {
         return;
       }
       if (currentSection === "Trash") {
-        const trashNotes = notesState.order.some(
-          (uuid) => notesState.notes.get(uuid).isTrash
-        );
+        const trashNotes = order.some((uuid) => notes.get(uuid).isTrash);
         if (!trashNotes) {
           const btn = document.body.querySelector("#add-btn");
           btn.disabled = true;
@@ -261,13 +188,7 @@ const page = () => {
         btn.disabled = false;
       }
     });
-  }, [
-    currentSection,
-    notesState.order,
-    notesState.notes,
-    notesReady,
-    labelsReady,
-  ]);
+  }, [currentSection, notesReady, labelsReady]);
 
   const handleDeleteLabel = useCallback((data) => {
     setFadingNotes((prev) => new Set(prev).add(data.labelData.uuid));
@@ -366,34 +287,14 @@ const page = () => {
     return true;
   };
 
-  useEffect(() => {
-    const handleOnline = () => {
-      openSnackFunction({
-        snackMessage: "Back online",
-        showUndo: false,
-      });
-    };
-    const handleOffline = () => {
-      openSnackFunction({
-        snackMessage: "Offline mode",
-        showUndo: false,
-      });
-    };
+  useConnection();
 
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
-
-    return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
-    };
-  }, []);
+  useDataManager({ notesState, dispatchNotes, notesReady, setNotesReady });
 
   useHashRouting({
     setCurrentSection,
     setSelectedNotesIDs,
     setTooltipAnchor,
-    openSnackFunction,
     undoFunction,
     allowUndoRef,
     allowRedoRef,
@@ -412,11 +313,9 @@ const page = () => {
     dispatchNotes,
     setVisibleItems,
     setFadingNotes,
-    openSnackFunction,
     setLoadingImages,
     labelObj,
     currentSection,
-    fadeNote,
   });
 
   useKeyBindings({
@@ -450,7 +349,6 @@ const page = () => {
   });
 
   useBatchLoading({
-    currentSection,
     notesState,
     notesStateRef,
     setVisibleItems,
@@ -462,6 +360,17 @@ const page = () => {
     matchesFilters,
   });
 
+  useSnackbar({
+    setSnackbarState,
+    setNoActionUndone,
+    setUnloadWarn,
+    undoFunction,
+    redoFunction,
+    onCloseFunction,
+    allowUndoRef,
+    allowRedoRef,
+  });
+
   const components = {
     Home,
     Labels,
@@ -471,6 +380,8 @@ const page = () => {
     Search,
     DynamicLabel,
   };
+
+  if (!currentSection) return;
 
   const Page = components[currentSection];
 
@@ -533,7 +444,6 @@ const page = () => {
       <div className="starting-div-header" />
 
       <TopMenu
-        fadeNote={fadeNote}
         notes={notesState.notes}
         visibleItems={visibleItems}
         setVisibleItems={setVisibleItems}

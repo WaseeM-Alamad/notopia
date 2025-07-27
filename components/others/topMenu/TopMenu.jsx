@@ -19,7 +19,6 @@ import { useSearch } from "@/context/SearchContext";
 
 const TopMenuHome = ({
   notes,
-  fadeNote,
   visibleItems,
   setVisibleItems,
   dispatchNotes,
@@ -31,8 +30,14 @@ const TopMenuHome = ({
   functionRefs,
   currentSection,
 }) => {
-  const { user, showTooltip, hideTooltip, closeToolTip, openSnackRef } =
-    useAppContext();
+  const {
+    user,
+    showTooltip,
+    hideTooltip,
+    closeToolTip,
+    openSnackRef,
+    fadeNote,
+  } = useAppContext();
   const { filters } = useSearch();
   const userID = user?.id;
   const [selectedNumber, setSelectedNumber] = useState(false);

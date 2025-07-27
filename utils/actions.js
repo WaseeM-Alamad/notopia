@@ -447,7 +447,6 @@ export const emailNewEmailAction = async ({ password, newEmail }) => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
   try {
-
     await connectDB();
 
     if (!userID)
@@ -468,7 +467,7 @@ export const emailNewEmailAction = async ({ password, newEmail }) => {
       $or: [{ email: newEmail }, { tempMail: newEmail }],
     });
 
-    console.log("IS EMAIL USED", isEmailUsed)
+    console.log("IS EMAIL USED", isEmailUsed);
 
     if (isEmailUsed)
       return {
@@ -568,12 +567,14 @@ export const fetchNotes = async () => {
     const notes = await Note.find({ creator: userID }).sort({ createdAt: -1 });
     const user = await User.findById(userID);
     const order = user?.notesOrder || [];
+    const labels = JSON.parse(JSON.stringify(user?.labels ?? []));
 
     return {
       success: true,
       status: 200,
       data: JSON.parse(JSON.stringify(notes ?? [])),
       order: order,
+      labels: labels,
     };
   } catch (error) {
     console.log("Error fetching notes:", error);
@@ -662,12 +663,12 @@ export const NoteUpdateAction = async (data) => {
         { uuid: data.noteUUIDs[0], creator: userID },
         { $set: { [data.type]: data.value } }
       );
-        const user = await User.findById(userID);
-        const { notesOrder } = user;
-        const order = notesOrder.filter((uuid) => uuid !== data.noteUUIDs[0]);
-        const updatedOrder = [data.noteUUIDs[0], ...order];
-        user.notesOrder = updatedOrder;
-        await user.save();
+      const user = await User.findById(userID);
+      const { notesOrder } = user;
+      const order = notesOrder.filter((uuid) => uuid !== data.noteUUIDs[0]);
+      const updatedOrder = [data.noteUUIDs[0], ...order];
+      user.notesOrder = updatedOrder;
+      await user.save();
     } else if (data.type === "isTrash") {
       await Note.updateOne(
         { uuid: data.noteUUIDs[0], creator: userID },

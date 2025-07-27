@@ -85,9 +85,9 @@ const Navbar = () => {
     setIsClient(true);
   }, []);
 
-  useEffect(()=> {
-    setBindsOpenRef.current = setBindsOpen
-  }, [])
+  useEffect(() => {
+    setBindsOpenRef.current = setBindsOpen;
+  }, []);
 
   useEffect(() => {
     ignoreKeysRef.current = settingsOpen;
@@ -451,7 +451,7 @@ const Navbar = () => {
     return () => window.removeEventListener("resize", handleResizeLayout);
   }, [handleResizeLayout]);
 
-  if (!isClient) return;
+  if (!isClient || !currentSection) return;
 
   return (
     <>

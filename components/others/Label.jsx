@@ -30,13 +30,13 @@ const Label = ({
     handlePin,
     updateLabelImage,
     deleteLabelImage,
-    labelLookUPRef,
     loadingImages,
     showTooltip,
     hideTooltip,
     closeToolTip,
     openSnackRef,
     calculateLayoutRef,
+    labelsRef,
   } = useAppContext();
   const { labelSearchTerm } = useSearch();
   const [mounted, setMounted] = useState(false);
@@ -61,6 +61,15 @@ const Label = ({
   const imageRef = useRef(null);
   const inputRef = useRef(null);
   const isFirstRender = useRef(true);
+
+  const checkExistence = (labelToCheck) => {
+    for (const labelData of labelsRef.current.values()) {
+      if (labelToCheck.toLowerCase() === labelData.label.toLowerCase()) {
+        return true;
+      }
+    }
+    return false;
+  };
 
   const noteCount = order.filter((uuid) => {
     const note = notes.get(uuid);
@@ -165,7 +174,7 @@ const Label = ({
       labelTitleRef.current.innerText.trim() !== originalTitleRef.current.trim()
     ) {
       const labelToCheck = labelTitleRef.current.innerText.toLowerCase().trim();
-      if (labelLookUPRef.current.has(labelToCheck)) {
+      if (checkExistence(labelToCheck)) {
         if (!labelExists) {
           openSnackRef.current({
             snackMessage: "Label already exists!",
@@ -541,10 +550,7 @@ const Label = ({
                   const newLabel = labelTitleRef.current.innerText
                     .toLowerCase()
                     .trim();
-                  if (
-                    labelLookUPRef.current.has(newLabel) &&
-                    newLabel !== oldLabel
-                  ) {
+                  if (checkExistence(newLabel) && newLabel !== oldLabel) {
                     setLabelExists(true);
                   } else {
                     labelTitleRef.current.blur();

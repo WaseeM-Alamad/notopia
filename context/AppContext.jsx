@@ -6,6 +6,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -15,6 +16,8 @@ import {
   updateLabelAction,
 } from "@/utils/actions";
 import { useSearch } from "./SearchContext";
+import { debounce } from "lodash";
+import { saveLabelsArray, saveLabelsMap } from "@/utils/localDb";
 
 const AppContext = createContext();
 
@@ -22,18 +25,18 @@ export function AppProvider({ children, initialUser }) {
   const { data: session, status } = useSession();
   const { setFilters } = useSearch();
   const [user, setUser] = useState(initialUser);
-  const [currentSection, setCurrentSection] = useState("Home");
+  const [currentSection, setCurrentSection] = useState(null);
   const [loadingImages, setLoadingImages] = useState(new Set());
   const [labelsReady, setLabelsReady] = useState(false);
   const [isFiltered, setIsFiltered] = useState(false);
   const [layout, setLayout] = useState(null);
+  const [isOnline, setIsOnline] = useState(true);
   const focusedIndex = useRef(null);
 
-  const openSnackRef = useRef(null);
+  const openSnackRef = useRef(() => {});
   const setTooltipRef = useRef(null);
-
+  const notesStateRef = useRef(null);
   const labelsRef = useRef(new Map());
-  const labelLookUPRef = useRef(new Map());
   const ignoreKeysRef = useRef(null);
   const labelObjRef = useRef(null);
   const calculateLayoutRef = useRef(null);
@@ -41,6 +44,9 @@ export function AppProvider({ children, initialUser }) {
   const isDarkModeRef = useRef(false);
   const addButtonRef = useRef(null);
   const setBindsOpenRef = useRef(null);
+
+  const fadeNote =
+    currentSection !== "DynamicLabel" && currentSection !== "Search";
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
@@ -57,18 +63,6 @@ export function AppProvider({ children, initialUser }) {
     setFilters({ image: null, color: null, label: null });
   }, [currentSection]);
 
-  const getLabels = async () => {
-    const fetchedLables = await fetchLabelsAction();
-    if (!fetchedLables.success || !fetchedLables) return;
-    labelsRef.current = new Map(
-      fetchedLables.data.map((mapLabel) => {
-        labelLookUPRef.current.set(mapLabel.label.toLowerCase(), true);
-        return [mapLabel.uuid, mapLabel];
-      })
-    );
-    setLabelsReady(true);
-  };
-
   useEffect(() => {
     session && setUser(session?.user);
   }, [session, status]);
@@ -83,19 +77,23 @@ export function AppProvider({ children, initialUser }) {
     setLayout(savedLayout);
   }, []);
 
-  useEffect(() => {
-    window.addEventListener("loadLabels", getLabels);
-    return () => window.removeEventListener("loadLabels", getLabels);
-  }, []);
+  const updateLocalLabels = useMemo(
+    () =>
+      debounce(
+        async () => await saveLabelsMap(labelsRef.current, initialUser?.id),
+        500
+      ),
+    []
+  );
 
   const createLabel = async (uuid, label, createdAt) => {
-    labelLookUPRef.current.set(label.toLowerCase(), true);
     labelsRef.current.set(uuid, {
       uuid: uuid,
       label: label,
       createdAt: createdAt,
       color: "Default",
     });
+    updateLocalLabels();
     window.dispatchEvent(new Event("loadingStart"));
     await createLabelAction(uuid, label);
     window.dispatchEvent(new Event("loadingEnd"));
@@ -103,7 +101,6 @@ export function AppProvider({ children, initialUser }) {
 
   const createLabelForNotes = async (data) => {
     const updatedLabels = new Map(labelsRef.current);
-    labelLookUPRef.current.set(data.label.toLowerCase(), true);
     updatedLabels.set(data.labelUUID, {
       uuid: data.labelUUID,
       label: data.label,
@@ -112,23 +109,25 @@ export function AppProvider({ children, initialUser }) {
     });
 
     labelsRef.current = updatedLabels;
+
+    updateLocalLabels();
   };
 
   const updateLabelColor = async (uuid, newColor) => {
     const newLabel = { ...labelsRef.current.get(uuid), color: newColor };
     const labels = new Map(labelsRef.current).set(uuid, newLabel);
     labelsRef.current = labels;
+    updateLocalLabels();
     window.dispatchEvent(new Event("loadingStart"));
     await updateLabelAction({ type: "color", uuid: uuid, color: newColor });
     window.dispatchEvent(new Event("loadingEnd"));
   };
 
   const updateLabel = async (uuid, updatedLabel, oldLabel) => {
-    labelLookUPRef.current.delete(oldLabel.toLowerCase().trim());
-    labelLookUPRef.current.set(updatedLabel.toLowerCase().trim(), true);
     const newLabel = { ...labelsRef.current.get(uuid), label: updatedLabel };
     const labels = new Map(labelsRef.current).set(uuid, newLabel);
     labelsRef.current = labels;
+    updateLocalLabels();
     window.dispatchEvent(new Event("loadingStart"));
     await updateLabelAction({ type: "title", uuid: uuid, label: updatedLabel });
     window.dispatchEvent(new Event("loadingEnd"));
@@ -162,6 +161,7 @@ export function AppProvider({ children, initialUser }) {
     if (!data.error) {
       const newLabel = { ...labelsRef.current.get(uuid), image: data.url };
       labelsRef.current.set(uuid, newLabel);
+      updateLocalLabels();
     } else {
     }
 
@@ -179,12 +179,14 @@ export function AppProvider({ children, initialUser }) {
       const newLabel = { ...labelsRef.current.get(data.uuid), image: null };
       const labels = new Map(labelsRef.current).set(data.uuid, newLabel);
       labelsRef.current = labels;
+      updateLocalLabels();
       window.dispatchEvent(new Event("loadingStart"));
       await updateLabelAction({ type: "delete_image", uuid: data.uuid });
       window.dispatchEvent(new Event("loadingEnd"));
     } else if (data.action === "remove") {
       const newLabel = { ...labelsRef.current.get(data.uuid), image: null };
       const labels = new Map(labelsRef.current).set(data.uuid, newLabel);
+      updateLocalLabels();
       labelsRef.current = labels;
     } else if (data.action === "restore") {
       const newLabel = {
@@ -193,12 +195,13 @@ export function AppProvider({ children, initialUser }) {
       };
       const labels = new Map(labelsRef.current).set(data.uuid, newLabel);
       labelsRef.current = labels;
+      updateLocalLabels();
     }
   };
 
   const removeLabel = (uuid, label) => {
     labelsRef.current.delete(uuid);
-    labelLookUPRef.current.delete(label.toLowerCase().trim());
+    updateLocalLabels();
   };
 
   const handlePin = async (uuid) => {
@@ -211,6 +214,7 @@ export function AppProvider({ children, initialUser }) {
     };
     const labels = new Map(labelsRef.current).set(uuid, newLabel);
     labelsRef.current = labels;
+    updateLocalLabels();
     window.dispatchEvent(new Event("loadingStart"));
     await updateLabelAction({
       type: "label_pin",
@@ -282,6 +286,7 @@ export function AppProvider({ children, initialUser }) {
       );
       labelsRef.current = reordered;
     }
+    updateLocalLabels();
     if (initialIndex !== endIndex) {
       window.dispatchEvent(new Event("refreshPinnedLabels"));
       window.dispatchEvent(new Event("loadingStart"));
@@ -313,6 +318,7 @@ export function AppProvider({ children, initialUser }) {
     <AppContext.Provider
       value={{
         labelsReady,
+        setLabelsReady,
         createLabel,
         createLabelForNotes,
         removeLabel,
@@ -321,7 +327,6 @@ export function AppProvider({ children, initialUser }) {
         updateLabel,
         updateLabelImage,
         deleteLabelImage,
-        labelLookUPRef,
         ignoreKeysRef,
         handlePin,
         layout,
@@ -349,6 +354,10 @@ export function AppProvider({ children, initialUser }) {
         focusedIndex,
         addButtonRef,
         setBindsOpenRef,
+        notesStateRef,
+        fadeNote,
+        isOnline,
+        setIsOnline,
       }}
     >
       {children}

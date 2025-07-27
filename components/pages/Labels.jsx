@@ -177,6 +177,16 @@ const Labels = memo(
     }, [calculateLayout, debouncedCalculateLayout, reRender]);
 
     useEffect(() => {
+      const handler = () => {
+        triggerReRender((prev) => !prev);
+      };
+
+      window.addEventListener("refreshLabelsSection", handler);
+
+      return () => window.removeEventListener("refreshLabelsSection", handler);
+    }, []);
+
+    useEffect(() => {
       calculateLayout();
     }, [visibleItems]);
 

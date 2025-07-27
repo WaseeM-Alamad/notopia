@@ -5,7 +5,6 @@ import { useSearch } from "@/context/SearchContext";
 import { useEffect, useRef } from "react";
 
 export function useBatchLoading({
-  currentSection,
   notesState,
   notesStateRef,
   setVisibleItems,
@@ -16,8 +15,10 @@ export function useBatchLoading({
   containerRef,
   matchesFilters,
 }) {
-  const { labelsRef, layout, labelsReady, calculateLayoutRef } =
+  const { labelsRef, layout, labelsReady, currentSection } =
     useAppContext();
+
+    
   const {
     filters,
     labelSearchTerm,
@@ -34,7 +35,7 @@ export function useBatchLoading({
   const loadNextBatch = (data) => {
     const { currentSet: currentVisibleSet, version } = data;
     const container = containerRef.current;
-    if (!container) {
+    if (!container || !currentSection) {
       isLoadingRef.current = false;
       return;
     }
@@ -241,7 +242,7 @@ export function useBatchLoading({
   }, [labelSearchTerm]);
 
   useEffect(() => {
-    if (isFirstRenderRef.current || currentSection.toLowerCase() !== "search")
+    if (isFirstRenderRef.current || !currentSection || currentSection.toLowerCase() !== "search")
       return;
     requestAnimationFrame(() => {
       resetAndLoad(false);
@@ -308,6 +309,7 @@ export function useBatchLoading({
     return () => window.removeEventListener("resize", handler);
   }, [visibleItems, layout]);
 
+  if (!currentSection) return;
   // useEffect(() => {
   //   const handler = () => {
   //     const order = notesStateRef.current.order;

@@ -442,7 +442,7 @@ const Home = memo(
       dispatchNotes({
         type: "DND",
         initialIndex: draggedIndexRef.current,
-        finalIndex: overIndexRef.current
+        finalIndex: overIndexRef.current,
       });
       endIndexRef.current = overIndexRef.current;
       overIndexRef.current = draggedIndexRef.current;

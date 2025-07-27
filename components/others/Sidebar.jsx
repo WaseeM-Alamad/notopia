@@ -218,7 +218,7 @@ const Sidebar = memo(() => {
   const [pageMounted, setPageMounted] = useState(false);
 
   useEffect(() => {
-    if (!labelsReady) return;
+    if (!labelsReady || !currentSection) return;
     requestAnimationFrame(() => {
       setTimeout(() => {
         setPageMounted(true);
@@ -261,6 +261,8 @@ const Sidebar = memo(() => {
 
     document.addEventListener("mouseup", handleDragEnd);
   };
+
+  if (!currentSection) return;
 
   if (currentHash === null) return;
 

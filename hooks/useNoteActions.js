@@ -10,17 +10,17 @@ import {
 } from "@/utils/actions";
 import { v4 as uuid } from "uuid";
 import { useSearch } from "@/context/SearchContext";
+import { useAppContext } from "@/context/AppContext";
 
 export function useNoteActions({
   dispatchNotes,
   setVisibleItems,
   setFadingNotes,
-  openSnackFunction,
   setLoadingImages,
   labelObj,
   currentSection,
-  fadeNote,
 }) {
+  const { fadeNote, openSnackRef } = useAppContext();
   const { filters } = useSearch();
   const noteActions = useCallback(
     async (data) => {
@@ -91,7 +91,7 @@ export function useNoteActions({
           });
           window.dispatchEvent(new Event("loadingEnd"));
         };
-        openSnackFunction({
+        openSnackRef.current({
           snackMessage: `${
             data.note.isArchived
               ? "Note unarchived"
@@ -159,7 +159,7 @@ export function useNoteActions({
           window.dispatchEvent(new Event("loadingEnd"));
         };
 
-        openSnackFunction({
+        openSnackRef.current({
           snackMessage: "Note restored",
           snackOnUndo: undoTrash,
           snackRedo: redo,
@@ -214,7 +214,7 @@ export function useNoteActions({
         };
 
         if (!data.note.isTrash) {
-          openSnackFunction({
+          openSnackRef.current({
             snackMessage: `${
               data.note.isPinned ? "Note unpinned and trashed" : "Note trashed"
             }`,
@@ -312,7 +312,7 @@ export function useNoteActions({
           window.dispatchEvent(new Event("loadingEnd"));
         };
 
-        openSnackFunction({
+        openSnackRef.current({
           snackMessage: "Note unarchived and pinned",
           snackOnUndo: undoPinArchived,
           snackRedo: redo,
@@ -436,7 +436,7 @@ export function useNoteActions({
             window.dispatchEvent(new Event("loadingEnd"));
           }, 250);
         };
-        openSnackFunction({
+        openSnackRef.current({
           snackMessage: "Note created",
           snackOnUndo: undoCopy,
           snackRedo: redo,
