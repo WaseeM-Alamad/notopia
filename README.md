@@ -40,6 +40,8 @@
 
 - Authentication: NextAuth / Google auth
 
+- Email Service: Resend
+
 - Hosting: Vercel / Custom domain
 
 ## 🧑‍💻 Development Notes
@@ -52,4 +54,5 @@
 ## 📬 Feedback & Contributions
 - This is an open-source project!
 If you find bugs, want to suggest improvements, or contribute new features — feel free to open an issue or submit a pull request.
+
 
