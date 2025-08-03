@@ -23,7 +23,7 @@ const AppContext = createContext();
 
 export function AppProvider({ children, initialUser }) {
   const { data: session, status } = useSession();
-  const { setFilters } = useSearch();
+  const { setFilters, setSearchTerm } = useSearch();
   const [user, setUser] = useState(initialUser);
   const [currentSection, setCurrentSection] = useState(null);
   const [loadingImages, setLoadingImages] = useState(new Set());
@@ -59,8 +59,11 @@ export function AppProvider({ children, initialUser }) {
   useEffect(() => {
     focusedIndex.current = null;
     if (currentSection?.toLowerCase() === "search") return;
-    setIsFiltered(false);
-    setFilters({ image: null, color: null, label: null });
+    requestAnimationFrame(() => {
+      setSearchTerm("");
+      setIsFiltered(false);
+      setFilters({ image: null, color: null, label: null });
+    });
   }, [currentSection]);
 
   useEffect(() => {

@@ -244,7 +244,9 @@ export function useHashRouting({
 
       encodedNewHash = "search/" + doubleEncode("text=") + encodedTerm;
     }
-
+    if (!searchTerm.trim() && currentSection.toLowerCase() !== "search") {
+      return;
+    }
     window.location.hash = encodedNewHash;
   }, [searchTerm]);
 
