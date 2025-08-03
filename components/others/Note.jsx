@@ -20,6 +20,7 @@ import { AnimatePresence } from "framer-motion";
 import { useLastInputWasKeyboard } from "@/hooks/useLastInputWasKeyboard";
 import handleServerCall from "@/utils/handleServerCall";
 import localDbReducer from "@/utils/localDbReducer";
+import { useSearch } from "@/context/SearchContext";
 
 const Note = memo(
   ({
@@ -42,6 +43,7 @@ const Note = memo(
       openSnackRef,
       notesStateRef,
     } = useAppContext();
+    const { searchTerm } = useSearch();
     const userID = user?.id;
     const [isDragOver, setIsDragOver] = useState(false);
     const [colorMenuOpen, setColorMenuOpen] = useState(false);
@@ -284,6 +286,24 @@ const Note = memo(
       focusedIndex.current = index;
     };
 
+    function highlightMatch(text) {
+      if (!searchTerm) return text;
+
+      const regex = new RegExp(`(${searchTerm.toLowerCase().trim()})`, "ig");
+
+      const parts = text.split(regex);
+
+      return parts.map((part, index) =>
+        regex.test(part) ? (
+          <span key={index} className="highlight">
+            {part}
+          </span>
+        ) : (
+          part
+        )
+      );
+    }
+
     return (
       <>
         <div
@@ -455,12 +475,12 @@ const Note = memo(
                 <div ref={inputsRef}>
                   {note.title?.trim() && (
                     <div dir="auto" ref={titleRef} className="title">
-                      {note.title}
+                      {highlightMatch(note.title)}
                     </div>
                   )}
                   {note.content?.trim() && (
                     <div dir="auto" ref={contentRef} className="content">
-                      {note.content}
+                      {highlightMatch(note.content)}
                     </div>
                   )}
                 </div>
