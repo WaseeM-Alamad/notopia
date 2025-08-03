@@ -475,7 +475,7 @@ const Navbar = () => {
           }}
         >
           {/* <Logo style={{margin: "auto 0", flexShrink: "0"}} /> */}
-          {/* <span style={{ marginLeft: "0rem", fontWeight: "700" }}>Notopia</span> */}
+          <span style={{ marginLeft: "0rem", fontWeight: "700" }}>Notopia</span>
         </div>
 
         <div

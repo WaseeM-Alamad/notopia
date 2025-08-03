@@ -515,30 +515,30 @@ export const emailNewEmailAction = async ({ password, newEmail }) => {
 
     await user.save();
 
-    const link = `http://localhost:3000/auth/verify?token=${token}`;
-    // const link = `https://notopia.app/auth/verify?token=${token}`;
+    // const link = `http://localhost:3000/auth/verify?token=${token}`;
+    const link = `https://notopia.app/auth/verify?token=${token}`;
 
-    // await resend.emails.send({
-    //   from: "Notopia <noreply@notopia.app>",
-    //   to: newEmail,
-    //   subject: "Verify your new Notopia email address",
-    //   html: `
-    //     <div style="font-family: 'Segoe UI', Roboto, sans-serif; padding: 24px; background-color: #f9fafb; color: #111827;">
-    //       <div style="max-width: 480px; margin: auto; background: white; padding: 32px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-    //         <h2 style="margin-bottom: 16px; font-size: 24px; color: #111827;">📧 Verify your new email</h2>
-    //         <p style="margin-bottom: 24px; font-size: 16px;">
-    //           You requested to update your Notopia account with a new email address. Please click the button below to confirm.
-    //         </p>
-    //         <a href="${link}" style="display: inline-block; background-color: #4F46E5; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 500;">
-    //           Verify Email
-    //         </a>
-    //       </div>
-    //       <p style="text-align: center; margin-top: 32px; font-size: 12px; color: #9ca3af;">
-    //         &copy; ${new Date().getFullYear()} Notopia. All rights reserved.
-    //       </p>
-    //     </div>
-    //   `,
-    // });
+    await resend.emails.send({
+      from: "Notopia <noreply@notopia.app>",
+      to: newEmail,
+      subject: "Verify your new Notopia email address",
+      html: `
+        <div style="font-family: 'Segoe UI', Roboto, sans-serif; padding: 24px; background-color: #f9fafb; color: #111827;">
+          <div style="max-width: 480px; margin: auto; background: white; padding: 32px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+            <h2 style="margin-bottom: 16px; font-size: 24px; color: #111827;">📧 Verify your new email</h2>
+            <p style="margin-bottom: 24px; font-size: 16px;">
+              You requested to update your Notopia account with a new email address. Please click the button below to confirm.
+            </p>
+            <a href="${link}" style="display: inline-block; background-color: #4F46E5; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 500;">
+              Verify Email
+            </a>
+          </div>
+          <p style="text-align: center; margin-top: 32px; font-size: 12px; color: #9ca3af;">
+            &copy; ${new Date().getFullYear()} Notopia. All rights reserved.
+          </p>
+        </div>
+      `,
+    });
 
     return {
       success: true,
