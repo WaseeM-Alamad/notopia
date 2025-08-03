@@ -4,7 +4,7 @@ import Note from "@/models/Note";
 import User from "@/models/User";
 import { getServerSession } from "next-auth";
 import { authOptions } from "./authOptions";
-import { v4 as uuid } from "uuid";
+import { v4 as uuid, validate as validateUUID } from "uuid";
 import { Resend } from "resend";
 import { nanoid } from "nanoid";
 import bcrypt from "bcryptjs";
@@ -559,7 +559,7 @@ export const fetchNotes = async () => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
   if (!session) {
-    return new Response("Unauthorized", { status: 401 });
+    throw new Error("Something went wrong");
   }
 
   try {
@@ -578,7 +578,7 @@ export const fetchNotes = async () => {
     };
   } catch (error) {
     console.log("Error fetching notes:", error);
-    return new Response("Failed to fetch notes", { status: 500 });
+    throw new Error("Error fetching notes");
   }
 };
 
@@ -586,11 +586,16 @@ export const createNoteAction = async (note) => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
   if (!session) {
-    return new Response("Unauthorized", { status: 401 });
+    throw new Error("Something went wrong");
   }
 
   try {
     await connectDB();
+
+    if (!validateUUID(note.uuid)) {
+      throw new Error("Invalid ID");
+    }
+
     const noteData = {
       ...note,
       images: [],
@@ -612,7 +617,7 @@ export const createNoteAction = async (note) => {
     };
   } catch (error) {
     console.log("Error creating note:", error);
-    return new Response("Failed to add note", { status: 500 });
+    throw new Error("Error creating note");
   }
 };
 
@@ -620,7 +625,7 @@ export const NoteUpdateAction = async (data) => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
   if (!session) {
-    return new Response("Unauthorized", { status: 401 });
+    throw new Error("Something went wrong");
   }
   try {
     await connectDB();
@@ -848,7 +853,7 @@ export const NoteUpdateAction = async (data) => {
     }
   } catch (error) {
     console.log("Error updating note:", error);
-    return new Response("Failed to update note", { status: 500 });
+    throw new Error("Error updating note");
   }
 };
 
@@ -856,7 +861,7 @@ export const batchUpdateAction = async (data) => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
   if (!session) {
-    return new Response("Unauthorized", { status: 401 });
+    throw new Error("Something went wrong");
   }
   try {
     if (data.type === "BATCH_ARCHIVE/TRASH") {
@@ -921,7 +926,7 @@ export const NoteTextUpdateAction = async (values, noteUUID) => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
   if (!session) {
-    return new Response("Unauthorized", { status: 401 });
+    throw new Error("Something went wrong");
   }
   try {
     await connectDB();
@@ -937,8 +942,8 @@ export const NoteTextUpdateAction = async (values, noteUUID) => {
       }
     );
   } catch (error) {
-    console.log("Error updating note:", error);
-    return new Response("Failed to update note", { status: 500 });
+    console.log("Error updating text", error);
+    throw new Error("Error updating text");
   }
 };
 
@@ -946,7 +951,7 @@ export const NoteImageDeleteAction = async (filePath, noteUUID, imageID) => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
   if (!session) {
-    return new Response("Unauthorized", { status: 401 });
+    throw new Error("Something went wrong");
   }
   try {
     await connectDB();
@@ -957,7 +962,8 @@ export const NoteImageDeleteAction = async (filePath, noteUUID, imageID) => {
 
     await cloudinary.uploader.destroy(filePath);
   } catch (error) {
-    console.log("Error removing note.", error);
+    console.log("Error deleting image", error);
+    throw new Error("Error deleting image");
   }
 };
 
@@ -965,7 +971,7 @@ export const DeleteNoteAction = async (noteUUID) => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
   if (!session) {
-    return new Response("Unauthorized", { status: 401 });
+    throw new Error("Something went wrong");
   }
   try {
     await connectDB();
@@ -983,8 +989,8 @@ export const DeleteNoteAction = async (noteUUID) => {
 
     return { success: true, message: "Note deleted successfully" };
   } catch (error) {
-    console.log("Error deleting note.", error);
-    return { success: false, message: "Error deleting note" };
+    console.log("Error deleting note", error);
+    throw new Error("Error deleting note");
   }
 };
 
@@ -992,7 +998,7 @@ export const emptyTrashAction = async () => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
   if (!session) {
-    return new Response("Unauthorized", { status: 401 });
+    throw new Error("Something went wrong");
   }
   try {
     await connectDB();
@@ -1027,8 +1033,8 @@ export const emptyTrashAction = async () => {
 
     return { success: true, message: "Trash emptied successfully" };
   } catch (error) {
-    console.log("Error deleting notes.", error);
-    return { success: false, message: "Error deleting notes" };
+    console.log("Error deleting notes", error);
+    throw new Error("Error deleting notes");
   }
 };
 
@@ -1036,7 +1042,7 @@ export const updateOrderAction = async (data) => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
   if (!session) {
-    return new Response("Unauthorized", { status: 401 });
+    throw new Error("Something went wrong");
   }
 
   try {
@@ -1058,7 +1064,8 @@ export const updateOrderAction = async (data) => {
     }
     await user.save();
   } catch (error) {
-    console.log(error);
+    console.log("Error updating position", error);
+    throw new Error("Error updating position");
   }
 };
 
@@ -1066,7 +1073,7 @@ export const undoAction = async (data) => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
   if (!session) {
-    return new Response("Unauthorized", { status: 401 });
+    throw new Error("Something went wrong");
   }
 
   try {
@@ -1187,7 +1194,8 @@ export const undoAction = async (data) => {
       );
     }
   } catch (error) {
-    console.log(error);
+    console.log("Error undoing action", error);
+    throw new Error("Error undoing action");
   }
 };
 
@@ -1195,7 +1203,7 @@ export const copyNoteAction = async (data) => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
   if (!session) {
-    return new Response("Unauthorized", { status: 401 });
+    throw new Error("Something went wrong");
   }
   try {
     await connectDB();
@@ -1266,8 +1274,8 @@ export const copyNoteAction = async (data) => {
       status: 201,
     };
   } catch (error) {
-    console.log("Error creating note:", error);
-    return new Response("Failed to add note", { status: 500 });
+    console.log("Error creating note", error);
+    throw new Error("Error copying note");
   }
 };
 
@@ -1275,7 +1283,7 @@ export const batchCopyNoteAction = async (data) => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
   if (!session) {
-    return new Response("Unauthorized", { status: 401 });
+    throw new Error("Something went wrong");
   }
   try {
     await connectDB();
@@ -1331,8 +1339,8 @@ export const batchCopyNoteAction = async (data) => {
       status: 201,
     };
   } catch (error) {
-    console.log("Error copying notes:", error);
-    return new Response("Failed to copy notes", { status: 500 });
+    console.log("Error copying notes", error);
+    throw new Error("Error copying notes");
   }
 };
 
@@ -1340,7 +1348,7 @@ export const fetchLabelsAction = async () => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
   if (!session) {
-    return { success: false, message: "Unauthorized", status: 401 };
+    throw new Error("Something went wrong");
   }
   try {
     await connectDB();
@@ -1364,7 +1372,7 @@ export const createLabelAction = async (newUUID, newLabel) => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
   if (!session) {
-    return new Response("Unauthorized", { status: 401 });
+    throw new Error("Something went wrong");
   }
   try {
     await connectDB();
@@ -1405,7 +1413,7 @@ export const createLabelForNotesAction = async (data) => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
   if (!session) {
-    return new Response("Unauthorized", { status: 401 });
+    throw new Error("Something went wrong");
   }
   try {
     await connectDB();
@@ -1426,7 +1434,8 @@ export const createLabelForNotesAction = async (data) => {
       status: 201,
     };
   } catch (error) {
-    console.log(error);
+    console.log("Error creating label", error);
+    throw new Error("Error creating label");
   }
 };
 
@@ -1434,7 +1443,7 @@ export const addLabelAction = async (data) => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
   if (!session) {
-    return new Response("Unauthorized", { status: 401 });
+    throw new Error("Something went wrong");
   }
   try {
     await connectDB();
@@ -1445,7 +1454,7 @@ export const addLabelAction = async (data) => {
     );
   } catch (error) {
     console.log(error);
-    return { message: "Failed to add label", status: 500 };
+    throw new Error("Error adding label");
   }
 };
 
@@ -1453,7 +1462,7 @@ export const removeLabelAction = async (data) => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
   if (!session) {
-    return new Response("Unauthorized", { status: 401 });
+    throw new Error("Something went wrong");
   }
   try {
     await connectDB();
@@ -1464,7 +1473,7 @@ export const removeLabelAction = async (data) => {
     );
   } catch (error) {
     console.log(error);
-    return { message: "Failed to remove label", status: 500 };
+    throw new Error("Error removing label");
   }
 };
 
@@ -1472,7 +1481,7 @@ export const updateLabelAction = async (data) => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
   if (!session) {
-    return { success: false, message: "Unauthorized", status: 401 };
+    throw new Error("Something went wrong");
   }
 
   try {
@@ -1584,7 +1593,7 @@ export const deleteLabelAction = async (data) => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
   if (!session) {
-    return { success: false, message: "Unauthorized", status: 401 };
+    throw new Error("Something went wrong");
   }
 
   try {
@@ -1611,8 +1620,8 @@ export const deleteLabelAction = async (data) => {
       status: 201,
     };
   } catch (error) {
-    console.log(error);
-    return { message: "Failed to delete label", status: 500 };
+    console.log("Error deleting label", error);
+    throw new Error("Error deleting label");
   }
 };
 
@@ -1620,7 +1629,7 @@ export const batchDeleteNotes = async (data) => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
   if (!session) {
-    return new Response("Unauthorized", { status: 401 });
+    throw new Error("Something went wrong");
   }
   try {
     await connectDB();
@@ -1660,8 +1669,8 @@ export const batchDeleteNotes = async (data) => {
 
     return { success: true, message: "Trash emptied successfully" };
   } catch (error) {
-    console.log("Error deleting notes.", error);
-    return { success: false, message: "Error deleting notes" };
+    console.log("Error deleting notes", error);
+    throw new Error("Error deleting notes");
   }
 };
 
@@ -1670,7 +1679,7 @@ export const batchManageLabelsAction = async (data) => {
   const userID = session?.user?.id;
 
   if (!session) {
-    return new Response("Unauthorized", { status: 401 });
+    throw new Error("Something went wrong");
   }
   try {
     await connectDB();
@@ -1711,6 +1720,45 @@ export const batchManageLabelsAction = async (data) => {
       return { success: true, message: "Label added successfully" };
     }
   } catch (error) {
-    return { success: false, message: "Error managing labels" };
+    console.log("Something went wrong", error);
+    throw new Error("Something went wrong");
+  }
+};
+
+function cleanNoteForDB(note) {
+  const { _id, ref, createdAt, updatedAt, _v, creator, ...cleanNote } = note; // exclude _id and any other unwanted props
+  return cleanNote;
+}
+
+export const syncOfflineUpdatesAction = async (data) => {
+  const session = await getServerSession(authOptions);
+  const userID = session?.user?.id;
+
+  if (!session) {
+    throw new Error("Something went wrong");
+  }
+
+  try {
+    await connectDB();
+
+    const bulkOperations = [];
+
+    for (let note of data.updatedNotes) {
+      const cleanedNote = cleanNoteForDB(note);
+      bulkOperations.push({
+        updateOne: {
+          filter: { uuid: cleanedNote.uuid },
+          update: { $set: cleanedNote },
+          upsert: true,
+        },
+      });
+    }
+
+    await Note.bulkWrite(bulkOperations);
+
+    return { success: true, message: "Data synced with database successfully" };
+  } catch (error) {
+    console.log("Error syncing data with database");
+    throw new Error("Error syncing data with database");
   }
 };

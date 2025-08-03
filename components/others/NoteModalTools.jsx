@@ -10,6 +10,8 @@ import DeleteModal from "./DeleteModal";
 import { useAppContext } from "@/context/AppContext";
 import MoreMenu from "./MoreMenu";
 import { validateImageFile } from "@/utils/validateImage";
+import handleServerCall from "@/utils/handleServerCall";
+import localDbReducer from "@/utils/localDbReducer";
 
 const ModalTools = ({
   localNote,
@@ -39,6 +41,7 @@ const ModalTools = ({
     hideTooltip,
     closeToolTip,
     openSnackRef,
+    notesStateRef,
   } = useAppContext();
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
   const [colorAnchorEl, setColorAnchorEl] = useState(null);
@@ -73,13 +76,18 @@ const ModalTools = ({
   const handleColorClick = useCallback(async (color) => {
     if (color === localNote?.color) return;
     setLocalNote((prev) => ({ ...prev, color: color }));
-    window.dispatchEvent(new Event("loadingStart"));
-    await NoteUpdateAction({
-      type: "color",
-      value: color,
-      noteUUIDs: [note.uuid],
-    });
-    window.dispatchEvent(new Event("loadingEnd"));
+
+    handleServerCall(
+      [
+        () =>
+          NoteUpdateAction({
+            type: "color",
+            value: color,
+            noteUUIDs: [note.uuid],
+          }),
+      ],
+      openSnackRef.current
+    );
   });
 
   const handleBackground = useCallback(
@@ -93,13 +101,18 @@ const ModalTools = ({
       //   note: note,
       //   newBG: newBG,
       // });
-      window.dispatchEvent(new Event("loadingStart"));
-      await NoteUpdateAction({
-        type: "background",
-        value: newBG,
-        noteUUIDs: [note.uuid],
-      });
-      window.dispatchEvent(new Event("loadingEnd"));
+
+      handleServerCall(
+        [
+          () =>
+            NoteUpdateAction({
+              type: "background",
+              value: newBG,
+              noteUUIDs: [note.uuid],
+            }),
+        ],
+        openSnackRef.current
+      );
     },
     [localNote?.background]
   );
@@ -178,7 +191,10 @@ const ModalTools = ({
     });
 
     if (data.error) {
-      console.error("Upload error:", data.error);
+      openSnackRef.current({
+        snackMessage: "Error uploading images",
+        showUndo: false,
+      });
     } else {
       const updatedImages = data;
       const imagesMap = new Map();
@@ -188,6 +204,14 @@ const ModalTools = ({
       });
 
       if (!modalOpenRef.current) {
+        localDbReducer({
+          notes: notesStateRef.current.notes,
+          order: notesStateRef.current.order,
+          userID: userID,
+          type: "UPDATE_IMAGES",
+          note: note,
+          imagesMap: imagesMap,
+        });
         dispatchNotes({
           type: "UPDATE_IMAGES",
           note: note,
@@ -211,25 +235,34 @@ const ModalTools = ({
     closeToolTip();
     const undo = async () => {
       setLocalNote((prev) => ({ ...prev, isTrash: true }));
-      window.dispatchEvent(new Event("loadingStart"));
-      await NoteUpdateAction({
-        type: "isTrash",
-        value: true,
-        noteUUIDs: [localNote.uuid],
-      });
-      window.dispatchEvent(new Event("loadingEnd"));
+
+      handleServerCall(
+        [
+          () =>
+            NoteUpdateAction({
+              type: "isTrash",
+              value: true,
+              noteUUIDs: [localNote.uuid],
+            }),
+        ],
+        openSnackRef.current
+      );
     };
 
     const redo = async () => {
       setLocalNote((prev) => ({ ...prev, isTrash: false }));
-      window.dispatchEvent(new Event("loadingStart"));
 
-      await NoteUpdateAction({
-        type: "isTrash",
-        value: false,
-        noteUUIDs: [localNote.uuid],
-      });
-      window.dispatchEvent(new Event("loadingEnd"));
+      handleServerCall(
+        [
+          () =>
+            NoteUpdateAction({
+              type: "isTrash",
+              value: false,
+              noteUUIDs: [localNote.uuid],
+            }),
+        ],
+        openSnackRef.current
+      );
     };
 
     redo();
@@ -268,9 +301,11 @@ const ModalTools = ({
         noteRef: note.ref,
       });
     }, 220);
-    window.dispatchEvent(new Event("loadingStart"));
-    await DeleteNoteAction(localNote.uuid);
-    window.dispatchEvent(new Event("loadingEnd"));
+
+    handleServerCall(
+      [() => DeleteNoteAction(localNote.uuid)],
+      openSnackRef.current
+    );
   };
 
   const handleTrashNote = async (e) => {
@@ -309,14 +344,18 @@ const ModalTools = ({
 
     setMoreMenuOpen(false);
 
-    window.dispatchEvent(new Event("loadingStart"));
-    await NoteUpdateAction({
-      type: "checkboxes",
-      operation: "ADD",
-      value: checkbox,
-      noteUUIDs: [note.uuid],
-    });
-    window.dispatchEvent(new Event("loadingEnd"));
+    handleServerCall(
+      [
+        () =>
+          NoteUpdateAction({
+            type: "checkboxes",
+            operation: "ADD",
+            value: checkbox,
+            noteUUIDs: [note.uuid],
+          }),
+      ],
+      openSnackRef.current
+    );
   };
 
   const uncheckAllitems = async () => {
@@ -328,13 +367,18 @@ const ModalTools = ({
     setLocalNote((prev) => ({ ...prev, checkboxes: newCheckboxArr }));
 
     setMoreMenuOpen(false);
-    window.dispatchEvent(new Event("loadingStart"));
-    await NoteUpdateAction({
-      type: "checkboxes",
-      operation: "UNCHECK_ALL",
-      noteUUIDs: [note.uuid],
-    });
-    window.dispatchEvent(new Event("loadingEnd"));
+
+    handleServerCall(
+      [
+        () =>
+          NoteUpdateAction({
+            type: "checkboxes",
+            operation: "UNCHECK_ALL",
+            noteUUIDs: [note.uuid],
+          }),
+      ],
+      openSnackRef.current
+    );
   };
 
   const deleteCheckedItems = async () => {
@@ -345,25 +389,35 @@ const ModalTools = ({
     setLocalNote((prev) => ({ ...prev, checkboxes: newCheckboxArr }));
 
     setMoreMenuOpen(false);
-    window.dispatchEvent(new Event("loadingStart"));
-    await NoteUpdateAction({
-      type: "checkboxes",
-      operation: "DELETE_CHECKED",
-      noteUUIDs: [note.uuid],
-    });
-    window.dispatchEvent(new Event("loadingEnd"));
+
+    handleServerCall(
+      [
+        () =>
+          NoteUpdateAction({
+            type: "checkboxes",
+            operation: "DELETE_CHECKED",
+            noteUUIDs: [note.uuid],
+          }),
+      ],
+      openSnackRef.current
+    );
   };
 
   const handleCheckboxVis = async () => {
     setLocalNote((prev) => ({ ...prev, showCheckboxes: !prev.showCheckboxes }));
     setMoreMenuOpen(false);
-    window.dispatchEvent(new Event("loadingStart"));
-    await NoteUpdateAction({
-      type: "showCheckboxes",
-      value: !note.showCheckboxes,
-      noteUUIDs: [note.uuid],
-    });
-    window.dispatchEvent(new Event("loadingEnd"));
+
+    handleServerCall(
+      [
+        () =>
+          NoteUpdateAction({
+            type: "showCheckboxes",
+            value: !note.showCheckboxes,
+            noteUUIDs: [note.uuid],
+          }),
+      ],
+      openSnackRef.current
+    );
   };
 
   const menuItems = [

@@ -121,11 +121,13 @@ const LeftPanel = ({
     <>
       <motion.div
         initial={{
+          pointerEvents: !isLogin ? "none" : "auto",
           x: !isLogin ? -40 : 0,
           opacity: !isLogin ? 0 : 1,
           // scale: !isLogin ? 0.99 : 1,
         }}
         animate={{
+          pointerEvents: !isLogin ? "none" : "auto",
           x: !isLogin ? -40 : 0,
           opacity: !isLogin ? 0 : 1,
           // scale: !isLogin ? 0.99 : 1,
@@ -223,11 +225,7 @@ const LeftPanel = ({
           </div>
           <div className="form-btns-container">
             <button form="signin-form" type="submit" className="login-btn">
-              {!isSubmitLoading ? (
-                "Sign In"
-              ) : (
-                <HorizontalLoader2 size={0.55} />
-              )}
+              {!isSubmitLoading ? "Sign In" : <HorizontalLoader2 size={0.55} />}
             </button>
             <div
               onClick={async () => {

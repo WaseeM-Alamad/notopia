@@ -1,5 +1,6 @@
 import { createRef, useEffect, useMemo, useRef } from "react";
 import {
+  getQueuedNotes,
   isLabelsEmpty,
   isNotesEmpty,
   isOrderEmpty,
@@ -8,23 +9,14 @@ import {
   loadOrderArray,
   saveLabelsArray,
   saveNotesArray,
-  saveNotesMap,
   saveOrderArray,
 } from "@/utils/localDb";
 import { useAppContext } from "@/context/AppContext";
-import { debounce } from "lodash";
 import { fetchNotes } from "@/utils/actions";
 
-export function useDataManager({
-  notesState,
-  dispatchNotes,
-  notesReady,
-  setNotesReady,
-}) {
-  const { user, labelsRef, setLabelsReady, notesStateRef } = useAppContext();
-
-  const isNotesSyncFirstRunRef = useRef(true);
-  const isOrderSyncFirstRunRef = useRef(true);
+export function useDataManager({ notesState, dispatchNotes, setNotesReady }) {
+  const { user, labelsRef, setLabelsReady, notesStateRef, openSnackRef } =
+    useAppContext();
 
   useEffect(() => {
     notesStateRef.current = notesState;
@@ -40,29 +32,45 @@ export function useDataManager({
   };
 
   const fetchAndUpdateLocally = async () => {
-    window.dispatchEvent(new Event("loadingStart"));
-    const fetchedNotes = await fetchNotes();
-    await saveNotesArray(fetchedNotes.data, user?.id);
-    await saveOrderArray(fetchedNotes.order, user?.id);
-    await saveLabelsArray(fetchedNotes.labels, user?.id);
-    window.dispatchEvent(new Event("loadingEnd"));
-    setLabels(fetchedNotes.labels);
-    const notesMap = new Map(
-      fetchedNotes.data.map((note) => [
-        note.uuid,
-        { ...note, ref: createRef() },
-      ])
-    );
-    dispatchNotes({
-      type: "SET_INITIAL_DATA",
-      notes: notesMap,
-      order: fetchedNotes.order,
-    });
-    setNotesReady(true);
-    requestIdleCallback(() => {
-      window.dispatchEvent(new Event("refreshLabelsSection"));
-      window.dispatchEvent(new Event("refreshPinnedLabels"));
-    });
+    if (!navigator.onLine) {
+      openSnackRef.current({
+        snackMessage: "You need to be online",
+        showUndo: false,
+      });
+      return;
+    }
+    try {
+      window.dispatchEvent(new Event("loadingStart"));
+
+      const fetchedNotes = await fetchNotes();
+      await saveNotesArray(fetchedNotes.data, user?.id);
+      await saveOrderArray(fetchedNotes.order, user?.id);
+      await saveLabelsArray(fetchedNotes.labels, user?.id);
+      setLabels(fetchedNotes.labels);
+      const notesMap = new Map(
+        fetchedNotes.data.map((note) => [
+          note.uuid,
+          { ...note, ref: createRef() },
+        ])
+      );
+      dispatchNotes({
+        type: "SET_INITIAL_DATA",
+        notes: notesMap,
+        order: fetchedNotes.order,
+      });
+      setNotesReady(true);
+      requestIdleCallback(() => {
+        window.dispatchEvent(new Event("refreshLabelsSection"));
+        window.dispatchEvent(new Event("refreshPinnedLabels"));
+      });
+    } catch (error) {
+      openSnackRef.current({
+        snackMessage: error.message,
+        showUndo: false,
+      });
+    } finally {
+      window.dispatchEvent(new Event("loadingEnd"));
+    }
   };
 
   const getInitialData = async () => {
@@ -98,41 +106,4 @@ export function useDataManager({
 
     return () => window.removeEventListener("refresh", fetchAndUpdateLocally);
   }, []);
-
-  const syncOrderToLocalDB = useMemo(
-    () =>
-      debounce(async () => {
-        await saveOrderArray(notesStateRef.current.order, user?.id);
-      }, 500),
-    [user]
-  );
-
-  useEffect(() => {
-    if (!notesReady) return;
-
-    if (isOrderSyncFirstRunRef.current) {
-      isOrderSyncFirstRunRef.current = false;
-      return;
-    }
-
-    syncOrderToLocalDB();
-  }, [notesState.order]);
-
-  const syncNotesToLocalDB = useMemo(
-    () =>
-      debounce(async () => {
-        await saveNotesMap(notesStateRef.current.notes, user?.id);
-      }, 500),
-    [user]
-  );
-
-  useEffect(() => {
-    if (!notesReady) return;
-    if (isNotesSyncFirstRunRef.current) {
-      isNotesSyncFirstRunRef.current = false;
-      return;
-    }
-
-    syncNotesToLocalDB();
-  }, [notesState.notes]);
 }

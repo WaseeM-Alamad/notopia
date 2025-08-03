@@ -1,6 +1,5 @@
 "use client";
 
-import { useAppContext } from "@/context/AppContext";
 import { openDB } from "idb";
 import { createRef } from "react";
 
@@ -16,6 +15,9 @@ export const initDB = async (userID) => {
       if (!db.objectStoreNames.contains("order")) {
         db.createObjectStore("order", { keyPath: "id" });
       }
+      if (!db.objectStoreNames.contains("notesUpdateQueue")) {
+        db.createObjectStore("notesUpdateQueue", { keyPath: "uuid" });
+      }
     },
   });
 };
@@ -29,19 +31,6 @@ export const saveNotesArray = async (notesArray, userID) => {
 
   for (const note of notesArray) {
     await store.put(note);
-  }
-
-  await tx.done;
-};
-
-export const saveNotesMap = async (notesMap, userID) => {
-  const db = await initDB(userID);
-  const tx = db.transaction("notes", "readwrite");
-  const store = tx.objectStore("notes");
-
-  for (const note of notesMap.values()) {
-    const { ref, ...cleanNote } = note;
-    await store.put(cleanNote);
   }
 
   await tx.done;
@@ -148,3 +137,125 @@ export const deleteNote = async (uuid, userID) => {
   const db = await initDB(userID);
   await db.delete("notes", uuid);
 };
+
+export async function updateLocalNotesAndOrder(
+  notesArray,
+  orderArray = null,
+  userID
+) {
+  try {
+    const db = await initDB(userID);
+    const isOnline = navigator.onLine;
+
+    const txStores = ["notes", "notesUpdateQueue"];
+    if (orderArray) txStores.push("order");
+
+    const tx = db.transaction(txStores, "readwrite");
+
+    const notesStore = tx.objectStore("notes");
+    const notesQueueStore = tx.objectStore("notesUpdateQueue");
+
+    for (const note of notesArray) {
+      const { ref, ...noteWithoutRef } = note;
+
+      if (!isOnline) {
+        notesQueueStore.put(noteWithoutRef);
+      }
+
+      notesStore.put(noteWithoutRef);
+    }
+
+    if (orderArray) {
+      const orderStore = tx.objectStore("order");
+      orderStore.put({ id: "main", value: orderArray });
+    }
+
+    await tx.done;
+  } catch (err) {
+    console.error("Failed to update local notes and order:", err);
+  }
+}
+
+// export async function updateLocalNotesAndOrder(
+//   notesArray,
+//   orderArray = null,
+//   userID
+// ) {
+//   try {
+//     const db = await initDB(userID);
+//     const txStores = ["notes"];
+//     if (orderArray) txStores.push("order");
+
+//     const tx = db.transaction(txStores, "readwrite");
+//     const notesStore = tx.objectStore("notes");
+
+//     for (const note of notesArray) {
+//       const { ref, ...noteWithoutRef } = note;
+//       notesStore.put(noteWithoutRef);
+//     }
+
+//     if (orderArray) {
+//       const orderStore = tx.objectStore("order");
+//       orderStore.put({ id: "main", value: orderArray });
+//     }
+
+//     await tx.done;
+//   } catch (err) {
+//     console.error("Failed to update local notes and order:", err);
+//   }
+// }
+
+export async function deleteLocalNotesAndUpdateOrder(
+  noteUUIDsToDelete,
+  orderArray = null,
+  userID
+) {
+  try {
+    const db = await initDB(userID);
+    const txStores = ["notes"];
+    if (orderArray) txStores.push("order");
+
+    const tx = db.transaction(txStores, "readwrite");
+    const notesStore = tx.objectStore("notes");
+
+    for (const uuid of noteUUIDsToDelete) {
+      notesStore.delete(uuid);
+    }
+
+    if (orderArray) {
+      const orderStore = tx.objectStore("order");
+      orderStore.put({ id: "main", value: orderArray });
+    }
+
+    await tx.done;
+  } catch (err) {
+    console.error("Failed to delete local notes and update order:", err);
+  }
+}
+
+export async function getQueuedNotes(userID) {
+  try {
+    const db = await initDB(userID);
+    const tx = db.transaction("notesUpdateQueue", "readonly");
+    const store = tx.objectStore("notesUpdateQueue");
+    const allQueuedNotes = await store.getAll();
+
+    await tx.done;
+    return allQueuedNotes;
+  } catch (err) {
+    console.error("Failed to fetch queued notes:", err);
+    return [];
+  }
+}
+
+export async function clearQueuedNotes(userID) {
+  try {
+    const db = await initDB(userID);
+    const tx = db.transaction("notesUpdateQueue", "readwrite");
+    const store = tx.objectStore("notesUpdateQueue");
+    await store.clear();
+    await tx.done;
+  } catch (err) {
+    console.error("Failed to clear notesUpdateQueue:", err);
+  }
+}

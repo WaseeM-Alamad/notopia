@@ -1,12 +1,20 @@
 import { useAppContext } from "@/context/AppContext";
+import { syncOfflineUpdatesAction } from "@/utils/actions";
+import { clearQueuedNotes, getQueuedNotes } from "@/utils/localDb";
 import React, { useEffect } from "react";
 
 export function useConnection() {
-  const { openSnackRef, isOnline, setIsOnline } = useAppContext();
+  const { openSnackRef, setIsOnline, user } = useAppContext();
 
   useEffect(() => {
-    const handleOnline = () => {
-      setIsOnline(true);
+    const handleOnline = async () => {
+      // window.dispatchEvent(new Event("loadingStart"));
+      // const queue = await getQueuedNotes(user?.id);
+      // await syncOfflineUpdatesAction({ updatedNotes: queue });
+      // window.dispatchEvent(new Event("loadingEnd"));
+      // console.log(queue);
+      // await clearQueuedNotes(user?.id);
+      // setIsOnline(true);
       openSnackRef.current({
         snackMessage: (
           <div style={{ display: "flex", alignItems: "center" }}>

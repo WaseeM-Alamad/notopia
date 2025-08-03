@@ -5,6 +5,8 @@ import { motion } from "framer-motion";
 import { updateOrderAction } from "@/utils/actions";
 import ComposeNote from "../others/ComposeNote";
 import { useAppContext } from "@/context/AppContext";
+import handleServerCall from "@/utils/handleServerCall";
+import localDbReducer from "@/utils/localDbReducer";
 
 const GUTTER = 15;
 const GAP_BETWEEN_SECTIONS = 88;
@@ -129,7 +131,6 @@ const Home = memo(
     selectedNotesRef,
     setVisibleItems,
     notes,
-    notesStateRef,
     order,
     fadingNotes,
     setFadingNotes,
@@ -143,7 +144,15 @@ const Home = memo(
     rootContainerRef,
     isGrid,
   }) => {
-    const { layout, calculateLayoutRef, focusedIndex } = useAppContext();
+    const {
+      user,
+      layout,
+      calculateLayoutRef,
+      focusedIndex,
+      openSnackRef,
+      notesStateRef,
+    } = useAppContext();
+    const userID = user?.id;
     const [pinnedHeight, setPinnedHeight] = useState(null);
     const lastAddedNoteRef = useRef(null);
     const resizeTimeoutRef = useRef(null);
@@ -377,15 +386,16 @@ const Home = memo(
                 endIndexRef.current !== null &&
                 endIndexRef.current !== draggedInitialIndex
               ) {
-                window.dispatchEvent(new Event("loadingStart"));
-                updateOrderAction({
-                  initialIndex: draggedInitialIndex,
-                  endIndex: endIndexRef.current,
-                })
-                  .then(() => window.dispatchEvent(new Event("loadingEnd")))
-                  .catch((err) => {
-                    console.log(err);
-                  });
+                handleServerCall(
+                  [
+                    () =>
+                      updateOrderAction({
+                        initialIndex: draggedInitialIndex,
+                        endIndex: endIndexRef.current,
+                      }),
+                  ],
+                  openSnackRef.current
+                );
               }
 
               document
@@ -438,7 +448,14 @@ const Home = memo(
       if (now - lastSwapRef.current < 150) return;
 
       lastSwapRef.current = now;
-
+      localDbReducer({
+        notes: notesStateRef.current.notes,
+        order: notesStateRef.current.order,
+        userID: userID,
+        type: "DND",
+        initialIndex: draggedIndexRef.current,
+        finalIndex: overIndexRef.current,
+      });
       dispatchNotes({
         type: "DND",
         initialIndex: draggedIndexRef.current,

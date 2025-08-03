@@ -5,6 +5,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { emptyTrashAction } from "@/utils/actions";
 import DeleteModal from "../others/DeleteModal";
 import { useAppContext } from "@/context/AppContext";
+import handleServerCall from "@/utils/handleServerCall";
+import localDbReducer from "@/utils/localDbReducer";
 
 const GUTTER = 15;
 
@@ -96,7 +98,9 @@ const Trash = memo(
     containerRef,
     isGrid,
   }) => {
-    const { layout, calculateLayoutRef, focusedIndex } = useAppContext();
+    const { layout, calculateLayoutRef, focusedIndex, openSnackRef, user } =
+      useAppContext();
+    const userID = user?.id;
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const COLUMN_WIDTH = layout === "grid" ? 240 : 600;
     const resizeTimeoutRef = useRef(null);
@@ -200,15 +204,18 @@ const Trash = memo(
       });
 
       setFadingNotes(new Set(deletedNotesUUIDs));
-
+      localDbReducer({
+        notes: notesStateRef.current.notes,
+        order: notesStateRef.current.order,
+        userID: userID,
+        type: "EMPTY_TRASH",
+      });
       setTimeout(() => {
         dispatchNotes({ type: "EMPTY_TRASH" });
         setFadingNotes(new Set());
       }, 250);
 
-      window.dispatchEvent(new Event("loadingStart"));
-      await emptyTrashAction();
-      window.dispatchEvent(new Event("loadingEnd"));
+      handleServerCall([() => emptyTrashAction()], openSnackRef.current);
     };
 
     useEffect(() => {

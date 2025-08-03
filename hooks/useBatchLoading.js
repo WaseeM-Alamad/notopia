@@ -15,10 +15,8 @@ export function useBatchLoading({
   containerRef,
   matchesFilters,
 }) {
-  const { labelsRef, layout, labelsReady, currentSection } =
-    useAppContext();
+  const { labelsRef, layout, labelsReady, currentSection } = useAppContext();
 
-    
   const {
     filters,
     labelSearchTerm,
@@ -32,8 +30,11 @@ export function useBatchLoading({
   const layoutVersionRef = useRef(0);
   const isFirstBatchRef = useRef(true);
 
-  const loadNextBatch = (data) => {
-    const { currentSet: currentVisibleSet, version } = data;
+  const loadNextBatch = (data = {}) => {
+    const {
+      currentSet: currentVisibleSet = visibleItems,
+      version = layoutVersionRef.current,
+    } = data;
     const container = containerRef.current;
     if (!container || !currentSection) {
       isLoadingRef.current = false;
@@ -242,7 +243,11 @@ export function useBatchLoading({
   }, [labelSearchTerm]);
 
   useEffect(() => {
-    if (isFirstRenderRef.current || !currentSection || currentSection.toLowerCase() !== "search")
+    if (
+      isFirstRenderRef.current ||
+      !currentSection ||
+      currentSection.toLowerCase() !== "search"
+    )
       return;
     requestAnimationFrame(() => {
       resetAndLoad(false);
@@ -288,28 +293,31 @@ export function useBatchLoading({
 
   useEffect(() => {
     const handler = () => {
-      const scrollTop = window.scrollY;
-      const viewportHeight = window.innerHeight;
-      const fullHeight = document.body.offsetHeight;
-      const version = layoutVersionRef.current;
-      if (scrollTop + viewportHeight >= fullHeight - 700) {
-        requestAnimationFrame(() => {
-          setTimeout(() => {
-            if (isLoadingRef.current) return;
-            loadNextBatch({
-              currentSet: visibleItems,
-              version: version,
-            });
-          }, 0);
-        });
-      }
+      if (isLoadingRef.current) return;
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          loadNextBatch();
+        }, 500);
+      });
     };
 
     window.addEventListener("resize", handler);
     return () => window.removeEventListener("resize", handler);
-  }, [visibleItems, layout]);
+  }, [loadNextBatch]);
 
-  if (!currentSection) return;
+  useEffect(() => {
+    if (
+      notesState.notes.length === 0 ||
+      notesState.order.length === 0 ||
+      isLoadingRef.current
+    ) {
+      return;
+    }
+    requestAnimationFrame(() => {
+      loadNextBatch();
+    });
+  }, [notesState]);
+
   // useEffect(() => {
   //   const handler = () => {
   //     const order = notesStateRef.current.order;
@@ -346,4 +354,5 @@ export function useBatchLoading({
   //   window.addEventListener("focus", handler);
   //   return () => window.removeEventListener("focus", handler);
   // }, [visibleItems]);
+  if (!currentSection) return;
 }

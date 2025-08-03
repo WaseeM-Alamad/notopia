@@ -222,9 +222,9 @@ const Sidebar = memo(() => {
     requestAnimationFrame(() => {
       setTimeout(() => {
         setPageMounted(true);
-      }, 50);
+      }, 500);
     });
-  }, [labelsReady]);
+  }, [labelsReady, currentSection]);
 
   const handleAddTooltip = (e) => {
     const section = currentSection.toLowerCase();

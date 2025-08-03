@@ -21,6 +21,8 @@ import { useSearch } from "@/context/SearchContext";
 import { AnimatePresence } from "framer-motion";
 import ImageDropZone from "../Tools/ImageDropZone";
 import TextLabelMenu from "./TextLabelMenu";
+import handleServerCall from "@/utils/handleServerCall";
+import localDbReducer from "@/utils/localDbReducer";
 
 const NoteModal = ({
   localNote,
@@ -48,7 +50,7 @@ const NoteModal = ({
     hideTooltip,
     closeToolTip,
     openSnackRef,
-    setTooltipRef,
+    notesStateRef,
   } = useAppContext();
   const { skipHashChangeRef, searchTerm } = useSearch();
   const [isDragOver, setIsDragOver] = useState(false);
@@ -200,6 +202,13 @@ const NoteModal = ({
 
     if (JSON.stringify(cleanLocalNote) !== JSON.stringify(cleanNote)) {
       dispatchNotes({ type: "SET_NOTE", note: localNote });
+      localDbReducer({
+        notes: notesStateRef.current.notes,
+        order: notesStateRef.current.order,
+        userID: userID,
+        type: "SET_NOTE",
+        note: localNote,
+      });
     }
   };
 
@@ -219,6 +228,13 @@ const NoteModal = ({
     } else if (localIsPinned !== note?.isPinned) {
       setTimeout(() => {
         dispatchNotes({
+          type: "PIN_NOTE",
+          note: note,
+        });
+        localDbReducer({
+          notes: notesStateRef.current.notes,
+          order: notesStateRef.current.order,
+          userID: userID,
           type: "PIN_NOTE",
           note: note,
         });
@@ -430,6 +446,14 @@ const NoteModal = ({
         setFadingNotes((prev) => new Set(prev).add(localNote?.uuid));
       }
       const initialIndex = initialStyle.index;
+      localDbReducer({
+        notes: notesStateRef.current.notes,
+        order: notesStateRef.current.order,
+        userID: userID,
+        type: "UNDO_ARCHIVE",
+        note: passedNote,
+        initialIndex: initialIndex,
+      });
       setTimeout(
         () => {
           dispatchNotes({
@@ -446,16 +470,20 @@ const NoteModal = ({
         localIsPinned && localNote?.isArchived ? 250 : 0
       );
 
-      window.dispatchEvent(new Event("loadingStart"));
-      await undoAction({
-        type: "UNDO_ARCHIVE",
-        noteUUID: passedNote.uuid,
-        value: passedNote.isArchived,
-        pin: passedNote.isPinned,
-        initialIndex: initialIndex,
-        endIndex: 0,
-      });
-      window.dispatchEvent(new Event("loadingEnd"));
+      handleServerCall(
+        [
+          () =>
+            undoAction({
+              type: "UNDO_ARCHIVE",
+              noteUUID: passedNote.uuid,
+              value: passedNote.isArchived,
+              pin: passedNote.isPinned,
+              initialIndex: initialIndex,
+              endIndex: 0,
+            }),
+        ],
+        openSnackRef.current
+      );
     };
 
     const first = initialStyle.index === 0;
@@ -467,6 +495,14 @@ const NoteModal = ({
       if (fade) {
         setFadingNotes((prev) => new Set(prev).add(localNote?.uuid));
       }
+
+      localDbReducer({
+        notes: notesStateRef.current.notes,
+        order: notesStateRef.current.order,
+        userID: userID,
+        type: "ARCHIVE_NOTE",
+        note: passedNote,
+      });
 
       setTimeout(
         () => {
@@ -484,14 +520,18 @@ const NoteModal = ({
         fade ? 250 : 0
       );
 
-      window.dispatchEvent(new Event("loadingStart"));
-      await NoteUpdateAction({
-        type: "isArchived",
-        value: !passedNote.isArchived,
-        noteUUIDs: [note.uuid],
-        first: first,
-      });
-      window.dispatchEvent(new Event("loadingEnd"));
+      handleServerCall(
+        [
+          () =>
+            NoteUpdateAction({
+              type: "isArchived",
+              value: !passedNote.isArchived,
+              noteUUIDs: [note.uuid],
+              first: first,
+            }),
+        ],
+        openSnackRef.current
+      );
     };
 
     redo(false);
@@ -511,12 +551,27 @@ const NoteModal = ({
   };
 
   const handleTrash = () => {
+    localDbReducer({
+      notes: notesStateRef.current.notes,
+      order: notesStateRef.current.order,
+      userID: userID,
+      type: "TRASH_NOTE",
+      note: note,
+    });
     dispatchNotes({
       type: "TRASH_NOTE",
       note: note,
     });
 
     const undoTrash = async () => {
+      localDbReducer({
+        notes: notesStateRef.current.notes,
+        order: notesStateRef.current.order,
+        userID: userID,
+        type: "UNDO_TRASH",
+        note: note,
+        initialIndex: initialStyle?.index,
+      });
       dispatchNotes({
         type: "UNDO_TRASH",
         note: note,
@@ -525,13 +580,17 @@ const NoteModal = ({
     };
 
     const onClose = async () => {
-      window.dispatchEvent(new Event("loadingStart"));
-      await NoteUpdateAction({
-        type: "isTrash",
-        value: true,
-        noteUUIDs: [note.uuid],
-      });
-      window.dispatchEvent(new Event("loadingEnd"));
+      handleServerCall(
+        [
+          () =>
+            NoteUpdateAction({
+              type: "isTrash",
+              value: true,
+              noteUUIDs: [note.uuid],
+            }),
+        ],
+        openSnackRef.current
+      );
     };
 
     if (!localNote?.isTrash) {
@@ -550,58 +609,83 @@ const NoteModal = ({
   const handlePinClick = async () => {
     if (localNote?.isTrash) return;
     setLocalIsPinned((prev) => !prev);
-    window.dispatchEvent(new Event("loadingStart"));
-    try {
-      if (!localNote?.isArchived) {
-        await NoteUpdateAction({
-          type: "isPinned",
-          value: !localIsPinned,
-          noteUUIDs: [note.uuid],
-        });
-      } else {
-        const redo = async () => {
-          if (!localIsPinned) {
-            await NoteUpdateAction({
-              type: "pinArchived",
-              value: true,
+    if (!localNote?.isArchived) {
+      handleServerCall(
+        [
+          () =>
+            NoteUpdateAction({
+              type: "isPinned",
+              value: !localIsPinned,
               noteUUIDs: [note.uuid],
-            });
-          } else {
-            await undoAction({
-              type: "UNDO_PIN_ARCHIVED",
-              noteUUID: note.uuid,
-              initialIndex: initialStyle.index,
-              endIndex: 0,
-            });
-          }
-        };
-        redo();
-        const undo = async () => {
-          setLocalIsPinned(false);
-          dispatchNotes({
-            type: "UNDO_PIN_ARCHIVED",
-            note: note,
-            initialIndex: initialStyle.index,
-          });
-
-          window.dispatchEvent(new Event("loadingStart"));
-          await undoAction({
-            type: "UNDO_PIN_ARCHIVED",
-            noteUUID: note.uuid,
-            initialIndex: initialStyle.index,
-            endIndex: 0,
-          });
-          window.dispatchEvent(new Event("loadingEnd"));
-        };
-
-        openSnackRef.current({
-          snackMessage: "Note unarchived and pinned",
-          snackOnUndo: undo,
-          snackRedo: redo,
+            }),
+        ],
+        openSnackRef.current
+      );
+    } else {
+      const redo = async () => {
+        if (!localIsPinned) {
+          handleServerCall(
+            [
+              () =>
+                NoteUpdateAction({
+                  type: "pinArchived",
+                  value: true,
+                  noteUUIDs: [note.uuid],
+                }),
+            ],
+            openSnackRef.current
+          );
+        } else {
+          handleServerCall(
+            [
+              () =>
+                undoAction({
+                  type: "UNDO_PIN_ARCHIVED",
+                  noteUUID: note.uuid,
+                  initialIndex: initialStyle.index,
+                  endIndex: 0,
+                }),
+            ],
+            openSnackRef.current
+          );
+        }
+      };
+      redo();
+      const undo = async () => {
+        setLocalIsPinned(false);
+        localDbReducer({
+          notes: notesStateRef.current.notes,
+          order: notesStateRef.current.order,
+          userID: userID,
+          type: "UNDO_PIN_ARCHIVED",
+          note: note,
+          initialIndex: initialStyle.index,
         });
-      }
-    } finally {
-      window.dispatchEvent(new Event("loadingEnd"));
+        dispatchNotes({
+          type: "UNDO_PIN_ARCHIVED",
+          note: note,
+          initialIndex: initialStyle.index,
+        });
+
+        handleServerCall(
+          [
+            () =>
+              undoAction({
+                type: "UNDO_PIN_ARCHIVED",
+                noteUUID: note.uuid,
+                initialIndex: initialStyle.index,
+                endIndex: 0,
+              }),
+          ],
+          openSnackRef.current
+        );
+      };
+
+      openSnackRef.current({
+        snackMessage: "Note unarchived and pinned",
+        snackOnUndo: undo,
+        snackRedo: redo,
+      });
     }
   };
 
@@ -632,9 +716,10 @@ const NoteModal = ({
 
       const onClose = async () => {
         const filePath = `${userID}/${note.uuid}/${imageUUID}`;
-        window.dispatchEvent(new Event("loadingStart"));
-        await NoteImageDeleteAction(filePath, note.uuid, imageUUID);
-        window.dispatchEvent(new Event("loadingEnd"));
+        handleServerCall(
+          [() => NoteImageDeleteAction(filePath, note.uuid, imageUUID)],
+          openSnackRef.current
+        );
       };
 
       openSnackRef.current({
@@ -657,9 +742,10 @@ const NoteModal = ({
 
   const updateTextDebounced = useCallback(
     debounce(async (values) => {
-      window.dispatchEvent(new Event("loadingStart"));
-      await NoteTextUpdateAction(values, note?.uuid);
-      window.dispatchEvent(new Event("loadingEnd"));
+      handleServerCall(
+        [() => NoteTextUpdateAction(values, note?.uuid)],
+        openSnackRef.current
+      );
     }, 600),
     [note?.uuid] // Dependencies array, make sure it's updated when `note.uuid` changes
   );
@@ -683,12 +769,17 @@ const NoteModal = ({
         title: note?.title,
         content: note?.content,
       }));
-      window.dispatchEvent(new Event("loadingStart"));
-      await NoteTextUpdateAction(
-        { title: note?.title, content: note?.content },
-        note?.uuid
+
+      handleServerCall(
+        [
+          () =>
+            NoteTextUpdateAction(
+              { title: note?.title, content: note?.content },
+              note?.uuid
+            ),
+        ],
+        openSnackRef.current
       );
-      window.dispatchEvent(new Event("loadingEnd"));
     } else {
       const redoItem = undoStack[undoStack.length - 1];
       setRedoStack((prev) => [...prev, redoItem]);
@@ -703,12 +794,17 @@ const NoteModal = ({
         title: undoItem.title,
         content: undoItem.content,
       }));
-      window.dispatchEvent(new Event("loadingStart"));
-      await NoteTextUpdateAction(
-        { title: undoItem.title, content: undoItem.content },
-        note?.uuid
+
+      handleServerCall(
+        [
+          () =>
+            NoteTextUpdateAction(
+              { title: undoItem.title, content: undoItem.content },
+              note?.uuid
+            ),
+        ],
+        openSnackRef.current
       );
-      window.dispatchEvent(new Event("loadingEnd"));
     }
   };
 
@@ -725,12 +821,17 @@ const NoteModal = ({
       title: redoItem.title,
       content: redoItem.content,
     }));
-    window.dispatchEvent(new Event("loadingStart"));
-    await NoteTextUpdateAction(
-      { title: redoItem.title, content: redoItem.content },
-      note?.uuid
+
+    handleServerCall(
+      [
+        () =>
+          NoteTextUpdateAction(
+            { title: redoItem.title, content: redoItem.content },
+            note?.uuid
+          ),
+      ],
+      openSnackRef.current
     );
-    window.dispatchEvent(new Event("loadingEnd"));
   };
 
   const getCaretCharacterOffsetWithin = (element) => {
@@ -842,12 +943,17 @@ const NoteModal = ({
       (noteLabelUUID) => noteLabelUUID !== labelUUID
     );
     setLocalNote((prev) => ({ ...prev, labels: newLabels }));
-    window.dispatchEvent(new Event("loadingStart"));
-    await removeLabelAction({
-      noteUUID: note.uuid,
-      labelUUID: labelUUID,
-    });
-    window.dispatchEvent(new Event("loadingEnd"));
+
+    handleServerCall(
+      [
+        () =>
+          removeLabelAction({
+            noteUUID: note.uuid,
+            labelUUID: labelUUID,
+          }),
+      ],
+      openSnackRef.current
+    );
   };
 
   const handleLabelClick = (e, label) => {
@@ -888,29 +994,39 @@ const NoteModal = ({
 
     const undo = async () => {
       setLocalNote((prev) => ({ ...prev, isTrash: true }));
-      window.dispatchEvent(new Event("loadingStart"));
-      await NoteUpdateAction({
-        type: "isTrash",
-        value: true,
-        noteUUIDs: [localNote?.uuid],
-      });
-      window.dispatchEvent(new Event("loadingEnd"));
+
+      handleServerCall(
+        [
+          () =>
+            NoteUpdateAction({
+              type: "isTrash",
+              value: true,
+              noteUUIDs: [localNote?.uuid],
+            }),
+        ],
+        openSnackRef.current
+      );
     };
 
     const restore = async () => {
       setLocalNote((prev) => ({ ...prev, isTrash: false }));
-      window.dispatchEvent(new Event("loadingStart"));
       openSnackRef.current({
         snackMessage: "Note restored",
         snackOnUndo: undo,
         snackRedo: restore,
       });
-      await NoteUpdateAction({
-        type: "isTrash",
-        value: false,
-        noteUUIDs: [localNote?.uuid],
-      });
-      window.dispatchEvent(new Event("loadingEnd"));
+
+      handleServerCall(
+        [
+          () =>
+            NoteUpdateAction({
+              type: "isTrash",
+              value: false,
+              noteUUIDs: [localNote?.uuid],
+            }),
+        ],
+        openSnackRef.current
+      );
     };
 
     openSnackRef.current({

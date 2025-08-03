@@ -90,7 +90,7 @@ const AddModalTools = ({
   };
 
   return (
-    <div style={{ opacity: isOpen ? "1" : "0" }} className="modal-bottom">
+    <div style={{ opacity: isOpen ? "1" : "0", marginTop: "auto" }} className="modal-bottom">
       {/* <p className="date">{FormattedDate}</p> */}
       <div className="modal-bottom-icons">
         <Button

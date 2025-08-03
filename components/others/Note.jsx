@@ -18,6 +18,8 @@ import { useAppContext } from "@/context/AppContext";
 import ImageDropZone from "../Tools/ImageDropZone";
 import { AnimatePresence } from "framer-motion";
 import { useLastInputWasKeyboard } from "@/hooks/useLastInputWasKeyboard";
+import handleServerCall from "@/utils/handleServerCall";
+import localDbReducer from "@/utils/localDbReducer";
 
 const Note = memo(
   ({
@@ -37,6 +39,8 @@ const Note = memo(
       hideTooltip,
       closeToolTip,
       focusedIndex,
+      openSnackRef,
+      notesStateRef,
     } = useAppContext();
     const userID = user?.id;
     const [isDragOver, setIsDragOver] = useState(false);
@@ -65,21 +69,30 @@ const Note = memo(
       handleSelectNote({ clear: true });
       e.stopPropagation(); // Prevent note click event
       if (!note.isArchived) {
-        window.dispatchEvent(new Event("loadingStart"));
         dispatchNotes({
           type: "PIN_NOTE",
           note: note,
         });
 
-        try {
-          await NoteUpdateAction({
-            type: "isPinned",
-            value: !note.isPinned,
-            noteUUIDs: [note.uuid],
-          });
-        } finally {
-          window.dispatchEvent(new Event("loadingEnd"));
-        }
+        localDbReducer({
+          notes: notesStateRef.current.notes,
+          order: notesStateRef.current.order,
+          userID: userID,
+          type: "PIN_NOTE",
+          note: note,
+        });
+
+        handleServerCall(
+          [
+            () =>
+              NoteUpdateAction({
+                type: "isPinned",
+                value: !note.isPinned,
+                noteUUIDs: [note.uuid],
+              }),
+          ],
+          openSnackRef.current
+        );
       } else {
         noteActions({
           type: "PIN_ARCHIVED_NOTE",
@@ -168,15 +181,30 @@ const Note = memo(
         checkboxUUID: checkboxUUID,
         value: value,
       });
-      window.dispatchEvent(new Event("loadingStart"));
-      await NoteUpdateAction({
-        type: "checkboxes",
-        operation: "MANAGE_COMPLETED",
-        value: value,
+
+      localDbReducer({
+        notes: notesStateRef.current.notes,
+        order: notesStateRef.current.order,
+        userID: userID,
+        type: "CHECKBOX_STATE",
+        noteUUID: note.uuid,
         checkboxUUID: checkboxUUID,
-        noteUUIDs: [note.uuid],
+        value: value,
       });
-      window.dispatchEvent(new Event("loadingEnd"));
+
+      handleServerCall(
+        [
+          () =>
+            NoteUpdateAction({
+              type: "checkboxes",
+              operation: "MANAGE_COMPLETED",
+              value: value,
+              checkboxUUID: checkboxUUID,
+              noteUUIDs: [note.uuid],
+            }),
+        ],
+        openSnackRef.current
+      );
     };
 
     const handleExpand = async (e) => {
@@ -187,13 +215,25 @@ const Note = memo(
         noteUUID: note.uuid,
       });
 
-      window.dispatchEvent(new Event("loadingStart"));
-      await NoteUpdateAction({
-        type: "expandCompleted",
-        value: val,
-        noteUUIDs: [note.uuid],
+      localDbReducer({
+        notes: notesStateRef.current.notes,
+        order: notesStateRef.current.order,
+        userID: userID,
+        type: "EXPAND_ITEMS",
+        noteUUID: note.uuid,
       });
-      window.dispatchEvent(new Event("loadingEnd"));
+
+      handleServerCall(
+        [
+          () =>
+            NoteUpdateAction({
+              type: "expandCompleted",
+              value: val,
+              noteUUIDs: [note.uuid],
+            }),
+        ],
+        openSnackRef.current
+      );
     };
 
     const noteClassName = useMemo(() => {
@@ -342,6 +382,15 @@ const Note = memo(
             className={noteClassName}
           >
             <div>
+              {/* <button
+                style={{
+                  position: "absolute",
+                  padding: "1rem",
+                  zIndex: "100000000",
+                }}
+              >
+                gg
+              </button> */}
               <div>
                 <div
                   style={{

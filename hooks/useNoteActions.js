@@ -11,6 +11,8 @@ import {
 import { v4 as uuid } from "uuid";
 import { useSearch } from "@/context/SearchContext";
 import { useAppContext } from "@/context/AppContext";
+import handleServerCall from "@/utils/handleServerCall";
+import localDbReducer from "@/utils/localDbReducer";
 
 export function useNoteActions({
   dispatchNotes,
@@ -20,7 +22,8 @@ export function useNoteActions({
   labelObj,
   currentSection,
 }) {
-  const { fadeNote, openSnackRef } = useAppContext();
+  const { user, fadeNote, openSnackRef, notesStateRef } = useAppContext();
+  const userID = user?.id;
   const { filters } = useSearch();
   const noteActions = useCallback(
     async (data) => {
@@ -32,6 +35,13 @@ export function useNoteActions({
             setFadingNotes((prev) => new Set(prev).add(data.note.uuid));
             setVisibleItems((prev) => new Set(prev).add(data.note.uuid));
           }
+          localDbReducer({
+            notes: notesStateRef.current.notes,
+            order: notesStateRef.current.order,
+            userID: userID,
+            type: "ARCHIVE_NOTE",
+            note: data.note,
+          });
           setTimeout(
             () => {
               dispatchNotes({
@@ -55,14 +65,18 @@ export function useNoteActions({
           );
 
           const first = data.index === 0;
-          window.dispatchEvent(new Event("loadingStart"));
-          await NoteUpdateAction({
-            type: "isArchived",
-            value: !data.note.isArchived,
-            noteUUIDs: [data.note.uuid],
-            first: first,
-          });
-          window.dispatchEvent(new Event("loadingEnd"));
+          handleServerCall(
+            [
+              () =>
+                NoteUpdateAction({
+                  type: "isArchived",
+                  value: !data.note.isArchived,
+                  noteUUIDs: [data.note.uuid],
+                  first: first,
+                }),
+            ],
+            openSnackRef.current
+          );
         };
 
         redo();
@@ -75,21 +89,34 @@ export function useNoteActions({
               return updated;
             });
           }
+          localDbReducer({
+            notes: notesStateRef.current.notes,
+            order: notesStateRef.current.order,
+            userID: userID,
+            type: "UNDO_ARCHIVE",
+            note: data.note,
+            initialIndex: initialIndex,
+          });
           dispatchNotes({
             type: "UNDO_ARCHIVE",
             note: data.note,
             initialIndex: initialIndex,
           });
-          window.dispatchEvent(new Event("loadingStart"));
-          await undoAction({
-            type: "UNDO_ARCHIVE",
-            noteUUID: data.note.uuid,
-            value: data.note.isArchived,
-            pin: data.note.isPinned,
-            initialIndex: initialIndex,
-            endIndex: 0,
-          });
-          window.dispatchEvent(new Event("loadingEnd"));
+
+          handleServerCall(
+            [
+              () =>
+                undoAction({
+                  type: "UNDO_ARCHIVE",
+                  noteUUID: data.note.uuid,
+                  value: data.note.isArchived,
+                  pin: data.note.isPinned,
+                  initialIndex: initialIndex,
+                  endIndex: 0,
+                }),
+            ],
+            openSnackRef.current
+          );
         };
         openSnackRef.current({
           snackMessage: `${
@@ -107,7 +134,13 @@ export function useNoteActions({
 
         const redo = async () => {
           setFadingNotes((prev) => new Set(prev).add(data.note.uuid));
-
+          localDbReducer({
+            notes: notesStateRef.current.notes,
+            order: notesStateRef.current.order,
+            userID: userID,
+            type: "TRASH_NOTE",
+            note: data.note,
+          });
           setTimeout(() => {
             dispatchNotes({
               type: "TRASH_NOTE",
@@ -125,18 +158,30 @@ export function useNoteActions({
             });
           }, 250);
 
-          window.dispatchEvent(new Event("loadingStart"));
-          await NoteUpdateAction({
-            type: "isTrash",
-            value: false,
-            noteUUIDs: [data.note.uuid],
-          });
-          window.dispatchEvent(new Event("loadingEnd"));
+          handleServerCall(
+            [
+              () =>
+                NoteUpdateAction({
+                  type: "isTrash",
+                  value: false,
+                  noteUUIDs: [data.note.uuid],
+                }),
+            ],
+            openSnackRef.current
+          );
         };
 
         redo();
 
         const undoTrash = async () => {
+          localDbReducer({
+            notes: notesStateRef.current.notes,
+            order: notesStateRef.current.order,
+            userID: userID,
+            type: "UNDO_TRASH",
+            note: data.note,
+            initialIndex: initialIndex,
+          });
           dispatchNotes({
             type: "UNDO_TRASH",
             note: data.note,
@@ -148,15 +193,19 @@ export function useNoteActions({
             return updated;
           });
 
-          window.dispatchEvent(new Event("loadingStart"));
-          await undoAction({
-            type: "UNDO_TRASH",
-            noteUUID: data.note.uuid,
-            value: true,
-            initialIndex: data.initialIndex,
-            endIndex: 0,
-          });
-          window.dispatchEvent(new Event("loadingEnd"));
+          handleServerCall(
+            [
+              () =>
+                undoAction({
+                  type: "UNDO_TRASH",
+                  noteUUID: data.note.uuid,
+                  value: true,
+                  initialIndex: data.initialIndex,
+                  endIndex: 0,
+                }),
+            ],
+            openSnackRef.current
+          );
         };
 
         openSnackRef.current({
@@ -169,7 +218,13 @@ export function useNoteActions({
 
         const redo = async () => {
           setFadingNotes((prev) => new Set(prev).add(data.note.uuid));
-
+          localDbReducer({
+            notes: notesStateRef.current.notes,
+            order: notesStateRef.current.order,
+            userID: userID,
+            type: "TRASH_NOTE",
+            note: data.note,
+          });
           setTimeout(() => {
             dispatchNotes({
               type: "TRASH_NOTE",
@@ -191,6 +246,14 @@ export function useNoteActions({
         redo();
 
         const undoTrash = async () => {
+          localDbReducer({
+            notes: notesStateRef.current.notes,
+            order: notesStateRef.current.order,
+            userID: userID,
+            type: "UNDO_TRASH",
+            note: data.note,
+            initialIndex: initialIndex,
+          });
           dispatchNotes({
             type: "UNDO_TRASH",
             note: data.note,
@@ -204,13 +267,17 @@ export function useNoteActions({
         };
 
         const onClose = async () => {
-          window.dispatchEvent(new Event("loadingStart"));
-          await NoteUpdateAction({
-            type: "isTrash",
-            value: true,
-            noteUUIDs: [data.note.uuid],
-          });
-          window.dispatchEvent(new Event("loadingEnd"));
+          handleServerCall(
+            [
+              () =>
+                NoteUpdateAction({
+                  type: "isTrash",
+                  value: true,
+                  noteUUIDs: [data.note.uuid],
+                }),
+            ],
+            openSnackRef.current
+          );
         };
 
         if (!data.note.isTrash) {
@@ -227,7 +294,13 @@ export function useNoteActions({
         data.setIsOpen(false);
       } else if (data.type === "DELETE_NOTE") {
         setFadingNotes((prev) => new Set(prev).add(data.note.uuid));
-
+        localDbReducer({
+          notes: notesStateRef.current.notes,
+          order: notesStateRef.current.order,
+          userID: userID,
+          type: "DELETE_NOTE",
+          note: data.note,
+        });
         setTimeout(() => {
           dispatchNotes({
             type: "DELETE_NOTE",
@@ -245,9 +318,10 @@ export function useNoteActions({
           });
         }, 250);
 
-        window.dispatchEvent(new Event("loadingStart"));
-        await DeleteNoteAction(data.note.uuid);
-        window.dispatchEvent(new Event("loadingEnd"));
+        handleServerCall(
+          [() => DeleteNoteAction(data.note.uuid)],
+          openSnackRef.current
+        );
       } else if (data.type === "PIN_ARCHIVED_NOTE") {
         const initialIndex = data.index;
 
@@ -255,6 +329,14 @@ export function useNoteActions({
           if (fadeNote) {
             setFadingNotes((prev) => new Set(prev).add(data.note.uuid));
           }
+
+          localDbReducer({
+            notes: notesStateRef.current.notes,
+            order: notesStateRef.current.order,
+            userID: userID,
+            type: "PIN_NOTE",
+            note: data.note,
+          });
 
           setTimeout(
             () => {
@@ -279,18 +361,30 @@ export function useNoteActions({
             fadeNote ? 250 : 0
           );
 
-          window.dispatchEvent(new Event("loadingStart"));
-          await NoteUpdateAction({
-            type: "pinArchived",
-            value: true,
-            noteUUIDs: [data.note.uuid],
-          });
-          window.dispatchEvent(new Event("loadingEnd"));
+          handleServerCall(
+            [
+              () =>
+                NoteUpdateAction({
+                  type: "pinArchived",
+                  value: true,
+                  noteUUIDs: [data.note.uuid],
+                }),
+            ],
+            openSnackRef.current
+          );
         };
 
         redo();
 
         const undoPinArchived = async () => {
+          localDbReducer({
+            notes: notesStateRef.current.notes,
+            order: notesStateRef.current.order,
+            userID: userID,
+            type: "UNDO_PIN_ARCHIVED",
+            note: data.note,
+            initialIndex: initialIndex,
+          });
           dispatchNotes({
             type: "UNDO_PIN_ARCHIVED",
             note: data.note,
@@ -302,14 +396,18 @@ export function useNoteActions({
             return updated;
           });
 
-          window.dispatchEvent(new Event("loadingStart"));
-          await undoAction({
-            type: "UNDO_PIN_ARCHIVED",
-            noteUUID: data.note.uuid,
-            initialIndex: initialIndex,
-            endIndex: 0,
-          });
-          window.dispatchEvent(new Event("loadingEnd"));
+          handleServerCall(
+            [
+              () =>
+                undoAction({
+                  type: "UNDO_PIN_ARCHIVED",
+                  noteUUID: data.note.uuid,
+                  initialIndex: initialIndex,
+                  endIndex: 0,
+                }),
+            ],
+            openSnackRef.current
+          );
         };
 
         openSnackRef.current({
@@ -375,6 +473,13 @@ export function useNoteActions({
         };
 
         const redo = async () => {
+          localDbReducer({
+            notes: notesStateRef.current.notes,
+            order: notesStateRef.current.order,
+            userID: userID,
+            type: "ADD_NOTE",
+            newNote: newNote,
+          });
           dispatchNotes({
             type: "ADD_NOTE",
             newNote: newNote,
@@ -388,20 +493,32 @@ export function useNoteActions({
             return newSet;
           });
 
-          window.dispatchEvent(new Event("loadingStart"));
-          const received = await copyNoteAction({
-            originalNoteUUID: note.uuid,
-            newNoteUUID: newUUID,
-            newImages: newImages,
-            note: { ...newNote, images: data.note.images },
-          });
+          const received = await handleServerCall(
+            [
+              () =>
+                copyNoteAction({
+                  originalNoteUUID: note.uuid,
+                  newNoteUUID: newUUID,
+                  newImages: newImages,
+                  note: { ...newNote, images: data.note.images },
+                }),
+            ],
+            openSnackRef.current
+          );
           const receivedNote = received.note;
-          window.dispatchEvent(new Event("loadingEnd"));
 
           setLoadingImages((prev) => {
             const newSet = new Set(prev);
             newImages.forEach(({ uuid }) => newSet.delete(uuid));
             return newSet;
+          });
+
+          localDbReducer({
+            notes: notesStateRef.current.notes,
+            order: notesStateRef.current.order,
+            userID: userID,
+            type: "SET_NOTE",
+            note: receivedNote,
           });
 
           dispatchNotes({ type: "SET_NOTE", note: receivedNote });
@@ -411,7 +528,13 @@ export function useNoteActions({
 
         const undoCopy = async () => {
           setFadingNotes((prev) => new Set(prev).add(newUUID));
-
+          localDbReducer({
+            notes: notesStateRef.current.notes,
+            order: notesStateRef.current.order,
+            userID: userID,
+            type: "UNDO_COPY",
+            noteUUID: newNote.uuid,
+          });
           setTimeout(async () => {
             dispatchNotes({
               type: "UNDO_COPY",
@@ -427,13 +550,18 @@ export function useNoteActions({
               updated.delete(newUUID);
               return updated;
             });
-            window.dispatchEvent(new Event("loadingStart"));
-            await undoAction({
-              type: "UNDO_COPY",
-              noteUUID: newNote.uuid,
-              isImages: note.images.length,
-            });
-            window.dispatchEvent(new Event("loadingEnd"));
+
+            handleServerCall(
+              [
+                () =>
+                  undoAction({
+                    type: "UNDO_COPY",
+                    noteUUID: newNote.uuid,
+                    isImages: note.images.length,
+                  }),
+              ],
+              openSnackRef.current
+            );
           }, 250);
         };
         openSnackRef.current({
@@ -447,7 +575,14 @@ export function useNoteActions({
           filters.label === data.labelUUID || labelObj?.uuid === data.labelUUID;
 
         fadeNote && setFadingNotes((prev) => new Set(prev).add(data.note.uuid));
-
+        localDbReducer({
+          notes: notesStateRef.current.notes,
+          order: notesStateRef.current.order,
+          userID: userID,
+          type: "REMOVE_LABEL",
+          note: data.note,
+          labelUUID: data.labelUUID,
+        });
         setTimeout(
           () => {
             dispatchNotes({
@@ -471,12 +606,17 @@ export function useNoteActions({
           },
           fadeNote ? 250 : 0
         );
-        window.dispatchEvent(new Event("loadingStart"));
-        await removeLabelAction({
-          noteUUID: data.note.uuid,
-          labelUUID: data.labelUUID,
-        });
-        window.dispatchEvent(new Event("loadingEnd"));
+
+        handleServerCall(
+          [
+            () =>
+              removeLabelAction({
+                noteUUID: data.note.uuid,
+                labelUUID: data.labelUUID,
+              }),
+          ],
+          openSnackRef.current
+        );
       } else if (data.type === "COLOR") {
         if (data.note.color === data.newColor) return;
 
@@ -486,6 +626,15 @@ export function useNoteActions({
         if (!isUseEffectCall && fadeNote) return;
 
         fadeNote && setFadingNotes((prev) => new Set(prev).add(data.note.uuid));
+
+        localDbReducer({
+          notes: notesStateRef.current.notes,
+          order: notesStateRef.current.order,
+          userID: userID,
+          type: "UPDATE_COLOR",
+          note: data.note,
+          newColor: data.newColor,
+        });
 
         setTimeout(
           () => {
@@ -513,6 +662,14 @@ export function useNoteActions({
           const updated = new Set(prev);
           updated.add(data.note.uuid);
           return updated;
+        });
+        localDbReducer({
+          notes: notesStateRef.current.notes,
+          order: notesStateRef.current.order,
+          userID: userID,
+          type: "REMOVE_LABEL",
+          note: data.note,
+          labelUUID: data.labelUUID,
         });
         setTimeout(() => {
           dispatchNotes({

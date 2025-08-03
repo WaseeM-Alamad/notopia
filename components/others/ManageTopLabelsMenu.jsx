@@ -1,6 +1,11 @@
 import { useAppContext } from "@/context/AppContext";
 import { useSearch } from "@/context/SearchContext";
-import { batchManageLabelsAction } from "@/utils/actions";
+import {
+  batchManageLabelsAction,
+  createLabelForNotesAction,
+} from "@/utils/actions";
+import handleServerCall from "@/utils/handleServerCall";
+import localDbReducer from "@/utils/localDbReducer";
 import { Popper } from "@mui/material";
 import { motion } from "framer-motion";
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
@@ -17,8 +22,16 @@ const ManageTopLabelsMenu = ({
   setFadingNotes,
   setVisibleItems,
 }) => {
-  const { labelsRef, labelObjRef } = useAppContext();
+  const {
+    labelsRef,
+    labelObjRef,
+    createLabelForNotes,
+    openSnackRef,
+    notesStateRef,
+    user,
+  } = useAppContext();
   const { filters } = useSearch();
+  const userID = user?.id;
   const [isClient, setIsClient] = useState();
   const [labelSearch, setLabelSearch] = useState("");
   const [notesLabels, setNotesLabels] = useState(new Map());
@@ -95,12 +108,26 @@ const ManageTopLabelsMenu = ({
       uuid: newUUID,
     });
 
-    window.dispatchEvent(new Event("loadingStart"));
-    await createLabelForNotesAction({
-      labelObj: labelObj,
-      notesUUIDs: notesUUIDs,
+    localDbReducer({
+      notes: notesStateRef.current.notes,
+      order: notesStateRef.current.order,
+      userID: userID,
+      type: "BATCH_ADD_LABEL",
+      selectedNotesIDs: selectedNotesIDs,
+      case: "shared",
+      uuid: newUUID,
     });
-    window.dispatchEvent(new Event("loadingEnd"));
+
+    handleServerCall(
+      [
+        () =>
+          createLabelForNotesAction({
+            labelObj: labelObj,
+            notesUUIDs: notesUUIDs,
+          }),
+      ],
+      openSnackRef.current
+    );
   };
 
   const addLabel = async (uuid) => {
@@ -118,6 +145,15 @@ const ManageTopLabelsMenu = ({
             });
             return updated;
           });
+
+        localDbReducer({
+          notes: notesStateRef.current.notes,
+          order: notesStateRef.current.order,
+          userID: userID,
+          type: "BATCH_REMOVE_LABEL",
+          selectedNotesIDs: selectedNotesIDs,
+          uuid: uuid,
+        });
 
         setTimeout(
           () => {
@@ -148,17 +184,22 @@ const ManageTopLabelsMenu = ({
 
         delay && setSelectedNotesIDs([]);
 
-        window.dispatchEvent(new Event("loadingStart"));
-        await batchManageLabelsAction({
-          operation: "remove",
-          case: "shared",
-          notesUUIDs: notesUUIDs,
-          labelUUID: uuid,
-        });
-        window.dispatchEvent(new Event("loadingEnd"));
+        handleServerCall(
+          [
+            () =>
+              batchManageLabelsAction({
+                operation: "remove",
+                case: "shared",
+                notesUUIDs: notesUUIDs,
+                labelUUID: uuid,
+              }),
+          ],
+          openSnackRef.current
+        );
       } else {
         const notesUUIDs = [];
         const updatedNotes = new Map(notes);
+        const newNotes = [];
 
         selectedNotesIDs.forEach(({ uuid: noteUUID }) => {
           const note = updatedNotes.get(noteUUID);
@@ -166,7 +207,9 @@ const ManageTopLabelsMenu = ({
           if (!note.labels.includes(uuid)) {
             notesUUIDs.push(noteUUID);
             const updatedLabels = [uuid, ...note.labels];
-            updatedNotes.set(noteUUID, { ...note, labels: updatedLabels });
+            const newNote = { ...note, labels: updatedLabels };
+            updatedNotes.set(noteUUID, newNote);
+            newNotes.push(newNote);
           }
         });
 
@@ -176,13 +219,26 @@ const ManageTopLabelsMenu = ({
           updatedNotes: updatedNotes,
         });
 
-        window.dispatchEvent(new Event("loadingStart"));
-        await batchManageLabelsAction({
+        localDbReducer({
+          notes: notesStateRef.current.notes,
+          order: notesStateRef.current.order,
+          userID: userID,
+          type: "BATCH_ADD_LABEL",
           case: "unshared",
-          notesUUIDs: notesUUIDs,
-          labelUUID: uuid,
+          newNotes: newNotes,
         });
-        window.dispatchEvent(new Event("loadingEnd"));
+
+        handleServerCall(
+          [
+            () =>
+              batchManageLabelsAction({
+                case: "unshared",
+                notesUUIDs: notesUUIDs,
+                labelUUID: uuid,
+              }),
+          ],
+          openSnackRef.current
+        );
       }
     } else {
       const notesUUIDs = selectedNotesIDs.map((n) => n.uuid);
@@ -194,14 +250,28 @@ const ManageTopLabelsMenu = ({
         uuid: uuid,
       });
 
-      window.dispatchEvent(new Event("loadingStart"));
-      await batchManageLabelsAction({
-        operation: "add",
+      localDbReducer({
+        notes: notesStateRef.current.notes,
+        order: notesStateRef.current.order,
+        userID: userID,
+        type: "BATCH_ADD_LABEL",
+        selectedNotesIDs: selectedNotesIDs,
         case: "shared",
-        notesUUIDs: notesUUIDs,
-        labelUUID: uuid,
+        uuid: uuid,
       });
-      window.dispatchEvent(new Event("loadingEnd"));
+
+      handleServerCall(
+        [
+          () =>
+            batchManageLabelsAction({
+              operation: "add",
+              case: "shared",
+              notesUUIDs: notesUUIDs,
+              labelUUID: uuid,
+            }),
+        ],
+        openSnackRef.current
+      );
     }
   };
 

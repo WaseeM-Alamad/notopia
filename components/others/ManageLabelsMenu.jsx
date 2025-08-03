@@ -6,6 +6,8 @@ import { createPortal } from "react-dom";
 import { Popper } from "@mui/material";
 import { v4 as generateUUID } from "uuid";
 import { useSearch } from "@/context/SearchContext";
+import handleServerCall from "@/utils/handleServerCall";
+import localDbReducer from "@/utils/localDbReducer";
 
 const ManageLabelsMenu = ({
   dispatchNotes,
@@ -19,8 +21,12 @@ const ManageLabelsMenu = ({
     createLabel,
     labelsRef,
     labelObjRef,
+    openSnackRef,
+    notesStateRef,
+    user,
   } = useAppContext();
   const { filters } = useSearch();
+  const userID = user?.id;
   const [isClient, setIsClient] = useState();
   const [labelSearch, setLabelSearch] = useState("");
   const [noteLabels, setNoteLabels] = useState(new Set());
@@ -106,16 +112,28 @@ const ManageLabelsMenu = ({
           note: note,
           labelUUID: uuid,
         });
+        localDbReducer({
+          notes: notesStateRef.current.notes,
+          order: notesStateRef.current.order,
+          userID: userID,
+          type: "REMOVE_LABEL",
+          note: note,
+          labelUUID: uuid,
+        });
       } else {
         removedFilteredLabelRef.current = uuid;
       }
 
-      window.dispatchEvent(new Event("loadingStart"));
-      await removeLabelAction({
-        noteUUID: note.uuid,
-        labelUUID: uuid,
-      });
-      window.dispatchEvent(new Event("loadingEnd"));
+      handleServerCall(
+        [
+          () =>
+            removeLabelAction({
+              noteUUID: note.uuid,
+              labelUUID: uuid,
+            }),
+        ],
+        openSnackRef.current
+      );
     } else {
       setNoteLabels((prev) => {
         const updated = new Set(prev);
@@ -128,16 +146,28 @@ const ManageLabelsMenu = ({
           note: note,
           labelUUID: uuid,
         });
+        localDbReducer({
+          notes: notesStateRef.current.notes,
+          order: notesStateRef.current.order,
+          userID: userID,
+          type: "ADD_LABEL",
+          note: note,
+          labelUUID: uuid,
+        });
       } else {
         removedFilteredLabelRef.current = null;
       }
 
-      window.dispatchEvent(new Event("loadingStart"));
-      await addLabelAction({
-        noteUUID: note.uuid,
-        labelUUID: uuid,
-      });
-      window.dispatchEvent(new Event("loadingEnd"));
+      handleServerCall(
+        [
+          () =>
+            addLabelAction({
+              noteUUID: note.uuid,
+              labelUUID: uuid,
+            }),
+        ],
+        openSnackRef.current
+      );
     }
   };
 
@@ -186,7 +216,7 @@ const ManageLabelsMenu = ({
           paddingBottom: "0",
           zIndex: "311",
           borderRadius: "0.4rem",
-          pointerEvents: !isOpen && "none"
+          pointerEvents: !isOpen && "none",
         }}
         className="menu not-draggable"
       >

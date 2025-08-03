@@ -39,17 +39,9 @@ const Auth = () => {
         <motion.div
           initial={{
             transform: isLogin ? "translateX(85.19%)" : "translateX(0%)",
-            borderTopLeftRadius: isLogin ? "1.5rem" : "0",
-            borderBottomLeftRadius: isLogin ? "1.5rem" : "0",
-            borderTopRightRadius: !isLogin ? "1.5rem" : "0",
-            borderBottomRightRadius: !isLogin ? "1.5rem" : "0",
           }}
           animate={{
             transform: isLogin ? "translateX(85.19%)" : "translateX(0%)",
-            borderTopLeftRadius: isLogin ? "1.5rem" : "0",
-            borderBottomLeftRadius: isLogin ? "1.5rem" : "0",
-            borderTopRightRadius: !isLogin ? "1.5rem" : "0",
-            borderBottomRightRadius: !isLogin ? "1.5rem" : "0",
           }}
           transition={{
             type: "spring",

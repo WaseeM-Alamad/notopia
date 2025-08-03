@@ -12,6 +12,8 @@ import { AnimatePresence } from "framer-motion";
 import MoreMenu from "./MoreMenu";
 import ManageLabelsCompose from "./ManageLabelsCompose";
 import ImageDropZone from "../Tools/ImageDropZone";
+import handleServerCall from "@/utils/handleServerCall";
+import localDbReducer from "@/utils/localDbReducer";
 
 const ComposeNote = ({
   dispatchNotes,
@@ -28,6 +30,7 @@ const ComposeNote = ({
     hideTooltip,
     closeToolTip,
     openSnackRef,
+    notesStateRef,
   } = useAppContext();
   const [isDragOver, setIsDragOver] = useState(false);
   const [isClient, setIsClient] = useState(false);
@@ -152,7 +155,10 @@ const ComposeNote = ({
     });
 
     if (data.error) {
-      console.error("Upload error:", data.error);
+      openSnackRef.current({
+        snackMessage: "Error uploading images",
+        showUndo: false,
+      });
     } else {
       const updatedImages = data;
       const imagesMap = new Map();
@@ -160,6 +166,14 @@ const ComposeNote = ({
         imagesMap.set(imageData.uuid, imageData);
       });
       dispatchNotes({
+        type: "UPDATE_IMAGES",
+        note: { uuid: noteUUID },
+        imagesMap: imagesMap,
+      });
+      localDbReducer({
+        notes: notesStateRef.current.notes,
+        order: notesStateRef.current.order,
+        userID: userID,
         type: "UPDATE_IMAGES",
         note: { uuid: noteUUID },
         imagesMap: imagesMap,
@@ -193,15 +207,20 @@ const ComposeNote = ({
       newNote: newNote,
     });
 
+    localDbReducer({
+      notes: notesStateRef.current.notes,
+      order: notesStateRef.current.order,
+      userID: userID,
+      type: "ADD_NOTE",
+      newNote: newNote,
+    });
+
     setVisibleItems((prev) => new Set([...prev, newUUID]));
 
-    window.dispatchEvent(new Event("loadingStart"));
-    try {
-      await createNoteAction(newNote);
-      await UploadImagesAction(newNote.uuid);
-    } finally {
-      window.dispatchEvent(new Event("loadingEnd"));
-    }
+    handleServerCall(
+      [() => createNoteAction(newNote), () => UploadImagesAction(newNote.uuid)],
+      openSnackRef.current
+    );
   };
 
   const reset = () => {

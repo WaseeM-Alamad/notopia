@@ -16,6 +16,8 @@ import { useSession } from "next-auth/react";
 import ManageTopLabelsMenu from "../ManageTopLabelsMenu";
 import DeleteModal from "../DeleteModal";
 import { useSearch } from "@/context/SearchContext";
+import handleServerCall from "@/utils/handleServerCall";
+import localDbReducer from "@/utils/localDbReducer";
 
 const TopMenuHome = ({
   notes,
@@ -37,6 +39,7 @@ const TopMenuHome = ({
     closeToolTip,
     openSnackRef,
     fadeNote,
+    notesStateRef,
   } = useAppContext();
   const { filters } = useSearch();
   const userID = user?.id;
@@ -176,6 +179,14 @@ const TopMenuHome = ({
     closeToolTip();
     if (selectedColor === newColor) return;
     if (!filters.color) {
+      localDbReducer({
+        notes: notesStateRef.current.notes,
+        order: notesStateRef.current.order,
+        userID: userID,
+        type: "BATCH_UPDATE_COLOR",
+        selectedNotes: selectedNotesIDs,
+        color: newColor,
+      });
       dispatchNotes({
         type: "BATCH_UPDATE_COLOR",
         selectedNotes: selectedNotesIDs,
@@ -184,13 +195,18 @@ const TopMenuHome = ({
     }
     setSelectedColor(newColor);
     const UUIDS = selectedNotesIDs.map((data) => data.uuid);
-    window.dispatchEvent(new Event("loadingStart"));
-    await NoteUpdateAction({
-      type: "color",
-      value: newColor,
-      noteUUIDs: UUIDS,
-    });
-    window.dispatchEvent(new Event("loadingEnd"));
+
+    handleServerCall(
+      [
+        () =>
+          NoteUpdateAction({
+            type: "color",
+            value: newColor,
+            noteUUIDs: UUIDS,
+          }),
+      ],
+      openSnackRef.current
+    );
   };
 
   useEffect(() => {
@@ -203,6 +219,14 @@ const TopMenuHome = ({
         const selectedNotes = selectedNotesRef.current;
         const selectedUUIDs = selectedNotes.map(({ uuid }) => uuid);
         setFadingNotes(new Set(selectedUUIDs));
+        localDbReducer({
+          notes: notesStateRef.current.notes,
+          order: notesStateRef.current.order,
+          userID: userID,
+          type: "BATCH_UPDATE_COLOR",
+          selectedNotes: selectedNotes,
+          color: selectedColor,
+        });
         setTimeout(() => {
           dispatchNotes({
             type: "BATCH_UPDATE_COLOR",
@@ -228,6 +252,14 @@ const TopMenuHome = ({
 
   const handleBackground = async (newBG) => {
     if (selectedBG === newBG) return;
+    localDbReducer({
+      notes: notesStateRef.current.notes,
+      order: notesStateRef.current.order,
+      userID: userID,
+      type: "BATCH_UPDATE_BG",
+      selectedNotes: selectedNotesIDs,
+      background: newBG,
+    });
     dispatchNotes({
       type: "BATCH_UPDATE_BG",
       selectedNotes: selectedNotesIDs,
@@ -235,13 +267,18 @@ const TopMenuHome = ({
     });
     setSelectedBG(newBG);
     const UUIDS = selectedNotesIDs.map((data) => data.uuid);
-    window.dispatchEvent(new Event("loadingStart"));
-    await NoteUpdateAction({
-      type: "background",
-      value: newBG,
-      noteUUIDs: UUIDS,
-    });
-    window.dispatchEvent(new Event("loadingEnd"));
+
+    handleServerCall(
+      [
+        () =>
+          NoteUpdateAction({
+            type: "background",
+            value: newBG,
+            noteUUIDs: UUIDS,
+          }),
+      ],
+      openSnackRef.current
+    );
   };
 
   const handleArchive = async () => {
@@ -265,6 +302,16 @@ const TopMenuHome = ({
       if (fadeNote) {
         setFadingNotes(new Set(selectedUUIDs));
       }
+
+      localDbReducer({
+        notes: notesStateRef.current.notes,
+        order: notesStateRef.current.order,
+        userID: userID,
+        type: "BATCH_ARCHIVE/TRASH",
+        selectedNotes: selectedNotesIDs,
+        property: "isArchived",
+        val: archiveNotes,
+      });
 
       setTimeout(
         () => {
@@ -319,6 +366,17 @@ const TopMenuHome = ({
         });
       }
 
+      localDbReducer({
+        notes: notesStateRef.current.notes,
+        order: notesStateRef.current.order,
+        userID: userID,
+        type: "UNDO_BATCH_ARCHIVE/TRASH",
+        selectedNotes: selectedNotesIDs,
+        property: "isArchived",
+        val: archiveNotes,
+        length: length,
+      });
+
       dispatchNotes({
         type: "UNDO_BATCH_ARCHIVE/TRASH",
         selectedNotes: selectedNotesIDs,
@@ -370,6 +428,14 @@ const TopMenuHome = ({
             selectedNotes: selectedNotesIDs,
           }).then(() => window.dispatchEvent(new Event("loadingEnd")));
 
+          localDbReducer({
+            notes: notesStateRef.current.notes,
+            order: notesStateRef.current.order,
+            userID: userID,
+            type: "UNDO_BATCH_PIN_ARCHIVED",
+            selectedNotes: selectedNotesIDs,
+            length: length,
+          });
           dispatchNotes({
             type: "UNDO_BATCH_PIN_ARCHIVED",
             selectedNotes: selectedNotesIDs,
@@ -396,6 +462,15 @@ const TopMenuHome = ({
           snackOnUndo: undo,
         });
       }
+
+      localDbReducer({
+        notes: notesStateRef.current.notes,
+        order: notesStateRef.current.order,
+        userID: userID,
+        type: "BATCH_PIN",
+        selectedNotes: selectedNotesIDs,
+        isPinned: pinNotes,
+      });
 
       setTimeout(
         () => {
@@ -441,7 +516,15 @@ const TopMenuHome = ({
 
     const redo = async () => {
       setFadingNotes((prev) => new Set([...prev, ...selectedUUIDs]));
-
+      localDbReducer({
+        notes: notesStateRef.current.notes,
+        order: notesStateRef.current.order,
+        userID: userID,
+        type: "BATCH_ARCHIVE/TRASH",
+        selectedNotes: selectedNotesIDs,
+        property: "isTrash",
+        val: val,
+      });
       setTimeout(() => {
         dispatchNotes({
           type: "BATCH_ARCHIVE/TRASH",
@@ -473,6 +556,17 @@ const TopMenuHome = ({
 
     const undo = () => {
       window.dispatchEvent(new Event("loadingStart"));
+
+      localDbReducer({
+        notes: notesStateRef.current.notes,
+        order: notesStateRef.current.order,
+        userID: userID,
+        type: "UNDO_BATCH_ARCHIVE/TRASH",
+        selectedNotes: selectedNotesIDs,
+        property: "isTrash",
+        val: val,
+        length: length,
+      });
 
       dispatchNotes({
         type: "UNDO_BATCH_ARCHIVE/TRASH",
@@ -520,6 +614,14 @@ const TopMenuHome = ({
     });
 
     setFadingNotes(new Set(selectedUUIDs));
+
+    localDbReducer({
+      notes: notesStateRef.current.notes,
+      order: notesStateRef.current.order,
+      userID: userID,
+      type: "BATCH_DELETE_NOTES",
+      deletedUUIDs: selectedUUIDs,
+    });
     setTimeout(() => {
       dispatchNotes({
         type: "BATCH_DELETE_NOTES",
@@ -530,9 +632,10 @@ const TopMenuHome = ({
 
     handleClose();
 
-    window.dispatchEvent(new Event("loadingStart"));
-    await batchDeleteNotes({ deletedUUIDs: selectedUUIDs });
-    window.dispatchEvent(new Event("loadingEnd"));
+    handleServerCall(
+      [() => batchDeleteNotes({ deletedUUIDs: selectedUUIDs })],
+      openSnackRef.current
+    );
   };
 
   const handleMakeCopy = async () => {
@@ -613,6 +716,13 @@ const TopMenuHome = ({
     setMoreMenuOpen(false);
 
     const redo = async () => {
+      localDbReducer({
+        notes: notesStateRef.current.notes,
+        order: notesStateRef.current.order,
+        userID: userID,
+        type: "BATCH_COPY_NOTE",
+        newNotes: newNotes,
+      });
       dispatchNotes({
         type: "BATCH_COPY_NOTE",
         newNotes: newNotes,
@@ -620,30 +730,44 @@ const TopMenuHome = ({
 
       setVisibleItems((prev) => new Set([...prev, ...newNotesUUIDs]));
 
-      window.dispatchEvent(new Event("loadingStart"));
-      await batchCopyNoteAction({ newNotes: newNotes, imagesMap: imagesMap });
-      window.dispatchEvent(new Event("loadingEnd"));
+      handleServerCall(
+        [
+          () =>
+            batchCopyNoteAction({ newNotes: newNotes, imagesMap: imagesMap }),
+        ],
+        openSnackRef.current
+      );
     };
 
     redo();
 
     const undo = async () => {
       setFadingNotes(new Set(newUUIDs));
+      localDbReducer({
+        notes: notesStateRef.current.notes,
+        order: notesStateRef.current.order,
+        userID: userID,
+        type: "UNDO_BATCH_COPY",
+        notesToDel: newUUIDs,
+      });
       setTimeout(() => {
         dispatchNotes({
           type: "UNDO_BATCH_COPY",
           notesToDel: newUUIDs,
-          length: length,
         });
         setFadingNotes(new Set());
       }, 250);
-      window.dispatchEvent(new Event("loadingStart"));
-      await undoAction({
-        type: "UNDO_BATCH_COPY",
-        imagesToDel: imagesToDel,
-        notesUUIDs: newNotesUUIDs,
-      });
-      window.dispatchEvent(new Event("loadingEnd"));
+      handleServerCall(
+        [
+          () =>
+            undoAction({
+              type: "UNDO_BATCH_COPY",
+              imagesToDel: imagesToDel,
+              notesUUIDs: newNotesUUIDs,
+            }),
+        ],
+        openSnackRef.current
+      );
     };
 
     openSnackRef.current({

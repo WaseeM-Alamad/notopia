@@ -10,6 +10,8 @@ import { useAppContext } from "@/context/AppContext";
 import ManageLabelsMenu from "./ManageLabelsMenu";
 import { useSearch } from "@/context/SearchContext";
 import { validateImageFile } from "@/utils/validateImage";
+import handleServerCall from "@/utils/handleServerCall";
+import localDbReducer from "@/utils/localDbReducer";
 
 const NoteTools = ({
   index,
@@ -34,6 +36,7 @@ const NoteTools = ({
     closeToolTip,
     setLoadingImages,
     openSnackRef,
+    notesStateRef,
   } = useAppContext();
   const { filters } = useSearch();
   const [colorAnchorEl, setColorAnchorEl] = useState(null);
@@ -53,13 +56,18 @@ const NoteTools = ({
         note: note,
         newColor: newColor,
       });
-      window.dispatchEvent(new Event("loadingStart"));
-      await NoteUpdateAction({
-        type: "color",
-        value: newColor,
-        noteUUIDs: [note.uuid],
-      });
-      window.dispatchEvent(new Event("loadingEnd"));
+
+      handleServerCall(
+        [
+          () =>
+            NoteUpdateAction({
+              type: "color",
+              value: newColor,
+              noteUUIDs: [note.uuid],
+            }),
+        ],
+        openSnackRef.current
+      );
     } else {
       noteActions({
         type: "COLOR",
@@ -67,15 +75,27 @@ const NoteTools = ({
         newColor: newColor,
       });
       if (newColor !== selectedColor) {
-        window.dispatchEvent(new Event("loadingStart"));
-        await NoteUpdateAction({
-          type: "color",
-          value: newColor,
-          noteUUIDs: [note.uuid],
-        });
-        window.dispatchEvent(new Event("loadingEnd"));
+        handleServerCall(
+          [
+            () =>
+              NoteUpdateAction({
+                type: "color",
+                value: newColor,
+                noteUUIDs: [note.uuid],
+              }),
+          ],
+          openSnackRef.current
+        );
       }
     }
+    localDbReducer({
+      notes: notesStateRef.current.notes,
+      order: notesStateRef.current.order,
+      userID: userID,
+      type: "UPDATE_COLOR",
+      note: note,
+      newColor: newColor,
+    });
   };
 
   useEffect(() => {
@@ -89,13 +109,18 @@ const NoteTools = ({
           newColor: selectedColor,
           isUseEffectCall: true,
         });
-        window.dispatchEvent(new Event("loadingStart"));
-        await NoteUpdateAction({
-          type: "color",
-          value: selectedColor,
-          noteUUIDs: [note.uuid],
-        });
-        window.dispatchEvent(new Event("loadingEnd"));
+
+        handleServerCall(
+          [
+            () =>
+              NoteUpdateAction({
+                type: "color",
+                value: selectedColor,
+                noteUUIDs: [note.uuid],
+              }),
+          ],
+          openSnackRef.current
+        );
       }
     };
 
@@ -116,13 +141,26 @@ const NoteTools = ({
         note: note,
         newBG: newBG,
       });
-      window.dispatchEvent(new Event("loadingStart"));
-      await NoteUpdateAction({
-        type: "background",
-        value: newBG,
-        noteUUIDs: [note.uuid],
+
+      handleServerCall(
+        [
+          () =>
+            NoteUpdateAction({
+              type: "background",
+              value: newBG,
+              noteUUIDs: [note.uuid],
+            }),
+        ],
+        openSnackRef.current
+      );
+      localDbReducer({
+        notes: notesStateRef.current.notes,
+        order: notesStateRef.current.order,
+        userID: userID,
+        type: "UPDATE_BG",
+        note: note,
+        newBG: newBG,
       });
-      window.dispatchEvent(new Event("loadingEnd"));
     },
     [note.background]
   );
@@ -218,6 +256,19 @@ const NoteTools = ({
         note: note,
         imagesMap: imagesMap,
       });
+      localDbReducer({
+        notes: notesStateRef.current.notes,
+        order: notesStateRef.current.order,
+        userID: userID,
+        type: "UPDATE_IMAGES",
+        note: note,
+        imagesMap: imagesMap,
+      });
+    } else {
+      openSnackRef.current({
+        snackMessage: "Error uploading images",
+        showUndo: false,
+      });
     }
   };
 
@@ -308,14 +359,26 @@ const NoteTools = ({
     });
     setMoreMenuOpen(false);
 
-    window.dispatchEvent(new Event("loadingStart"));
-    await NoteUpdateAction({
-      type: "checkboxes",
-      operation: "ADD",
-      value: checkbox,
-      noteUUIDs: [note.uuid],
+    handleServerCall(
+      [
+        () =>
+          NoteUpdateAction({
+            type: "checkboxes",
+            operation: "ADD",
+            value: checkbox,
+            noteUUIDs: [note.uuid],
+          }),
+      ],
+      openSnackRef.current
+    );
+    localDbReducer({
+      notes: notesStateRef.current.notes,
+      order: notesStateRef.current.order,
+      userID: userID,
+      type: "ADD_CHECKBOX",
+      noteUUID: note.uuid,
+      checkbox: checkbox,
     });
-    window.dispatchEvent(new Event("loadingEnd"));
   };
 
   const handleCheckboxVis = async () => {
@@ -324,13 +387,25 @@ const NoteTools = ({
       noteUUID: note.uuid,
     });
     setMoreMenuOpen(false);
-    window.dispatchEvent(new Event("loadingStart"));
-    await NoteUpdateAction({
-      type: "showCheckboxes",
-      value: !note.showCheckboxes,
-      noteUUIDs: [note.uuid],
+
+    handleServerCall(
+      [
+        () =>
+          NoteUpdateAction({
+            type: "showCheckboxes",
+            value: !note.showCheckboxes,
+            noteUUIDs: [note.uuid],
+          }),
+      ],
+      openSnackRef.current
+    );
+    localDbReducer({
+      notes: notesStateRef.current.notes,
+      order: notesStateRef.current.order,
+      userID: userID,
+      type: "CHECKBOX_VIS",
+      noteUUID: note.uuid,
     });
-    window.dispatchEvent(new Event("loadingEnd"));
   };
 
   const uncheckAllitems = async () => {
@@ -339,13 +414,25 @@ const NoteTools = ({
       noteUUID: note.uuid,
     });
     setMoreMenuOpen(false);
-    window.dispatchEvent(new Event("loadingStart"));
-    await NoteUpdateAction({
-      type: "checkboxes",
-      operation: "UNCHECK_ALL",
-      noteUUIDs: [note.uuid],
+
+    handleServerCall(
+      [
+        () =>
+          NoteUpdateAction({
+            type: "checkboxes",
+            operation: "UNCHECK_ALL",
+            noteUUIDs: [note.uuid],
+          }),
+      ],
+      openSnackRef.current
+    );
+    localDbReducer({
+      notes: notesStateRef.current.notes,
+      order: notesStateRef.current.order,
+      userID: userID,
+      type: "UNCHECK_ALL",
+      noteUUID: note.uuid,
     });
-    window.dispatchEvent(new Event("loadingEnd"));
   };
 
   const deleteCheckedItems = async () => {
@@ -354,13 +441,25 @@ const NoteTools = ({
       noteUUID: note.uuid,
     });
     setMoreMenuOpen(false);
-    window.dispatchEvent(new Event("loadingStart"));
-    await NoteUpdateAction({
-      type: "checkboxes",
-      operation: "DELETE_CHECKED",
-      noteUUIDs: [note.uuid],
+
+    handleServerCall(
+      [
+        () =>
+          NoteUpdateAction({
+            type: "checkboxes",
+            operation: "DELETE_CHECKED",
+            noteUUIDs: [note.uuid],
+          }),
+      ],
+      openSnackRef.current
+    );
+    localDbReducer({
+      notes: notesStateRef.current.notes,
+      order: notesStateRef.current.order,
+      userID: userID,
+      type: "DELETE_CHECKED",
+      noteUUID: note.uuid,
     });
-    window.dispatchEvent(new Event("loadingEnd"));
   };
 
   const menuItems = [

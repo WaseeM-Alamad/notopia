@@ -615,6 +615,7 @@ svg {
 .login-slider {
   background-color: #d4e3fa;
   height: 100%;
+  border-radius: 1.5rem;
   width: 54%;
   position: absolute;
   left: 0;
@@ -635,6 +636,7 @@ svg {
   position: absolute;
   right: 0;
   /* transition: all 0.37s ease, padding 0s; */
+  overflow-y: auto;
   z-index: 1;
 }
 
@@ -650,8 +652,29 @@ svg {
   width: 46%;
   position: absolute;
   left: 0;
+  overflow-y: auto;
   /* transition: all 0.37s ease, padding 0s; */
   z-index: 1;
+}
+
+@media (max-width: 855px) {
+  .login-slider {
+    display: none;
+  }
+
+  .login-container {
+    max-width: 30rem;
+  }
+
+  .right-panel {
+    width: 100%;
+    padding: 3rem;
+  }
+
+  .left-panel {
+    width: 100%;
+    padding: 3rem;
+  }
 }
 
 .form-title {
@@ -3347,13 +3370,14 @@ img {
   left: 5%;
   margin-right: 40px;
   border-radius: 0.6rem;
+  box-sizing: border-box;
   background-color: #1f1f27;
   color: white;
   padding: 0.925rem 0.925rem 0.925rem 1.25rem;
   align-items: center;
   z-index: 2000;
   max-width: 25.875rem;
-  width: 100%;
+  width: 90%;
 }
 
 .dark-mode .snackbar {
@@ -4169,7 +4193,7 @@ img {
 }
 
 .acc-settings-container {
-  background-color: white;
+  background-color: #ffffff;
   display: flex;
   position: fixed;
   width: 95%;
@@ -4188,13 +4212,26 @@ img {
   overflow: hidden;
 }
 
+.dark-mode .acc-settings-container {
+  background-color: #1e1e1e;
+  border: 1px solid #19191a;
+  box-shadow: -1px -2px 32px -10px rgba(22, 22, 22, 0.75);
+  -webkit-box-shadow: -1px -2px 32px -10px rgba(22, 22, 22, 0.75);
+  -moz-box-shadow: -1px -2px 32px -10px rgba(22, 22, 22, 0.75);
+}
+
 .settings-left-panel {
   background-color: #f9fafb;
   border-right: 1px solid #e5e7eb;
   height: 100%;
   width: 100%;
-  max-width: 15rem;
+  max-width: 30%;
   box-sizing: border-box;
+}
+
+.dark-mode .settings-left-panel {
+  background-color: #242424;
+  border-right: 1px solid #414141;
 }
 
 .settings-section-container {
@@ -4214,6 +4251,13 @@ img {
   transition:
     background-color 0.25s ease-out,
     color 0.12s ease-out;
+}
+
+.account-left-section-header {
+  padding: 1rem 1.3rem 1.5rem 1.3rem;
+  font-size: 1.3rem;
+  font-weight: 500;
+  box-sizing: border-box;
 }
 
 .settings-section-selector {
@@ -4241,6 +4285,46 @@ img {
   height: 15px;
   flex-shrink: 0;
   transition: background-image 0.12s ease-out;
+}
+
+@media (max-width: 681px) {
+  .settings-left-panel {
+    padding-top: 2rem;
+    background-color: #f9fafb;
+    border-right: 1px solid #e5e7eb;
+    height: 100%;
+    width: 4rem;
+    max-width: 30%;
+    box-sizing: border-box;
+  }
+
+  .account-left-section-header {
+    display: none;
+  }
+
+  .settings-section-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    /* padding: 0.725rem 1.5rem; */
+    min-height: 45px;
+    box-sizing: border-box;
+    cursor: pointer;
+    text-align: center;
+    white-space: nowrap;
+    font-size: 0.92rem;
+    transition:
+      background-color 0.25s ease-out,
+      color 0.12s ease-out;
+  }
+
+  .account-section-title {
+    display: none;
+  }
+
+  .settings-section-selector {
+    height: 44px;
+  }
 }
 
 .settings-profile-icon {
@@ -4289,6 +4373,10 @@ img {
   padding: 1.5rem;
   padding-bottom: 0;
   box-sizing: border-box;
+}
+
+.dark-mode .settings-right-panel {
+  background-color: #1e1e1e;
 }
 
 .settings-right-title {
@@ -4737,4 +4825,11 @@ img {
   opacity: 0.87;
   margin-right: 0.7rem;
   margin-left: 0.2rem;
+}
+
+[data-side-dragging="true"] {
+  /* display: none; */
+  opacity: 0.5 !important;
+  pointer-events: none;
+  transition: none !important;
 }

@@ -31,6 +31,8 @@ import { useHashRouting } from "@/hooks/useHashRouting";
 import { useDataManager } from "@/hooks/useDataManager";
 import { useSnackbar } from "@/hooks/useSnackbar";
 import { useConnection } from "@/hooks/useConnection";
+import handleServerCall from "@/utils/handleServerCall";
+import localDbReducer from "@/utils/localDbReducer";
 
 const page = () => {
   const { searchTerm, filters } = useSearch();
@@ -45,6 +47,7 @@ const page = () => {
     setTooltipRef,
     notesStateRef,
     openSnackRef,
+    user,
   } = useAppContext();
   const [tooltipAnchor, setTooltipAnchor] = useState(null);
   const [notesState, dispatchNotes] = useReducer(notesReducer, initialStates);
@@ -81,6 +84,7 @@ const page = () => {
   const rootContainerRef = useRef(null);
   const skipSetLabelObjRef = useRef(false);
   const containerRef = useRef(null);
+  const userID = user?.id;
 
   useEffect(() => {
     setTooltipRef.current = setTooltipAnchor;
@@ -192,7 +196,23 @@ const page = () => {
 
   const handleDeleteLabel = useCallback((data) => {
     setFadingNotes((prev) => new Set(prev).add(data.labelData.uuid));
-
+    localDbReducer({
+      notes: notesStateRef.current.notes,
+      order: notesStateRef.current.order,
+      userID: userID,
+      type: "REMOVE_LABEL_FROM_NOTES",
+      labelUUID: data.labelData.uuid,
+    });
+    handleServerCall(
+      [
+        () =>
+          deleteLabelAction({
+            labelUUID: data.labelData.uuid,
+            hasImage: data.labelData.image,
+          }),
+      ],
+      openSnackRef.current
+    );
     setTimeout(async () => {
       dispatchNotes({
         type: "REMOVE_LABEL_FROM_NOTES",
@@ -206,12 +226,6 @@ const page = () => {
       removeLabel(data.labelData.uuid, data.labelData.label);
       data.triggerReRender((prev) => !prev);
       window.dispatchEvent(new Event("refreshPinnedLabels"));
-      window.dispatchEvent(new Event("loadingStart"));
-      await deleteLabelAction({
-        labelUUID: data.labelData.uuid,
-        hasImage: data.labelData.image,
-      });
-      window.dispatchEvent(new Event("loadingEnd"));
     }, 250);
   }, []);
 
@@ -395,9 +409,9 @@ const page = () => {
           zIndex: "1000000",
         }}
         onClick={() => {
-          const uuid = notesState.order[focusedIndex.current];
-          const note = notesState.notes.get(uuid);
-          console.log(note, note.ref.current);
+          const rect = containerRef.current.getBoundingClientRect();
+          const bottom = rect.bottom + window.scrollY;
+          console.log(bottom)
         }}
       >
         ggg

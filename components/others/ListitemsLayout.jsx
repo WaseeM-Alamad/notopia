@@ -10,6 +10,8 @@ import ListItem from "./ListItem";
 import { debounce } from "lodash";
 import { NoteUpdateAction } from "@/utils/actions";
 import { v4 as uuid } from "uuid";
+import handleServerCall from "@/utils/handleServerCall";
+import { useAppContext } from "@/context/AppContext";
 
 const ListItemsLayout = ({
   setLocalNote,
@@ -18,6 +20,7 @@ const ListItemsLayout = ({
   dispatchNotes,
   isOpen,
 }) => {
+  const { openSnackRef } = useAppContext();
   const renderCBdivider =
     localNote?.checkboxes.some((cb) => cb.isCompleted) &&
     localNote?.checkboxes.some((cb) => !cb.isCompleted);
@@ -88,13 +91,17 @@ const ListItemsLayout = ({
       expandCompleted: val,
     }));
 
-    window.dispatchEvent(new Event("loadingStart"));
-    await NoteUpdateAction({
-      type: "expandCompleted",
-      value: val,
-      noteUUIDs: [localNote?.uuid],
-    });
-    window.dispatchEvent(new Event("loadingEnd"));
+    handleServerCall(
+      [
+        () =>
+          NoteUpdateAction({
+            type: "expandCompleted",
+            value: val,
+            noteUUIDs: [localNote?.uuid],
+          }),
+      ],
+      openSnackRef.current
+    );
   };
 
   const addListItem = async (text) => {
@@ -119,14 +126,18 @@ const ListItemsLayout = ({
       placeCursorAtEnd(lastListItemRef.current);
     });
 
-    window.dispatchEvent(new Event("loadingStart"));
-    await NoteUpdateAction({
-      type: "checkboxes",
-      operation: "ADD",
-      value: checkbox,
-      noteUUIDs: [localNote?.uuid],
-    });
-    window.dispatchEvent(new Event("loadingEnd"));
+    handleServerCall(
+      [
+        () =>
+          NoteUpdateAction({
+            type: "checkboxes",
+            operation: "ADD",
+            value: checkbox,
+            noteUUIDs: [localNote?.uuid],
+          }),
+      ],
+      openSnackRef.current
+    );
   };
 
   const handleNewListItemInput = (e) => {
@@ -151,30 +162,39 @@ const ListItemsLayout = ({
         }),
         textUpdatedAt: new Date(),
       }));
-      window.dispatchEvent(new Event("loadingStart"));
-      await NoteUpdateAction({
-        type: "checkboxes",
-        operation: "MANAGE_COMPLETED",
-        value: value,
-        checkboxUUID: checkboxUUID,
-        noteUUIDs: [localNote?.uuid],
-      });
-      window.dispatchEvent(new Event("loadingEnd"));
+
+      handleServerCall(
+        [
+          () =>
+            NoteUpdateAction({
+              type: "checkboxes",
+              operation: "MANAGE_COMPLETED",
+              value: value,
+              checkboxUUID: checkboxUUID,
+              noteUUIDs: [localNote?.uuid],
+            }),
+        ],
+        openSnackRef.current
+      );
     },
     [localNote?.uuid]
   );
 
   const updateListItemContent = useCallback(
     debounce(async (text, cbUUID) => {
-      window.dispatchEvent(new Event("loadingStart"));
-      await NoteUpdateAction({
-        type: "checkboxes",
-        operation: "UPDATE_CONTENT",
-        value: text,
-        checkboxUUID: cbUUID,
-        noteUUIDs: [localNote?.uuid],
-      });
-      window.dispatchEvent(new Event("loadingEnd"));
+      handleServerCall(
+        [
+          () =>
+            NoteUpdateAction({
+              type: "checkboxes",
+              operation: "UPDATE_CONTENT",
+              value: text,
+              checkboxUUID: cbUUID,
+              noteUUIDs: [localNote?.uuid],
+            }),
+        ],
+        openSnackRef.current
+      );
     }, 600),
     [localNote?.uuid]
   );
@@ -413,17 +433,21 @@ const ListItemsLayout = ({
       initialIndex !== draggedIndexRef.current && overItemRef?.current?.uuid;
 
     if (initialIndex !== draggedIndexRef.current || updatedItems.size > 0) {
-      window.dispatchEvent(new Event("loadingStart"));
-      await NoteUpdateAction({
-        type: "checkboxes",
-        operation: "UPDATE_ORDER-FAM",
-        overItemUUID: overItemRef?.current?.uuid,
-        reOrder: reOrder,
-        parentUUID: draggedItem.uuid,
-        updatedItems: updatedItems,
-        noteUUIDs: [localNote?.uuid],
-      });
-      window.dispatchEvent(new Event("loadingEnd"));
+      handleServerCall(
+        [
+          () =>
+            NoteUpdateAction({
+              type: "checkboxes",
+              operation: "UPDATE_ORDER-FAM",
+              overItemUUID: overItemRef?.current?.uuid,
+              reOrder: reOrder,
+              parentUUID: draggedItem.uuid,
+              updatedItems: updatedItems,
+              noteUUIDs: [localNote?.uuid],
+            }),
+        ],
+        openSnackRef.current
+      );
     }
   };
 

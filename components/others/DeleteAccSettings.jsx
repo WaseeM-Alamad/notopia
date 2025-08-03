@@ -26,7 +26,7 @@ const DeleteAccSettings = ({ rightHeader, selected }) => {
               }}
             >
               Deleting your account will permanently remove all your data,
-              including your profile, posts, and any other information
+              including your notes, media, and any other information
               associated with your account. This action is irreversible.
             </div>
 
@@ -38,9 +38,8 @@ const DeleteAccSettings = ({ rightHeader, selected }) => {
                 listStyle: "none",
               }}
             >
-              <li>• All your posts and comments will be deleted</li>
+              <li>• All your notes and labels will be deleted</li>
               <li>• Your profile information will be permanently removed</li>
-              <li>• You will lose access to all premium features</li>
               <li>• This action cannot be undone</li>
             </ul>
 

@@ -17,7 +17,7 @@ const MainLayout = ({ children }) => {
 
   return (
     <div className="auth-background">
-      <button
+      {/* <button
         onClick={toggleDarkMode}
         style={{
           position: "fixed",
@@ -27,7 +27,7 @@ const MainLayout = ({ children }) => {
         }}
       >
         toggle theme
-      </button>
+      </button> */}
       {children}
     </div>
   );

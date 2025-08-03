@@ -79,14 +79,14 @@ export async function POST(req) {
 
       const newUrl = cloudinary.url(publicId);
 
-      await NoteUpdateAction({
-        type: "images",
-        value: {
-          url: newUrl,
-          uuid: imageUUID,
-        },
-        noteUUIDs: [noteUUID],
-      });
+        await NoteUpdateAction({
+          type: "images",
+          value: {
+            url: newUrl,
+            uuid: imageUUID,
+          },
+          noteUUIDs: [noteUUID],
+        });
 
       return {
         url: result.secure_url,

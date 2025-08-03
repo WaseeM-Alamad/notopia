@@ -5,6 +5,7 @@ import { addLabelAction, removeLabelAction } from "@/utils/actions";
 import { createPortal } from "react-dom";
 import { Popper } from "@mui/material";
 import { v4 as generateUUID } from "uuid";
+import handleServerCall from "@/utils/handleServerCall";
 
 const ManageModalLabels = ({
   note,
@@ -14,7 +15,7 @@ const ManageModalLabels = ({
   setLocalNote,
   anchorEl,
 }) => {
-  const { createLabel, labelsRef } = useAppContext();
+  const { createLabel, labelsRef, openSnackRef } = useAppContext();
   const [isClient, setIsClient] = useState();
   const [labelSearch, setLabelSearch] = useState("");
   const [noteLabels, setNoteLabels] = useState(new Map());
@@ -94,22 +95,29 @@ const ManageModalLabels = ({
         labels: prev.labels.filter((noteLabelUUID) => noteLabelUUID !== uuid),
       }));
 
-
-      window.dispatchEvent(new Event("loadingStart"));
-      await removeLabelAction({
-        noteUUID: note.uuid,
-        labelUUID: uuid,
-      });
-      window.dispatchEvent(new Event("loadingEnd"));
+      handleServerCall(
+        [
+          () =>
+            removeLabelAction({
+              noteUUID: note.uuid,
+              labelUUID: uuid,
+            }),
+        ],
+        openSnackRef.current
+      );
     } else {
       setLocalNote((prev) => ({ ...prev, labels: [...prev.labels, uuid] }));
 
-      window.dispatchEvent(new Event("loadingStart"));
-      await addLabelAction({
-        noteUUID: note.uuid,
-        labelUUID: uuid,
-      });
-      window.dispatchEvent(new Event("loadingEnd"));
+      handleServerCall(
+        [
+          () =>
+            addLabelAction({
+              noteUUID: note.uuid,
+              labelUUID: uuid,
+            }),
+        ],
+        openSnackRef.current
+      );
     }
   };
 

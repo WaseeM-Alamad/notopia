@@ -26,6 +26,7 @@ import SearchIcon from "../icons/SearchIcon";
 import InputSearchIcon from "../icons/InputSearchIcon";
 import LeftArrow from "../icons/LeftArrow";
 import KeybindsTable from "./KeybindsTable";
+import LocalSaveIcon from "../icons/LocalSaveIcon";
 
 const Navbar = () => {
   const {
@@ -51,6 +52,7 @@ const Navbar = () => {
     hideTooltip,
     closeToolTip,
     setBindsOpenRef,
+    isOnline,
   } = useAppContext();
   const [isLoading, setIsLoading] = useState(0);
   const [UpToDatetrigger, setUpToDateTrigger] = useState(true);
@@ -472,8 +474,8 @@ const Navbar = () => {
             minWidth: !threshold2 && "23%",
           }}
         >
-          {/* <Logo style={{margin: "auto 0"}} /> */}
-          <span style={{ marginLeft: "0rem" }}>Notopia</span>
+          {/* <Logo style={{margin: "auto 0", flexShrink: "0"}} /> */}
+          {/* <span style={{ marginLeft: "0rem", fontWeight: "700" }}>Notopia</span> */}
         </div>
 
         <div
@@ -689,7 +691,7 @@ const Navbar = () => {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0, transition: { delay: 0.1 } }}
                     transition={{ duration: 0.2 }}
-                    style={{ position: "absolute", height: "18px" }}
+                    style={{ position: "absolute", display: "flex" }}
                   >
                     <RefreshIcon />
                   </motion.div>
@@ -702,7 +704,7 @@ const Navbar = () => {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0, transition: { delay: 0.07 } }}
                     transition={{ duration: 0.15 }}
-                    style={{ position: "absolute", marginTop: "4px" }}
+                    style={{ position: "absolute", display: "flex" }}
                   >
                     <CircularProgress
                       sx={{
@@ -725,9 +727,9 @@ const Navbar = () => {
                     animate={{ opacity: 1, transition: { duration: 0.35 } }}
                     exit={{ opacity: 0, transition: { duration: 0.1 } }}
                     transition={{ duration: 0.25 }}
-                    style={{ position: "absolute", height: "22px" }}
+                    style={{ position: "absolute", display: "flex" }}
                   >
-                    <CloudIcon />
+                    {isOnline ? <CloudIcon /> : <LocalSaveIcon />}
                   </motion.div>
                 )}
               </AnimatePresence>

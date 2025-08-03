@@ -45,7 +45,9 @@ export function notesReducer(state, action) {
     case "UNDO_BATCH_COPY": {
       const updatedNotes = new Map(state.notes);
       [...updatedNotes].filter((n) => !action.notesToDel.includes(n.uuid));
-      const updatedOrder = state.order.slice(action.length);
+      const updatedOrder = state.order.filter(
+        (uuid) => !action.notesToDel.includes(uuid)
+      );
 
       return {
         ...state,
@@ -106,9 +108,19 @@ export function notesReducer(state, action) {
         isPinned: action.note.isPinned,
       };
       const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
-      const updatedOrder = [...state.order];
-      const [targetedNote] = updatedOrder.splice(0, 1);
-      updatedOrder.splice(action.initialIndex, 0, targetedNote);
+      let targetedNote = null;
+
+      const updatedOrder = state.order.filter((uuid) => {
+        if (uuid === newNote.uuid) {
+          targetedNote = uuid;
+          return false;
+        }
+        return true;
+      });
+
+      if (targetedNote !== null) {
+        updatedOrder.splice(action.initialIndex, 0, targetedNote);
+      }
 
       return {
         ...state,
@@ -267,9 +279,18 @@ export function notesReducer(state, action) {
         isPinned: action.note.isPinned,
       };
       const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
-      const updatedOrder = [...state.order];
-      const [targetedNote] = updatedOrder.splice(0, 1);
-      updatedOrder.splice(action.initialIndex, 0, targetedNote);
+      let targetedNote = null;
+
+      const updatedOrder = state.order.filter((uuid) => {
+        if (uuid === newNote.uuid) {
+          targetedNote = uuid;
+          return false;
+        }
+        return true;
+      });
+      if (targetedNote !== null) {
+        updatedOrder.splice(action.initialIndex, 0, targetedNote);
+      }
 
       return {
         ...state,
@@ -289,22 +310,6 @@ export function notesReducer(state, action) {
         order: updatedOrder,
       };
     }
-    case "PIN_ARCHIVED_NOTE": {
-      const newNote = {
-        ...state.notes.get(action.note.uuid),
-        isPinned: true,
-        isArchived: false,
-      };
-      const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
-      const updatedOrder = [...state.order].filter(
-        (uuid) => uuid !== action.note.uuid
-      );
-      return {
-        ...state,
-        notes: updatedNotes,
-        order: [action.note.uuid, ...updatedOrder],
-      };
-    }
     case "UNDO_PIN_ARCHIVED": {
       const newNote = {
         ...state.notes.get(action.note.uuid),
@@ -314,9 +319,18 @@ export function notesReducer(state, action) {
 
       const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
 
-      const updatedOrder = [...state.order];
-      const [targetedNote] = updatedOrder.splice(0, 1);
-      updatedOrder.splice(action.initialIndex, 0, targetedNote);
+      let targetedNote = null;
+
+      const updatedOrder = state.order.filter((uuid) => {
+        if (uuid === newNote.uuid) {
+          targetedNote = uuid;
+          return false;
+        }
+        return true;
+      });
+      if (targetedNote !== null) {
+        updatedOrder.splice(action.initialIndex, 0, targetedNote);
+      }
 
       return {
         ...state,

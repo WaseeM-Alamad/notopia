@@ -3,6 +3,8 @@
 import { useAppContext } from "@/context/AppContext";
 import { useSearch } from "@/context/SearchContext";
 import { NoteUpdateAction, updateOrderAction } from "@/utils/actions";
+import handleServerCall from "@/utils/handleServerCall";
+import localDbReducer from "@/utils/localDbReducer";
 import { useEffect, useRef } from "react";
 
 export function useKeyBindings({
@@ -25,6 +27,7 @@ export function useKeyBindings({
   dispatchNotes,
 }) {
   const {
+    user,
     labelsRef,
     currentSection,
     ignoreKeysRef,
@@ -34,7 +37,9 @@ export function useKeyBindings({
     addButtonRef,
     labelObjRef,
     setBindsOpenRef,
+    openSnackRef,
   } = useAppContext();
+  const userID = user?.id;
   const { filters, searchRef } = useSearch();
   const actionThrottle = useRef(false);
   const dndThrottle = useRef(false);
@@ -250,7 +255,14 @@ export function useKeyBindings({
           initialNote?.isArchived !== finalNote?.isArchived
         )
           return;
-
+        localDbReducer({
+          notes: notesStateRef.current.notes,
+          order: notesStateRef.current.order,
+          userID: userID,
+          type: "DND",
+          initialIndex,
+          finalIndex,
+        });
         dispatchNotes({
           type: "DND",
           initialIndex,
@@ -258,12 +270,16 @@ export function useKeyBindings({
         });
         focusedIndex.current = finalIndex;
 
-        window.dispatchEvent(new Event("loadingStart"));
-        await updateOrderAction({
-          initialIndex,
-          endIndex: finalIndex,
-        });
-        window.dispatchEvent(new Event("loadingEnd"));
+        handleServerCall(
+          [
+            () =>
+              updateOrderAction({
+                initialIndex,
+                endIndex: finalIndex,
+              }),
+          ],
+          openSnackRef.current
+        );
       }
 
       if (
@@ -322,7 +338,7 @@ export function useKeyBindings({
 
         let finalIndex = null;
 
-        for (let i = initialIndex - 1; i < order.length; i++) {
+        for (let i = initialIndex - 1; i < order.length; i--) {
           const noteUUID = order[i];
           const note = notes.get(noteUUID);
           if (!note) break;
@@ -341,7 +357,14 @@ export function useKeyBindings({
           initialNote?.isArchived !== finalNote?.isArchived
         )
           return;
-
+        localDbReducer({
+          notes: notesStateRef.current.notes,
+          order: notesStateRef.current.order,
+          userID: userID,
+          type: "DND",
+          initialIndex,
+          finalIndex,
+        });
         dispatchNotes({
           type: "DND",
           initialIndex,
@@ -349,12 +372,16 @@ export function useKeyBindings({
         });
         focusedIndex.current = finalIndex;
 
-        window.dispatchEvent(new Event("loadingStart"));
-        await updateOrderAction({
-          initialIndex,
-          endIndex: finalIndex,
-        });
-        window.dispatchEvent(new Event("loadingEnd"));
+        handleServerCall(
+          [
+            () =>
+              updateOrderAction({
+                initialIndex,
+                endIndex: finalIndex,
+              }),
+          ],
+          openSnackRef.current
+        );
       }
 
       if (
@@ -499,17 +526,29 @@ export function useKeyBindings({
               index: index,
             });
           } else {
+            localDbReducer({
+              notes: notesStateRef.current.notes,
+              order: notesStateRef.current.order,
+              userID: userID,
+              type: "PIN_NOTE",
+              note: note,
+            });
             dispatchNotes({
               type: "PIN_NOTE",
               note: note,
             });
-            window.dispatchEvent(new Event("loadingStart"));
-            await NoteUpdateAction({
-              type: "isPinned",
-              value: !note.isPinned,
-              noteUUIDs: [note.uuid],
-            });
-            window.dispatchEvent(new Event("loadingEnd"));
+
+            handleServerCall(
+              [
+                () =>
+                  NoteUpdateAction({
+                    type: "isPinned",
+                    value: !note.isPinned,
+                    noteUUIDs: [note.uuid],
+                  }),
+              ],
+              openSnackRef.current
+            );
           }
         }
       }
@@ -561,17 +600,29 @@ export function useKeyBindings({
         const note = notes.get(uuid);
 
         if (note.checkboxes.length === 0) return;
+        localDbReducer({
+          notes: notesStateRef.current.notes,
+          order: notesStateRef.current.order,
+          userID: userID,
+          type: "CHECKBOX_VIS",
+          noteUUID: note.uuid,
+        });
         dispatchNotes({
           type: "CHECKBOX_VIS",
           noteUUID: note.uuid,
         });
-        window.dispatchEvent(new Event("loadingStart"));
-        await NoteUpdateAction({
-          type: "showCheckboxes",
-          value: !note.showCheckboxes,
-          noteUUIDs: [note.uuid],
-        });
-        window.dispatchEvent(new Event("loadingEnd"));
+
+        handleServerCall(
+          [
+            () =>
+              NoteUpdateAction({
+                type: "showCheckboxes",
+                value: !note.showCheckboxes,
+                noteUUIDs: [note.uuid],
+              }),
+          ],
+          openSnackRef.current
+        );
       }
 
       if (

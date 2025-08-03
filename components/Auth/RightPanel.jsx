@@ -163,11 +163,13 @@ const RightPanel = ({
   return (
     <motion.div
       initial={{
+        pointerEvents: isLogin ? "none" : "auto",
         x: isLogin ? 40 : 0,
         opacity: isLogin ? 0 : 1,
         // scale: isLogin ? 0.99 : 1,
       }}
       animate={{
+        pointerEvents: isLogin ? "none" : "auto",
         x: isLogin ? 40 : 0,
         opacity: isLogin ? 0 : 1,
         // scale: isLogin ? 0.99 : 1,
@@ -292,11 +294,7 @@ const RightPanel = ({
         </form>
         <div className="form-btns-container">
           <button type="submit" form="signup-form" className="login-btn">
-            {!isSubmitLoading ? (
-              "Sign Up"
-            ) : (
-              <HorizontalLoader2 size={0.55} />
-            )}
+            {!isSubmitLoading ? "Sign Up" : <HorizontalLoader2 size={0.55} />}
           </button>
           <div
             onClick={async () => {

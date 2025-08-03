@@ -2,6 +2,7 @@ import React, { memo, useEffect, useRef } from "react";
 import Button from "../Tools/Button";
 import { NoteUpdateAction } from "@/utils/actions";
 import { useAppContext } from "@/context/AppContext";
+import handleServerCall from "@/utils/handleServerCall";
 
 const ListItem = ({
   no = false,
@@ -17,7 +18,8 @@ const ListItem = ({
   modalOpen,
   index,
 }) => {
-  const { showTooltip, hideTooltip, closeToolTip } = useAppContext();
+  const { showTooltip, hideTooltip, closeToolTip, openSnackRef } =
+    useAppContext();
   const listItemRef = useRef(null);
   const containerRef = useRef(null);
   const inputTimeoutRef = useRef(null);
@@ -88,14 +90,19 @@ const ListItem = ({
       }),
       textUpdatedAt: new Date(),
     }));
-    window.dispatchEvent(new Event("loadingStart"));
-    await NoteUpdateAction({
-      type: "checkboxes",
-      operation: "DELETE_CHECKBOX",
-      checkboxUUID: checkbox.uuid,
-      noteUUIDs: [noteUUID],
-    });
-    window.dispatchEvent(new Event("loadingEnd"));
+
+    handleServerCall(
+      [
+        () =>
+          NoteUpdateAction({
+            type: "checkboxes",
+            operation: "DELETE_CHECKBOX",
+            checkboxUUID: checkbox.uuid,
+            noteUUIDs: [noteUUID],
+          }),
+      ],
+      openSnackRef.current
+    );
   };
 
   let startX, startY;

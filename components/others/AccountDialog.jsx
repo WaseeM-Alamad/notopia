@@ -10,9 +10,25 @@ import { useAppContext } from "@/context/AppContext";
 const AccountDialog = ({ settingsRef, setIsOpen, user, setUser }) => {
   const { showTooltip, hideTooltip, closeToolTip } = useAppContext();
   const [isMounted, setIsMounted] = useState(false);
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
   const containerRef = useRef(null);
 
   const [selectedSection, setSelectedSection] = useState(0);
+
+  useEffect(() => {
+    const handler = () => {
+      if (window.innerWidth > 681) {
+        setIsSmallScreen(false);
+      } else {
+        setIsSmallScreen(true);
+      }
+    };
+
+    handler();
+
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
 
   const sectionsBtns = [
     { icon: "settings-profile-icon", title: "Profile Photo" },
@@ -116,19 +132,12 @@ const AccountDialog = ({ settingsRef, setIsOpen, user, setUser }) => {
           className="clear-icon btn close-dialog-btn"
         />
         <div className="settings-left-panel">
-          <div
-            style={{
-              padding: "1rem 1.3rem 1.5rem 1.3rem",
-              fontSize: "1.3rem",
-              fontWeight: "500",
-              boxSizing: "border-box",
-            }}
-          >
-            Settings
-          </div>
+          <div className="account-left-section-header">Settings</div>
           <div className="settings-section-container">
             <motion.div
-              animate={{ transform: `translateY(${39 * selectedSection}px)` }}
+              animate={{
+                transform: `translateY(${(isSmallScreen ? 45 : 40) * selectedSection}px)`,
+              }}
               transition={{
                 type: "spring",
                 stiffness: 800,
@@ -151,7 +160,7 @@ const AccountDialog = ({ settingsRef, setIsOpen, user, setUser }) => {
                       icon + (selected ? "-selected" : "")
                     }`}
                   />
-                  {title}
+                  <span className="account-section-title">{title}</span>
                 </div>
               );
             })}
