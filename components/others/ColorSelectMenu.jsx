@@ -63,7 +63,7 @@ const ColorSelectMenu = ({
   }, [setIsOpen]);
 
   useEffect(() => {
-    const handleResize = () => {
+    const closeMenu = () => {
       setIsOpen(false);
     };
 
@@ -74,10 +74,12 @@ const ColorSelectMenu = ({
     };
 
     document.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("resize", handleResize);
+    document.addEventListener("contextmenu", closeMenu);
+    window.addEventListener("resize", closeMenu);
     return () => {
-      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("resize", closeMenu);
       document.removeEventListener("keydown", handleKeyDown);
+      document.addEventListener("contextmenu", closeMenu);
     };
   }, []);
 

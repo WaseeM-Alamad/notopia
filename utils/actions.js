@@ -1726,7 +1726,8 @@ export const batchManageLabelsAction = async (data) => {
 };
 
 function cleanNoteForDB(note) {
-  const { _id, ref, createdAt, updatedAt, _v, creator, ...cleanNote } = note; // exclude _id and any other unwanted props
+  const { _id, ref, createdAt, updatedAt, _v, creator, type, ...cleanNote } =
+    note; // exclude _id and any other unwanted props
   return cleanNote;
 }
 
@@ -1742,23 +1743,38 @@ export const syncOfflineUpdatesAction = async (data) => {
     await connectDB();
 
     const bulkOperations = [];
+    const newNotes = [];
+    const notesToUpdateMap = new Map();
 
     for (let note of data.updatedNotes) {
-      const cleanedNote = cleanNoteForDB(note);
-      bulkOperations.push({
-        updateOne: {
-          filter: { uuid: cleanedNote.uuid },
-          update: { $set: cleanedNote },
-          upsert: true,
-        },
-      });
+      if (note?.isNew) {
+        newNotes.push(note);
+      } else {
+        notesToUpdateMap.set(note.uuid, note);
+      }
+    }
+
+    for (let note of [...newNotes, ...notesToUpdateMap.values()]) {
+      const cleanNote = cleanNoteForDB(note);
+      if (!note?.isNew) {
+        bulkOperations.push({
+          updateOne: {
+            filter: { uuid: cleanNote.uuid, creator: userID },
+            update: { $set: cleanNote },
+          },
+        });
+      } else {
+        bulkOperations.push({
+          insertOne: { document: { ...cleanNote, creator: userID } },
+        });
+      }
     }
 
     await Note.bulkWrite(bulkOperations);
 
     return { success: true, message: "Data synced with database successfully" };
   } catch (error) {
-    console.log("Error syncing data with database");
+    console.log("Error syncing data with database", error);
     throw new Error("Error syncing data with database");
   }
 };

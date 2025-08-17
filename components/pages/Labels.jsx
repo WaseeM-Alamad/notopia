@@ -29,7 +29,7 @@ const Labels = memo(
     containerRef,
     isGrid,
   }) => {
-    const { createLabel, labelsRef, labelsReady, layout, calculateLayoutRef } =
+    const { createLabel, labelsRef, labelsReady, layout, calculateLayoutRef, isExpanded } =
       useAppContext();
     const { labelSearchTerm } = useSearch();
     const [reRender, triggerReRender] = useState(false);
@@ -198,7 +198,10 @@ const Labels = memo(
 
     return (
       <>
-        <div ref={rootContainerRef} className="starting-div">
+        <div
+          ref={rootContainerRef}
+          className={`starting-div ${isExpanded ? "sidebar-expanded" : "sidebar-collapsed"}`}
+        >
           <div ref={containerRef} className="section-container">
             {/* <NewLabel triggerReRender={triggerReRender} /> */}
             {[...labelsRef.current]

@@ -31,6 +31,7 @@ export function AppProvider({ children, initialUser }) {
   const [isFiltered, setIsFiltered] = useState(false);
   const [layout, setLayout] = useState(null);
   const [isOnline, setIsOnline] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
   const focusedIndex = useRef(null);
 
   const openSnackRef = useRef(() => {});
@@ -44,11 +45,15 @@ export function AppProvider({ children, initialUser }) {
   const isDarkModeRef = useRef(false);
   const addButtonRef = useRef(null);
   const setBindsOpenRef = useRef(null);
+  const rootContainerRef = useRef(null);
+  const loadNextBatchRef = useRef(null);
 
   const fadeNote =
     currentSection !== "DynamicLabel" && currentSection !== "Search";
 
   useEffect(() => {
+    const sidebarExpanded = localStorage.getItem("sidebar-expanded");
+    setIsExpanded(sidebarExpanded === "true");
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme === "dark") {
       document.documentElement.classList.add("dark-mode");
@@ -317,6 +322,17 @@ export function AppProvider({ children, initialUser }) {
     }));
   }, []);
 
+  useEffect(() => {
+    if (!calculateLayoutRef.current) return;
+    requestAnimationFrame(() => {
+      calculateLayoutRef.current();
+    });
+  }, [isExpanded]);
+
+  useEffect(() => {
+    localStorage.setItem("sidebar-expanded", isExpanded ? "true" : "false");
+  }, [isExpanded]);
+
   return (
     <AppContext.Provider
       value={{
@@ -361,6 +377,10 @@ export function AppProvider({ children, initialUser }) {
         fadeNote,
         isOnline,
         setIsOnline,
+        isExpanded,
+        setIsExpanded,
+        rootContainerRef,
+        loadNextBatchRef,
       }}
     >
       {children}

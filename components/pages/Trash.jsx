@@ -98,8 +98,14 @@ const Trash = memo(
     containerRef,
     isGrid,
   }) => {
-    const { layout, calculateLayoutRef, focusedIndex, openSnackRef, user } =
-      useAppContext();
+    const {
+      layout,
+      calculateLayoutRef,
+      focusedIndex,
+      openSnackRef,
+      user,
+      isExpanded,
+    } = useAppContext();
     const userID = user?.id;
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const COLUMN_WIDTH = layout === "grid" ? 240 : 600;
@@ -258,7 +264,10 @@ const Trash = memo(
 
     return (
       <>
-        <div ref={rootContainerRef} className="starting-div">
+        <div
+          ref={rootContainerRef}
+          className={`starting-div ${isExpanded ? "sidebar-expanded" : "sidebar-collapsed"}`}
+        >
           <div className="trash-section-header">
             Notes in Trash are deleted after 7 days.
           </div>

@@ -48,6 +48,7 @@ const page = () => {
     notesStateRef,
     openSnackRef,
     user,
+    rootContainerRef,
   } = useAppContext();
   const [tooltipAnchor, setTooltipAnchor] = useState(null);
   const [notesState, dispatchNotes] = useReducer(notesReducer, initialStates);
@@ -81,7 +82,6 @@ const page = () => {
   const isDraggingRef = useRef(false);
   const selectionBoxRef = useRef(null);
   const selectedNotesRef = useRef(new Set());
-  const rootContainerRef = useRef(null);
   const skipSetLabelObjRef = useRef(false);
   const containerRef = useRef(null);
   const userID = user?.id;

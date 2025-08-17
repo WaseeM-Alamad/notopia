@@ -1,6 +1,10 @@
 import { useAppContext } from "@/context/AppContext";
 import { syncOfflineUpdatesAction } from "@/utils/actions";
-import { clearQueuedNotes, getQueuedNotes } from "@/utils/localDb";
+import handleServerCall from "@/utils/handleServerCall";
+import {
+  clearQueuedNotes,
+  getQueue,
+} from "@/utils/localDb";
 import React, { useEffect } from "react";
 
 export function useConnection() {
@@ -8,13 +12,16 @@ export function useConnection() {
 
   useEffect(() => {
     const handleOnline = async () => {
-      // window.dispatchEvent(new Event("loadingStart"));
-      // const queue = await getQueuedNotes(user?.id);
-      // await syncOfflineUpdatesAction({ updatedNotes: queue });
-      // window.dispatchEvent(new Event("loadingEnd"));
-      // console.log(queue);
-      // await clearQueuedNotes(user?.id);
-      // setIsOnline(true);
+      await clearQueuedNotes(user?.id);
+      return;
+      const {syncOrder, QueuedNotes} = await getQueue(user?.id);
+      console.log(QueuedNotes)
+      // await handleServerCall(
+      //   [() => syncOfflineUpdatesAction({ updatedNotes: queue })],
+      //   openSnackRef.current
+      // );
+      await clearQueuedNotes(user?.id);
+      setIsOnline(true);
       openSnackRef.current({
         snackMessage: (
           <div style={{ display: "flex", alignItems: "center" }}>

@@ -5,6 +5,7 @@ import { AppProvider } from "@/context/AppContext";
 import { SearchProvider } from "@/context/SearchContext";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/utils/authOptions";
+import FatalErrorBoundary from "@/utils/ErrorBoundry";
 
 export const metadata = {
   title: "Notopia",
@@ -25,20 +26,22 @@ const MainLayout = async ({ children }) => {
         />
       </head>
       <body suppressHydrationWarning>
-        <AuthProvider>
-          <SearchProvider>
-            <AppProvider initialUser={initialUser}>
-              <div id="tooltipPortal" />
-              <div id="snackbarPortal" />
+        <FatalErrorBoundary>
+          <AuthProvider>
+            <SearchProvider>
+              <AppProvider initialUser={initialUser}>
+                <div id="tooltipPortal" />
+                <div id="snackbarPortal" />
 
-              {children}
+                {children}
 
-              <div id="menu" />
-              <div id="modal-portal" />
-              <div id="selectionBox" />
-            </AppProvider>
-          </SearchProvider>
-        </AuthProvider>
+                <div id="menu" />
+                <div id="modal-portal" />
+                <div id="selectionBox" />
+              </AppProvider>
+            </SearchProvider>
+          </AuthProvider>
+        </FatalErrorBoundary>
       </body>
     </html>
   );

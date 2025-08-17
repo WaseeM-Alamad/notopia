@@ -1,7 +1,8 @@
 import { AnimatePresence, motion } from "framer-motion";
-import React, { memo, useEffect, useState } from "react";
+import React, { memo, useEffect, useRef, useState } from "react";
 import MoreMenu from "./MoreMenu";
 import { useAppContext } from "@/context/AppContext";
+import SideTooltip from "../Tools/SideTooltip";
 
 const SideBtn = ({
   type,
@@ -10,18 +11,21 @@ const SideBtn = ({
   currentHash,
   Icon,
   labelUUID,
-  setTooltipAnchor,
   calculateVerticalLayout,
   pageMounted,
   containerRef,
   handleDragStart,
-  overUUIDRef,
+  setOverUUID,
+  overUUID,
   isDragging,
+  isExpanded,
 }) => {
   const { handlePin, labelsRef, currentSection } = useAppContext();
   const [mounted, setMounted] = useState(null);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
+  const [tooltipAnc, setTooltipAnc] = useState(null);
+  const [tooltipOpen, setTooltipOpen] = useState(false);
   const selected = () => {
     const decodedCurrentHash = decodeURIComponent(currentHash).toLowerCase();
     const section = currentSection.toLowerCase();
@@ -45,32 +49,52 @@ const SideBtn = ({
     };
   }, []);
 
-  const closeToolTip = () => {
-    setTooltipAnchor((prev) => ({
-      anchor: null,
-      text: prev?.text,
-    }));
-  };
+  const handleContextMenu = (e) => {
+    e.preventDefault();
 
-  const handleMouseEnter = (e, text) => {
-    if (moreMenuOpen) return;
-    const target = e.currentTarget;
-    setTooltipAnchor({ anchor: target, text: text, display: true });
-  };
+    hideSideTooltip();
+    const scrollContainer = containerRef.current;
+    const currentTarget = e.currentTarget;
+    let virtualAnchor = null;
 
-  const handleMouseLeave = () => {
-    setTooltipAnchor((prev) => ({
-      ...prev,
-      display: false,
-    }));
+    if (!isExpanded) {
+      virtualAnchor = {
+        getBoundingClientRect: () => {
+          const targetRect = currentTarget.getBoundingClientRect();
+          const containerRect = scrollContainer.getBoundingClientRect();
+
+          const offsetX =
+            targetRect.left - containerRect.left + scrollContainer.scrollLeft;
+          const offsetY =
+            targetRect.top - containerRect.top + scrollContainer.scrollTop;
+
+          return new DOMRect(
+            containerRect.left + offsetX - scrollContainer.scrollLeft,
+            containerRect.top + offsetY - scrollContainer.scrollTop,
+            targetRect.width,
+            targetRect.height
+          );
+        },
+        contextElement: scrollContainer,
+      };
+    } else {
+      virtualAnchor = {
+        getBoundingClientRect: () =>
+          new DOMRect(e.pageX - window.scrollX, e.pageY - window.scrollY, 0, 0),
+        contextElement: document.body,
+      };
+    }
+
+    setAnchorEl({ ...virtualAnchor, navTitle: name });
+    setMoreMenuOpen(true);
   };
 
   const handleIconClick = (e, hash) => {
+    hideSideTooltip();
     const currentHash = window.location.hash.replace("#", "");
     if (hash === currentHash.toLowerCase()) return;
     e.preventDefault();
     e.stopPropagation();
-    closeToolTip();
 
     // Update hash without triggering scroll, but preserve history
     history.pushState(null, null, `#${hash}`);
@@ -133,12 +157,7 @@ const SideBtn = ({
       const deltaY = Math.abs(event.clientY - startY);
 
       if (deltaX > 5 || deltaY > 5) {
-        // if (
-        // targetElement === noteRef.current &&
-        // !target.classList.contains("not-draggable")
-        // ) {
         handleDragStart(labelUUID);
-        // }
         document.removeEventListener("mousemove", detectDrag);
       }
     };
@@ -154,8 +173,38 @@ const SideBtn = ({
 
   const handleDragOver = (labelUUID) => {
     if ((type === "label" || name === "Reminders") && isDragging) {
-      overUUIDRef.current = labelUUID;
+      setOverUUID(labelUUID);
     }
+  };
+
+  const tooltipTimeoutRef = useRef(null);
+
+  const showSideTooltip = (e) => {
+    if (isExpanded || moreMenuOpen) return;
+    const scrollContainer = containerRef.current;
+    const currentTarget = e.currentTarget;
+    tooltipTimeoutRef.current = setTimeout(() => {
+      const virtualAnchor = {
+        getBoundingClientRect: () => {
+          const targetRect = currentTarget.getBoundingClientRect();
+          return new DOMRect(
+            targetRect.left,
+            targetRect.top,
+            targetRect.width,
+            targetRect.height
+          );
+        },
+        contextElement: scrollContainer,
+      };
+      setTooltipAnc(virtualAnchor);
+      setTooltipOpen(true);
+    }, 100);
+  };
+
+  const hideSideTooltip = () => {
+    clearTimeout(tooltipTimeoutRef.current);
+    setTooltipAnc(null);
+    setTooltipOpen(false);
   };
 
   return (
@@ -172,68 +221,39 @@ const SideBtn = ({
           transition: { duration: 0.16, ease: "easeInOut", type: "tween" },
         }}
         transition={{ type: "spring", stiffness: 800, damping: 50, mass: 1 }}
-        className={`${
-          overUUIDRef.current === labelUUID ? "hovered-side-btn" : ""
+        className={`side-btn-wrapper ${
+          overUUID === labelUUID ? "hovered-side-btn" : ""
         }`}
         style={{
           transition:
             mounted && pageMounted
-              ? "transform 0.17s ease, background-color 0.2s ease"
+              ? "transform 0.18s ease, background-color 0.2s ease"
               : "none",
         }}
-        onMouseEnter={() => handleDragOver(labelUUID)}
+        onMouseEnter={() => {
+          handleDragOver(labelUUID);
+        }}
       >
         <div
           key={hash}
-          onContextMenu={(e) => {
-            e.preventDefault();
-            closeToolTip();
-
-            const scrollContainer = containerRef.current;
-            const currentTarget = e.currentTarget;
-
-            const virtualAnchor = {
-              getBoundingClientRect: () => {
-                const targetRect = currentTarget.getBoundingClientRect();
-                const containerRect = scrollContainer.getBoundingClientRect();
-
-                const offsetX =
-                  targetRect.left -
-                  containerRect.left +
-                  scrollContainer.scrollLeft;
-                const offsetY =
-                  targetRect.top -
-                  containerRect.top +
-                  scrollContainer.scrollTop;
-
-                return new DOMRect(
-                  containerRect.left + offsetX - scrollContainer.scrollLeft,
-                  containerRect.top + offsetY - scrollContainer.scrollTop,
-                  targetRect.width,
-                  targetRect.height
-                );
-              },
-              contextElement: scrollContainer,
-            };
-
-            setAnchorEl({ ...virtualAnchor, navTitle: name });
-            setMoreMenuOpen(true);
-          }}
-          className={`link-btn ${
+          onContextMenu={handleContextMenu}
+          className={`side-icon ${
             moreMenuOpen || isDragging === labelUUID ? "side-btn-active" : ""
-          } ${selected() ? "link-btn-selected" : ""} `}
-          onMouseEnter={(e) => {
-            handleMouseEnter(e, name);
-          }}
-          onMouseLeave={handleMouseLeave}
+          } ${selected() ? "selected" : ""} `}
           id={hash}
           tabIndex="-1"
           onClick={(e) => handleIconClick(e, hash)}
+          onMouseEnter={showSideTooltip}
+          onMouseLeave={hideSideTooltip}
           onMouseDown={handleMouseDown}
         >
           <Icon />
+          <span className="side-btn-title">{name}</span>
         </div>
       </motion.div>
+      <AnimatePresence>
+        {tooltipOpen && <SideTooltip text={name} anchor={tooltipAnc} />}
+      </AnimatePresence>
       <AnimatePresence>
         {moreMenuOpen && (
           <MoreMenu

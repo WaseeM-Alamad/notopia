@@ -18,12 +18,14 @@ const ProfileMenu = forwardRef(
     }, []);
 
     const toggleDarkMode = () => {
+      requestIdleCallback(()=> {
       document.documentElement.classList.toggle("dark-mode");
       const newMode = document.documentElement.classList.contains("dark-mode")
         ? "dark"
         : "light";
       localStorage.setItem("theme", newMode);
       isDarkModeRef.current = newMode === "dark";
+    })
       setIsOpen(false);
     };
 

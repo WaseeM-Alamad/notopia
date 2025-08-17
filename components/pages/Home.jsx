@@ -151,6 +151,7 @@ const Home = memo(
       focusedIndex,
       openSnackRef,
       notesStateRef,
+      isExpanded,
     } = useAppContext();
     const userID = user?.id;
     const [pinnedHeight, setPinnedHeight] = useState(null);
@@ -504,7 +505,10 @@ const Home = memo(
 
     return (
       <>
-        <div ref={rootContainerRef} className="starting-div">
+        <div
+          ref={rootContainerRef}
+          className={`starting-div ${isExpanded ? "sidebar-expanded" : "sidebar-collapsed"}`}
+        >
           <div
             ref={containerRef}
             className="section-container"

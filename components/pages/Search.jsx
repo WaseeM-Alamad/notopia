@@ -38,6 +38,7 @@ const Search = ({
     hideTooltip,
     closeToolTip,
     focusedIndex,
+    isExpanded,
   } = useAppContext();
   const [colorsSet, setColorsSet] = useState(new Set());
   const [labelsSet, setLabelsSet] = useState(new Set());
@@ -175,7 +176,7 @@ const Search = ({
 
   return (
     <>
-      <div ref={rootContainerRef} className="starting-div">
+      <div ref={rootContainerRef} className={`starting-div ${isExpanded ? "sidebar-expanded" : "sidebar-collapsed"}`}>
         {noMatchingNotes || !filtersExist ? (
           <div
             className="search-section"

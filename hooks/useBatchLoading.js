@@ -15,7 +15,8 @@ export function useBatchLoading({
   containerRef,
   matchesFilters,
 }) {
-  const { labelsRef, layout, labelsReady, currentSection } = useAppContext();
+  const { labelsRef, layout, labelsReady, currentSection, loadNextBatchRef } =
+    useAppContext();
 
   const {
     filters,
@@ -132,6 +133,10 @@ export function useBatchLoading({
       });
     });
   };
+
+  useEffect(() => {
+    loadNextBatchRef.current = loadNextBatch;
+  }, [loadNextBatch]);
 
   const resetBatchLoading = () => {
     if (layoutVersionRef.current >= 1) {

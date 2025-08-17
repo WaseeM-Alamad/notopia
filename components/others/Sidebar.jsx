@@ -11,14 +11,13 @@ import HomeIcon from "../icons/HomeIcon";
 import BellIcon from "../icons/BellIcon";
 import SideArchiveIcon from "../icons/SideArchiveIcon";
 import TrashIcon from "../icons/TrashIcon";
-import { AnimatePresence, motion } from "framer-motion";
 import AddButton from "../icons/AddButton";
 import LabelIcon from "../icons/LabelIcon";
 import FolderIcon from "../icons/FolderIcon";
-import Tooltip from "../Tools/Tooltip";
 import { useAppContext } from "@/context/AppContext";
-import SideBtn from "./SideBtn";
-import RightTooltip from "../Tools/RightTooltip";
+import SideButtons from "./SideButtons";
+import SideTooltip from "../Tools/SideTooltip";
+import { AnimatePresence } from "framer-motion";
 
 const Sidebar = memo(() => {
   const {
@@ -27,11 +26,14 @@ const Sidebar = memo(() => {
     swapPinnedLabels,
     currentSection,
     addButtonRef,
+    isExpanded,
   } = useAppContext();
   const containerRef = useRef(null);
-  const [tooltipAnchor, setTooltipAnchor] = useState(null);
   const [currentHash, setCurrentHash] = useState(null);
   const [isDragging, setIsDragging] = useState(null);
+  const [actionTitle, setActionTitle] = useState("");
+  const [tooltipOpen, setTooltipOpen] = useState(false);
+
   const layoutFrameRef = useRef(null);
 
   const items = [
@@ -110,10 +112,7 @@ const Sidebar = memo(() => {
   };
 
   const handleAddNote = async () => {
-    closeToolTip();
-    addButtonRef.current.classList.remove("animate");
-    void addButtonRef.current.offsetWidth;
-    addButtonRef.current.classList.add("animate");
+    hideSideTooltip();
     const section = currentSection.toLowerCase();
     if (section === "labels") {
       window.dispatchEvent(new Event("addLabel"));
@@ -125,25 +124,6 @@ const Sidebar = memo(() => {
       window.dispatchEvent(new Event("emptyTrash"));
       return;
     }
-  };
-
-  const closeToolTip = () => {
-    setTooltipAnchor((prev) => ({
-      anchor: null,
-      text: prev?.text,
-    }));
-  };
-
-  const handleMouseEnter = (e, text) => {
-    const target = e.currentTarget;
-    setTooltipAnchor({ anchor: target, text: text, display: true });
-  };
-
-  const handleMouseLeave = () => {
-    setTooltipAnchor((prev) => ({
-      ...prev,
-      display: false,
-    }));
   };
 
   useEffect(() => {
@@ -189,7 +169,7 @@ const Sidebar = memo(() => {
     };
   }, [labelsReady]);
 
-  const GUTTER = 15;
+  const GUTTER = 0;
 
   const calculateVerticalLayout = useCallback(() => {
     if (layoutFrameRef.current) {
@@ -211,7 +191,7 @@ const Sidebar = memo(() => {
         y += ref.offsetHeight + GUTTER;
       });
 
-      container.style.height = `${0}px`;
+      // container.style.height = `${0}px`;
     });
   }, []);
 
@@ -226,40 +206,63 @@ const Sidebar = memo(() => {
     });
   }, [labelsReady, currentSection]);
 
-  const handleAddTooltip = (e) => {
+  useEffect(() => {
+    if (!currentSection) return;
     const section = currentSection.toLowerCase();
     if (section === "home") {
-      handleMouseEnter(e, "New note");
+      setActionTitle("New note");
     } else if (section === "labels") {
-      handleMouseEnter(e, "New label");
+      setActionTitle("New label");
     } else if (section === "trash") {
-      handleMouseEnter(e, "Empty trash");
+      setActionTitle("Empty trash");
     } else {
-      handleMouseEnter(e, "New note");
+      setActionTitle("New note");
     }
-  };
+  }, [currentSection]);
 
   const draggedUUIDRef = useRef(null);
+  const [overUUID, setOverUUID] = useState(null);
   const overUUIDRef = useRef(null);
 
-  const handleDragStart = (labelUUID) => {
-    if (isDragging) return;
-    setIsDragging(labelUUID);
-    draggedUUIDRef.current = labelUUID;
-    closeToolTip();
-    document.body.classList.add("dragging-sidebar");
+  useEffect(() => {
+    overUUIDRef.current = overUUID;
+  }, [overUUID]);
 
-    const handleDragEnd = () => {
-      swapPinnedLabels(labelUUID, overUUIDRef.current);
-      setIsDragging(null);
-      overUUIDRef.current = null;
-      draggedUUIDRef.current = null;
+  const handleDragStart = useCallback(
+    (labelUUID) => {
+      if (isDragging) return;
+      setIsDragging(labelUUID);
+      draggedUUIDRef.current = labelUUID;
+      document.body.classList.add("dragging-sidebar");
 
-      document.body.classList.remove("dragging-sidebar");
-      document.removeEventListener("mouseup", handleDragEnd);
-    };
+      const handleDragEnd = () => {
+        if (overUUIDRef.current !== draggedUUIDRef.current) {
+          swapPinnedLabels(labelUUID, overUUIDRef.current);
+        }
+        setIsDragging(null);
+        setOverUUID(null);
+        draggedUUIDRef.current = null;
 
-    document.addEventListener("mouseup", handleDragEnd);
+        document.body.classList.remove("dragging-sidebar");
+        document.removeEventListener("mouseup", handleDragEnd);
+      };
+
+      document.addEventListener("mouseup", handleDragEnd);
+    },
+    [isDragging, overUUID]
+  );
+
+  const tooltipTimeoutRef = useRef(null);
+  const showSideTooltip = () => {
+    if (isExpanded) return;
+    tooltipTimeoutRef.current = setTimeout(() => {
+      setTooltipOpen(true);
+    }, 100);
+  };
+
+  const hideSideTooltip = () => {
+    clearTimeout(tooltipTimeoutRef.current);
+    setTooltipOpen(false);
   };
 
   if (!currentSection) return;
@@ -268,52 +271,45 @@ const Sidebar = memo(() => {
 
   return (
     <>
-      <aside className="sidebar">
-        <button
-          onMouseEnter={handleAddTooltip}
-          onMouseLeave={handleMouseLeave}
-          ref={addButtonRef}
-          onClick={handleAddNote}
-          id="add-btn"
-          className="add-button-icon pulse-button"
-        >
-          <AddButton />
-        </button>
-        <div
-          ref={containerRef}
-          className={`sidebar-icons-container ${
-            isDragging ? "side-dragging" : ""
-          }`}
-        >
-          <AnimatePresence>
-            {navItems.map(({ type, name, hash, Icon, uuid: labelUUID }) => (
-              <SideBtn
-                key={labelUUID || hash}
-                type={type}
-                name={name}
-                hash={hash}
-                Icon={Icon}
-                labelUUID={labelUUID}
+      <div className={isExpanded ? "menu-expanded" : ""}>
+        <aside className={isDragging ? "side-dragging" : ""}>
+          <button
+            ref={addButtonRef}
+            onClick={handleAddNote}
+            id="add-btn"
+            className="add-btn"
+            onMouseEnter={showSideTooltip}
+            onMouseLeave={hideSideTooltip}
+          >
+            <AnimatePresence>
+              {tooltipOpen && (
+                <SideTooltip Xi="56px" Xf="60px" text={actionTitle} />
+              )}
+            </AnimatePresence>
+            <AddButton />
+            <span className="side-btn-title">{actionTitle}</span>
+          </button>
+            <div ref={containerRef} className="btns-container">
+              <SideButtons
+                navItems={navItems}
                 currentHash={currentHash}
-                setTooltipAnchor={setTooltipAnchor}
                 calculateVerticalLayout={calculateVerticalLayout}
                 pageMounted={pageMounted}
                 containerRef={containerRef}
                 handleDragStart={handleDragStart}
-                overUUIDRef={overUUIDRef}
+                setOverUUID={setOverUUID}
+                overUUID={overUUID}
                 isDragging={isDragging}
+                isExpanded={isExpanded}
               />
-            ))}
-            {/* <span className="copyright-text">&copy; {currentYear}</span> */}
-          </AnimatePresence>
-        </div>
-        <div style={{ height: "2rem", width: "2rem" }} />
-      </aside>
-      <RightTooltip anchorEl={tooltipAnchor} />
+          </div>
+          <div style={{ height: "2rem", width: "2rem" }} />
+        </aside>
+      </div>
     </>
   );
 });
 
 Sidebar.displayName = "Sidebar";
 
-export default Sidebar;
+export default memo(Sidebar);

@@ -8,13 +8,13 @@ const AddButton = () => {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="45"
-      height="45"
-      className="add-button-icon pulse-button"
+      width="44"
+      height="44"
+      className="add-button-icon"
       viewBox="0 0 45 45"
       fill="none"
     >
-      <circle cx="22.5" cy="22.5" r="22.5" className="add-circle-fill" />
+      <circle cx="22.5" cy="22.5" r="22.5" />
       <g filter="url(#filter0_d_419_13)">
         <motion.path
           initial={{

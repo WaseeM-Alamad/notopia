@@ -53,6 +53,7 @@ const Navbar = () => {
     closeToolTip,
     setBindsOpenRef,
     isOnline,
+    setIsExpanded,
   } = useAppContext();
   const [isLoading, setIsLoading] = useState(0);
   const [UpToDatetrigger, setUpToDateTrigger] = useState(true);
@@ -468,14 +469,34 @@ const Navbar = () => {
           className="logo"
           style={{
             display: !showNav && "none",
-            overflow: "hidden",
-            marginLeft: "1.2rem",
             flex: threshold2 ? "1 1 auto" : "1 0 auto",
             minWidth: !threshold2 && "23%",
           }}
         >
-          {/* <Logo style={{margin: "auto 0", flexShrink: "0"}} /> */}
-          <span style={{ marginLeft: "0rem", fontWeight: "700" }}>Notopia</span>
+          <Button
+            onMouseEnter={(e) =>
+              showTooltip(
+                e,
+                <span style={{ fontWeight: "550" }}>Main menu</span>
+              )
+            }
+            onMouseLeave={hideTooltip}
+            onClick={() => {
+              closeToolTip();
+              setIsExpanded((prev) => !prev);
+            }}
+            className="side-expand-btn"
+          />
+          <Logo style={{ margin: "auto 0", flexShrink: "0" }} />
+          <span
+            style={{
+              marginLeft: ".6rem",
+              fontWeight: "700",
+              fontSize: "1.3rem",
+            }}
+          >
+            Notopia
+          </span>
         </div>
 
         <div
@@ -749,7 +770,7 @@ const Navbar = () => {
           }}
         >
           <div
-            style={{ padding: "8px" }}
+            style={{ padding: "8px", opacity: "1" }}
             className="btn"
             onClick={handleProfileOpen}
             onMouseEnter={(e) =>

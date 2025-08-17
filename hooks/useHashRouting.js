@@ -61,6 +61,7 @@ export function useHashRouting({
     }
 
     if (hash.toLowerCase().startsWith("note")) {
+      !currentSection && setCurrentSection("Home");
       const parts = hash.split("/");
       const noteUUID = parts[1];
       const note = notesStateRef.current.notes.get(noteUUID);
@@ -142,7 +143,7 @@ export function useHashRouting({
         searchRef.current.value = "";
       });
     }
-  }, [labelsReady]);
+  }, [labelsReady, currentSection]);
 
   useEffect(() => {
     handleHashChange();

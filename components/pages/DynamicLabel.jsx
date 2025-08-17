@@ -99,7 +99,7 @@ const DynamicLabel = ({
   containerRef,
   isGrid,
 }) => {
-  const { layout, calculateLayoutRef, focusedIndex } = useAppContext();
+  const { layout, calculateLayoutRef, focusedIndex, isExpanded } = useAppContext();
   const [pinnedHeight, setPinnedHeight] = useState(null);
   const [sectionsHeight, setSectionsHeight] = useState(null);
   const [layoutReady, setLayoutReady] = useState(false);
@@ -318,7 +318,10 @@ const DynamicLabel = ({
 
   return (
     <>
-      <div ref={rootContainerRef} className="starting-div">
+      <div
+        ref={rootContainerRef}
+        className={`starting-div ${isExpanded ? "sidebar-expanded" : "sidebar-collapsed"}`}
+      >
         <div
           ref={containerRef}
           className="section-container"

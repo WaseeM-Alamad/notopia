@@ -47,12 +47,18 @@ const MoreMenu = ({
       }
     };
 
+    const handleRightClick = ()=> {
+      setIsOpen(false);
+    }
+
     document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("contextmenu", handleRightClick);
     document.addEventListener("keydown", handleKeyDown);
     window.addEventListener("resize", handleResize);
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("contextmenu", handleRightClick);
       document.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("resize", handleResize);
     };

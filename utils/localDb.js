@@ -18,6 +18,9 @@ export const initDB = async (userID) => {
       if (!db.objectStoreNames.contains("notesUpdateQueue")) {
         db.createObjectStore("notesUpdateQueue", { keyPath: "uuid" });
       }
+      if (!db.objectStoreNames.contains("orderSyncQueue")) {
+        db.createObjectStore("orderSyncQueue", { keyPath: "id" });
+      }
     },
   });
 };
@@ -36,14 +39,21 @@ export const saveNotesArray = async (notesArray, userID) => {
   await tx.done;
 };
 
-export const saveOrderArray = async (orderArray, userID) => {
+export const saveOrderArray = async (orderArray, userID, checkOffline) => {
   const db = await initDB(userID);
-  const tx = db.transaction("order", "readwrite");
+  const txStores = ["order"];
+  const isOnline = navigator.onLine;
+  const markOffline = checkOffline && !isOnline;
+  if (markOffline) txStores.push("orderSyncQueue");
+  const tx = db.transaction(txStores, "readwrite");
 
-  await tx.store.put({
+  tx.objectStore("order").put({
     id: "main",
     value: orderArray,
   });
+
+  if (markOffline)
+    tx.objectStore("orderSyncQueue").put({ id: "main", needsSync: true });
 
   await tx.done;
 };
@@ -113,14 +123,6 @@ export const loadLabelsMap = async (userID) => {
   return new Map(allLabels.map((label) => [label.uuid, label]));
 };
 
-export const updateLocalNote = async (passedNote, userID) => {
-  const db = await initDB(userID);
-
-  const { ref, ...note } = passedNote;
-
-  await db.put("notes", note);
-};
-
 export const updateLocalNotes = async (notesArray, userID) => {
   const db = await initDB(userID);
   const tx = db.transaction("notes", "readwrite");
@@ -133,11 +135,6 @@ export const updateLocalNotes = async (notesArray, userID) => {
   await tx.done;
 };
 
-export const deleteNote = async (uuid, userID) => {
-  const db = await initDB(userID);
-  await db.delete("notes", uuid);
-};
-
 export async function updateLocalNotesAndOrder(
   notesArray,
   orderArray = null,
@@ -148,7 +145,7 @@ export async function updateLocalNotesAndOrder(
     const isOnline = navigator.onLine;
 
     const txStores = ["notes", "notesUpdateQueue"];
-    if (orderArray) txStores.push("order");
+    if (orderArray) txStores.push(...["order", "orderSyncQueue"]);
 
     const tx = db.transaction(txStores, "readwrite");
 
@@ -168,6 +165,11 @@ export async function updateLocalNotesAndOrder(
     if (orderArray) {
       const orderStore = tx.objectStore("order");
       orderStore.put({ id: "main", value: orderArray });
+      console.log("yess");
+      if (!isOnline) {
+        const orderSyncQueue = tx.objectStore("orderSyncQueue");
+        orderSyncQueue.put({ id: "main", needsSync: true });
+      }
     }
 
     await tx.done;
@@ -176,35 +178,6 @@ export async function updateLocalNotesAndOrder(
   }
 }
 
-// export async function updateLocalNotesAndOrder(
-//   notesArray,
-//   orderArray = null,
-//   userID
-// ) {
-//   try {
-//     const db = await initDB(userID);
-//     const txStores = ["notes"];
-//     if (orderArray) txStores.push("order");
-
-//     const tx = db.transaction(txStores, "readwrite");
-//     const notesStore = tx.objectStore("notes");
-
-//     for (const note of notesArray) {
-//       const { ref, ...noteWithoutRef } = note;
-//       notesStore.put(noteWithoutRef);
-//     }
-
-//     if (orderArray) {
-//       const orderStore = tx.objectStore("order");
-//       orderStore.put({ id: "main", value: orderArray });
-//     }
-
-//     await tx.done;
-//   } catch (err) {
-//     console.error("Failed to update local notes and order:", err);
-//   }
-// }
-
 export async function deleteLocalNotesAndUpdateOrder(
   noteUUIDsToDelete,
   orderArray = null,
@@ -212,19 +185,30 @@ export async function deleteLocalNotesAndUpdateOrder(
 ) {
   try {
     const db = await initDB(userID);
-    const txStores = ["notes"];
+    const isOnline = navigator.onLine;
+
+    const txStores = ["notes", "notesUpdateQueue", "orderSyncQueue"];
     if (orderArray) txStores.push("order");
 
     const tx = db.transaction(txStores, "readwrite");
+
     const notesStore = tx.objectStore("notes");
+    const notesQueueStore = tx.objectStore("notesUpdateQueue");
+    const orderSyncQueue = tx.objectStore("orderSyncQueue");
 
     for (const uuid of noteUUIDsToDelete) {
       notesStore.delete(uuid);
+      if (!isOnline) {
+        notesQueueStore.put({ uuid: uuid, type: "delete" });
+      }
     }
 
     if (orderArray) {
       const orderStore = tx.objectStore("order");
       orderStore.put({ id: "main", value: orderArray });
+      if (!isOnline) {
+        orderSyncQueue.put({ id: "main", needsSync: true });
+      }
     }
 
     await tx.done;
@@ -233,15 +217,18 @@ export async function deleteLocalNotesAndUpdateOrder(
   }
 }
 
-export async function getQueuedNotes(userID) {
+export async function getQueue(userID) {
   try {
     const db = await initDB(userID);
-    const tx = db.transaction("notesUpdateQueue", "readonly");
-    const store = tx.objectStore("notesUpdateQueue");
-    const allQueuedNotes = await store.getAll();
+    const tx = db.transaction(
+      ["notesUpdateQueue", "orderSyncQueue"],
+      "readonly"
+    );
+    const QueuedNotes = await tx.objectStore("notesUpdateQueue").getAll();
+    const syncOrder = await tx.objectStore("orderSyncQueue").get("main");
 
     await tx.done;
-    return allQueuedNotes;
+    return { syncOrder: syncOrder?.needsSync || false, QueuedNotes };
   } catch (err) {
     console.error("Failed to fetch queued notes:", err);
     return [];
@@ -251,11 +238,38 @@ export async function getQueuedNotes(userID) {
 export async function clearQueuedNotes(userID) {
   try {
     const db = await initDB(userID);
-    const tx = db.transaction("notesUpdateQueue", "readwrite");
-    const store = tx.objectStore("notesUpdateQueue");
-    await store.clear();
-    await tx.done;
+
+    const txNotes = db.transaction("notesUpdateQueue", "readwrite");
+    await txNotes.objectStore("notesUpdateQueue").clear();
+    await txNotes.done;
+
+    const txOrder = db.transaction("orderSyncQueue", "readwrite");
+    const orderStore = txOrder.objectStore("orderSyncQueue");
+    const orderSync = await orderStore.get("main");
+
+    if (orderSync) {
+      orderSync.needsSync = false;
+      await orderStore.put(orderSync);
+    }
+
+    await txOrder.done;
   } catch (err) {
-    console.error("Failed to clear notesUpdateQueue:", err);
+    console.error("Failed to clear queues:", err);
+  }
+}
+
+export async function fetchOrderQueueFlag(userID) {
+  try {
+    const db = await initDB(userID);
+    const tx = db.transaction("orderSyncQueue", "readonly");
+    const store = tx.objectStore("orderSyncQueue");
+
+    const orderSync = await store.get("main");
+    await tx.done;
+
+    return orderSync?.needsSync || false;
+  } catch (err) {
+    console.error("Failed to fetch orderQueue flag:", err);
+    return false;
   }
 }

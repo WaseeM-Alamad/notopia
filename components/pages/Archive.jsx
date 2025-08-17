@@ -94,7 +94,8 @@ const Archive = memo(
     containerRef,
     isGrid,
   }) => {
-    const { layout, calculateLayoutRef, focusedIndex } = useAppContext();
+    const { layout, calculateLayoutRef, focusedIndex, isExpanded } =
+      useAppContext();
     const COLUMN_WIDTH = layout === "grid" ? 240 : 600;
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
@@ -209,7 +210,10 @@ const Archive = memo(
 
     return (
       <>
-        <div ref={rootContainerRef} className="starting-div">
+        <div
+          ref={rootContainerRef}
+          className={`starting-div ${isExpanded ? "sidebar-expanded" : "sidebar-collapsed"}`}
+        >
           {/* <div style={{ padding: "0 2rem" }} className="page-header"> */}
           {/* <ArchiveIcon size={22} color="#212121" /> */}
           {/* <div /> */}
