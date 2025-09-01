@@ -18,7 +18,7 @@ const ListItem = ({
   modalOpen,
   index,
 }) => {
-  const { showTooltip, hideTooltip, closeToolTip, openSnackRef } =
+  const { clientID, showTooltip, hideTooltip, closeToolTip, openSnackRef } =
     useAppContext();
   const listItemRef = useRef(null);
   const containerRef = useRef(null);
@@ -99,6 +99,7 @@ const ListItem = ({
             operation: "DELETE_CHECKBOX",
             checkboxUUID: checkbox.uuid,
             noteUUIDs: [noteUUID],
+            clientID: clientID,
           }),
       ],
       openSnackRef.current

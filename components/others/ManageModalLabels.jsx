@@ -15,7 +15,7 @@ const ManageModalLabels = ({
   setLocalNote,
   anchorEl,
 }) => {
-  const { createLabel, labelsRef, openSnackRef } = useAppContext();
+  const { clientID, createLabel, labelsRef, openSnackRef } = useAppContext();
   const [isClient, setIsClient] = useState();
   const [labelSearch, setLabelSearch] = useState("");
   const [noteLabels, setNoteLabels] = useState(new Map());
@@ -101,6 +101,7 @@ const ManageModalLabels = ({
             removeLabelAction({
               noteUUID: note.uuid,
               labelUUID: uuid,
+              clientID: clientID,
             }),
         ],
         openSnackRef.current
@@ -114,6 +115,7 @@ const ManageModalLabels = ({
             addLabelAction({
               noteUUID: note.uuid,
               labelUUID: uuid,
+              clientID: clientID,
             }),
         ],
         openSnackRef.current

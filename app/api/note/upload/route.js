@@ -14,6 +14,7 @@ export async function POST(req) {
   const noteUUID = formData.get("noteUUID");
   const files = formData.getAll("files");
   const imageUUIDs = formData.getAll("imageUUIDs");
+  const clientID = formData.get("clientID");
 
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
@@ -79,14 +80,15 @@ export async function POST(req) {
 
       const newUrl = cloudinary.url(publicId);
 
-        await NoteUpdateAction({
-          type: "images",
-          value: {
-            url: newUrl,
-            uuid: imageUUID,
-          },
-          noteUUIDs: [noteUUID],
-        });
+      await NoteUpdateAction({
+        type: "images",
+        value: {
+          url: newUrl,
+          uuid: imageUUID,
+        },
+        noteUUIDs: [noteUUID],
+        clientID: clientID,
+      });
 
       return {
         url: result.secure_url,

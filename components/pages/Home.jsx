@@ -146,6 +146,7 @@ const Home = memo(
   }) => {
     const {
       user,
+      clientID,
       layout,
       calculateLayoutRef,
       focusedIndex,
@@ -393,6 +394,7 @@ const Home = memo(
                       updateOrderAction({
                         initialIndex: draggedInitialIndex,
                         endIndex: endIndexRef.current,
+                        clientID: clientID
                       }),
                   ],
                   openSnackRef.current

@@ -31,6 +31,7 @@ const NoteTools = ({
   inputRef,
 }) => {
   const {
+    clientID,
     showTooltip,
     hideTooltip,
     closeToolTip,
@@ -64,6 +65,7 @@ const NoteTools = ({
               type: "color",
               value: newColor,
               noteUUIDs: [note.uuid],
+              clientID: clientID
             }),
         ],
         openSnackRef.current
@@ -82,6 +84,7 @@ const NoteTools = ({
                 type: "color",
                 value: newColor,
                 noteUUIDs: [note.uuid],
+                clientID: clientID
               }),
           ],
           openSnackRef.current
@@ -117,6 +120,7 @@ const NoteTools = ({
                 type: "color",
                 value: selectedColor,
                 noteUUIDs: [note.uuid],
+                clientID: clientID
               }),
           ],
           openSnackRef.current
@@ -149,6 +153,7 @@ const NoteTools = ({
               type: "background",
               value: newBG,
               noteUUIDs: [note.uuid],
+              clientID: clientID
             }),
         ],
         openSnackRef.current
@@ -198,6 +203,7 @@ const NoteTools = ({
 
       formData.append("files", file);
       formData.append("imageUUIDs", imageUUID);
+      formData.append("clientID", clientID);
 
       const imageURL = URL.createObjectURL(file);
 
@@ -367,6 +373,7 @@ const NoteTools = ({
             operation: "ADD",
             value: checkbox,
             noteUUIDs: [note.uuid],
+            clientID: clientID
           }),
       ],
       openSnackRef.current
@@ -395,6 +402,7 @@ const NoteTools = ({
             type: "showCheckboxes",
             value: !note.showCheckboxes,
             noteUUIDs: [note.uuid],
+            clientID: clientID
           }),
       ],
       openSnackRef.current
@@ -422,6 +430,7 @@ const NoteTools = ({
             type: "checkboxes",
             operation: "UNCHECK_ALL",
             noteUUIDs: [note.uuid],
+            clientID: clientID
           }),
       ],
       openSnackRef.current
@@ -449,6 +458,7 @@ const NoteTools = ({
             type: "checkboxes",
             operation: "DELETE_CHECKED",
             noteUUIDs: [note.uuid],
+            clientID: clientID
           }),
       ],
       openSnackRef.current

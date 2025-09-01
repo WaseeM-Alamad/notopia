@@ -10,14 +10,11 @@ import React, {
   useRef,
   useState,
 } from "react";
-import {
-  fetchLabelsAction,
-  createLabelAction,
-  updateLabelAction,
-} from "@/utils/actions";
+import { createLabelAction, updateLabelAction } from "@/utils/actions";
 import { useSearch } from "./SearchContext";
 import { debounce } from "lodash";
-import { saveLabelsArray, saveLabelsMap } from "@/utils/localDb";
+import { saveLabelsMap } from "@/utils/localDb";
+import { v4 as uuid } from "uuid";
 
 const AppContext = createContext();
 
@@ -34,6 +31,7 @@ export function AppProvider({ children, initialUser }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const focusedIndex = useRef(null);
 
+  const clientID = useRef(uuid());
   const openSnackRef = useRef(() => {});
   const setTooltipRef = useRef(null);
   const notesStateRef = useRef(null);
@@ -103,7 +101,7 @@ export function AppProvider({ children, initialUser }) {
     });
     updateLocalLabels();
     window.dispatchEvent(new Event("loadingStart"));
-    await createLabelAction(uuid, label);
+    await createLabelAction(uuid, label, clientID.current);
     window.dispatchEvent(new Event("loadingEnd"));
   };
 
@@ -127,7 +125,12 @@ export function AppProvider({ children, initialUser }) {
     labelsRef.current = labels;
     updateLocalLabels();
     window.dispatchEvent(new Event("loadingStart"));
-    await updateLabelAction({ type: "color", uuid: uuid, color: newColor });
+    await updateLabelAction({
+      type: "color",
+      uuid: uuid,
+      color: newColor,
+      clientID: clientID.current,
+    });
     window.dispatchEvent(new Event("loadingEnd"));
   };
 
@@ -137,7 +140,12 @@ export function AppProvider({ children, initialUser }) {
     labelsRef.current = labels;
     updateLocalLabels();
     window.dispatchEvent(new Event("loadingStart"));
-    await updateLabelAction({ type: "title", uuid: uuid, label: updatedLabel });
+    await updateLabelAction({
+      type: "title",
+      uuid: uuid,
+      label: updatedLabel,
+      clientID: clientID.current,
+    });
     window.dispatchEvent(new Event("loadingEnd"));
   };
 
@@ -150,6 +158,7 @@ export function AppProvider({ children, initialUser }) {
     const formData = new FormData();
     formData.append("file", imageFile);
     formData.append("labelUUID", uuid);
+    formData.append("clientID", clientID.current);
 
     window.dispatchEvent(new Event("loadingStart"));
 
@@ -189,7 +198,11 @@ export function AppProvider({ children, initialUser }) {
       labelsRef.current = labels;
       updateLocalLabels();
       window.dispatchEvent(new Event("loadingStart"));
-      await updateLabelAction({ type: "delete_image", uuid: data.uuid });
+      await updateLabelAction({
+        type: "delete_image",
+        uuid: data.uuid,
+        clientID: clientID.current,
+      });
       window.dispatchEvent(new Event("loadingEnd"));
     } else if (data.action === "remove") {
       const newLabel = { ...labelsRef.current.get(data.uuid), image: null };
@@ -228,6 +241,7 @@ export function AppProvider({ children, initialUser }) {
       type: "label_pin",
       uuid: uuid,
       value: value,
+      clientID: clientID.current,
     });
     window.dispatchEvent(new Event("loadingEnd"));
   };
@@ -298,7 +312,11 @@ export function AppProvider({ children, initialUser }) {
     if (initialIndex !== endIndex) {
       window.dispatchEvent(new Event("refreshPinnedLabels"));
       window.dispatchEvent(new Event("loadingStart"));
-      await updateLabelAction({ type: "side-dnd", affected: changedLabels });
+      await updateLabelAction({
+        type: "side-dnd",
+        affected: changedLabels,
+        clientID: clientID.current,
+      });
       window.dispatchEvent(new Event("loadingEnd"));
     }
   };
@@ -381,6 +399,7 @@ export function AppProvider({ children, initialUser }) {
         setIsExpanded,
         rootContainerRef,
         loadNextBatchRef,
+        clientID: clientID.current,
       }}
     >
       {children}

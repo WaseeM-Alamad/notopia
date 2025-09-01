@@ -12,7 +12,6 @@ import {
 import MoreMenu from "../MoreMenu";
 import { useAppContext } from "@/context/AppContext";
 import { v4 as uuid } from "uuid";
-import { useSession } from "next-auth/react";
 import ManageTopLabelsMenu from "../ManageTopLabelsMenu";
 import DeleteModal from "../DeleteModal";
 import { useSearch } from "@/context/SearchContext";
@@ -34,6 +33,7 @@ const TopMenuHome = ({
 }) => {
   const {
     user,
+    clientID,
     showTooltip,
     hideTooltip,
     closeToolTip,
@@ -203,6 +203,7 @@ const TopMenuHome = ({
             type: "color",
             value: newColor,
             noteUUIDs: UUIDS,
+            clientID: clientID,
           }),
       ],
       openSnackRef.current
@@ -275,6 +276,7 @@ const TopMenuHome = ({
             type: "background",
             value: newBG,
             noteUUIDs: UUIDS,
+            clientID: clientID,
           }),
       ],
       openSnackRef.current
@@ -335,27 +337,38 @@ const TopMenuHome = ({
         fadeNote ? 250 : 0
       );
 
-      window.dispatchEvent(new Event("loadingStart"));
-
-      batchUpdateAction({
-        type: "BATCH_ARCHIVE/TRASH",
-        selectedNotes: selectedNotesIDs,
-        property: "isArchived",
-        val: archiveNotes,
-      }).then(() => window.dispatchEvent(new Event("loadingEnd")));
+      handleServerCall(
+        [
+          () =>
+            batchUpdateAction({
+              type: "BATCH_ARCHIVE/TRASH",
+              selectedNotes: selectedNotesIDs,
+              property: "isArchived",
+              val: archiveNotes,
+              clientID,
+            }),
+        ],
+        openSnackRef.current
+      );
     };
 
     redo();
 
     const undo = () => {
-      window.dispatchEvent(new Event("loadingStart"));
+      handleServerCall(
+        [
+          () =>
+            undoAction({
+              type: "UNDO_BATCH_ARCHIVE/TRASH",
+              selectedNotes: selectedNotesIDs,
+              property: "isArchived",
+              val: archiveNotes,
+              clientID,
+            }),
+        ],
+        openSnackRef.current
+      );
 
-      undoAction({
-        type: "UNDO_BATCH_ARCHIVE/TRASH",
-        selectedNotes: selectedNotesIDs,
-        property: "isArchived",
-        val: archiveNotes,
-      }).then(() => window.dispatchEvent(new Event("loadingEnd")));
       if (fadeNote && !clearSet) {
         setVisibleItems((prev) => {
           const updated = new Set(prev);
@@ -421,12 +434,17 @@ const TopMenuHome = ({
         setFadingNotes(new Set(selectedUUIDs));
 
         const undo = () => {
-          window.dispatchEvent(new Event("loadingStart"));
-
-          undoAction({
-            type: "UNDO_BATCH_PIN_ARCHIVED",
-            selectedNotes: selectedNotesIDs,
-          }).then(() => window.dispatchEvent(new Event("loadingEnd")));
+          handleServerCall(
+            [
+              () =>
+                undoAction({
+                  type: "UNDO_BATCH_PIN_ARCHIVED",
+                  selectedNotes: selectedNotesIDs,
+                  clientID,
+                }),
+            ],
+            openSnackRef.current
+          );
 
           localDbReducer({
             notes: notesStateRef.current.notes,
@@ -491,12 +509,19 @@ const TopMenuHome = ({
         },
         ArchiveVal ? 250 : 0
       );
-      window.dispatchEvent(new Event("loadingStart"));
-      batchUpdateAction({
-        type: "BATCH_PIN",
-        selectedNotes: selectedNotesIDs,
-        val: pinNotes,
-      }).then(() => window.dispatchEvent(new Event("loadingEnd")));
+
+      handleServerCall(
+        [
+          () =>
+            batchUpdateAction({
+              type: "BATCH_PIN",
+              selectedNotes: selectedNotesIDs,
+              val: pinNotes,
+              clientID,
+            }),
+        ],
+        openSnackRef.current
+      );
     });
   };
 
@@ -542,21 +567,24 @@ const TopMenuHome = ({
         });
       }, 250);
 
-      window.dispatchEvent(new Event("loadingStart"));
-
-      batchUpdateAction({
-        type: "BATCH_ARCHIVE/TRASH",
-        selectedNotes: selectedNotesIDs,
-        property: "isTrash",
-        val: val,
-      }).then(() => window.dispatchEvent(new Event("loadingEnd")));
+      handleServerCall(
+        [
+          () =>
+            batchUpdateAction({
+              type: "BATCH_ARCHIVE/TRASH",
+              selectedNotes: selectedNotesIDs,
+              property: "isTrash",
+              val: val,
+              clientID,
+            }),
+        ],
+        openSnackRef.current
+      );
     };
 
     redo();
 
     const undo = () => {
-      window.dispatchEvent(new Event("loadingStart"));
-
       localDbReducer({
         notes: notesStateRef.current.notes,
         order: notesStateRef.current.order,
@@ -583,12 +611,19 @@ const TopMenuHome = ({
         });
         return updated;
       });
-      undoAction({
-        type: "UNDO_BATCH_ARCHIVE/TRASH",
-        selectedNotes: selectedNotesIDs,
-        property: "isTrash",
-        val: val,
-      }).then(() => window.dispatchEvent(new Event("loadingEnd")));
+      handleServerCall(
+        [
+          () =>
+            undoAction({
+              type: "UNDO_BATCH_ARCHIVE/TRASH",
+              selectedNotes: selectedNotesIDs,
+              property: "isTrash",
+              val: val,
+              clientID,
+            }),
+        ],
+        openSnackRef.current
+      );
     };
 
     const snackMessage =
@@ -633,7 +668,10 @@ const TopMenuHome = ({
     handleClose();
 
     handleServerCall(
-      [() => batchDeleteNotes({ deletedUUIDs: selectedUUIDs })],
+      [
+        () =>
+          batchDeleteNotes({ deletedUUIDs: selectedUUIDs, clientID: clientID }),
+      ],
       openSnackRef.current
     );
   };
@@ -730,13 +768,25 @@ const TopMenuHome = ({
 
       setVisibleItems((prev) => new Set([...prev, ...newNotesUUIDs]));
 
-      handleServerCall(
+      const result = await handleServerCall(
         [
           () =>
-            batchCopyNoteAction({ newNotes: newNotes, imagesMap: imagesMap }),
+            batchCopyNoteAction({
+              newNotes: newNotes,
+              imagesMap: imagesMap,
+              clientID: clientID,
+            }),
         ],
         openSnackRef.current
       );
+      localDbReducer({
+        notes: notesStateRef.current.notes,
+        order: notesStateRef.current.order,
+        userID: userID,
+        type: "SET_NOTES",
+        notes: result.newNotes,
+      });
+      dispatchNotes({ type: "SET_NOTES", notes: result.newNotes });
     };
 
     redo();
@@ -764,6 +814,7 @@ const TopMenuHome = ({
               type: "UNDO_BATCH_COPY",
               imagesToDel: imagesToDel,
               notesUUIDs: newNotesUUIDs,
+              clientID: clientID,
             }),
         ],
         openSnackRef.current
@@ -823,8 +874,8 @@ const TopMenuHome = ({
             }}
             exit={{ opacity: 0, y: -20 }}
             transition={{
-              opacity: { duration: 0.2, ease: "easeIn" },
-              y: { duration: 0.3, stiffness: 120, damping: 20 },
+              opacity: { duration: 0.18, ease: "easeIn" },
+              y: { type: "spring", stiffness: 400, damping: 37, mass: 1.22 },
             }}
             style={{ pointerEvents: selectedNumber === 0 && "none" }}
           >

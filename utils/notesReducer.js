@@ -12,8 +12,8 @@ export function notesReducer(state, action) {
     case "SET_INITIAL_DATA":
       return {
         ...state,
-        notes: action.notes,
-        order: action.order,
+        notes: action?.notes ? action.notes : state.notes,
+        order: action?.order ? action.order : state.order,
       };
 
     case "ADD_NOTE":
@@ -26,6 +26,23 @@ export function notesReducer(state, action) {
         }),
         order: [action.newNote.uuid, ...state.order],
       };
+
+    case "ADD_NOTES": {
+      const updatedNotes = new Map(state.notes);
+
+      action.newNotes.forEach((note) => {
+        updatedNotes.set(note.uuid, {
+          ...note,
+          updatedAt: new Date(),
+          ref: createRef(),
+        });
+      });
+
+      return {
+        ...state,
+        notes: updatedNotes,
+      };
+    }
 
     case "BATCH_COPY_NOTE": {
       const updatedNotes = new Map(state.notes);
@@ -61,12 +78,31 @@ export function notesReducer(state, action) {
       };
     }
 
+    case "SET_ORDER": {
+      return {
+        ...state,
+        order: action.newOrder,
+      };
+    }
+
     case "SET_NOTE": {
       const updatedNotes = new Map(state.notes).set(action.note.uuid, {
         ...action.note,
         updatedAt: new Date(),
         ref: createRef(),
       });
+      return {
+        ...state,
+        notes: updatedNotes,
+      };
+    }
+
+    case "SET_NOTES": {
+      const updatedNotes = new Map(state.notes);
+      action.notes.forEach((note) => {
+        updatedNotes.set(note.uuid, { ...note, ref: createRef() });
+      });
+
       return {
         ...state,
         notes: updatedNotes,
@@ -216,6 +252,20 @@ export function notesReducer(state, action) {
         ...state,
         notes: updatedNotes,
         order: updatedOrder,
+      };
+    }
+
+    case "DELETE_BY_ID": {
+      const updatedNotes = new Map();
+
+      for (const noteUUID of state.order) {
+        const note = state.notes.get(noteUUID);
+        if (action.deletedIDsSet.has(note._id)) continue;
+        updatedNotes.set(note.uuid, note);
+      }
+      return {
+        ...state,
+        notes: updatedNotes,
       };
     }
 

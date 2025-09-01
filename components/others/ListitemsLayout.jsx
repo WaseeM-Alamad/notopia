@@ -20,7 +20,7 @@ const ListItemsLayout = ({
   dispatchNotes,
   isOpen,
 }) => {
-  const { openSnackRef } = useAppContext();
+  const { clientID, openSnackRef } = useAppContext();
   const renderCBdivider =
     localNote?.checkboxes.some((cb) => cb.isCompleted) &&
     localNote?.checkboxes.some((cb) => !cb.isCompleted);
@@ -98,6 +98,7 @@ const ListItemsLayout = ({
             type: "expandCompleted",
             value: val,
             noteUUIDs: [localNote?.uuid],
+            clientID: clientID,
           }),
       ],
       openSnackRef.current
@@ -134,6 +135,7 @@ const ListItemsLayout = ({
             operation: "ADD",
             value: checkbox,
             noteUUIDs: [localNote?.uuid],
+            clientID: clientID,
           }),
       ],
       openSnackRef.current
@@ -172,6 +174,7 @@ const ListItemsLayout = ({
               value: value,
               checkboxUUID: checkboxUUID,
               noteUUIDs: [localNote?.uuid],
+              clientID: clientID,
             }),
         ],
         openSnackRef.current
@@ -191,6 +194,7 @@ const ListItemsLayout = ({
               value: text,
               checkboxUUID: cbUUID,
               noteUUIDs: [localNote?.uuid],
+              clientID: clientID,
             }),
         ],
         openSnackRef.current
@@ -444,6 +448,7 @@ const ListItemsLayout = ({
               parentUUID: draggedItem.uuid,
               updatedItems: updatedItems,
               noteUUIDs: [localNote?.uuid],
+              clientID: clientID,
             }),
         ],
         openSnackRef.current

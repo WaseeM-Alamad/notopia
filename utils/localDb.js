@@ -153,6 +153,7 @@ export async function updateLocalNotesAndOrder(
     const notesQueueStore = tx.objectStore("notesUpdateQueue");
 
     for (const note of notesArray) {
+      if (!note) continue;
       const { ref, ...noteWithoutRef } = note;
 
       if (!isOnline) {
@@ -165,7 +166,6 @@ export async function updateLocalNotesAndOrder(
     if (orderArray) {
       const orderStore = tx.objectStore("order");
       orderStore.put({ id: "main", value: orderArray });
-      console.log("yess");
       if (!isOnline) {
         const orderSyncQueue = tx.objectStore("orderSyncQueue");
         orderSyncQueue.put({ id: "main", needsSync: true });
@@ -224,11 +224,11 @@ export async function getQueue(userID) {
       ["notesUpdateQueue", "orderSyncQueue"],
       "readonly"
     );
-    const QueuedNotes = await tx.objectStore("notesUpdateQueue").getAll();
+    const queuedNotes = await tx.objectStore("notesUpdateQueue").getAll();
     const syncOrder = await tx.objectStore("orderSyncQueue").get("main");
 
     await tx.done;
-    return { syncOrder: syncOrder?.needsSync || false, QueuedNotes };
+    return { syncOrder: syncOrder?.needsSync || false, queuedNotes };
   } catch (err) {
     console.error("Failed to fetch queued notes:", err);
     return [];

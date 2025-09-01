@@ -78,6 +78,14 @@ const UserSchema = new Schema({
     },
   ],
   labels: [LabelSchema],
+  orderLastModifiedBy: {
+    type: String,
+    default: null,
+  },
+  labelsLastModifiedBy: {
+    type: String,
+    default: null,
+  },
 });
 
 const User = models?.User || model("User", UserSchema);

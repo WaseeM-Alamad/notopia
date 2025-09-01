@@ -1,6 +1,5 @@
 import { createRef, useEffect, useMemo, useRef } from "react";
 import {
-  getQueuedNotes,
   isLabelsEmpty,
   isNotesEmpty,
   isOrderEmpty,
@@ -10,13 +9,24 @@ import {
   saveLabelsArray,
   saveNotesArray,
   saveOrderArray,
+  clearQueuedNotes,
+  getQueue,
+  updateLocalNotesAndOrder,
 } from "@/utils/localDb";
 import { useAppContext } from "@/context/AppContext";
-import { fetchNotes } from "@/utils/actions";
+import { fetchNotes, syncOfflineUpdatesAction } from "@/utils/actions";
+import handleServerCall from "@/utils/handleServerCall";
 
 export function useDataManager({ notesState, dispatchNotes, setNotesReady }) {
-  const { user, labelsRef, setLabelsReady, notesStateRef, openSnackRef } =
-    useAppContext();
+  const {
+    user,
+    clientID,
+    setIsOnline,
+    labelsRef,
+    setLabelsReady,
+    notesStateRef,
+    openSnackRef,
+  } = useAppContext();
 
   useEffect(() => {
     notesStateRef.current = notesState;
@@ -105,5 +115,64 @@ export function useDataManager({ notesState, dispatchNotes, setNotesReady }) {
     window.addEventListener("refresh", fetchAndUpdateLocally);
 
     return () => window.removeEventListener("refresh", fetchAndUpdateLocally);
+  }, []);
+
+  useEffect(() => {
+    const handleOnline = async () => {
+      const { syncOrder, queuedNotes } = await getQueue(user?.id);
+      let queuedOrder = [];
+      if (syncOrder) {
+        queuedOrder = await loadOrderArray(user?.id);
+      }
+
+      if (syncOrder || queuedNotes.length > 0) {
+        await handleServerCall(
+          [
+            () =>
+              syncOfflineUpdatesAction({
+                queuedOrder,
+                syncOrder,
+                queuedNotes,
+                clientID,
+              }),
+          ],
+          openSnackRef.current
+        );
+      }
+      await clearQueuedNotes(user?.id);
+
+      fetchAndUpdateLocally();
+
+      setIsOnline(true);
+      openSnackRef.current({
+        snackMessage: (
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <div className="internet-icon" />
+            <span>You're back online</span>
+          </div>
+        ),
+        showUndo: false,
+      });
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      openSnackRef.current({
+        snackMessage: (
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <div className="no-internet-icon" />
+            <span>You are currently offline</span>
+          </div>
+        ),
+        showUndo: false,
+      });
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
   }, []);
 }

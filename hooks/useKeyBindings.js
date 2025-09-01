@@ -28,6 +28,7 @@ export function useKeyBindings({
 }) {
   const {
     user,
+    clientID,
     labelsRef,
     currentSection,
     ignoreKeysRef,
@@ -276,6 +277,7 @@ export function useKeyBindings({
               updateOrderAction({
                 initialIndex,
                 endIndex: finalIndex,
+                clientID: clientID,
               }),
           ],
           openSnackRef.current
@@ -378,6 +380,7 @@ export function useKeyBindings({
               updateOrderAction({
                 initialIndex,
                 endIndex: finalIndex,
+                clientID: clientID
               }),
           ],
           openSnackRef.current
@@ -545,6 +548,7 @@ export function useKeyBindings({
                     type: "isPinned",
                     value: !note.isPinned,
                     noteUUIDs: [note.uuid],
+                    clientID: clientID
                   }),
               ],
               openSnackRef.current
@@ -619,6 +623,7 @@ export function useKeyBindings({
                 type: "showCheckboxes",
                 value: !note.showCheckboxes,
                 noteUUIDs: [note.uuid],
+                clientID: clientID
               }),
           ],
           openSnackRef.current

@@ -582,7 +582,7 @@ export const fetchNotes = async () => {
   }
 };
 
-export const createNoteAction = async (note) => {
+export const createNoteAction = async (note, clientID) => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
   if (!session) {
@@ -600,20 +600,25 @@ export const createNoteAction = async (note) => {
       ...note,
       images: [],
       creator: userID,
+      lastModifiedBy: clientID,
     };
     const newNote = new Note(noteData);
 
     await User.updateOne(
       { _id: userID },
-      { $push: { notesOrder: { $each: [newNote.uuid], $position: 0 } } }
+      {
+        $push: { notesOrder: { $each: [newNote.uuid], $position: 0 } },
+        $set: { orderLastModifiedBy: clientID },
+      }
     );
 
-    await newNote.save();
+    const savedNote = await newNote.save();
 
     return {
       success: true,
       message: "Note added successfully!",
       status: 201,
+      newNote: JSON.parse(JSON.stringify(savedNote)),
     };
   } catch (error) {
     console.log("Error creating note:", error);
@@ -632,7 +637,10 @@ export const NoteUpdateAction = async (data) => {
     if (data.type === "images") {
       const updatedNote = await Note.findOneAndUpdate(
         { uuid: data.noteUUIDs[0], creator: userID },
-        { $push: { images: data.value } },
+        {
+          $push: { images: data.value },
+          $set: { lastModifiedBy: data.clientID },
+        },
         { returnDocument: "after" }
       );
       const updatedImage = updatedNote.images.find(
@@ -642,47 +650,69 @@ export const NoteUpdateAction = async (data) => {
     } else if (data.type === "isArchived") {
       await Note.updateOne(
         { uuid: data.noteUUIDs[0], creator: userID },
-        { $set: { [data.type]: data.value, isPinned: false } }
+        {
+          $set: {
+            [data.type]: data.value,
+            isPinned: false,
+            lastModifiedBy: data.clientID,
+          },
+        }
       );
       if (!data.first) {
         const user = await User.findById(userID);
         const { notesOrder } = user;
         const order = notesOrder.filter((uuid) => uuid !== data.noteUUIDs[0]);
         const updatedOrder = [data.noteUUIDs[0], ...order];
+        user.orderLastModifiedBy = data.clientID;
         user.notesOrder = updatedOrder;
         await user.save();
       }
     } else if (data.type === "pinArchived") {
       await Note.updateOne(
         { uuid: data.noteUUIDs[0], creator: userID },
-        { $set: { isPinned: data.value, isArchived: false } }
+        {
+          $set: {
+            isPinned: data.value,
+            isArchived: false,
+            lastModifiedBy: data.clientID,
+          },
+        }
       );
       const user = await User.findById(userID);
       const { notesOrder } = user;
       const order = notesOrder.filter((uuid) => uuid !== data.noteUUIDs[0]);
       const updatedOrder = [data.noteUUIDs[0], ...order];
+      user.orderLastModifiedBy = data.clientID;
       user.notesOrder = updatedOrder;
       await user.save();
     } else if (data.type === "isPinned") {
       await Note.updateOne(
         { uuid: data.noteUUIDs[0], creator: userID },
-        { $set: { [data.type]: data.value } }
+        { $set: { [data.type]: data.value, lastModifiedBy: data.clientID } }
       );
       const user = await User.findById(userID);
       const { notesOrder } = user;
       const order = notesOrder.filter((uuid) => uuid !== data.noteUUIDs[0]);
       const updatedOrder = [data.noteUUIDs[0], ...order];
+      user.orderLastModifiedBy = data.clientID;
       user.notesOrder = updatedOrder;
       await user.save();
     } else if (data.type === "isTrash") {
       await Note.updateOne(
         { uuid: data.noteUUIDs[0], creator: userID },
-        { $set: { [data.type]: data.value, isPinned: false } }
+        {
+          $set: {
+            [data.type]: data.value,
+            isPinned: false,
+            lastModifiedBy: data.clientID,
+          },
+        }
       );
       const user = await User.findById(userID);
       const { notesOrder } = user;
       const order = notesOrder.filter((uuid) => uuid !== data.noteUUIDs[0]);
       const updatedOrder = [data.noteUUIDs[0], ...order];
+      user.orderLastModifiedBy = data.clientID;
       user.notesOrder = updatedOrder;
       await user.save();
     } else if (data.type === "checkboxes") {
@@ -696,7 +726,10 @@ export const NoteUpdateAction = async (data) => {
             { uuid: data.noteUUIDs[0], creator: userID },
             {
               $push: { checkboxes: checkbox },
-              $set: { textUpdatedAt: new Date() },
+              $set: {
+                textUpdatedAt: new Date(),
+                lastModifiedBy: data.clientID,
+              },
             }
           );
           break;
@@ -712,6 +745,7 @@ export const NoteUpdateAction = async (data) => {
               $set: {
                 "checkboxes.$.isCompleted": data.value,
                 textUpdatedAt: new Date(),
+                lastModifiedBy: data.clientID,
               },
             }
           );
@@ -732,7 +766,10 @@ export const NoteUpdateAction = async (data) => {
                   ],
                 },
               },
-              $set: { textUpdatedAt: new Date() },
+              $set: {
+                textUpdatedAt: new Date(),
+                lastModifiedBy: data.clientID,
+              },
             }
           );
           break;
@@ -742,7 +779,10 @@ export const NoteUpdateAction = async (data) => {
             { uuid: data.noteUUIDs[0], creator: userID },
             {
               $pull: { checkboxes: { isCompleted: true } },
-              $set: { textUpdatedAt: new Date() },
+              $set: {
+                textUpdatedAt: new Date(),
+                lastModifiedBy: data.clientID,
+              },
             }
           );
           break;
@@ -754,6 +794,7 @@ export const NoteUpdateAction = async (data) => {
               $set: {
                 "checkboxes.$[elem].isCompleted": false,
                 textUpdatedAt: new Date(),
+                lastModifiedBy: data.clientID,
               },
             },
             { arrayFilters: [{ "elem.isCompleted": true }] }
@@ -771,6 +812,7 @@ export const NoteUpdateAction = async (data) => {
               $set: {
                 "checkboxes.$.content": data.value,
                 textUpdatedAt: new Date(),
+                lastModifiedBy: data.clientID,
               },
             }
           );
@@ -840,6 +882,7 @@ export const NoteUpdateAction = async (data) => {
           console.log(initialIndex, overIndex);
           note.textUpdatedAt = new Date();
           note.checkboxes = newList;
+          note.lastModifiedBy = data.clientID;
           await note.save();
 
           break;
@@ -848,7 +891,13 @@ export const NoteUpdateAction = async (data) => {
     } else {
       await Note.updateMany(
         { uuid: { $in: data.noteUUIDs }, creator: userID },
-        { $set: { [data.type]: data.value, textUpdatedAt: new Date() } }
+        {
+          $set: {
+            [data.type]: data.value,
+            textUpdatedAt: new Date(),
+            lastModifiedBy: data.clientID,
+          },
+        }
       );
     }
   } catch (error) {
@@ -885,9 +934,16 @@ export const batchUpdateAction = async (data) => {
 
       await Note.updateMany(
         { uuid: { $in: sortedUUIDs }, creator: userID },
-        { $set: { [data.property]: !data.val, isPinned: false } }
+        {
+          $set: {
+            [data.property]: !data.val,
+            isPinned: false,
+            lastModifiedBy: data.clientID,
+          },
+        }
       );
 
+      user.orderLastModifiedBy = data.clientID;
       user.notesOrder = updatedOrder;
       await user.save();
     } else if (data.type === "BATCH_PIN") {
@@ -910,9 +966,16 @@ export const batchUpdateAction = async (data) => {
 
       await Note.updateMany(
         { uuid: { $in: sortedUUIDs }, creator: userID },
-        { $set: { isPinned: !data.val, isArchived: false } }
+        {
+          $set: {
+            isPinned: !data.val,
+            isArchived: false,
+            lastModifiedBy: data.clientID,
+          },
+        }
       );
 
+      user.orderLastModifiedBy = data.clientID;
       user.notesOrder = updatedOrder;
       await user.save();
     }
@@ -922,7 +985,7 @@ export const batchUpdateAction = async (data) => {
   }
 };
 
-export const NoteTextUpdateAction = async (values, noteUUID) => {
+export const NoteTextUpdateAction = async (values, noteUUID, clientID) => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
   if (!session) {
@@ -938,6 +1001,7 @@ export const NoteTextUpdateAction = async (values, noteUUID) => {
           title: values.title,
           content: values.content,
           textUpdatedAt: new Date(),
+          lastModifiedBy: clientID,
         },
       }
     );
@@ -947,7 +1011,12 @@ export const NoteTextUpdateAction = async (values, noteUUID) => {
   }
 };
 
-export const NoteImageDeleteAction = async (filePath, noteUUID, imageID) => {
+export const NoteImageDeleteAction = async (
+  filePath,
+  noteUUID,
+  imageID,
+  clientID
+) => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
   if (!session) {
@@ -957,7 +1026,10 @@ export const NoteImageDeleteAction = async (filePath, noteUUID, imageID) => {
     await connectDB();
     await Note.updateOne(
       { uuid: noteUUID, "images.uuid": imageID, creator: userID },
-      { $pull: { images: { uuid: imageID } } }
+      {
+        $pull: { images: { uuid: imageID } },
+        $set: { lastModifiedBy: clientID },
+      }
     );
 
     await cloudinary.uploader.destroy(filePath);
@@ -967,7 +1039,7 @@ export const NoteImageDeleteAction = async (filePath, noteUUID, imageID) => {
   }
 };
 
-export const DeleteNoteAction = async (noteUUID) => {
+export const DeleteNoteAction = async (noteUUID, clientID) => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
   if (!session) {
@@ -994,7 +1066,7 @@ export const DeleteNoteAction = async (noteUUID) => {
   }
 };
 
-export const emptyTrashAction = async () => {
+export const emptyTrashAction = async (clientID) => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
   if (!session) {
@@ -1049,11 +1121,11 @@ export const updateOrderAction = async (data) => {
     await connectDB();
     const user = await User.findById(userID);
     const { notesOrder } = user;
-    // console.log(user)
 
     if (data.type === "shift to start") {
       const order = notesOrder.filter((uuid) => uuid !== data.uuid);
       const updatedOrder = [data.uuid, ...order];
+
       user.notesOrder = updatedOrder;
     } else {
       const updatedOrder = [...notesOrder];
@@ -1062,6 +1134,7 @@ export const updateOrderAction = async (data) => {
 
       user.notesOrder = updatedOrder;
     }
+    user.orderLastModifiedBy = data.clientID;
     await user.save();
   } catch (error) {
     console.log("Error updating position", error);
@@ -1084,40 +1157,58 @@ export const undoAction = async (data) => {
     if (data.type === "UNDO_ARCHIVE") {
       await Note.updateOne(
         { uuid: data.noteUUID, creator: userID },
-        { $set: { isArchived: data.value, isPinned: data.pin } }
+        {
+          $set: {
+            isArchived: data.value,
+            isPinned: data.pin,
+            lastModifiedBy: data.clientID,
+          },
+        }
       );
       const updatedOrder = [...notesOrder];
       const [targetedNote] = updatedOrder.splice(data.endIndex, 1);
       updatedOrder.splice(data.initialIndex, 0, targetedNote);
 
+      user.orderLastModifiedBy = data.clientID;
       user.notesOrder = updatedOrder;
       await user.save();
     } else if (data.type === "UNDO_TRASH") {
       await Note.updateOne(
         { uuid: data.noteUUID, creator: userID },
-        { $set: { isTrash: data.value } }
+        { $set: { isTrash: data.value, lastModifiedBy: data.clientID } }
       );
       const updatedOrder = [...notesOrder];
       const [targetedNote] = updatedOrder.splice(data.endIndex, 1);
       updatedOrder.splice(data.initialIndex, 0, targetedNote);
 
+      user.orderLastModifiedBy = data.clientID;
       user.notesOrder = updatedOrder;
       await user.save();
     } else if (data.type === "UNDO_PIN_ARCHIVED") {
       await Note.updateOne(
         { uuid: data.noteUUID, creator: userID },
-        { $set: { isPinned: false, isArchived: true } }
+        {
+          $set: {
+            isPinned: false,
+            isArchived: true,
+            lastModifiedBy: data.clientID,
+          },
+        }
       );
       const updatedOrder = [...notesOrder];
       const [targetedNote] = updatedOrder.splice(data.endIndex, 1);
       updatedOrder.splice(data.initialIndex, 0, targetedNote);
 
+      user.orderLastModifiedBy = data.clientID;
       user.notesOrder = updatedOrder;
       await user.save();
     } else if (data.type === "UNDO_COPY") {
       await User.updateOne(
         { _id: userID },
-        { $pull: { notesOrder: data.noteUUID } }
+        {
+          $pull: { notesOrder: data.noteUUID },
+          $set: { orderLastModifiedBy: data.clientID },
+        }
       );
 
       const result = await Note.deleteOne({
@@ -1146,13 +1237,19 @@ export const undoAction = async (data) => {
           updateOne: {
             filter: { uuid: noteData.uuid },
             update: {
-              $set: { [data.property]: data.val, isPinned: noteData.isPinned },
+              $set: {
+                [data.property]: data.val,
+                isPinned: noteData.isPinned,
+                lastModifiedBy: data.clientID,
+              },
             },
           },
         });
       });
 
       await Note.bulkWrite(bulkOperations);
+
+      user.orderLastModifiedBy = data.clientID;
       user.notesOrder = updatedOrder;
       await user.save();
     } else if (data.type === "UNDO_BATCH_PIN_ARCHIVED") {
@@ -1167,8 +1264,16 @@ export const undoAction = async (data) => {
 
       await Note.updateMany(
         { uuid: { $in: selectedUUIDs }, creator: userID },
-        { $set: { isArchived: true, isPinned: false } }
+        {
+          $set: {
+            isArchived: true,
+            isPinned: false,
+            lastModifiedBy: data.clientID,
+          },
+        }
       );
+
+      user.orderLastModifiedBy = data.clientID;
       user.notesOrder = updatedOrder;
       await user.save();
     } else if (data.type === "UNDO_BATCH_COPY") {
@@ -1187,9 +1292,8 @@ export const undoAction = async (data) => {
       await User.updateOne(
         { _id: userID },
         {
-          $pull: {
-            notesOrder: { $in: data.notesUUIDs },
-          },
+          $pull: { notesOrder: { $in: data.notesUUIDs } },
+          $set: { orderLastModifiedBy: data.clientID },
         }
       );
     }
@@ -1256,20 +1360,24 @@ export const copyNoteAction = async (data) => {
       isTrash: copiedNote.isTrash,
       images: copiedImages,
       creator: userID,
+      lastModifiedBy: data.clientID,
     };
 
     const newNote = new Note(noteData);
 
     await User.updateOne(
       { _id: userID },
-      { $push: { notesOrder: { $each: [newNote.uuid], $position: 0 } } }
+      {
+        $push: { notesOrder: { $each: [newNote.uuid], $position: 0 } },
+        $set: { orderLastModifiedBy: data.clientID },
+      }
     );
 
-    await newNote.save();
+    const savedNote = await newNote.save();
 
     return {
       success: true,
-      note: JSON.parse(JSON.stringify(newNote)),
+      note: JSON.parse(JSON.stringify(savedNote)),
       message: "Note copied successfully!",
       status: 201,
     };
@@ -1294,6 +1402,7 @@ export const batchCopyNoteAction = async (data) => {
       data.newNotes.map(async (n) => {
         notesUUIDs.unshift(n.uuid);
         n.creator = userID;
+        n.lastModifiedBy = data.clientID;
         const destinationFolder = `${userID}/${n.uuid}`;
         if (n.images.length > 0) {
           await Promise.all(
@@ -1323,19 +1432,19 @@ export const batchCopyNoteAction = async (data) => {
       })
     );
 
-    await Note.insertMany(data.newNotes);
+    const savedNotes = await Note.insertMany(data.newNotes);
     await User.updateOne(
       { _id: userID },
       {
-        $push: {
-          notesOrder: { $each: notesUUIDs, $position: 0 },
-        },
+        $push: { notesOrder: { $each: notesUUIDs, $position: 0 } },
+        $set: { lastModifiedBy: data.clientID },
       }
     );
 
     return {
       success: true,
       message: "Notes copied successfully!",
+      newNotes: JSON.parse(JSON.stringify(savedNotes)),
       status: 201,
     };
   } catch (error) {
@@ -1368,7 +1477,7 @@ export const fetchLabelsAction = async () => {
   }
 };
 
-export const createLabelAction = async (newUUID, newLabel) => {
+export const createLabelAction = async (newUUID, newLabel, clientID) => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
   if (!session) {
@@ -1395,6 +1504,7 @@ export const createLabelAction = async (newUUID, newLabel) => {
       };
     }
 
+    user.labelsLastModifiedBy = clientID;
     user.labels.push({ uuid: newUUID, label: newLabel });
 
     await user.save();
@@ -1423,10 +1533,19 @@ export const createLabelForNotesAction = async (data) => {
         uuid: { $in: data.notesUUIDs },
         creator: userID,
       },
-      { $push: { labels: data.labelObj.uuid } }
+      {
+        $push: { labels: data.labelObj.uuid },
+        $set: { lastModifiedBy: data.clientID },
+      }
     );
 
-    await User.updateOne({ _id: userID }, { $push: { labels: data.labelObj } });
+    await User.updateOne(
+      { _id: userID },
+      {
+        $push: { labels: data.labelObj },
+        $set: { labelsLastModifiedBy: data.clientID },
+      }
+    );
 
     return {
       success: true,
@@ -1450,7 +1569,10 @@ export const addLabelAction = async (data) => {
 
     await Note.updateOne(
       { uuid: data.noteUUID, creator: userID },
-      { $push: { labels: data.labelUUID } }
+      {
+        $push: { labels: data.labelUUID },
+        $set: { lastModifiedBy: data.clientID },
+      }
     );
   } catch (error) {
     console.log(error);
@@ -1469,7 +1591,10 @@ export const removeLabelAction = async (data) => {
 
     await Note.updateOne(
       { uuid: data.noteUUID, creator: userID },
-      { $pull: { labels: data.labelUUID } }
+      {
+        $pull: { labels: data.labelUUID },
+        $set: { lastModifiedBy: data.clientID },
+      }
     );
   } catch (error) {
     console.log(error);
@@ -1490,7 +1615,12 @@ export const updateLabelAction = async (data) => {
     if (data.type === "color") {
       await User.findOneAndUpdate(
         { _id: userID, "labels.uuid": data.uuid },
-        { $set: { "labels.$.color": data.color } }
+        {
+          $set: {
+            "labels.$.color": data.color,
+            labelsLastModifiedBy: data.clientID,
+          },
+        }
       );
 
       return {
@@ -1517,7 +1647,12 @@ export const updateLabelAction = async (data) => {
 
       await User.findOneAndUpdate(
         { _id: userID, "labels.uuid": data.uuid },
-        { $set: { "labels.$.label": data.label.trim() } }
+        {
+          $set: {
+            "labels.$.label": data.label.trim(),
+            labelsLastModifiedBy: data.clientID,
+          },
+        }
       );
 
       return {
@@ -1528,7 +1663,12 @@ export const updateLabelAction = async (data) => {
     } else if (data.type === "image") {
       await User.findOneAndUpdate(
         { _id: userID, "labels.uuid": data.uuid },
-        { $set: { "labels.$.image": data.imageURL } }
+        {
+          $set: {
+            "labels.$.image": data.imageURL,
+            labelsLastModifiedBy: data.clientID,
+          },
+        }
       );
 
       return {
@@ -1539,7 +1679,9 @@ export const updateLabelAction = async (data) => {
     } else if (data.type === "delete_image") {
       await User.findOneAndUpdate(
         { _id: userID, "labels.uuid": data.uuid },
-        { $set: { "labels.$.image": null } }
+        {
+          $set: { "labels.$.image": null, labelsLastModifiedBy: data.clientID },
+        }
       );
 
       const publicId = `${userID}/labels/${data.uuid}`;
@@ -1557,6 +1699,7 @@ export const updateLabelAction = async (data) => {
           $set: {
             "labels.$.isPinned": data.value,
             "labels.$.pinDate": new Date(),
+            labelsLastModifiedBy: data.clientID,
           },
         }
       );
@@ -1575,7 +1718,11 @@ export const updateLabelAction = async (data) => {
         arrayFilters.push({ [`label${index}.uuid`]: label.uuid });
       });
 
-      await User.updateOne({ _id: userID }, { $set: set }, { arrayFilters });
+      await User.updateOne(
+        { _id: userID },
+        { $set: set, labelsLastModifiedBy: data.clientID },
+        { arrayFilters }
+      );
 
       return {
         success: true,
@@ -1601,12 +1748,18 @@ export const deleteLabelAction = async (data) => {
 
     await User.findOneAndUpdate(
       { _id: userID, "labels.uuid": data.labelUUID },
-      { $pull: { labels: { uuid: data.labelUUID } } }
+      {
+        $pull: { labels: { uuid: data.labelUUID } },
+        $set: { labelsLastModifiedBy: data.clientID },
+      }
     );
 
     await Note.updateMany(
       { labels: data.labelUUID, creator: userID },
-      { $pull: { labels: data.labelUUID } }
+      {
+        $pull: { labels: data.labelUUID },
+        $set: { lastModifiedBy: data.clientID },
+      }
     );
 
     if (data.hasImage) {
@@ -1656,6 +1809,7 @@ export const batchDeleteNotes = async (data) => {
         $pull: {
           notesOrder: { $in: data.deletedUUIDs },
         },
+        $set: { orderLastModifiedBy: data.clientID },
       }
     );
 
@@ -1693,7 +1847,10 @@ export const batchManageLabelsAction = async (data) => {
               labels: data.labelUUID,
               creator: userID,
             },
-            { $pull: { labels: data.labelUUID } }
+            {
+              $pull: { labels: data.labelUUID },
+              $set: { lastModifiedBy: data.clientID },
+            }
           );
           return { success: true, message: "Label removed successfully" };
         }
@@ -1704,7 +1861,10 @@ export const batchManageLabelsAction = async (data) => {
               uuid: { $in: data.notesUUIDs },
               creator: userID,
             },
-            { $push: { labels: data.labelUUID } }
+            {
+              $push: { labels: data.labelUUID },
+              $set: { lastModifiedBy: data.clientID },
+            }
           );
           return { success: true, message: "Label added successfully" };
         }
@@ -1715,7 +1875,10 @@ export const batchManageLabelsAction = async (data) => {
           uuid: { $in: data.notesUUIDs },
           creator: userID,
         },
-        { $push: { labels: data.labelUUID } }
+        {
+          $push: { labels: data.labelUUID },
+          $set: { lastModifiedBy: data.clientID },
+        }
       );
       return { success: true, message: "Label added successfully" };
     }
@@ -1742,37 +1905,84 @@ export const syncOfflineUpdatesAction = async (data) => {
   try {
     await connectDB();
 
-    const bulkOperations = [];
-    const newNotes = [];
-    const notesToUpdateMap = new Map();
+    const dbNotes = await Note.find({ creator: userID }).sort({
+      createdAt: -1,
+    });
 
-    for (let note of data.updatedNotes) {
-      if (note?.isNew) {
-        newNotes.push(note);
-      } else {
-        notesToUpdateMap.set(note.uuid, note);
+    const queuedNotes = data?.queuedNotes || [];
+    const queuedOrder = data?.queuedOrder || [];
+
+    const queuedOrderSet = new Set(queuedOrder);
+    const deletedNotesSet = new Set();
+
+    let syncOrder = data.syncOrder;
+
+    const notesBulkOperations = [];
+    const userBulkOperations = [];
+
+    if (queuedNotes.length > 0) {
+      for (let note of queuedNotes) {
+        const cleanNote = cleanNoteForDB(note);
+        if (note.type === "create") {
+          notesBulkOperations.push({
+            insertOne: {
+              document: {
+                ...cleanNote,
+                creator: userID,
+                lastModifiedBy: data.clientID,
+              },
+            },
+          });
+        } else if (note.type === "delete") {
+          deletedNotesSet.add(note.uuid);
+          notesBulkOperations.push({
+            deleteOne: {
+              filter: { uuid: cleanNote.uuid, creator: userID },
+            },
+          });
+        } else {
+          notesBulkOperations.push({
+            updateOne: {
+              filter: { uuid: cleanNote.uuid, creator: userID },
+              update: { $set: { ...cleanNote, lastModifiedBy: data.clientID } },
+            },
+          });
+        }
       }
     }
 
-    for (let note of [...newNotes, ...notesToUpdateMap.values()]) {
-      const cleanNote = cleanNoteForDB(note);
-      if (!note?.isNew) {
-        bulkOperations.push({
-          updateOne: {
-            filter: { uuid: cleanNote.uuid, creator: userID },
-            update: { $set: cleanNote },
-          },
-        });
-      } else {
-        bulkOperations.push({
-          insertOne: { document: { ...cleanNote, creator: userID } },
-        });
+    if (syncOrder) {
+      for (let dbNote of dbNotes) {
+        if (
+          !queuedOrderSet.has(dbNote.uuid) &&
+          !deletedNotesSet.has(dbNote.uuid)
+        ) {
+          syncOrder = true;
+          queuedOrder.push(dbNote.uuid);
+        }
       }
     }
 
-    await Note.bulkWrite(bulkOperations);
+    if (syncOrder) {
+      userBulkOperations.push({
+        updateOne: {
+          filter: { _id: userID },
+          update: { $set: { notesOrder: queuedOrder } },
+        },
+      });
+    }
 
-    return { success: true, message: "Data synced with database successfully" };
+    if (notesBulkOperations.length > 0) {
+      await Note.bulkWrite(notesBulkOperations);
+    }
+    if (syncOrder) {
+      await User.bulkWrite(userBulkOperations);
+    }
+
+    return {
+      success: true,
+      message: "Data synced with database successfully",
+    };
   } catch (error) {
     console.log("Error syncing data with database", error);
     throw new Error("Error syncing data with database");

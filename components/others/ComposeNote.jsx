@@ -6,7 +6,7 @@ import NoteImagesLayout from "../Tools/NoteImagesLayout";
 import { v4 as uuid } from "uuid";
 import { createNoteAction } from "@/utils/actions";
 import ComposeTools from "./ComposeTools";
-import { debounce } from "lodash";
+import { debounce, result } from "lodash";
 import { useAppContext } from "@/context/AppContext";
 import { AnimatePresence } from "framer-motion";
 import MoreMenu from "./MoreMenu";
@@ -31,6 +31,7 @@ const ComposeNote = ({
     closeToolTip,
     openSnackRef,
     notesStateRef,
+    clientID,
   } = useAppContext();
   const [isDragOver, setIsDragOver] = useState(false);
   const [isClient, setIsClient] = useState(false);
@@ -133,6 +134,7 @@ const ComposeNote = ({
 
       formData.append("files", file);
       formData.append("imageUUIDs", imageUUID);
+      formData.append("clientID", clientID);
     });
 
     setLoadingImages((prev) => {
@@ -217,10 +219,23 @@ const ComposeNote = ({
 
     setVisibleItems((prev) => new Set([...prev, newUUID]));
 
-    handleServerCall(
-      [() => createNoteAction(newNote), () => UploadImagesAction(newNote.uuid)],
-      openSnackRef.current
+    const result = await handleServerCall(
+      [
+        () => createNoteAction(newNote, clientID),
+        () => UploadImagesAction(newNote.uuid),
+      ],
+      openSnackRef.current,
+      true
     );
+    if (!result) return;
+    dispatchNotes({ type: "SET_NOTE", note: result.firstResult.newNote });
+    localDbReducer({
+      notes: notesStateRef.current.notes,
+      order: notesStateRef.current.order,
+      userID: userID,
+      type: "SET_NOTE",
+      note: result.firstResult.newNote,
+    });
   };
 
   const reset = () => {

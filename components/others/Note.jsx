@@ -36,6 +36,7 @@ const Note = memo(
     const {
       labelsRef,
       user,
+      clientID,
       showTooltip,
       hideTooltip,
       closeToolTip,
@@ -91,6 +92,7 @@ const Note = memo(
                 type: "isPinned",
                 value: !note.isPinned,
                 noteUUIDs: [note.uuid],
+                clientID: clientID,
               }),
           ],
           openSnackRef.current
@@ -203,6 +205,7 @@ const Note = memo(
               value: value,
               checkboxUUID: checkboxUUID,
               noteUUIDs: [note.uuid],
+              clientID: clientID,
             }),
         ],
         openSnackRef.current
@@ -232,6 +235,7 @@ const Note = memo(
               type: "expandCompleted",
               value: val,
               noteUUIDs: [note.uuid],
+              clientID: clientID,
             }),
         ],
         openSnackRef.current
@@ -306,6 +310,7 @@ const Note = memo(
 
     return (
       <>
+        {/* <button onClick={()=> console.log(note)}>ggg</button> */}
         <div
           tabIndex="0"
           onClick={(e) =>

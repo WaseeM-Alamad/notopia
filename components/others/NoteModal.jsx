@@ -46,6 +46,7 @@ const NoteModal = ({
     labelsRef,
     ignoreKeysRef,
     user,
+    clientID,
     showTooltip,
     hideTooltip,
     closeToolTip,
@@ -480,6 +481,7 @@ const NoteModal = ({
               pin: passedNote.isPinned,
               initialIndex: initialIndex,
               endIndex: 0,
+              clientID: clientID,
             }),
         ],
         openSnackRef.current
@@ -528,6 +530,7 @@ const NoteModal = ({
               value: !passedNote.isArchived,
               noteUUIDs: [note.uuid],
               first: first,
+              clientID: clientID,
             }),
         ],
         openSnackRef.current
@@ -587,6 +590,7 @@ const NoteModal = ({
               type: "isTrash",
               value: true,
               noteUUIDs: [note.uuid],
+              clientID: clientID,
             }),
         ],
         openSnackRef.current
@@ -617,6 +621,7 @@ const NoteModal = ({
               type: "isPinned",
               value: !localIsPinned,
               noteUUIDs: [note.uuid],
+              clientID: clientID,
             }),
         ],
         openSnackRef.current
@@ -631,6 +636,7 @@ const NoteModal = ({
                   type: "pinArchived",
                   value: true,
                   noteUUIDs: [note.uuid],
+                  clientID: clientID,
                 }),
             ],
             openSnackRef.current
@@ -644,6 +650,7 @@ const NoteModal = ({
                   noteUUID: note.uuid,
                   initialIndex: initialStyle.index,
                   endIndex: 0,
+                  clientID: clientID,
                 }),
             ],
             openSnackRef.current
@@ -675,6 +682,7 @@ const NoteModal = ({
                 noteUUID: note.uuid,
                 initialIndex: initialStyle.index,
                 endIndex: 0,
+                clientID: clientID,
               }),
           ],
           openSnackRef.current
@@ -717,7 +725,10 @@ const NoteModal = ({
       const onClose = async () => {
         const filePath = `${userID}/${note.uuid}/${imageUUID}`;
         handleServerCall(
-          [() => NoteImageDeleteAction(filePath, note.uuid, imageUUID)],
+          [
+            () =>
+              NoteImageDeleteAction(filePath, note.uuid, imageUUID, clientID),
+          ],
           openSnackRef.current
         );
       };
@@ -743,7 +754,7 @@ const NoteModal = ({
   const updateTextDebounced = useCallback(
     debounce(async (values) => {
       handleServerCall(
-        [() => NoteTextUpdateAction(values, note?.uuid)],
+        [() => NoteTextUpdateAction(values, note?.uuid, clientID)],
         openSnackRef.current
       );
     }, 600),
@@ -775,7 +786,8 @@ const NoteModal = ({
           () =>
             NoteTextUpdateAction(
               { title: note?.title, content: note?.content },
-              note?.uuid
+              note?.uuid,
+              clientID
             ),
         ],
         openSnackRef.current
@@ -800,7 +812,8 @@ const NoteModal = ({
           () =>
             NoteTextUpdateAction(
               { title: undoItem.title, content: undoItem.content },
-              note?.uuid
+              note?.uuid,
+              clientID
             ),
         ],
         openSnackRef.current
@@ -827,7 +840,8 @@ const NoteModal = ({
         () =>
           NoteTextUpdateAction(
             { title: redoItem.title, content: redoItem.content },
-            note?.uuid
+            note?.uuid,
+            clientID
           ),
       ],
       openSnackRef.current
@@ -950,6 +964,7 @@ const NoteModal = ({
           removeLabelAction({
             noteUUID: note.uuid,
             labelUUID: labelUUID,
+            clientID: clientID,
           }),
       ],
       openSnackRef.current
@@ -1002,6 +1017,7 @@ const NoteModal = ({
               type: "isTrash",
               value: true,
               noteUUIDs: [localNote?.uuid],
+              clientID: clientID,
             }),
         ],
         openSnackRef.current
@@ -1023,6 +1039,7 @@ const NoteModal = ({
               type: "isTrash",
               value: false,
               noteUUIDs: [localNote?.uuid],
+              clientID: clientID,
             }),
         ],
         openSnackRef.current

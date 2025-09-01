@@ -7,9 +7,8 @@ import Reminders from "@/components/pages/Reminders";
 import Trash from "@/components/pages/Trash";
 import Snackbar from "@/components/Tools/Snackbar";
 import Tooltip from "@/components/Tools/Tooltip";
-import { deleteLabelAction, fetchNotes } from "@/utils/actions";
+import { deleteLabelAction } from "@/utils/actions";
 import React, {
-  createRef,
   useCallback,
   useEffect,
   useReducer,
@@ -30,9 +29,9 @@ import { useBatchLoading } from "@/hooks/useBatchLoading";
 import { useHashRouting } from "@/hooks/useHashRouting";
 import { useDataManager } from "@/hooks/useDataManager";
 import { useSnackbar } from "@/hooks/useSnackbar";
-import { useConnection } from "@/hooks/useConnection";
 import handleServerCall from "@/utils/handleServerCall";
 import localDbReducer from "@/utils/localDbReducer";
+import { useRealtimeUpdates } from "@/hooks/useRealtimeUpdates";
 
 const page = () => {
   const { searchTerm, filters } = useSearch();
@@ -49,6 +48,7 @@ const page = () => {
     openSnackRef,
     user,
     rootContainerRef,
+    clientID,
   } = useAppContext();
   const [tooltipAnchor, setTooltipAnchor] = useState(null);
   const [notesState, dispatchNotes] = useReducer(notesReducer, initialStates);
@@ -209,6 +209,7 @@ const page = () => {
           deleteLabelAction({
             labelUUID: data.labelData.uuid,
             hasImage: data.labelData.image,
+            clientID: clientID,
           }),
       ],
       openSnackRef.current
@@ -301,7 +302,7 @@ const page = () => {
     return true;
   };
 
-  useConnection();
+  useRealtimeUpdates({ dispatchNotes });
 
   useDataManager({ notesState, dispatchNotes, notesReady, setNotesReady });
 
@@ -409,9 +410,7 @@ const page = () => {
           zIndex: "1000000",
         }}
         onClick={() => {
-          const rect = containerRef.current.getBoundingClientRect();
-          const bottom = rect.bottom + window.scrollY;
-          console.log(bottom)
+          console.log(notesState);
         }}
       >
         ggg

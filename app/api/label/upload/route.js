@@ -13,6 +13,7 @@ export async function POST(req) {
   const formData = await req.formData();
   const labelUUID = formData.get("labelUUID");
   const file = formData.get("file");
+  const clientID = formData.get("clientID");
 
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
@@ -75,6 +76,7 @@ export async function POST(req) {
       type: "image",
       uuid: labelUUID,
       imageURL: newUrl,
+      clientID: clientID,
     });
 
     return Response.json({

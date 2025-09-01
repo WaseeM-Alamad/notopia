@@ -30,11 +30,13 @@ const Sidebar = memo(() => {
   } = useAppContext();
   const containerRef = useRef(null);
   const [currentHash, setCurrentHash] = useState(null);
+  const [tooltipAnc, setTooltipAnc] = useState(null);
   const [isDragging, setIsDragging] = useState(null);
   const [actionTitle, setActionTitle] = useState("");
   const [tooltipOpen, setTooltipOpen] = useState(false);
 
   const layoutFrameRef = useRef(null);
+  const tooltipTimeoutRef = useRef(null);
 
   const items = [
     { type: "nav", name: "Home", hash: "home", Icon: HomeIcon },
@@ -252,16 +254,31 @@ const Sidebar = memo(() => {
     [isDragging, overUUID]
   );
 
-  const tooltipTimeoutRef = useRef(null);
-  const showSideTooltip = () => {
+  const showSideTooltip = (e) => {
     if (isExpanded) return;
+    const scrollContainer = containerRef.current;
+    const currentTarget = e.currentTarget;
     tooltipTimeoutRef.current = setTimeout(() => {
+      const virtualAnchor = {
+        getBoundingClientRect: () => {
+          const targetRect = currentTarget.getBoundingClientRect();
+          return new DOMRect(
+            targetRect.left,
+            targetRect.top,
+            targetRect.width,
+            targetRect.height
+          );
+        },
+        contextElement: scrollContainer,
+      };
+      setTooltipAnc(virtualAnchor);
       setTooltipOpen(true);
     }, 100);
   };
 
   const hideSideTooltip = () => {
     clearTimeout(tooltipTimeoutRef.current);
+    setTooltipAnc(null);
     setTooltipOpen(false);
   };
 
@@ -283,25 +300,28 @@ const Sidebar = memo(() => {
           >
             <AnimatePresence>
               {tooltipOpen && (
-                <SideTooltip Xi="56px" Xf="60px" text={actionTitle} />
+                <SideTooltip
+                  text={actionTitle}
+                  anchor={tooltipAnc}
+                />
               )}
             </AnimatePresence>
             <AddButton />
             <span className="side-btn-title">{actionTitle}</span>
           </button>
-            <div ref={containerRef} className="btns-container">
-              <SideButtons
-                navItems={navItems}
-                currentHash={currentHash}
-                calculateVerticalLayout={calculateVerticalLayout}
-                pageMounted={pageMounted}
-                containerRef={containerRef}
-                handleDragStart={handleDragStart}
-                setOverUUID={setOverUUID}
-                overUUID={overUUID}
-                isDragging={isDragging}
-                isExpanded={isExpanded}
-              />
+          <div ref={containerRef} className="btns-container">
+            <SideButtons
+              navItems={navItems}
+              currentHash={currentHash}
+              calculateVerticalLayout={calculateVerticalLayout}
+              pageMounted={pageMounted}
+              containerRef={containerRef}
+              handleDragStart={handleDragStart}
+              setOverUUID={setOverUUID}
+              overUUID={overUUID}
+              isDragging={isDragging}
+              isExpanded={isExpanded}
+            />
           </div>
           <div style={{ height: "2rem", width: "2rem" }} />
         </aside>

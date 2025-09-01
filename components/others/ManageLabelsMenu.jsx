@@ -24,6 +24,7 @@ const ManageLabelsMenu = ({
     openSnackRef,
     notesStateRef,
     user,
+    clientID,
   } = useAppContext();
   const { filters } = useSearch();
   const userID = user?.id;
@@ -130,6 +131,7 @@ const ManageLabelsMenu = ({
             removeLabelAction({
               noteUUID: note.uuid,
               labelUUID: uuid,
+              clientID: clientID,
             }),
         ],
         openSnackRef.current
@@ -164,6 +166,7 @@ const ManageLabelsMenu = ({
             addLabelAction({
               noteUUID: note.uuid,
               labelUUID: uuid,
+              clientID: clientID,
             }),
         ],
         openSnackRef.current

@@ -22,7 +22,8 @@ export function useNoteActions({
   labelObj,
   currentSection,
 }) {
-  const { user, fadeNote, openSnackRef, notesStateRef } = useAppContext();
+  const { user, clientID, fadeNote, openSnackRef, notesStateRef } =
+    useAppContext();
   const userID = user?.id;
   const { filters } = useSearch();
   const noteActions = useCallback(
@@ -73,6 +74,7 @@ export function useNoteActions({
                   value: !data.note.isArchived,
                   noteUUIDs: [data.note.uuid],
                   first: first,
+                  clientID: clientID,
                 }),
             ],
             openSnackRef.current
@@ -113,6 +115,7 @@ export function useNoteActions({
                   pin: data.note.isPinned,
                   initialIndex: initialIndex,
                   endIndex: 0,
+                  clientID: clientID,
                 }),
             ],
             openSnackRef.current
@@ -165,6 +168,7 @@ export function useNoteActions({
                   type: "isTrash",
                   value: false,
                   noteUUIDs: [data.note.uuid],
+                  clientID: clientID,
                 }),
             ],
             openSnackRef.current
@@ -202,6 +206,7 @@ export function useNoteActions({
                   value: true,
                   initialIndex: data.initialIndex,
                   endIndex: 0,
+                  clientID: clientID,
                 }),
             ],
             openSnackRef.current
@@ -274,6 +279,7 @@ export function useNoteActions({
                   type: "isTrash",
                   value: true,
                   noteUUIDs: [data.note.uuid],
+                  clientID: clientID,
                 }),
             ],
             openSnackRef.current
@@ -319,7 +325,7 @@ export function useNoteActions({
         }, 250);
 
         handleServerCall(
-          [() => DeleteNoteAction(data.note.uuid)],
+          [() => DeleteNoteAction(data.note.uuid, clientID)],
           openSnackRef.current
         );
       } else if (data.type === "PIN_ARCHIVED_NOTE") {
@@ -368,6 +374,7 @@ export function useNoteActions({
                   type: "pinArchived",
                   value: true,
                   noteUUIDs: [data.note.uuid],
+                  clientID: clientID,
                 }),
             ],
             openSnackRef.current
@@ -404,6 +411,7 @@ export function useNoteActions({
                   noteUUID: data.note.uuid,
                   initialIndex: initialIndex,
                   endIndex: 0,
+                  clientID: clientID,
                 }),
             ],
             openSnackRef.current
@@ -501,6 +509,7 @@ export function useNoteActions({
                   newNoteUUID: newUUID,
                   newImages: newImages,
                   note: { ...newNote, images: data.note.images },
+                  clientID: clientID,
                 }),
             ],
             openSnackRef.current
@@ -558,6 +567,7 @@ export function useNoteActions({
                     type: "UNDO_COPY",
                     noteUUID: newNote.uuid,
                     isImages: note.images.length,
+                    clientID: clientID,
                   }),
               ],
               openSnackRef.current
@@ -613,6 +623,7 @@ export function useNoteActions({
               removeLabelAction({
                 noteUUID: data.note.uuid,
                 labelUUID: data.labelUUID,
+                clientID: clientID,
               }),
           ],
           openSnackRef.current

@@ -79,6 +79,10 @@ const NoteSchema = new Schema(
       type: Date,
       default: Date.now,
     },
+    lastModifiedBy: {
+      type: String,
+      default: null
+    }
   },
   {
     timestamps: true,

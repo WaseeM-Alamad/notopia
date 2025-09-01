@@ -20,9 +20,3 @@ export const getNoteFormattedDate = (recievedDate) => {
 
   return FormattedDate;
 };
-
-// noteYear === currentDate.getFullYear()
-//   ? noteDay === currentDate.getDate()
-//     ? format(new Date(recievedDate), "h:mm a")
-//     : format(new Date(recievedDate), `MMM dd`)
-//   : format(new Date(recievedDate), `MMM yyyy`);

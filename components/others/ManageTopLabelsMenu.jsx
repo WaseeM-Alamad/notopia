@@ -29,6 +29,7 @@ const ManageTopLabelsMenu = ({
     openSnackRef,
     notesStateRef,
     user,
+    clientID,
   } = useAppContext();
   const { filters } = useSearch();
   const userID = user?.id;
@@ -124,6 +125,7 @@ const ManageTopLabelsMenu = ({
           createLabelForNotesAction({
             labelObj: labelObj,
             notesUUIDs: notesUUIDs,
+            clientID: clientID,
           }),
       ],
       openSnackRef.current
@@ -192,6 +194,7 @@ const ManageTopLabelsMenu = ({
                 case: "shared",
                 notesUUIDs: notesUUIDs,
                 labelUUID: uuid,
+                clientID: clientID,
               }),
           ],
           openSnackRef.current
@@ -235,6 +238,7 @@ const ManageTopLabelsMenu = ({
                 case: "unshared",
                 notesUUIDs: notesUUIDs,
                 labelUUID: uuid,
+                clientID: clientID,
               }),
           ],
           openSnackRef.current
@@ -268,6 +272,7 @@ const ManageTopLabelsMenu = ({
               case: "shared",
               notesUUIDs: notesUUIDs,
               labelUUID: uuid,
+              clientID: clientID,
             }),
         ],
         openSnackRef.current

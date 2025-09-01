@@ -14,33 +14,42 @@ const localDbReducer = (payload) => {
   switch (payload.type) {
     case "ADD_NOTE": {
       const isOnline = navigator.onLine;
-      let newNote = null;
-      if (!isOnline) {
-        newNote = {
-          ...payload.newNote,
-          updatedAt: new Date(),
-          type: "create",
-          ref: createRef(),
-        };
-      } else {
-        newNote = {
-          ...payload.newNote,
-          updatedAt: new Date(),
-          ref: createRef(),
-        };
-      }
+
+      const newNote = {
+        ...payload.newNote,
+        updatedAt: new Date(),
+        ref: createRef(),
+        ...(isOnline ? {} : { type: "create" }),
+      };
+
       const updatedOrder = [payload.newNote.uuid, ...payload.order];
       updateLocalNotesAndOrder([newNote], updatedOrder, payload.userID);
       break;
     }
 
+    case "ADD_NOTES": {
+      const isOnline = navigator.onLine;
+      const newNotes = payload.newNotes.map((note) => ({
+        ...note,
+        updatedAt: new Date(),
+        ref: createRef(),
+        ...(isOnline ? {} : { type: "create" }),
+      }));
+
+      updateLocalNotesAndOrder(newNotes, null, payload.userID);
+      break;
+    }
+
     case "BATCH_COPY_NOTE": {
       const updatedOrder = [...payload.order];
+      const isOnline = navigator.onLine;
+      const newNotes = [];
 
       payload.newNotes.forEach((note) => {
         updatedOrder.unshift(note.uuid);
+        newNotes.push({ ...note, ...(isOnline ? {} : { type: "create" }) });
       });
-      updateLocalNotesAndOrder(payload.newNotes, updatedOrder, payload.userID);
+      updateLocalNotesAndOrder(newNotes, updatedOrder, payload.userID);
       break;
     }
 
@@ -59,6 +68,15 @@ const localDbReducer = (payload) => {
     case "SET_NOTE": {
       const newNote = { ...payload.note, updatedAt: new Date() };
       updateLocalNotesAndOrder([newNote], null, payload.userID);
+      break;
+    }
+
+    case "SET_NOTES": {
+      const newNotes = [];
+      payload.notes.forEach((note) => {
+        newNotes.push({ ...note, ref: createRef() });
+      });
+      updateLocalNotesAndOrder(newNotes, null, payload.userID);
       break;
     }
 
@@ -193,6 +211,21 @@ const localDbReducer = (payload) => {
         updatedOrder,
         payload.userID
       );
+      break;
+    }
+
+    case "DELETE_BY_ID": {
+      const deletedUUIDs = [];
+
+      for (const noteUUID of payload.order) {
+        const note = payload.notes.get(noteUUID);
+        if (deletedUUIDs.length === payload.deletedIDsSet.size) break;
+        if (note && payload.deletedIDsSet.has(note._id))
+          deletedUUIDs.push(note.uuid);
+      }
+
+      deleteLocalNotesAndUpdateOrder(deletedUUIDs, null, payload.userID);
+
       break;
     }
 

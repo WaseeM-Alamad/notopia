@@ -1,16 +1,24 @@
 "use client";
 
-const handleServerCall = async (fns, snackbar) => {
+const handleServerCall = async (fns, snackbar, getFirstRes = false) => {
   try {
-    let result;
+    let result = null;
+    let firstRes = null;
     window.dispatchEvent(new Event("loadingStart"));
-    if (navigator.onLine) {
-      for (const fn of fns) {
+    if (!navigator.onLine) return;
+    for (const fn of fns) {
+      if (!firstRes && getFirstRes) {
+        firstRes = await fn();
+      } else {
         result = await fn();
       }
     }
 
-    return result;
+    if (firstRes && getFirstRes) {
+      return { firstResult: firstRes, otherResult: result };
+    } else {
+      return result;
+    }
   } catch (error) {
     snackbar({ snackMessage: error.message, showUndo: false });
   } finally {

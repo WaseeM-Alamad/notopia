@@ -490,9 +490,10 @@ const Navbar = () => {
           <Logo style={{ margin: "auto 0", flexShrink: "0" }} />
           <span
             style={{
-              marginLeft: ".6rem",
+              marginLeft: ".8rem",
               fontWeight: "700",
               fontSize: "1.3rem",
+              color: "#474b4f"
             }}
           >
             Notopia

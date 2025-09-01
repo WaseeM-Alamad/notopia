@@ -37,6 +37,7 @@ const ModalTools = ({
   const {
     setLoadingImages,
     user,
+    clientID,
     showTooltip,
     hideTooltip,
     closeToolTip,
@@ -84,6 +85,7 @@ const ModalTools = ({
             type: "color",
             value: color,
             noteUUIDs: [note.uuid],
+            clientID: clientID
           }),
       ],
       openSnackRef.current
@@ -109,6 +111,7 @@ const ModalTools = ({
               type: "background",
               value: newBG,
               noteUUIDs: [note.uuid],
+              clientID: clientID
             }),
         ],
         openSnackRef.current
@@ -144,6 +147,7 @@ const ModalTools = ({
 
       formData.append("files", file);
       formData.append("imageUUIDs", imageUUID);
+      formData.append("clientID", clientID);
 
       const imageURL = URL.createObjectURL(file);
 
@@ -243,6 +247,7 @@ const ModalTools = ({
               type: "isTrash",
               value: true,
               noteUUIDs: [localNote.uuid],
+              clientID: clientID
             }),
         ],
         openSnackRef.current
@@ -259,6 +264,7 @@ const ModalTools = ({
               type: "isTrash",
               value: false,
               noteUUIDs: [localNote.uuid],
+              clientID: clientID
             }),
         ],
         openSnackRef.current
@@ -303,7 +309,7 @@ const ModalTools = ({
     }, 220);
 
     handleServerCall(
-      [() => DeleteNoteAction(localNote.uuid)],
+      [() => DeleteNoteAction(localNote.uuid, clientID)],
       openSnackRef.current
     );
   };
@@ -352,6 +358,7 @@ const ModalTools = ({
             operation: "ADD",
             value: checkbox,
             noteUUIDs: [note.uuid],
+            clientID: clientID
           }),
       ],
       openSnackRef.current
@@ -375,6 +382,7 @@ const ModalTools = ({
             type: "checkboxes",
             operation: "UNCHECK_ALL",
             noteUUIDs: [note.uuid],
+            clientID: clientID
           }),
       ],
       openSnackRef.current
@@ -397,6 +405,7 @@ const ModalTools = ({
             type: "checkboxes",
             operation: "DELETE_CHECKED",
             noteUUIDs: [note.uuid],
+            clientID: clientID
           }),
       ],
       openSnackRef.current
@@ -414,6 +423,7 @@ const ModalTools = ({
             type: "showCheckboxes",
             value: !note.showCheckboxes,
             noteUUIDs: [note.uuid],
+            clientID: clientID
           }),
       ],
       openSnackRef.current

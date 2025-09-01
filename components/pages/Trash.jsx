@@ -104,6 +104,7 @@ const Trash = memo(
       focusedIndex,
       openSnackRef,
       user,
+      clientID,
       isExpanded,
     } = useAppContext();
     const userID = user?.id;
@@ -221,7 +222,7 @@ const Trash = memo(
         setFadingNotes(new Set());
       }, 250);
 
-      handleServerCall([() => emptyTrashAction()], openSnackRef.current);
+      handleServerCall([() => emptyTrashAction(clientID)], openSnackRef.current);
     };
 
     useEffect(() => {
