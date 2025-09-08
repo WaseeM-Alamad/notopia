@@ -27,8 +27,9 @@ export async function GET(request) {
             $match: {
               operationType: { $in: ["insert", "update", "delete", "replace"] },
               $or: [
-                { operationType: "delete" },
-                { "fullDocument.creator": userID },
+                { "fullDocument.creator": userID }, // user is creator
+                { "fullDocument.collaborators": userID }, // user is a collaborator
+                { operationType: "delete" }, // optional: include deletes
               ],
             },
           },
@@ -53,7 +54,8 @@ export async function GET(request) {
       noteStream.on("change", (change) => {
         if (
           change.operationType !== "delete" &&
-          change.fullDocument.lastModifiedBy === clientID
+          change.fullDocument.lastModifiedBy === clientID &&
+          !change.fullDocument?.collaborators?.some((id) => id.equals(userID))
         )
           return;
         noteBuffer.push({

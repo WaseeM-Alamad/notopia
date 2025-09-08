@@ -100,6 +100,7 @@ export const authOptions = {
             email: user.email,
             tempEmail: user.tempEmail,
             name: user.username,
+            displayName: user.displayName || "",
             image: user?.image,
           };
         } catch (error) {
@@ -162,6 +163,7 @@ export const authOptions = {
           token.id = user.id;
         }
 
+        token.displayName = user.displayName || "";
         token.name = user.name;
         token.email = user.email;
         token.picture = user.image;
@@ -194,13 +196,15 @@ export const authOptions = {
 
       if (user) {
         session.user.id = user._id.toString();
+        session.user.displayName = user.displayName || "";
         session.user.name = user.username;
-        session.user.email = user.email; // This will be the updated email from DB
+        session.user.email = user.email;
         session.user.image = userImage;
         session.user.tempEmail = user.tempEmail;
       } else {
         // fallback from token if user not found
         session.user.id = token.id;
+        session.user.displayName = token.displayName || "";
         session.user.name = token.name;
         session.user.email = token.email;
         session.user.image = token.picture || userImage;

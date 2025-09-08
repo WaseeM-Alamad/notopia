@@ -105,37 +105,42 @@ const RightPanel = ({
   };
 
   const validateUsername = (e, isSubmit) => {
-    const val = userRef.current.value;
+    const val = userRef.current.value.toLowerCase();
 
     if (!val.trim()) {
       if (isSubmit) {
-        const message = "Field can't be empty";
-        setUserStatus(message);
+        setUserStatus("Field can't be empty");
       }
       return false;
     }
 
-    if (val.length < 3) {
-      const message = "At least 3 characters";
-      setUserStatus(message);
+    if (val.length < 2) {
+      setUserStatus("At least 2 characters");
       return false;
     }
 
-    if (val.length > 30) {
-      const message = "At most 30 characters";
-      setUserStatus(message);
+    if (val.length > 32) {
+      setUserStatus("At most 32 characters");
       return false;
     }
 
-    if (!/^[a-zA-Z]/.test(val.trim())) {
-      const message = "Must start with a letter";
-      setUserStatus(message);
+    if (!/^[a-z0-9._]+$/.test(val)) {
+      setUserStatus("Only letters, numbers, underscores, and periods allowed");
       return false;
     }
 
-    if (/[=<>\/"]/.test(val)) {
-      const message = "Contains invalid characters";
-      setUserStatus(message);
+    if (val.includes("..")) {
+      setUserStatus("Cannot contain consecutive periods");
+      return false;
+    }
+
+    if (/^[._]/.test(val)) {
+      setUserStatus("Cannot start with a period or underscore");
+      return false;
+    }
+
+    if (/[._]$/.test(val)) {
+      setUserStatus("Cannot end with a period or underscore");
       return false;
     }
 
@@ -242,7 +247,10 @@ const RightPanel = ({
             <input
               className="form-input"
               ref={userRef}
-              onInput={() => setUserStatus(null)}
+              onInput={(e) => {
+                e.target.value = e.target.value.toLowerCase();
+                setUserStatus(null);
+              }}
               name="username"
               onBlur={(e) => validateUsername(e, false)}
               type="text"

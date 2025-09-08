@@ -31,6 +31,7 @@ const Note = memo(
     setSelectedNotesIDs,
     setFadingNotes,
     handleSelectNote,
+    handleNoteClick,
     index,
   }) => {
     const {
@@ -658,6 +659,7 @@ const Note = memo(
           </div>
           <NoteTools
             colorMenuOpen={colorMenuOpen}
+            handleNoteClick={handleNoteClick}
             setColorMenuOpen={handleMenuIsOpenChange}
             moreMenuOpen={moreMenuOpen}
             setFadingNotes={setFadingNotes}

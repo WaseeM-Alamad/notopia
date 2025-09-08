@@ -108,13 +108,7 @@ const page = () => {
     };
   }, [unloadWarn]);
 
-  const handleNoteClick = useCallback((e, note, index) => {
-    if (
-      e.target.closest("button") ||
-      !e.currentTarget.classList.contains("grid-item")
-    ) {
-      return;
-    }
+  const handleNoteClick = useCallback((e, note, index, collab = false) => {
     const element = e.currentTarget;
 
     requestAnimationFrame(() => {
@@ -122,6 +116,7 @@ const page = () => {
         index: index,
         element: element,
         initialNote: note,
+        collab: collab,
       });
 
       rootContainerRef.current.classList.add("modal-open");
@@ -427,7 +422,6 @@ const page = () => {
         localNote={selectedNote}
         setLocalNote={setSelectedNote}
         setVisibleItems={setVisibleItems}
-        filters={filters}
         setFadingNotes={setFadingNotes}
         noteActions={noteActions}
         dispatchNotes={dispatchNotes}

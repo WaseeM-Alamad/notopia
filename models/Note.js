@@ -75,14 +75,20 @@ const NoteSchema = new Schema(
         uuid: { type: String, required: true },
       },
     ],
+    collaborators: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
     textUpdatedAt: {
       type: Date,
       default: Date.now,
     },
     lastModifiedBy: {
       type: String,
-      default: null
-    }
+      default: null,
+    },
   },
   {
     timestamps: true,

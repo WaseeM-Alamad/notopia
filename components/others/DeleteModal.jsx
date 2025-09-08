@@ -70,13 +70,13 @@ const DeleteModal = ({ setIsOpen, handleDelete, title, message }) => {
         <div style={{ textAlign: "center", fontSize: ".95rem" }}>{message}</div>
         <div className="buttons-con">
           <button
-            className="delete-modal-button"
+            className="modal-bottom-btn"
             onClick={() => setIsOpen(false)}
           >
             Cancel
           </button>
           <button
-            className="delete-modal-button delete-btn"
+            className="modal-bottom-btn delete-btn"
             onClick={() => {
               handleDelete();
               setIsOpen(false);

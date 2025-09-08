@@ -40,13 +40,23 @@ const isConfirmPasswordValid = (confirmPassword, originalPassword) => {
 };
 
 const isUsernameValid = (val) => {
+  if (typeof val !== "string") return false;
+
+  const u = val.toLowerCase();
+
   return (
-    typeof val === "string" &&
-    val.trim() === val &&
-    val.length >= 3 &&
-    val.length <= 30 &&
-    /^\p{L}/u.test(val) &&
-    !/[=<>\/"]/.test(val)
+    u.length >= 2 &&
+    u.length <= 32 &&
+    /^[a-z0-9._]+$/.test(u) &&
+    !u.includes("..") &&
+    !/^[._]/.test(u) &&
+    !/[._]$/.test(u)
+  );
+};
+
+const isDisplayNameValid = (val) => {
+  return (
+    typeof val === "string" && val.trim().length >= 1 && val.trim().length <= 32
   );
 };
 
@@ -57,9 +67,9 @@ const isEmailValid = (val) => {
 export const signUpAction = async (formData) => {
   try {
     await connectDB();
-    const email = formData.get("email");
+    const email = formData.get("email").toLowerCase().trim();
     const password = formData.get("password");
-    const username = formData.get("username");
+    const username = formData.get("username").toLowerCase().trim();
 
     if (!isEmailValid(email))
       return { success: false, type: "email", message: "Invalid email" };
@@ -72,18 +82,24 @@ export const signUpAction = async (formData) => {
     const token = nanoid(32);
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
-    const user = await User.findOne({ email: email });
+    const user = await User.findOne({
+      $or: [{ email: email }, { username: username }],
+    });
 
     if (user) {
       return {
         success: false,
-        type: "email",
-        message: "Email is already registered",
+        type: user.email === email ? "email" : "username",
+        message:
+          user.email === email
+            ? "Email is already registered"
+            : "Username is already taken",
       };
     }
 
     await User.create({
       email: email,
+      displayName: username,
       username: username,
       password: hashedPassword,
       token: token,
@@ -335,7 +351,7 @@ export const verifyResetTokenAction = async (receivedToken) => {
   }
 };
 
-export const updateUsernameAction = async (newUsername) => {
+export const updateDisplayNameAction = async (newDisplayName) => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
   try {
@@ -348,18 +364,61 @@ export const updateUsernameAction = async (newUsername) => {
     await connectDB();
     const user = await User.findOne({ _id: userID });
 
-    if (user.username.trim() === newUsername)
+    if (user.displayName.trim() === newDisplayName)
       return {
         success: false,
-        message: "New username cannot be the same as your current username",
+        message: "New display name cannot be the same as your current username",
       };
+
+    if (!isDisplayNameValid(newDisplayName))
+      return { success: false, message: "Invalid display name" };
+
+    user.displayName = newDisplayName;
+
+    await user.save();
+
+    return { success: true, message: "Display name updated successfully" };
+  } catch (error) {
+    console.log("Error updating display name", error);
+    return { success: false, message: "Error updating display name" };
+  }
+};
+
+export const updateUsernameAction = async (input) => {
+  const session = await getServerSession(authOptions);
+  const userID = session?.user?.id;
+  try {
+    if (!userID)
+      return {
+        success: false,
+        message: "An error has occurred",
+      };
+
+    const newUsername = input.toLowerCase().trim();
+
+    await connectDB();
+    const user = await User.findOne({ username: newUsername });
+
+    console.log("user", user);
+
+    if (user) {
+      if (user._id.equals(userID)) {
+        return {
+          success: false,
+          message: "New username cannot be the same as your current username",
+        };
+      } else {
+        return {
+          success: false,
+          message: "Username is already taken",
+        };
+      }
+    }
 
     if (!isUsernameValid(newUsername))
       return { success: false, message: "Invalid username" };
 
-    user.username = newUsername;
-
-    await user.save();
+    await User.updateOne({ _id: userID }, { $set: { username: newUsername } });
 
     return { success: true, message: "Username updated successfully" };
   } catch (error) {
@@ -564,7 +623,14 @@ export const fetchNotes = async () => {
 
   try {
     await connectDB();
-    const notes = await Note.find({ creator: userID }).sort({ createdAt: -1 });
+    const notes = await Note.find({
+      $or: [
+        { creator: userID }, // notes created by user
+        { collaborators: userID }, // notes where user is in collaborators array
+      ],
+    })
+      .sort({ createdAt: -1 })
+      .populate("collaborators", "displayName username image");
     const user = await User.findById(userID);
     const order = user?.notesOrder || [];
     const labels = JSON.parse(JSON.stringify(user?.labels ?? []));

@@ -182,7 +182,7 @@ const KeybindsTable = ({ keybindsRef, setIsOpen }) => {
           }}
           onMouseEnter={(e) => showTooltip(e, "Close")}
           onMouseLeave={hideTooltip}
-          className="clear-icon btn close-dialog-btn"
+          className="clear-icon btn small-btn"
         />
         <div
           className={`keybinds-header ${isScrolled ? "keybinds-container-scrolled" : ""}`}

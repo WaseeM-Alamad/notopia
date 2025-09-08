@@ -114,6 +114,7 @@ const NoteWrapper = memo(
             setFadingNotes={setFadingNotes}
             setSelectedNotesIDs={setSelectedNotesIDs}
             handleSelectNote={handleSelectNote}
+            handleNoteClick={handleNoteClick}
             index={index}
           />
           {/* <p>{index}</p> */}

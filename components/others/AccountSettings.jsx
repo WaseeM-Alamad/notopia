@@ -1,6 +1,10 @@
 "use client";
 
-import { emailNewEmailAction, updateUsernameAction } from "@/utils/actions";
+import {
+  emailNewEmailAction,
+  updateDisplayNameAction,
+  updateUsernameAction,
+} from "@/utils/actions";
 import { CircularProgress } from "@mui/material";
 import React, { memo, useEffect, useRef, useState } from "react";
 import HorizontalLoader from "../Tools/HorizontalLoader";
@@ -12,13 +16,22 @@ import { useAppContext } from "@/context/AppContext";
 const AccountSettings = ({ rightHeader, selected, user, setUser }) => {
   const { openSnackRef } = useAppContext();
   const [reRender, triggerRerender] = useState(false);
+  const [isDisplayDisabled, setIsDisplayDisabled] = useState(true);
+  const [displayStatus, setDisplayStatus] = useState(null);
+  const [isDisplayLoading, setIsDisplayLoading] = useState(false);
   const [isNameDisabled, setIsNameDisabled] = useState(true);
+
   const [userStatus, setUserStatus] = useState(null);
   const [isUserLoading, setIsUserLoading] = useState(false);
   const [isEmailLoading, setIsEmailLoading] = useState(false);
   const [isEmailOpen, setIsEmailOpen] = useState(false);
   const [emailPassStatus, setEmailPassStatus] = useState(null);
   const [newEmailStatus, setNewEmailStatus] = useState(null);
+
+  const displayRef = useRef(null);
+
+  const newDisplayName = displayRef.current?.value?.trim();
+  const oldDisplayName = user.displayName?.trim() || "";
 
   const nameRef = useRef(null);
   const emailRef = useRef(null);
@@ -38,6 +51,41 @@ const AccountSettings = ({ rightHeader, selected, user, setUser }) => {
     return newUsername === oldUsername;
   };
 
+  const displayNameMatch = () => {
+    return newDisplayName === oldDisplayName;
+  };
+
+  const handleDisplaySubmit = async (e) => {
+    e.preventDefault();
+    setDisplayStatus(null);
+
+    if (displayNameMatch()) {
+      setDisplayStatus(
+        "New username cannot be the same as your current username"
+      );
+      return;
+    }
+
+    const isValid = validateDisplayName();
+    if (!isValid) return;
+
+    setIsDisplayLoading(true);
+    setIsDisplayDisabled(true);
+
+    const newVal = newDisplayName;
+
+    const { success, message } = await updateDisplayNameAction(newVal);
+    setIsDisplayLoading(false);
+    if (!success) {
+      setDisplayStatus(message);
+      setIsDisplayDisabled(false);
+      requestAnimationFrame(() => displayRef.current.focus());
+      return;
+    }
+    setIsDisplayDisabled(true);
+    setUser((prev) => ({ ...prev, displayName: newVal }));
+  };
+
   const handleUsernameSubmit = async (e) => {
     e.preventDefault();
     setUserStatus(null);
@@ -52,7 +100,10 @@ const AccountSettings = ({ rightHeader, selected, user, setUser }) => {
 
     setIsUserLoading(true);
     setIsNameDisabled(true);
-    const { success, message } = await updateUsernameAction(newUsername);
+
+    const newVal = newUsername;
+
+    const { success, message } = await updateUsernameAction(newVal);
     setIsUserLoading(false);
     if (!success) {
       setUserStatus(message);
@@ -61,47 +112,81 @@ const AccountSettings = ({ rightHeader, selected, user, setUser }) => {
       return;
     }
     setIsNameDisabled(true);
-    setUser((prev) => ({ ...prev, name: newUsername }));
+    setUser((prev) => ({ ...prev, name: newVal }));
+  };
+
+  const handleCancelDisplay = () => {
+    setIsDisplayDisabled(true);
+    setDisplayStatus(null);
+    requestAnimationFrame(() => {
+      !isDisplayLoading && (displayRef.current.value = oldDisplayName);
+    });
   };
 
   const handleCancelUser = () => {
     setIsNameDisabled(true);
     setUserStatus(null);
     requestAnimationFrame(() => {
-      !isUserLoading && (nameRef.current.value = user.name);
+      !isUserLoading && (nameRef.current.value = oldUsername);
     });
+  };
+
+  const validateDisplayName = () => {
+    const val = displayRef.current.value;
+
+    if (!val.trim()) {
+      setDisplayStatus("Field can't be empty");
+      return false;
+    }
+
+    if (val.length < 1) {
+      setDisplayStatus("At least 1 character");
+      return false;
+    }
+
+    if (val.length > 32) {
+      setDisplayStatus("At most 32 characters");
+      return false;
+    }
+
+    return true;
   };
 
   const validateUsername = () => {
     const val = nameRef.current.value;
 
     if (!val.trim()) {
-      const message = "Field can't be empty";
-      setUserStatus(message);
+      setUserStatus("Field can't be empty");
       return false;
     }
 
-    if (val.length < 3) {
-      const message = "At least 3 characters";
-      setUserStatus(message);
+    if (val.length < 2) {
+      setUserStatus("At least 2 characters");
       return false;
     }
 
-    if (val.length > 30) {
-      const message = "At most 30 characters";
-      setUserStatus(message);
+    if (val.length > 32) {
+      setUserStatus("At most 32 characters");
       return false;
     }
 
-    if (!/^\p{L}/u.test(val.trim())) {
-      const message = "Must start with a letter";
-      setUserStatus(message);
+    if (!/^[a-z0-9._]+$/.test(val)) {
+      setUserStatus("Only letters, numbers, underscores, and periods allowed");
       return false;
     }
 
-    if (/[=<>\/"]/.test(val)) {
-      const message = "Contains invalid characters";
-      setUserStatus(message);
+    if (val.includes("..")) {
+      setUserStatus("Cannot contain consecutive periods");
+      return false;
+    }
+
+    if (/^[._]/.test(val)) {
+      setUserStatus("Cannot start with a period or underscore");
+      return false;
+    }
+
+    if (/[._]$/.test(val)) {
+      setUserStatus("Cannot end with a period or underscore");
       return false;
     }
 
@@ -185,6 +270,112 @@ const AccountSettings = ({ rightHeader, selected, user, setUser }) => {
         <div className="account-info-settings">
           <div>
             <form
+              onSubmit={handleDisplaySubmit}
+              id="display-from"
+              className="settings-form"
+            >
+              <label
+                className={`form-label ${displayStatus ? "form-error-color" : ""} `}
+              >
+                Display name
+                {displayStatus ? (
+                  <span style={{ fontStyle: "italic", fontSize: ".76rem" }}>
+                    {" "}
+                    - {displayStatus}
+                  </span>
+                ) : (
+                  ""
+                )}
+              </label>
+              <div style={{ position: "relative", marginBottom: "0.2rem" }}>
+                <div
+                  onClick={() => {
+                    setIsDisplayDisabled(false);
+                    requestAnimationFrame(() => displayRef.current.focus());
+                  }}
+                  style={{
+                    opacity: isDisplayDisabled && !isDisplayLoading ? "1" : "0",
+                    pointerEvents:
+                      isDisplayDisabled && !isDisplayLoading ? "auto" : "none",
+                  }}
+                  className="form-edit"
+                >
+                  Edit
+                </div>
+                {isDisplayLoading && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      right: "2rem",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      boxSizing: "border-box",
+                    }}
+                  >
+                    <CircularProgress
+                      sx={{
+                        color: document.documentElement.classList.contains(
+                          "dark-mode"
+                        )
+                          ? "#dfdfdf"
+                          : "#6d6d6d",
+                        display: "block",
+                      }}
+                      size={20}
+                      thickness={5}
+                    />
+                  </div>
+                )}
+                <input
+                  ref={displayRef}
+                  onInput={() => triggerRerender((prev) => !prev)}
+                  disabled={isDisplayDisabled}
+                  defaultValue={user.displayName}
+                  type="text"
+                  className="form-input"
+                  style={{
+                    paddingRight: "5rem",
+                    marginBottom: "0",
+                  }}
+                />
+              </div>
+              <div style={{ display: "flex" }}>
+                <div className="form-input-desc">
+                  Your non-unique display name on the platform.
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "0.6rem",
+                    marginTop: "0.1rem",
+                    marginLeft: "auto",
+                    marginRight: "0.6rem",
+                    fontSize: ".76rem",
+                    opacity: isDisplayDisabled ? "0" : "1",
+                    pointerEvents: isDisplayDisabled ? "none" : "auto",
+                    transition: "all .15s ease",
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={handleCancelDisplay}
+                    className="update-acc-info"
+                  >
+                    cancel
+                  </button>
+                  <button
+                    disabled={displayNameMatch() || !newDisplayName}
+                    type="submit"
+                    className="update-acc-info update-info-btn"
+                  >
+                    save
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div>
+            <form
               onSubmit={handleUsernameSubmit}
               id="username-from"
               className="settings-form"
@@ -243,7 +434,10 @@ const AccountSettings = ({ rightHeader, selected, user, setUser }) => {
                 )}
                 <input
                   ref={nameRef}
-                  onInput={() => triggerRerender((prev) => !prev)}
+                  onInput={(e) => {
+                    e.target.value = e.target.value.toLowerCase();
+                    triggerRerender((prev) => !prev);
+                  }}
                   disabled={isNameDisabled}
                   defaultValue={user.name}
                   type="text"
@@ -256,7 +450,7 @@ const AccountSettings = ({ rightHeader, selected, user, setUser }) => {
               </div>
               <div style={{ display: "flex" }}>
                 <div className="form-input-desc">
-                  Your non-unique username on the platform.
+                  Your unique username on the platform.
                 </div>
                 <div
                   style={{
@@ -283,7 +477,7 @@ const AccountSettings = ({ rightHeader, selected, user, setUser }) => {
                     type="submit"
                     className="update-acc-info update-info-btn"
                   >
-                    update
+                    save
                   </button>
                 </div>
               </div>

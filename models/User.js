@@ -62,10 +62,15 @@ const UserSchema = new Schema({
   googleID: {
     type: String,
   },
-  username: {
+  displayName: {
     type: String,
     maxlength: [30],
+  },
+  username: {
+    type: String,
+    maxlength: [20],
     required: [true, "Username is required!"],
+    unique: [true, "Username already exists!"],
   },
   image: {
     type: String,

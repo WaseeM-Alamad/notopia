@@ -129,7 +129,7 @@ const AccountDialog = ({ settingsRef, setIsOpen, user, setUser }) => {
           }}
           onMouseEnter={(e) => showTooltip(e, "Close")}
           onMouseLeave={hideTooltip}
-          className="clear-icon btn close-dialog-btn"
+          className="clear-icon btn small-btn"
         />
         <div className="settings-left-panel">
           <div className="account-left-section-header">Settings</div>

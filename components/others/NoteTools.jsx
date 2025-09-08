@@ -18,6 +18,7 @@ const NoteTools = ({
   note = {},
   anchorEl,
   setFadingNotes,
+  handleNoteClick,
   setAnchorEl,
   selectedColor,
   setSelectedColor,
@@ -65,7 +66,7 @@ const NoteTools = ({
               type: "color",
               value: newColor,
               noteUUIDs: [note.uuid],
-              clientID: clientID
+              clientID: clientID,
             }),
         ],
         openSnackRef.current
@@ -84,7 +85,7 @@ const NoteTools = ({
                 type: "color",
                 value: newColor,
                 noteUUIDs: [note.uuid],
-                clientID: clientID
+                clientID: clientID,
               }),
           ],
           openSnackRef.current
@@ -120,7 +121,7 @@ const NoteTools = ({
                 type: "color",
                 value: selectedColor,
                 noteUUIDs: [note.uuid],
-                clientID: clientID
+                clientID: clientID,
               }),
           ],
           openSnackRef.current
@@ -153,7 +154,7 @@ const NoteTools = ({
               type: "background",
               value: newBG,
               noteUUIDs: [note.uuid],
-              clientID: clientID
+              clientID: clientID,
             }),
         ],
         openSnackRef.current
@@ -373,7 +374,7 @@ const NoteTools = ({
             operation: "ADD",
             value: checkbox,
             noteUUIDs: [note.uuid],
-            clientID: clientID
+            clientID: clientID,
           }),
       ],
       openSnackRef.current
@@ -402,7 +403,7 @@ const NoteTools = ({
             type: "showCheckboxes",
             value: !note.showCheckboxes,
             noteUUIDs: [note.uuid],
-            clientID: clientID
+            clientID: clientID,
           }),
       ],
       openSnackRef.current
@@ -430,7 +431,7 @@ const NoteTools = ({
             type: "checkboxes",
             operation: "UNCHECK_ALL",
             noteUUIDs: [note.uuid],
-            clientID: clientID
+            clientID: clientID,
           }),
       ],
       openSnackRef.current
@@ -458,7 +459,7 @@ const NoteTools = ({
             type: "checkboxes",
             operation: "DELETE_CHECKED",
             noteUUIDs: [note.uuid],
-            clientID: clientID
+            clientID: clientID,
           }),
       ],
       openSnackRef.current
@@ -560,6 +561,11 @@ const NoteTools = ({
     });
   }, [labelsOpen]);
 
+  const handleCollab = () => {
+    const element = note.ref.current.parentElement;
+    handleNoteClick({ currentTarget: element }, note, index, true);
+  };
+
   return (
     <>
       <div
@@ -602,6 +608,7 @@ const NoteTools = ({
                   onMouseLeave={hideTooltip}
                   onFocus={(e) => showTooltip(e, "Collaborator")}
                   onBlur={hideTooltip}
+                  onClick={handleCollab}
                 />
                 <Button
                   tabIndex="0"

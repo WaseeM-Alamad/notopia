@@ -33,6 +33,8 @@ const ModalTools = ({
   handleRedo,
   inputRef,
   inputsContainerRef,
+  setInitialStyle,
+  openCollab,
 }) => {
   const {
     setLoadingImages,
@@ -85,7 +87,7 @@ const ModalTools = ({
             type: "color",
             value: color,
             noteUUIDs: [note.uuid],
-            clientID: clientID
+            clientID: clientID,
           }),
       ],
       openSnackRef.current
@@ -111,7 +113,7 @@ const ModalTools = ({
               type: "background",
               value: newBG,
               noteUUIDs: [note.uuid],
-              clientID: clientID
+              clientID: clientID,
             }),
         ],
         openSnackRef.current
@@ -247,7 +249,7 @@ const ModalTools = ({
               type: "isTrash",
               value: true,
               noteUUIDs: [localNote.uuid],
-              clientID: clientID
+              clientID: clientID,
             }),
         ],
         openSnackRef.current
@@ -264,7 +266,7 @@ const ModalTools = ({
               type: "isTrash",
               value: false,
               noteUUIDs: [localNote.uuid],
-              clientID: clientID
+              clientID: clientID,
             }),
         ],
         openSnackRef.current
@@ -358,7 +360,7 @@ const ModalTools = ({
             operation: "ADD",
             value: checkbox,
             noteUUIDs: [note.uuid],
-            clientID: clientID
+            clientID: clientID,
           }),
       ],
       openSnackRef.current
@@ -382,7 +384,7 @@ const ModalTools = ({
             type: "checkboxes",
             operation: "UNCHECK_ALL",
             noteUUIDs: [note.uuid],
-            clientID: clientID
+            clientID: clientID,
           }),
       ],
       openSnackRef.current
@@ -405,7 +407,7 @@ const ModalTools = ({
             type: "checkboxes",
             operation: "DELETE_CHECKED",
             noteUUIDs: [note.uuid],
-            clientID: clientID
+            clientID: clientID,
           }),
       ],
       openSnackRef.current
@@ -423,7 +425,7 @@ const ModalTools = ({
             type: "showCheckboxes",
             value: !note.showCheckboxes,
             noteUUIDs: [note.uuid],
-            clientID: clientID
+            clientID: clientID,
           }),
       ],
       openSnackRef.current
@@ -500,8 +502,17 @@ const ModalTools = ({
         <div className="modal-bottom-icons">
           {!localNote?.isTrash ? (
             <>
-              <Button className="reminder-icon btn-hover" />
-              <Button className="person-add-icon btn-hover" />
+              <Button
+                onMouseEnter={(e) => showTooltip(e, "Reminders")}
+                onMouseLeave={hideTooltip}
+                className="reminder-icon btn-hover"
+              />
+              <Button
+                onClick={() => openCollab()}
+                onMouseEnter={(e) => showTooltip(e, "Collaborator")}
+                onMouseLeave={hideTooltip}
+                className="person-add-icon btn-hover"
+              />
               <Button
                 className="close archive-icon btn-hover"
                 onClick={handleModalArchive}

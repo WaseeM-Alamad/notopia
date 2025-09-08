@@ -18,14 +18,14 @@ const ProfileMenu = forwardRef(
     }, []);
 
     const toggleDarkMode = () => {
-      requestIdleCallback(()=> {
-      document.documentElement.classList.toggle("dark-mode");
-      const newMode = document.documentElement.classList.contains("dark-mode")
-        ? "dark"
-        : "light";
-      localStorage.setItem("theme", newMode);
-      isDarkModeRef.current = newMode === "dark";
-    })
+      requestIdleCallback(() => {
+        document.documentElement.classList.toggle("dark-mode");
+        const newMode = document.documentElement.classList.contains("dark-mode")
+          ? "dark"
+          : "light";
+        localStorage.setItem("theme", newMode);
+        isDarkModeRef.current = newMode === "dark";
+      });
       setIsOpen(false);
     };
 
@@ -80,7 +80,7 @@ const ProfileMenu = forwardRef(
                     <div className="img-edit-icon" />
                   </div>
                   <span dir="auto" className="username">
-                    {user.name}
+                    {user.displayName}
                   </span>
                 </div>
               </div>

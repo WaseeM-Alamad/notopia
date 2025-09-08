@@ -1,4 +1,5 @@
 import { useAppContext } from "@/context/AppContext";
+import { saveOrderArray } from "@/utils/localDb";
 import localDbReducer from "@/utils/localDbReducer";
 import { useEffect, useRef } from "react";
 
@@ -23,7 +24,7 @@ export function useRealtimeUpdates({ dispatchNotes }) {
       `/api/realtime?clientID=${clientID}`
     );
 
-    eventSourceRef.current.onmessage = (event) => {
+    eventSourceRef.current.onmessage = async (event) => {
       try {
         const data = JSON.parse(event.data);
         console.log(data);
@@ -47,6 +48,7 @@ export function useRealtimeUpdates({ dispatchNotes }) {
             }
           } else if (item.type === "order") {
             dispatchNotes({ type: "SET_ORDER", newOrder: item.notesOrder });
+            await saveOrderArray(item.notesOrder, user?.id);
           } else if (item.type === "labels") {
             labelsRef.current = new Map(
               item.labels.map((mapLabel) => {
