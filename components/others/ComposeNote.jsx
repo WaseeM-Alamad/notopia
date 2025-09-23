@@ -120,7 +120,7 @@ const ComposeNote = ({
 
   const UploadImagesAction = async (noteUUID) => {
     const formData = new FormData();
-    const files = note.imageFiles;
+    const files = note?.imageFiles;
 
     if (files.length === 0) return;
 
@@ -188,21 +188,26 @@ const ComposeNote = ({
 
     const newNote = {
       uuid: newUUID,
-      title: note.title,
-      content: note.content,
-      color: note.color,
-      background: note.background,
-      labels: note.labels,
-      isPinned: note.isPinned,
-      isArchived: note.isArchived,
-      checkboxes: note.checkboxes,
-      showCheckboxes: note.showCheckboxes,
-      expandCompleted: note.expandCompleted,
-      isTrash: note.isTrash,
+      creator: {
+        _id: userID,
+        displayName: user.displayName,
+        username: user.username,
+        image: user.image,
+      },
+      title: note?.title,
+      content: note?.content,
+      color: note?.color,
+      background: note?.background,
+      labels: note?.labels,
+      isPinned: note?.isPinned,
+      isArchived: note?.isArchived,
+      checkboxes: note?.checkboxes,
+      showCheckboxes: note?.showCheckboxes,
+      expandCompleted: note?.expandCompleted,
+      isTrash: note?.isTrash,
       createdAt: new Date(),
       updatedAt: new Date(),
-      images: note.images,
-      textUpdatedAt: new Date(),
+      images: note?.images,
     };
     dispatchNotes({
       type: "ADD_NOTE",
@@ -222,19 +227,28 @@ const ComposeNote = ({
     const result = await handleServerCall(
       [
         () => createNoteAction(newNote, clientID),
-        () => UploadImagesAction(newNote.uuid),
+        () => UploadImagesAction(newNote?.uuid),
       ],
       openSnackRef.current,
       true
     );
     if (!result) return;
-    dispatchNotes({ type: "SET_NOTE", note: result.firstResult.newNote });
+    const receivedNote = {
+      ...result.firstResult.newNote,
+      creator: {
+        _id: userID,
+        displayName: user.displayName,
+        username: user.username,
+        image: user.image,
+      },
+    };
+    dispatchNotes({ type: "SET_NOTE", note: receivedNote });
     localDbReducer({
       notes: notesStateRef.current.notes,
       order: notesStateRef.current.order,
       userID: userID,
       type: "SET_NOTE",
-      note: result.firstResult.newNote,
+      note: receivedNote,
     });
   };
 
@@ -330,7 +344,7 @@ const ComposeNote = ({
         "all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1)";
 
       const noteEmpty =
-        !note.title && !note.content && note.images.length === 0;
+        !note?.title && !note?.content && note?.images.length === 0;
 
       if (noteEmpty) {
         modalRef.current.style.transform = "scale(0.95)";
@@ -366,7 +380,7 @@ const ComposeNote = ({
             const lastNote = lastAddedNoteRef.current;
             modalRef.current.removeAttribute("style");
             overlay.removeAttribute("style");
-            lastNote.style.removeProperty("opacity");
+            lastNote?.style.removeProperty("opacity");
             reset();
           });
         }, 220);
@@ -385,7 +399,7 @@ const ComposeNote = ({
     let imageIndex;
 
     setNote((restOfNote) => {
-      const filteredImages = restOfNote.images.reduce((acc, image, index) => {
+      const filteredImages = restOfNote?.images.reduce((acc, image, index) => {
         if (image.uuid === imageUUID) {
           imageIndex = index;
           return acc;
@@ -398,7 +412,7 @@ const ComposeNote = ({
     });
 
     setNote((restOfNote) => {
-      const filteredImageFiles = restOfNote.imageFiles.reduce(
+      const filteredImageFiles = restOfNote?.imageFiles.reduce(
         (acc, imageFile) => {
           if (imageFile.uuid === imageUUID) {
             imageFileObject = { file: imageFile.file, uuid: imageUUID };
@@ -414,13 +428,13 @@ const ComposeNote = ({
 
     const undo = () => {
       setNote((restOfNote) => {
-        const updatedImages = [...restOfNote.images];
+        const updatedImages = [...restOfNote?.images];
         updatedImages.splice(imageIndex, 0, imageObject);
 
         return {
           ...restOfNote,
           images: updatedImages,
-          imageFiles: [...restOfNote.imageFiles, imageFileObject],
+          imageFiles: [...restOfNote?.imageFiles, imageFileObject],
         };
       });
     };
@@ -516,17 +530,17 @@ const ComposeNote = ({
     for (let i = 0; i < 20; i++) {
       const newNote = {
         uuid: uuid(),
-        title: note.title,
-        content: note.content,
-        color: note.color,
+        title: note?.title,
+        content: note?.content,
+        color: note?.color,
         background: "DefaultBG",
-        labels: note.labels,
-        isPinned: note.isPinned,
-        isArchived: note.isArchived,
-        isTrash: note.isTrash,
+        labels: note?.labels,
+        isPinned: note?.isPinned,
+        isArchived: note?.isArchived,
+        isTrash: note?.isTrash,
         createdAt: new Date(),
         updatedAt: new Date(),
-        images: note.images,
+        images: note?.images,
       };
       createNoteAction(newNote);
     }
@@ -553,7 +567,7 @@ const ComposeNote = ({
 
   const menuItems = [
     {
-      title: note.labels.length === 0 ? "Add label" : "Change labels",
+      title: note?.labels.length === 0 ? "Add label" : "Change labels",
       function: handleLabels,
       icon: "label-menu-icon",
     },
@@ -625,17 +639,17 @@ const ComposeNote = ({
         {/* <button onClick={insert}>insert</button> */}
         <div
           style={{ overflowY: !isOpen && "hidden" }}
-          className={`modal-inputs-container ${"n-bg-" + note.background}`}
+          className={`modal-inputs-container ${"n-bg-" + note?.background}`}
         >
-          {note.images.length === 0 ||
-            (!note.images && <div className="modal-corner" />)}
+          {note?.images.length === 0 ||
+            (!note?.images && <div className="modal-corner" />)}
           <div style={{ opacity: !isOpen && "0" }} className="modal-pin">
             <Button onClick={handlePinClick} disabled={!isOpen}>
               <PinIcon
-                isPinned={note.isPinned}
+                isPinned={note?.isPinned}
                 opacity={0.8}
-                rotation={note.isPinned ? "-45deg" : "-5deg"}
-                images={note.images.length !== 0}
+                rotation={note?.isPinned ? "-45deg" : "-5deg"}
+                images={note?.images.length !== 0}
               />
             </Button>
           </div>
@@ -647,12 +661,12 @@ const ComposeNote = ({
             }}
           >
             <NoteImagesLayout
-              images={note.images}
+              images={note?.images}
               deleteSource="AddModal"
               AddNoteImageDelete={AddNoteImageDelete}
               modalOpen={isOpen}
             />
-            {/* {!isOpen && note.images.length > 0 && (
+            {/* {!isOpen && note?.images.length > 0 && (
               <div className="linear-loader" />
             )} */}
           </div>
@@ -660,9 +674,9 @@ const ComposeNote = ({
             style={{
               opacity: isOpen
                 ? "1"
-                : note.content && !note.title
+                : note?.content && !note?.title
                   ? "0"
-                  : !note.title && !note.content
+                  : !note?.title && !note?.content
                     ? "0"
                     : "1",
             }}
@@ -683,9 +697,9 @@ const ComposeNote = ({
             style={{
               opacity: isOpen
                 ? "1"
-                : !note.content && note.title
+                : !note?.content && note?.title
                   ? "0"
-                  : !note.title && !note.content
+                  : !note?.title && !note?.content
                     ? "0"
                     : "1",
               minHeight: "30px",
@@ -700,7 +714,7 @@ const ComposeNote = ({
             role="textbox"
             tabIndex="0"
             aria-multiline="true"
-            aria-label="Take a note..."
+            aria-label="Take a note?..."
             spellCheck="false"
           />
           {note?.labels?.length > 0 && (

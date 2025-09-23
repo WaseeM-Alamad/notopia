@@ -10,6 +10,8 @@ import { nanoid } from "nanoid";
 import bcrypt from "bcryptjs";
 import isEmail from "validator/lib/isEmail";
 import cloudinary from "@/config/cloudinary";
+import UserSettings from "@/models/UserSettings";
+import { startSession } from "mongoose";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -364,7 +366,7 @@ export const updateDisplayNameAction = async (newDisplayName) => {
     await connectDB();
     const user = await User.findOne({ _id: userID });
 
-    if (user.displayName.trim() === newDisplayName)
+    if (user?.displayName?.trim() === newDisplayName)
       return {
         success: false,
         message: "New display name cannot be the same as your current username",
@@ -623,14 +625,29 @@ export const fetchNotes = async () => {
 
   try {
     await connectDB();
-    const notes = await Note.find({
-      $or: [
-        { creator: userID }, // notes created by user
-        { collaborators: userID }, // notes where user is in collaborators array
-      ],
-    })
-      .sort({ createdAt: -1 })
-      .populate("collaborators", "displayName username image");
+
+    const userSettings = await UserSettings.find({ user: userID })
+      .populate({
+        path: "note",
+        populate: [
+          {
+            path: "collaborators.data",
+            select: "displayName username image",
+          },
+          {
+            path: "creator",
+            select: "_id displayName username image",
+          },
+        ],
+      })
+      .lean();
+
+    const notes = userSettings.map(({ note, ...settings }) => ({
+      ...note,
+      ...settings,
+      _id: note._id,
+    }));
+
     const user = await User.findById(userID);
     const order = user?.notesOrder || [];
     const labels = JSON.parse(JSON.stringify(user?.labels ?? []));
@@ -651,7 +668,7 @@ export const fetchNotes = async () => {
 export const createNoteAction = async (note, clientID) => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
-  if (!session) {
+  if (!session || !note.uuid) {
     throw new Error("Something went wrong");
   }
 
@@ -663,12 +680,35 @@ export const createNoteAction = async (note, clientID) => {
     }
 
     const noteData = {
-      ...note,
-      images: [],
+      _id: note.uuid,
+      uuid: note.uuid,
+      title: note.title || "",
+      content: note.content || "",
       creator: userID,
+      checkboxes: note.checkboxes || [],
+      images: note.images || [],
+      collaborators: note.collaborators || [],
       lastModifiedBy: clientID,
     };
+    const settings = {
+      note: note.uuid,
+      user: userID,
+      color: note.color || "Default",
+      background: note.background || "DefaultBG",
+      labels: note.labels || [],
+      showCheckboxes: note.showCheckboxes || true,
+      expandCompleted: note.expandCompleted || true,
+      isPinned: note.isPinned || false,
+      isArchived: note.isArchived || false,
+      isTrash: note.isTrash || false,
+      lastModifiedBy: clientID,
+    };
+
     const newNote = new Note(noteData);
+    const savedNote = await newNote.save();
+
+    const newSettings = new UserSettings(settings);
+    const savedSettings = await newSettings.save();
 
     await User.updateOne(
       { _id: userID },
@@ -678,13 +718,17 @@ export const createNoteAction = async (note, clientID) => {
       }
     );
 
-    const savedNote = await newNote.save();
+    const finalData = JSON.parse(JSON.stringify(savedNote));
+    const p2 = JSON.parse(JSON.stringify(savedSettings));
+    const { _id, _v, ...finalSettings } = p2;
+
+    const finalNote = { ...finalData, ...finalSettings };
 
     return {
       success: true,
       message: "Note added successfully!",
       status: 201,
-      newNote: JSON.parse(JSON.stringify(savedNote)),
+      newNote: finalNote,
     };
   } catch (error) {
     console.log("Error creating note:", error);
@@ -702,7 +746,7 @@ export const NoteUpdateAction = async (data) => {
     await connectDB();
     if (data.type === "images") {
       const updatedNote = await Note.findOneAndUpdate(
-        { uuid: data.noteUUIDs[0], creator: userID },
+        { uuid: data.noteUUIDs[0] },
         {
           $push: { images: data.value },
           $set: { lastModifiedBy: data.clientID },
@@ -714,11 +758,11 @@ export const NoteUpdateAction = async (data) => {
       );
       return JSON.parse(JSON.stringify(updatedImage));
     } else if (data.type === "isArchived") {
-      await Note.updateOne(
-        { uuid: data.noteUUIDs[0], creator: userID },
+      await UserSettings.updateOne(
+        { note: data.noteUUIDs[0], user: userID },
         {
           $set: {
-            [data.type]: data.value,
+            isArchived: data.value,
             isPinned: false,
             lastModifiedBy: data.clientID,
           },
@@ -734,8 +778,8 @@ export const NoteUpdateAction = async (data) => {
         await user.save();
       }
     } else if (data.type === "pinArchived") {
-      await Note.updateOne(
-        { uuid: data.noteUUIDs[0], creator: userID },
+      await UserSettings.updateOne(
+        { note: data.noteUUIDs[0], user: userID },
         {
           $set: {
             isPinned: data.value,
@@ -752,9 +796,9 @@ export const NoteUpdateAction = async (data) => {
       user.notesOrder = updatedOrder;
       await user.save();
     } else if (data.type === "isPinned") {
-      await Note.updateOne(
-        { uuid: data.noteUUIDs[0], creator: userID },
-        { $set: { [data.type]: data.value, lastModifiedBy: data.clientID } }
+      await UserSettings.updateOne(
+        { note: data.noteUUIDs[0], user: userID },
+        { $set: { isPinned: data.value, lastModifiedBy: data.clientID } }
       );
       const user = await User.findById(userID);
       const { notesOrder } = user;
@@ -764,11 +808,11 @@ export const NoteUpdateAction = async (data) => {
       user.notesOrder = updatedOrder;
       await user.save();
     } else if (data.type === "isTrash") {
-      await Note.updateOne(
-        { uuid: data.noteUUIDs[0], creator: userID },
+      await UserSettings.updateOne(
+        { note: data.noteUUIDs[0], user: userID },
         {
           $set: {
-            [data.type]: data.value,
+            isTrash: data.value,
             isPinned: false,
             lastModifiedBy: data.clientID,
           },
@@ -789,11 +833,10 @@ export const NoteUpdateAction = async (data) => {
             content: data.value.content.trim(),
           };
           await Note.updateOne(
-            { uuid: data.noteUUIDs[0], creator: userID },
+            { uuid: data.noteUUIDs[0] },
             {
               $push: { checkboxes: checkbox },
               $set: {
-                textUpdatedAt: new Date(),
                 lastModifiedBy: data.clientID,
               },
             }
@@ -805,12 +848,10 @@ export const NoteUpdateAction = async (data) => {
             {
               uuid: data.noteUUIDs[0],
               "checkboxes.uuid": data.checkboxUUID,
-              creator: userID,
             },
             {
               $set: {
                 "checkboxes.$.isCompleted": data.value,
-                textUpdatedAt: new Date(),
                 lastModifiedBy: data.clientID,
               },
             }
@@ -821,7 +862,6 @@ export const NoteUpdateAction = async (data) => {
           await Note.updateOne(
             {
               uuid: data.noteUUIDs[0],
-              creator: userID,
             },
             {
               $pull: {
@@ -833,7 +873,6 @@ export const NoteUpdateAction = async (data) => {
                 },
               },
               $set: {
-                textUpdatedAt: new Date(),
                 lastModifiedBy: data.clientID,
               },
             }
@@ -842,11 +881,10 @@ export const NoteUpdateAction = async (data) => {
         }
         case "DELETE_CHECKED": {
           await Note.updateOne(
-            { uuid: data.noteUUIDs[0], creator: userID },
+            { uuid: data.noteUUIDs[0] },
             {
               $pull: { checkboxes: { isCompleted: true } },
               $set: {
-                textUpdatedAt: new Date(),
                 lastModifiedBy: data.clientID,
               },
             }
@@ -855,11 +893,10 @@ export const NoteUpdateAction = async (data) => {
         }
         case "UNCHECK_ALL": {
           await Note.updateMany(
-            { uuid: data.noteUUIDs[0], creator: userID },
+            { uuid: data.noteUUIDs[0] },
             {
               $set: {
                 "checkboxes.$[elem].isCompleted": false,
-                textUpdatedAt: new Date(),
                 lastModifiedBy: data.clientID,
               },
             },
@@ -872,12 +909,10 @@ export const NoteUpdateAction = async (data) => {
             {
               uuid: data.noteUUIDs[0],
               "checkboxes.uuid": data.checkboxUUID,
-              creator: userID,
             },
             {
               $set: {
                 "checkboxes.$.content": data.value,
-                textUpdatedAt: new Date(),
                 lastModifiedBy: data.clientID,
               },
             }
@@ -887,7 +922,6 @@ export const NoteUpdateAction = async (data) => {
         case "UPDATE_ORDER-FAM": {
           const note = await Note.findOne({
             uuid: data.noteUUIDs[0],
-            creator: userID,
           });
           const checkboxes = note.checkboxes;
           let filteredList = checkboxes;
@@ -946,7 +980,6 @@ export const NoteUpdateAction = async (data) => {
           });
 
           console.log(initialIndex, overIndex);
-          note.textUpdatedAt = new Date();
           note.checkboxes = newList;
           note.lastModifiedBy = data.clientID;
           await note.save();
@@ -954,13 +987,27 @@ export const NoteUpdateAction = async (data) => {
           break;
         }
       }
-    } else {
-      await Note.updateMany(
-        { uuid: { $in: data.noteUUIDs }, creator: userID },
+    } else if (
+      data.type === "expandCompleted" ||
+      data.type === "color" ||
+      data.type === "background" ||
+      data.type === "showCheckboxes"
+    ) {
+      await UserSettings.updateMany(
+        { note: { $in: data.noteUUIDs }, user: userID },
         {
           $set: {
             [data.type]: data.value,
-            textUpdatedAt: new Date(),
+            lastModifiedBy: data.clientID,
+          },
+        }
+      );
+    } else {
+      await Note.updateMany(
+        { uuid: { $in: data.noteUUIDs } },
+        {
+          $set: {
+            [data.type]: data.value,
             lastModifiedBy: data.clientID,
           },
         }
@@ -998,8 +1045,8 @@ export const batchUpdateAction = async (data) => {
 
       updatedOrder.unshift(...sortedUUIDs);
 
-      await Note.updateMany(
-        { uuid: { $in: sortedUUIDs }, creator: userID },
+      await UserSettings.updateMany(
+        { note: { $in: sortedUUIDs }, user: userID },
         {
           $set: {
             [data.property]: !data.val,
@@ -1030,8 +1077,8 @@ export const batchUpdateAction = async (data) => {
 
       updatedOrder.unshift(...sortedUUIDs);
 
-      await Note.updateMany(
-        { uuid: { $in: sortedUUIDs }, creator: userID },
+      await UserSettings.updateMany(
+        { note: { $in: sortedUUIDs }, user: userID },
         {
           $set: {
             isPinned: !data.val,
@@ -1061,12 +1108,11 @@ export const NoteTextUpdateAction = async (values, noteUUID, clientID) => {
     await connectDB();
 
     await Note.updateOne(
-      { uuid: noteUUID, creator: userID },
+      { uuid: noteUUID },
       {
         $set: {
           title: values.title,
           content: values.content,
-          textUpdatedAt: new Date(),
           lastModifiedBy: clientID,
         },
       }
@@ -1091,7 +1137,7 @@ export const NoteImageDeleteAction = async (
   try {
     await connectDB();
     await Note.updateOne(
-      { uuid: noteUUID, "images.uuid": imageID, creator: userID },
+      { uuid: noteUUID, "images.uuid": imageID },
       {
         $pull: { images: { uuid: imageID } },
         $set: { lastModifiedBy: clientID },
@@ -1113,12 +1159,15 @@ export const DeleteNoteAction = async (noteUUID, clientID) => {
   }
   try {
     await connectDB();
-    const note = await Note.findOne({ uuid: noteUUID, creator: userID });
+    const note = await Note.findOne({ uuid: noteUUID });
     await User.updateOne({ _id: userID }, { $pull: { notesOrder: noteUUID } });
-    const result = await Note.deleteOne({ uuid: noteUUID, creator: userID });
+    const result = await Note.deleteOne({ uuid: noteUUID });
     if (result.deletedCount === 0) {
       return { success: false, message: "Note not found" };
     }
+    await UserSettings.deleteOne({
+      note: noteUUID,
+    });
 
     if (note.images.length !== 0) {
       const folderPath = `${userID}/${note.uuid}/`;
@@ -1132,7 +1181,7 @@ export const DeleteNoteAction = async (noteUUID, clientID) => {
   }
 };
 
-export const emptyTrashAction = async (clientID) => {
+export const batchDeleteNotes = async (deletedUUIDs, clientID) => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
   if (!session) {
@@ -1141,25 +1190,32 @@ export const emptyTrashAction = async (clientID) => {
   try {
     await connectDB();
 
-    const deletedNotes = await Note.find({ isTrash: true, creator: userID });
-    let deletedUUIDs = [];
-    let deletedImages = [];
+    const deletedImages = [];
 
-    deletedNotes.map((note) => {
-      deletedUUIDs.push(note.uuid);
-      const filePath = `${userID}/${note.uuid}/`;
+    deletedUUIDs.map((uuid) => {
+      const filePath = `${userID}/${uuid}/`;
       deletedImages.push(filePath);
     });
 
-    await Note.deleteMany({ isTrash: true, creator: userID });
-    await User.updateOne(
-      { _id: userID },
-      {
-        $pull: {
-          notesOrder: { $in: deletedUUIDs },
-        },
-      }
-    );
+    const session = await startSession();
+    await session.withTransaction(async () => {
+      const ids = await UserSettings.distinct("user", {
+        note: { $in: deletedUUIDs },
+      }).session(session);
+
+      await Note.deleteMany({ uuid: { $in: deletedUUIDs } }).session(session);
+      await UserSettings.deleteMany({
+        note: { $in: deletedUUIDs },
+      }).session(session);
+      await User.updateMany(
+        { _id: { $in: ids } },
+        {
+          $pull: { notesOrder: { $in: deletedUUIDs } },
+          $set: { orderLastModifiedBy: clientID },
+        }
+      ).session(session);
+    });
+    session.endSession();
 
     if (deletedImages.length !== 0) {
       await Promise.all(
@@ -1221,8 +1277,8 @@ export const undoAction = async (data) => {
     const { notesOrder } = user;
 
     if (data.type === "UNDO_ARCHIVE") {
-      await Note.updateOne(
-        { uuid: data.noteUUID, creator: userID },
+      await UserSettings.updateOne(
+        { note: data.noteUUID, user: userID },
         {
           $set: {
             isArchived: data.value,
@@ -1239,8 +1295,8 @@ export const undoAction = async (data) => {
       user.notesOrder = updatedOrder;
       await user.save();
     } else if (data.type === "UNDO_TRASH") {
-      await Note.updateOne(
-        { uuid: data.noteUUID, creator: userID },
+      await UserSettings.updateOne(
+        { note: data.noteUUID, user: userID },
         { $set: { isTrash: data.value, lastModifiedBy: data.clientID } }
       );
       const updatedOrder = [...notesOrder];
@@ -1251,8 +1307,8 @@ export const undoAction = async (data) => {
       user.notesOrder = updatedOrder;
       await user.save();
     } else if (data.type === "UNDO_PIN_ARCHIVED") {
-      await Note.updateOne(
-        { uuid: data.noteUUID, creator: userID },
+      await UserSettings.updateOne(
+        { note: data.noteUUID, user: userID },
         {
           $set: {
             isPinned: false,
@@ -1279,11 +1335,12 @@ export const undoAction = async (data) => {
 
       const result = await Note.deleteOne({
         uuid: data.noteUUID,
-        creator: userID,
       });
       if (result.deletedCount === 0) {
         return { success: false, message: "Note not found" };
       }
+
+      await UserSettings.deleteOne({ note: data.noteUUID, user: userID });
 
       if (data.isImages) {
         const folderPath = `${userID}/${data.noteUUID}/`;
@@ -1301,7 +1358,7 @@ export const undoAction = async (data) => {
 
         bulkOperations.push({
           updateOne: {
-            filter: { uuid: noteData.uuid },
+            filter: { note: noteData.uuid, user: userID },
             update: {
               $set: {
                 [data.property]: data.val,
@@ -1313,7 +1370,7 @@ export const undoAction = async (data) => {
         });
       });
 
-      await Note.bulkWrite(bulkOperations);
+      await UserSettings.bulkWrite(bulkOperations);
 
       user.orderLastModifiedBy = data.clientID;
       user.notesOrder = updatedOrder;
@@ -1328,8 +1385,8 @@ export const undoAction = async (data) => {
         updatedOrder.splice(noteData.index, 0, noteData.uuid);
       });
 
-      await Note.updateMany(
-        { uuid: { $in: selectedUUIDs }, creator: userID },
+      await UserSettings.updateMany(
+        { note: { $in: selectedUUIDs }, user: userID },
         {
           $set: {
             isArchived: true,
@@ -1353,7 +1410,10 @@ export const undoAction = async (data) => {
 
       await Note.deleteMany({
         uuid: { $in: data.notesUUIDs },
-        creator: userID,
+      });
+      await UserSettings.deleteMany({
+        note: { $in: data.notesUUIDs },
+        user: userID,
       });
       await User.updateOne(
         { _id: userID },
@@ -1412,24 +1472,35 @@ export const copyNoteAction = async (data) => {
     }
 
     const noteData = {
+      _id: data.newNoteUUID,
       uuid: data.newNoteUUID,
-      title: copiedNote.title,
-      content: copiedNote.content,
-      color: copiedNote.color,
-      background: copiedNote.background,
-      labels: copiedNote.labels,
-      checkboxes: copiedNote.checkboxes,
-      showCheckboxes: copiedNote.showCheckboxes,
-      expandCompleted: copiedNote.expandCompleted,
+      title: copiedNote.title || "",
+      content: copiedNote.content || "",
+      creator: userID,
+      checkboxes: copiedNote.checkboxes || [],
+      images: copiedImages ?? [],
+      lastModifiedBy: data.clientID,
+    };
+
+    const settings = {
+      note: data.newNoteUUID,
+      user: userID,
+      color: copiedNote.color || "Default",
+      background: copiedNote.background || "DefaultBG",
+      labels: copiedNote.labels || [],
+      showCheckboxes: copiedNote.showCheckboxes || true,
+      expandCompleted: copiedNote.expandCompleted || true,
       isPinned: false,
       isArchived: false,
-      isTrash: copiedNote.isTrash,
-      images: copiedImages,
-      creator: userID,
+      isTrash: false,
       lastModifiedBy: data.clientID,
     };
 
     const newNote = new Note(noteData);
+    const savedNote = await newNote.save();
+
+    const newSettings = new UserSettings(settings);
+    const savedSettings = await newSettings.save();
 
     await User.updateOne(
       { _id: userID },
@@ -1439,11 +1510,15 @@ export const copyNoteAction = async (data) => {
       }
     );
 
-    const savedNote = await newNote.save();
+    const finalData = JSON.parse(JSON.stringify(savedNote));
+    const p2 = JSON.parse(JSON.stringify(savedSettings));
+    const { _id, _v, ...finalSettings } = p2;
+
+    const finalNote = { ...finalData, ...finalSettings };
 
     return {
       success: true,
-      note: JSON.parse(JSON.stringify(savedNote)),
+      note: finalNote,
       message: "Note copied successfully!",
       status: 201,
     };
@@ -1463,6 +1538,9 @@ export const batchCopyNoteAction = async (data) => {
     await connectDB();
 
     const notesUUIDs = [];
+
+    const notes = [];
+    const notesSettings = [];
 
     await Promise.all(
       data.newNotes.map(async (n) => {
@@ -1495,10 +1573,40 @@ export const batchCopyNoteAction = async (data) => {
             })
           );
         }
+
+        notes.push({
+          _id: n.uuid,
+          uuid: n.uuid,
+          title: n?.title,
+          content: n?.content,
+          creator: userID,
+          checkboxes: n?.checkboxes,
+          images: n?.images,
+          lastModifiedBy: data.clientID,
+        });
+
+        notesSettings.push({
+          note: n.uuid,
+          user: userID,
+          color: n?.color,
+          background: n?.background,
+          labels: n?.labels,
+          showCheckboxes: n?.showCheckboxes,
+          expandCompleted: n?.expandCompleted,
+          isPinned: n?.isPinned,
+          isArchived: n?.isArchived,
+          isTrash: n?.isTrash,
+          lastModifiedBy: data.clientID,
+        });
       })
     );
 
-    const savedNotes = await Note.insertMany(data.newNotes);
+    const savedNotes = await Note.insertMany(notes);
+    const savedSettings = await UserSettings.insertMany(notesSettings);
+
+    const finalNotesData = JSON.parse(JSON.stringify(savedNotes));
+    const finalSettings = JSON.parse(JSON.stringify(savedSettings));
+
     await User.updateOne(
       { _id: userID },
       {
@@ -1507,10 +1615,15 @@ export const batchCopyNoteAction = async (data) => {
       }
     );
 
+    const finalNotes = finalNotesData.map((note, index) => {
+      const settings = finalSettings[index];
+      return { ...note, ...settings, _id: note._id };
+    });
+
     return {
       success: true,
       message: "Notes copied successfully!",
-      newNotes: JSON.parse(JSON.stringify(savedNotes)),
+      newNotes: finalNotes,
       status: 201,
     };
   } catch (error) {
@@ -1594,10 +1707,10 @@ export const createLabelForNotesAction = async (data) => {
   try {
     await connectDB();
 
-    await Note.updateMany(
+    await UserSettings.updateMany(
       {
-        uuid: { $in: data.notesUUIDs },
-        creator: userID,
+        note: { $in: data.notesUUIDs },
+        user: userID,
       },
       {
         $push: { labels: data.labelObj.uuid },
@@ -1633,8 +1746,8 @@ export const addLabelAction = async (data) => {
   try {
     await connectDB();
 
-    await Note.updateOne(
-      { uuid: data.noteUUID, creator: userID },
+    await UserSettings.updateOne(
+      { note: data.noteUUID, user: userID },
       {
         $push: { labels: data.labelUUID },
         $set: { lastModifiedBy: data.clientID },
@@ -1655,8 +1768,8 @@ export const removeLabelAction = async (data) => {
   try {
     await connectDB();
 
-    await Note.updateOne(
-      { uuid: data.noteUUID, creator: userID },
+    await UserSettings.updateOne(
+      { note: data.noteUUID, user: userID },
       {
         $pull: { labels: data.labelUUID },
         $set: { lastModifiedBy: data.clientID },
@@ -1820,8 +1933,8 @@ export const deleteLabelAction = async (data) => {
       }
     );
 
-    await Note.updateMany(
-      { labels: data.labelUUID, creator: userID },
+    await UserSettings.updateMany(
+      { labels: data.labelUUID, user: userID },
       {
         $pull: { labels: data.labelUUID },
         $set: { lastModifiedBy: data.clientID },
@@ -1844,56 +1957,6 @@ export const deleteLabelAction = async (data) => {
   }
 };
 
-export const batchDeleteNotes = async (data) => {
-  const session = await getServerSession(authOptions);
-  const userID = session?.user?.id;
-  if (!session) {
-    throw new Error("Something went wrong");
-  }
-  try {
-    await connectDB();
-
-    const deletedNotes = await Note.find({
-      uuid: { $in: data.deletedUUIDs },
-      creator: userID,
-    });
-
-    let deletedImages = [];
-
-    deletedNotes.map((note) => {
-      const filePath = `${userID}/${note.uuid}/`;
-      deletedImages.push(filePath);
-    });
-
-    await Note.deleteMany({
-      uuid: { $in: data.deletedUUIDs },
-      creator: userID,
-    });
-    await User.updateOne(
-      { _id: userID },
-      {
-        $pull: {
-          notesOrder: { $in: data.deletedUUIDs },
-        },
-        $set: { orderLastModifiedBy: data.clientID },
-      }
-    );
-
-    if (deletedImages.length !== 0) {
-      await Promise.all(
-        deletedImages.map((path) => {
-          return cloudinary.api.delete_resources_by_prefix(path);
-        })
-      );
-    }
-
-    return { success: true, message: "Trash emptied successfully" };
-  } catch (error) {
-    console.log("Error deleting notes", error);
-    throw new Error("Error deleting notes");
-  }
-};
-
 export const batchManageLabelsAction = async (data) => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
@@ -1907,11 +1970,11 @@ export const batchManageLabelsAction = async (data) => {
     if (data.case === "shared") {
       switch (data.operation) {
         case "remove": {
-          await Note.updateMany(
+          await UserSettings.updateMany(
             {
-              uuid: { $in: data.notesUUIDs },
+              note: { $in: data.notesUUIDs },
               labels: data.labelUUID,
-              creator: userID,
+              user: userID,
             },
             {
               $pull: { labels: data.labelUUID },
@@ -1922,10 +1985,10 @@ export const batchManageLabelsAction = async (data) => {
         }
 
         case "add": {
-          await Note.updateMany(
+          await UserSettings.updateMany(
             {
-              uuid: { $in: data.notesUUIDs },
-              creator: userID,
+              note: { $in: data.notesUUIDs },
+              user: userID,
             },
             {
               $push: { labels: data.labelUUID },
@@ -1936,10 +1999,10 @@ export const batchManageLabelsAction = async (data) => {
         }
       }
     } else {
-      await Note.updateMany(
+      await UserSettings.updateMany(
         {
-          uuid: { $in: data.notesUUIDs },
-          creator: userID,
+          note: { $in: data.notesUUIDs },
+          user: userID,
         },
         {
           $push: { labels: data.labelUUID },
@@ -2052,5 +2115,293 @@ export const syncOfflineUpdatesAction = async (data) => {
   } catch (error) {
     console.log("Error syncing data with database", error);
     throw new Error("Error syncing data with database");
+  }
+};
+
+export const submitCollabUserAction = async (input, noteUUID) => {
+  const session = await getServerSession(authOptions);
+  const loggedInUser = session?.user;
+
+  if (!session) {
+    throw new Error("Something went wrong");
+  }
+
+  try {
+    await connectDB();
+
+    const finalInput = input.toLowerCase().trim();
+
+    const isEmail = isEmailValid(finalInput);
+    let user = null;
+
+    if (!isEmail) {
+      if (
+        finalInput.toLowerCase().trim() ===
+        loggedInUser.username.toLocaleLowerCase().trim()
+      ) {
+        return {
+          success: false,
+          message: "Username already exists",
+        };
+      }
+      user = await User.findOne({ username: finalInput });
+    } else {
+      if (
+        finalInput.toLowerCase().trim() ===
+        loggedInUser.email.toLocaleLowerCase().trim()
+      ) {
+        return {
+          success: false,
+          message: "Email already exists",
+        };
+      }
+      user = await User.findOne({ email: finalInput });
+    }
+
+    const passedUser = {
+      data: {
+        image: user.image,
+        displayName: user.displayName,
+        username: user.username,
+      },
+      id: user._id,
+    };
+
+    if (!user) {
+      return {
+        success: false,
+        message: "No matching user found",
+      };
+    }
+
+    const alreadyExists = await Note.exists({
+      uuid: noteUUID,
+      "collaborators.data": user._id,
+    });
+
+    if (alreadyExists)
+      return {
+        success: false,
+        newUser: JSON.parse(JSON.stringify(passedUser)),
+        message: isEmail ? "Email already exists" : "Username already exists",
+      };
+
+    return {
+      success: true,
+      newUser: JSON.parse(JSON.stringify(passedUser)),
+      message: "A matching user found",
+    };
+  } catch (error) {
+    console.log("Error submitting collab user", error);
+    throw new Error("Error submitting collab user");
+  }
+};
+
+export const removeSelfAction = async (noteUUID, clientID) => {
+  const session = await getServerSession(authOptions);
+  const userID = session?.user?.id;
+
+  if (!session) {
+    throw new Error("Something went wrong");
+  }
+
+  try {
+    await connectDB();
+
+    const session = await startSession();
+    await session.withTransaction(async () => {
+      await Note.updateOne(
+        { uuid: noteUUID },
+        {
+          $pull: { collaborators: { id: userID } },
+          $set: { lastModifiedBy: clientID },
+        }
+      ).session(session);
+      await UserSettings.deleteOne({ user: userID, note: noteUUID }).session(
+        session
+      );
+      await User.updateOne(
+        { _id: userID },
+        {
+          $pull: { notesOrder: noteUUID },
+          $set: { orderLastModifiedBy: clientID },
+        }
+      ).session(session);
+    });
+    session.endSession();
+
+    return {
+      success: true,
+      message: "Collaborator has been removed successfully",
+    };
+  } catch (error) {
+    console.log("Error removing collaborator", error);
+    throw new Error("Error removing collaborator");
+  }
+};
+
+export const updateCollabsAction = async (data) => {
+  const session = await getServerSession(authOptions);
+  const userID = session?.user?.id;
+
+  if (!session) {
+    throw new Error("Something went wrong");
+  }
+
+  if (data.creatorID !== userID) {
+    throw new Error("Only creator manage collaborators");
+  }
+
+  try {
+    await connectDB();
+
+    const shareDate = new Date();
+
+    if (!data.creatorID) {
+      throw new Error("Something went wrong");
+    }
+
+    const noteBulkOps = [];
+    const settingsBulkOps = [];
+    const userBulkOps = [];
+
+    const addIDsSet = new Set();
+    const removeIDsSet = new Set();
+
+    for (let [collabID, operation] of data.collabOpsMap) {
+      if (operation === "add") {
+        addIDsSet.add(collabID);
+        settingsBulkOps.push({
+          insertOne: {
+            document: {
+              note: data.noteUUID,
+              user: collabID,
+              openNote: false,
+              shareDate: shareDate,
+              lastModifiedBy: data.clientID,
+            },
+          },
+        });
+      } else {
+        removeIDsSet.add(collabID);
+        settingsBulkOps.push({
+          deleteOne: { filter: { user: collabID, note: data.noteUUID } },
+        });
+      }
+    }
+
+    if (addIDsSet.size > 0) {
+      const newUsers = await User.find(
+        { _id: { $in: [...addIDsSet] } },
+        { _id: 1, displayName: 1, username: 1, image: 1 }
+      );
+
+      const collabsToAdd = newUsers.map((u) => {
+        return {
+          data: u._id,
+          id: u._id,
+          snapshot: {
+            displayName: u.displayName,
+            username: u.username,
+            image: u.image,
+          },
+        };
+      });
+
+      noteBulkOps.push({
+        updateOne: {
+          filter: { uuid: data.noteUUID },
+          update: {
+            $addToSet: { collaborators: { $each: collabsToAdd } },
+            $set: { lastModifiedBy: data.clientID },
+          },
+        },
+      });
+
+      userBulkOps.push({
+        updateMany: {
+          filter: { _id: { $in: [...addIDsSet] } },
+          update: [
+            {
+              $set: {
+                notesOrder: {
+                  $concatArrays: [
+                    [data.noteUUID],
+                    {
+                      $filter: {
+                        input: "$notesOrder",
+                        cond: { $ne: ["$$this", data.noteUUID] },
+                      },
+                    },
+                  ],
+                },
+                orderLastModifiedBy: data.clientID,
+              },
+            },
+          ],
+        },
+      });
+    }
+
+    if (removeIDsSet.size > 0) {
+      noteBulkOps.push({
+        updateOne: {
+          filter: { uuid: data.noteUUID },
+          update: {
+            $pull: { collaborators: { id: { $in: [...removeIDsSet] } } },
+            $set: { lastModifiedBy: data.clientID },
+          },
+        },
+      });
+      userBulkOps.push({
+        updateMany: {
+          filter: { _id: { $in: [...removeIDsSet] } },
+          update: {
+            $pull: { notesOrder: data.noteUUID },
+            $set: { orderLastModifiedBy: data.clientID },
+          },
+        },
+      });
+    }
+
+    const session = await startSession();
+    await session.withTransaction(async () => {
+      await Note.bulkWrite(noteBulkOps, { session });
+      await UserSettings.bulkWrite(settingsBulkOps, { session });
+      await User.bulkWrite(userBulkOps, { session });
+    });
+    session.endSession();
+    return { success: true, message: "Collaborators updated successfully" };
+  } catch (error) {
+    console.log("Error updating collaborators", error);
+    throw new Error("Error updating collaborators");
+  }
+};
+
+export const openNoteAction = async (noteUUID, clientID) => {
+  const session = await getServerSession(authOptions);
+  const userID = session?.user?.id;
+
+  if (!session) {
+    throw new Error("Something went wrong");
+  }
+
+  try {
+    await connectDB();
+
+    await UserSettings.updateOne(
+      { user: userID, note: noteUUID },
+      {
+        $set: {
+          openNote: true,
+          lastModifiedBy: clientID,
+        },
+      }
+    );
+
+    return { success: true, message: "Note updated successfully" };
+  } catch (error) {
+    console.log("Error updating note", error);
+    throw new Error("Error updating note");
   }
 };

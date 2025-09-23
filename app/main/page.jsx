@@ -7,7 +7,11 @@ import Reminders from "@/components/pages/Reminders";
 import Trash from "@/components/pages/Trash";
 import Snackbar from "@/components/Tools/Snackbar";
 import Tooltip from "@/components/Tools/Tooltip";
-import { deleteLabelAction } from "@/utils/actions";
+import {
+  deleteLabelAction,
+  openNoteAction,
+  removeSelfAction,
+} from "@/utils/actions";
 import React, {
   useCallback,
   useEffect,
@@ -32,6 +36,8 @@ import { useSnackbar } from "@/hooks/useSnackbar";
 import handleServerCall from "@/utils/handleServerCall";
 import localDbReducer from "@/utils/localDbReducer";
 import { useRealtimeUpdates } from "@/hooks/useRealtimeUpdates";
+import { AnimatePresence } from "framer-motion";
+import ActionModal from "@/components/others/ActionModal";
 
 const page = () => {
   const { searchTerm, filters } = useSearch();
@@ -44,8 +50,10 @@ const page = () => {
     modalOpenRef,
     setLoadingImages,
     setTooltipRef,
+    setDialogInfoRef,
     notesStateRef,
     openSnackRef,
+    addButtonRef,
     user,
     rootContainerRef,
     clientID,
@@ -68,6 +76,8 @@ const page = () => {
   const [noActionUndone, setNoActionUndone] = useState(false);
   const [labelObj, setLabelObj] = useState(null);
   const [isGrid, setIsGrid] = useState(layout === "grid");
+  const [dialogInfo, setDialogInfo] = useState(null);
+
   const undoFunction = useRef(null);
   const redoFunction = useRef(null);
   const allowUndoRef = useRef(true);
@@ -89,6 +99,7 @@ const page = () => {
   useEffect(() => {
     setTooltipRef.current = setTooltipAnchor;
     notesStateRef.current = notesState;
+    setDialogInfoRef.current = setDialogInfo;
   }, []);
 
   useEffect(() => {
@@ -111,24 +122,98 @@ const page = () => {
   const handleNoteClick = useCallback((e, note, index, collab = false) => {
     const element = e.currentTarget;
 
-    requestAnimationFrame(() => {
-      setModalStyle({
-        index: index,
-        element: element,
-        initialNote: note,
-        collab: collab,
-      });
-
-      rootContainerRef.current.classList.add("modal-open");
+    const handleOpenNote = () => {
       requestAnimationFrame(() => {
-        requestIdleCallback(() => {
-          element.style.opacity = "0";
-          setSelectedNote(note);
-          setIsModalOpen(true);
+        setModalStyle({
+          index: index,
+          element: element,
+          initialNote: note,
+          collab: collab,
+        });
+
+        rootContainerRef.current.classList.add("modal-open");
+        requestAnimationFrame(() => {
+          requestIdleCallback(() => {
+            element.style.opacity = "0";
+            setSelectedNote(note);
+            setIsModalOpen(true);
+          });
         });
       });
-    });
+    };
+
+    const openNote = note?.openNote ?? true;
+
+    if (!openNote) {
+      setDialogInfo({
+        func: () => {
+          dispatchNotes({
+            type: "OPEN_NOTE",
+            noteUUID: note?.uuid,
+          });
+          localDbReducer({
+            notes: notesStateRef.current.notes,
+            order: notesStateRef.current.order,
+            userID: userID,
+            type: "OPEN_NOTE",
+            noteUUID: note?.uuid,
+          });
+          handleServerCall(
+            [() => openNoteAction(note?.uuid, clientID)],
+            openSnackRef.current
+          );
+          handleOpenNote();
+        },
+        title: "This note has been shared with you",
+        message: `The owner of this note is ${note?.creator?.username || "Owner"}. You should only open notes from someone you trust. How would you like to proceed?`,
+        btnMsg: "Open note",
+        cancelFunc: () => {
+          localDbReducer({
+            notes: notesStateRef.current.notes,
+            order: notesStateRef.current.order,
+            userID: userID,
+            type: "DELETE_NOTE",
+            note: note,
+          });
+          dispatchNotes({
+            type: "DELETE_NOTE",
+            note: note,
+          });
+          handleServerCall(
+            [() => removeSelfAction(note?.uuid, clientID)],
+            openSnackRef.current
+          );
+        },
+        cancelBtnMsg: "Delete note",
+      });
+      return;
+    }
+
+    handleOpenNote();
   }, []);
+
+  useEffect(() => {
+    if (!isModalOpen || !updateModalRef.current) return;
+    const notes = notesState.notes;
+    if (notes.get(modalStyle?.initialNote?.uuid) === undefined) {
+      const creatorID = modalStyle?.initialNote?.creator?._id;
+      const message = creatorID === userID ? "Note deleted" : "Note unshared";
+      openSnackRef.current({
+        snackMessage: message,
+        showUndo: false,
+      });
+      setIsModalOpen(false);
+      return;
+    }
+    setModalStyle((prev) => {
+      const note = prev?.initialNote;
+      if (!note) return prev;
+      const updatedNote = notes.get(note?.uuid);
+      setSelectedNote(updatedNote);
+      return { ...prev, initialNote: updatedNote };
+    });
+    updateModalRef.current = false;
+  }, [notesState.notes]);
 
   useEffect(() => {
     modalOpenRef.current = isModalOpen;
@@ -162,32 +247,31 @@ const page = () => {
   }, [searchTerm]);
 
   useEffect(() => {
-    if (!notesReady || !labelsReady || !currentSection) return;
-    const order = notesStateRef.current.order;
-    const notes = notesStateRef.current.notes;
+    if (!currentSection) return;
+    const order = notesState.order;
+    const notes = notesState.notes;
+    const btn = addButtonRef?.current;
     requestAnimationFrame(() => {
       if (order.length === 0 && currentSection === "Trash") {
-        const btn = document.body.querySelector("#add-btn");
         if (btn) {
           btn.disabled = true;
         }
         return;
       }
+
       if (currentSection === "Trash") {
-        const trashNotes = order.some((uuid) => notes.get(uuid).isTrash);
+        const trashNotes = order.some((uuid) => notes.get(uuid)?.isTrash);
+        if (!btn) return;
         if (!trashNotes) {
-          const btn = document.body.querySelector("#add-btn");
           btn.disabled = true;
         } else {
-          const btn = document.body.querySelector("#add-btn");
           btn.disabled = false;
         }
       } else {
-        const btn = document.body.querySelector("#add-btn");
         btn.disabled = false;
       }
     });
-  }, [currentSection, notesReady, labelsReady]);
+  }, [currentSection, notesState]);
 
   const handleDeleteLabel = useCallback((data) => {
     setFadingNotes((prev) => new Set(prev).add(data.labelData.uuid));
@@ -271,33 +355,34 @@ const page = () => {
   }, [selectedNotesIDs.length]);
 
   const matchesFilters = (note) => {
-    if (note.isTrash) return false;
+    if (note?.isTrash) return false;
 
-    if (filters.color && note.color !== filters.color) {
+    if (filters.color && note?.color !== filters.color) {
       return false;
     }
 
     if (
       searchTerm &&
       !(
-        note.title.toLowerCase().includes(searchTerm.toLowerCase().trim()) ||
-        note.content.toLowerCase().includes(searchTerm.toLowerCase().trim())
+        note?.title.toLowerCase().includes(searchTerm.toLowerCase().trim()) ||
+        note?.content.toLowerCase().includes(searchTerm.toLowerCase().trim())
       )
     ) {
       return false;
     }
 
-    if (filters.label && !note.labels.includes(filters.label)) {
+    if (filters.label && !note?.labels.includes(filters.label)) {
       return false;
     }
 
-    if (filters.image && note.images.length === 0) {
+    if (filters.image && note?.images.length === 0) {
       return false;
     }
     return true;
   };
 
-  useRealtimeUpdates({ dispatchNotes });
+  const updateModalRef = useRef(false);
+  useRealtimeUpdates({ dispatchNotes, updateModalRef });
 
   useDataManager({ notesState, dispatchNotes, notesReady, setNotesReady });
 
@@ -415,7 +500,7 @@ const page = () => {
         onClick={() => {
           setIsModalOpen(false);
         }}
-        className="note-overlay"
+        className="note-modal-overlay"
       />
 
       <NoteModal
@@ -500,6 +585,19 @@ const page = () => {
       />
 
       <SelectionBox ref={selectionBoxRef} />
+      <AnimatePresence>
+        {dialogInfo && (
+          <ActionModal
+            setDialogInfo={setDialogInfo}
+            func={dialogInfo?.func || (() => {})}
+            cancelFunc={dialogInfo?.cancelFunc || (() => {})}
+            title={dialogInfo?.title || ""}
+            message={dialogInfo?.message || ""}
+            btnMsg={dialogInfo?.btnMsg || "okay"}
+            cancelBtnMsg={dialogInfo?.cancelBtnMsg || "Cancel"}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 };

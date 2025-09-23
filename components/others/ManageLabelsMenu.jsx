@@ -68,7 +68,7 @@ const ManageLabelsMenu = ({
     // }
     if (!isOpen) return;
 
-    setNoteLabels(new Set(note.labels));
+    setNoteLabels(new Set(note?.labels));
   }, []);
 
   const handleInputKeyDown = (e) => {
@@ -129,7 +129,7 @@ const ManageLabelsMenu = ({
         [
           () =>
             removeLabelAction({
-              noteUUID: note.uuid,
+              noteUUID: note?.uuid,
               labelUUID: uuid,
               clientID: clientID,
             }),
@@ -164,7 +164,7 @@ const ManageLabelsMenu = ({
         [
           () =>
             addLabelAction({
-              noteUUID: note.uuid,
+              noteUUID: note?.uuid,
               labelUUID: uuid,
               clientID: clientID,
             }),

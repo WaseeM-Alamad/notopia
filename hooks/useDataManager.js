@@ -59,7 +59,7 @@ export function useDataManager({ notesState, dispatchNotes, setNotesReady }) {
       setLabels(fetchedNotes.labels);
       const notesMap = new Map(
         fetchedNotes.data.map((note) => [
-          note.uuid,
+          note?.uuid,
           { ...note, ref: createRef() },
         ])
       );
@@ -119,6 +119,10 @@ export function useDataManager({ notesState, dispatchNotes, setNotesReady }) {
 
   useEffect(() => {
     const handleOnline = async () => {
+      setIsOnline(true);
+      fetchAndUpdateLocally();
+      await clearQueuedNotes(user?.id);
+      return
       const { syncOrder, queuedNotes } = await getQueue(user?.id);
       let queuedOrder = [];
       if (syncOrder) {

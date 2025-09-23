@@ -164,7 +164,7 @@ export const authOptions = {
         }
 
         token.displayName = user.displayName || "";
-        token.name = user.name;
+        token.username = user.username;
         token.email = user.email;
         token.picture = user.image;
         token.tempEmail = user.tempEmail;
@@ -197,7 +197,7 @@ export const authOptions = {
       if (user) {
         session.user.id = user._id.toString();
         session.user.displayName = user.displayName || "";
-        session.user.name = user.username;
+        session.user.username = user.username;
         session.user.email = user.email;
         session.user.image = userImage;
         session.user.tempEmail = user.tempEmail;
@@ -205,7 +205,7 @@ export const authOptions = {
         // fallback from token if user not found
         session.user.id = token.id;
         session.user.displayName = token.displayName || "";
-        session.user.name = token.name;
+        session.user.username = token.username;
         session.user.email = token.email;
         session.user.image = token.picture || userImage;
         session.user.tempEmail = token.tempEmail;

@@ -62,10 +62,7 @@ const Navbar = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [bindsOpen, setBindsOpen] = useState(false);
   const [isClient, setIsClient] = useState(false);
-  const [showInput, setShowInput] = useState(() => {
-    const width = window.innerWidth;
-    return !(width < 795);
-  });
+  const [showInput, setShowInput] = useState(null);
   const [showLayoutBtn, setShowLayoutBtn] = useState(false);
   const [showNav, setShowNav] = useState(true);
   const [threshold1, setThreshold1] = useState(false);
@@ -82,6 +79,8 @@ const Navbar = () => {
   const keybindsRef = useRef(null);
 
   useEffect(() => {
+    const width = window.innerWidth;
+    setShowInput(!(width < 795))
     requestAnimationFrame(() => {
       handleResizeLayout();
     });
@@ -493,7 +492,7 @@ const Navbar = () => {
               marginLeft: ".8rem",
               fontWeight: "700",
               fontSize: "1.3rem",
-              color: "#474b4f"
+              color: "#474b4f",
             }}
           >
             Notopia
@@ -780,7 +779,7 @@ const Navbar = () => {
                 <>
                   <span style={{ fontSize: "0.85rem" }}>Notopia account</span>
                   <div style={{ opacity: "0.7", paddingTop: "0.2rem" }}>
-                    {user?.name}
+                    {user?.username}
                     <br />
                     {user?.email}
                   </div>

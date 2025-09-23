@@ -51,7 +51,7 @@ const NoteWrapper = memo(
             }
           }}
           className={`grid-item ${
-            fadingNotes.has(note.uuid) ? "fade-out" : ""
+            fadingNotes.has(note?.uuid) ? "fade-out" : ""
           }`}
           style={{
             maxWidth: `${isGrid ? 240 : 600}px`,
@@ -71,6 +71,7 @@ const NoteWrapper = memo(
             setFadingNotes={setFadingNotes}
             setSelectedNotesIDs={setSelectedNotesIDs}
             handleSelectNote={handleSelectNote}
+            handleNoteClick={handleNoteClick}
             index={index}
           />
         </div>
@@ -99,7 +100,8 @@ const DynamicLabel = ({
   containerRef,
   isGrid,
 }) => {
-  const { layout, calculateLayoutRef, focusedIndex, isExpanded } = useAppContext();
+  const { layout, calculateLayoutRef, focusedIndex, isExpanded } =
+    useAppContext();
   const [pinnedHeight, setPinnedHeight] = useState(null);
   const [sectionsHeight, setSectionsHeight] = useState(null);
   const [layoutReady, setLayoutReady] = useState(false);
@@ -115,6 +117,7 @@ const DynamicLabel = ({
 
   const hasUnpinned = [...visibleItems].some((uuid) => {
     const note = notes.get(uuid);
+    if (!note) return false;
     return !note?.isPinned && !note?.isArchived;
   });
 
@@ -125,7 +128,8 @@ const DynamicLabel = ({
 
   const notesExist = order.some((uuid, index) => {
     const note = notes.get(uuid);
-    if (!note?.labels?.includes(labelObj?.uuid) || note.isTrash) return false;
+    if (!note) return false;
+    if (!note?.labels?.includes(labelObj?.uuid) || note?.isTrash) return false;
     if (!focusedIndex.current) {
       focusedIndex.current = index;
     }
@@ -176,7 +180,7 @@ const DynamicLabel = ({
       // Filter out pinned and unpinned items
       const pinnedItems = sortedItems.filter((item) => {
         if (
-          !item.labels.includes(labelObj?.uuid) ||
+          !item?.labels?.includes(labelObj?.uuid) ||
           item.isTrash ||
           item.isArchived
         )
@@ -185,7 +189,7 @@ const DynamicLabel = ({
       });
       const unpinnedItems = sortedItems.filter((item) => {
         if (
-          !item.labels.includes(labelObj?.uuid) ||
+          !item?.labels?.includes(labelObj?.uuid) ||
           item.isTrash ||
           item.isArchived
         )
@@ -194,7 +198,8 @@ const DynamicLabel = ({
       });
 
       const archivedItems = sortedItems.filter((item) => {
-        if (!item.labels.includes(labelObj?.uuid) || item.isTrash) return false;
+        if (!item?.labels?.includes(labelObj?.uuid) || item.isTrash)
+          return false;
         return item.isArchived === true;
       });
 
@@ -304,8 +309,8 @@ const DynamicLabel = ({
     let lastRef = null;
     for (let uuid of order) {
       const note = notes.get(uuid);
-      if (note.labels.includes(labelObj?.uuid) && !note.isTrash) {
-        lastRef = note.ref.current;
+      if (note?.labels?.includes(labelObj?.uuid) && !note?.isTrash) {
+        lastRef = note?.ref.current;
         lastAddedNoteRef.current = lastRef;
         return lastRef;
       }
@@ -357,12 +362,12 @@ const DynamicLabel = ({
           </p>
           {order.map((uuid, index) => {
             const note = notes.get(uuid);
-            if (!visibleItems.has(note.uuid)) return null;
-            if (!note.labels.includes(labelObj?.uuid) || note.isTrash)
+            if (!visibleItems.has(note?.uuid)) return null;
+            if (!note?.labels?.includes(labelObj?.uuid) || note?.isTrash)
               return null;
             return (
               <NoteWrapper
-                key={note.uuid}
+                key={note?.uuid}
                 note={note}
                 selectedNotesRef={selectedNotesRef}
                 noteActions={noteActions}

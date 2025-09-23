@@ -31,7 +31,7 @@ export function notesReducer(state, action) {
       const updatedNotes = new Map(state.notes);
 
       action.newNotes.forEach((note) => {
-        updatedNotes.set(note.uuid, {
+        updatedNotes.set(note?.uuid, {
           ...note,
           updatedAt: new Date(),
           ref: createRef(),
@@ -49,12 +49,12 @@ export function notesReducer(state, action) {
       const updatedOrder = [...state.order];
 
       action.newNotes.forEach((note) => {
-        updatedNotes.set(note.uuid, {
+        updatedNotes.set(note?.uuid, {
           ...note,
           updatedAt: new Date(),
           ref: createRef(),
         });
-        updatedOrder.unshift(note.uuid);
+        updatedOrder.unshift(note?.uuid);
       });
 
       return {
@@ -86,7 +86,7 @@ export function notesReducer(state, action) {
     }
 
     case "SET_NOTE": {
-      const updatedNotes = new Map(state.notes).set(action.note.uuid, {
+      const updatedNotes = new Map(state.notes).set(action.note?.uuid, {
         ...action.note,
         updatedAt: new Date(),
         ref: createRef(),
@@ -100,7 +100,7 @@ export function notesReducer(state, action) {
     case "SET_NOTES": {
       const updatedNotes = new Map(state.notes);
       action.notes.forEach((note) => {
-        updatedNotes.set(note.uuid, { ...note, ref: createRef() });
+        updatedNotes.set(note?.uuid, { ...note, ref: createRef() });
       });
 
       return {
@@ -110,49 +110,46 @@ export function notesReducer(state, action) {
     }
 
     case "PIN_NOTE": {
-      const note = state.notes.get(action.note.uuid);
+      const note = state.notes.get(action.note?.uuid);
       const newNote = {
-        ...state.notes.get(action.note.uuid),
-        updatedAt: new Date(),
-        isPinned: !note.isPinned,
+        ...state.notes.get(action.note?.uuid),
+        isPinned: !note?.isPinned,
         isArchived: false,
       };
-      const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
+      const updatedNotes = new Map(state.notes).set(action.note?.uuid, newNote);
       const updatedOrder = [...state.order].filter(
-        (uuid) => uuid !== action.note.uuid
+        (uuid) => uuid !== action.note?.uuid
       );
       return {
         ...state,
         notes: updatedNotes,
-        order: [action.note.uuid, ...updatedOrder],
+        order: [action.note?.uuid, ...updatedOrder],
       };
     }
 
     case "ARCHIVE_NOTE": {
       const newNote = {
-        ...state.notes.get(action.note.uuid),
-        updatedAt: new Date(),
-        isArchived: !action.note.isArchived,
+        ...state.notes.get(action.note?.uuid),
+        isArchived: !action.note?.isArchived,
         isPinned: false,
       };
-      const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
+      const updatedNotes = new Map(state.notes).set(action.note?.uuid, newNote);
       const updatedOrder = [...state.order].filter(
-        (uuid) => uuid !== action.note.uuid
+        (uuid) => uuid !== action.note?.uuid
       );
       return {
         ...state,
         notes: updatedNotes,
-        order: [action.note.uuid, ...updatedOrder],
+        order: [action.note?.uuid, ...updatedOrder],
       };
     }
     case "UNDO_ARCHIVE": {
       const newNote = {
-        ...state.notes.get(action.note.uuid),
-        updatedAt: new Date(),
-        isArchived: action.note.isArchived,
-        isPinned: action.note.isPinned,
+        ...state.notes.get(action.note?.uuid),
+        isArchived: action.note?.isArchived,
+        isPinned: action.note?.isPinned,
       };
-      const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
+      const updatedNotes = new Map(state.notes).set(action.note?.uuid, newNote);
       let targetedNote = null;
 
       const updatedOrder = state.order.filter((uuid) => {
@@ -184,7 +181,6 @@ export function notesReducer(state, action) {
       sortedNotes.forEach((noteData) => {
         const newNote = {
           ...updatedNotes.get(noteData.uuid),
-          updatedAt: new Date(),
           [action.property]: !action.val,
           isPinned: false,
         };
@@ -215,7 +211,6 @@ export function notesReducer(state, action) {
       sortedNotes.forEach((noteData) => {
         const newNote = {
           ...updatedNotes.get(noteData.uuid),
-          updatedAt: new Date(),
           isPinned: !action.isPinned,
           isArchived: false,
         };
@@ -260,8 +255,8 @@ export function notesReducer(state, action) {
 
       for (const noteUUID of state.order) {
         const note = state.notes.get(noteUUID);
-        if (action.deletedIDsSet.has(note._id)) continue;
-        updatedNotes.set(note.uuid, note);
+        if (action.deletedIDsSet.has(note?._id)) continue;
+        updatedNotes.set(note?.uuid, note);
       }
       return {
         ...state,
@@ -279,7 +274,6 @@ export function notesReducer(state, action) {
       sortedNotes.forEach((noteData) => {
         const newNote = {
           ...updatedNotes.get(noteData.uuid),
-          updatedAt: new Date(),
           [action.property]: action.val,
           isPinned: noteData.isPinned,
         };
@@ -304,7 +298,6 @@ export function notesReducer(state, action) {
       sortedNotes.forEach((noteData) => {
         const newNote = {
           ...updatedNotes.get(noteData.uuid),
-          updatedAt: new Date(),
           isArchived: true,
           isPinned: false,
         };
@@ -321,29 +314,27 @@ export function notesReducer(state, action) {
 
     case "TRASH_NOTE": {
       const newNote = {
-        ...state.notes.get(action.note.uuid),
-        updatedAt: new Date(),
-        isTrash: !action.note.isTrash,
+        ...state.notes.get(action.note?.uuid),
+        isTrash: !action.note?.isTrash,
         isPinned: false,
       };
-      const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
+      const updatedNotes = new Map(state.notes).set(action.note?.uuid, newNote);
       const updatedOrder = [...state.order].filter(
-        (uuid) => uuid !== action.note.uuid
+        (uuid) => uuid !== action.note?.uuid
       );
       return {
         ...state,
         notes: updatedNotes,
-        order: [action.note.uuid, ...updatedOrder],
+        order: [action.note?.uuid, ...updatedOrder],
       };
     }
     case "UNDO_TRASH": {
       const newNote = {
-        ...state.notes.get(action.note.uuid),
-        updatedAt: new Date(),
-        isTrash: action.note.isTrash,
-        isPinned: action.note.isPinned,
+        ...state.notes.get(action.note?.uuid),
+        isTrash: action.note?.isTrash,
+        isPinned: action.note?.isPinned,
       };
-      const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
+      const updatedNotes = new Map(state.notes).set(action.note?.uuid, newNote);
       let targetedNote = null;
 
       const updatedOrder = state.order.filter((uuid) => {
@@ -365,9 +356,9 @@ export function notesReducer(state, action) {
     }
     case "DELETE_NOTE": {
       const newNotes = new Map(state.notes);
-      newNotes.delete(action.note.uuid);
+      newNotes.delete(action.note?.uuid);
       const updatedOrder = [...state.order].filter(
-        (uuid) => uuid !== action.note.uuid
+        (uuid) => uuid !== action.note?.uuid
       );
       return {
         ...state,
@@ -377,13 +368,12 @@ export function notesReducer(state, action) {
     }
     case "UNDO_PIN_ARCHIVED": {
       const newNote = {
-        ...state.notes.get(action.note.uuid),
-        updatedAt: new Date(),
+        ...state.notes.get(action.note?.uuid),
         isPinned: false,
         isArchived: true,
       };
 
-      const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
+      const updatedNotes = new Map(state.notes).set(action.note?.uuid, newNote);
 
       let targetedNote = null;
 
@@ -406,11 +396,10 @@ export function notesReducer(state, action) {
     }
     case "UPDATE_COLOR": {
       const newNote = {
-        ...state.notes.get(action.note.uuid),
-        updatedAt: new Date(),
+        ...state.notes.get(action.note?.uuid),
         color: action.newColor,
       };
-      const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
+      const updatedNotes = new Map(state.notes).set(action.note?.uuid, newNote);
 
       return {
         ...state,
@@ -423,7 +412,6 @@ export function notesReducer(state, action) {
       action.selectedNotes.forEach((data) => {
         const newNote = {
           ...updatedNotes.get(data.uuid),
-          updatedAt: new Date(),
           color: action.color,
         };
         updatedNotes.set(data.uuid, newNote);
@@ -437,11 +425,10 @@ export function notesReducer(state, action) {
 
     case "UPDATE_BG": {
       const newNote = {
-        ...state.notes.get(action.note.uuid),
-        updatedAt: new Date(),
+        ...state.notes.get(action.note?.uuid),
         background: action.newBG,
       };
-      const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
+      const updatedNotes = new Map(state.notes).set(action.note?.uuid, newNote);
 
       return {
         ...state,
@@ -453,7 +440,6 @@ export function notesReducer(state, action) {
       action.selectedNotes.forEach((data) => {
         const newNote = {
           ...updatedNotes.get(data.uuid),
-          updatedAt: new Date(),
           background: action.background,
         };
         updatedNotes.set(data.uuid, newNote);
@@ -466,11 +452,11 @@ export function notesReducer(state, action) {
     }
     case "ADD_IMAGES": {
       const newNote = {
-        ...state.notes.get(action.note.uuid),
+        ...state.notes.get(action.note?.uuid),
         updatedAt: new Date(),
-        images: [...action.note.images, ...action.newImages],
+        images: [...action.note?.images, ...action.newImages],
       };
-      const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
+      const updatedNotes = new Map(state.notes).set(action.note?.uuid, newNote);
 
       return {
         ...state,
@@ -479,30 +465,29 @@ export function notesReducer(state, action) {
     }
     case "UPDATE_TEXT": {
       const newNote = {
-        ...state.notes.get(action.note.uuid),
+        ...state.notes.get(action.note?.uuid),
         updatedAt: new Date(),
         title: action.newTitle,
         content: action.newContent,
-        textUpdatedAt: new Date(),
       };
-      const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
+      const updatedNotes = new Map(state.notes).set(action.note?.uuid, newNote);
       return {
         ...state,
         notes: updatedNotes,
       };
     }
     case "UPDATE_IMAGES": {
-      const note = state.notes.get(action.note.uuid);
+      const note = state.notes.get(action.note?.uuid);
       const imagesMap = action.imagesMap;
       const newNote = {
         ...note,
         updatedAt: new Date(),
-        images: note.images.map((img) => {
+        images: note?.images.map((img) => {
           if (imagesMap.has(img.uuid)) return imagesMap.get(img.uuid);
           return img;
         }),
       };
-      const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
+      const updatedNotes = new Map(state.notes).set(action.note?.uuid, newNote);
       return {
         ...state,
         notes: updatedNotes,
@@ -525,11 +510,10 @@ export function notesReducer(state, action) {
 
     case "ADD_LABEL": {
       const newNote = {
-        ...state.notes.get(action.note.uuid),
-        updatedAt: new Date(),
-        labels: [...action.note.labels, action.labelUUID],
+        ...state.notes.get(action.note?.uuid),
+        labels: [...action.note?.labels, action.labelUUID],
       };
-      const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
+      const updatedNotes = new Map(state.notes).set(action.note?.uuid, newNote);
       return {
         ...state,
         notes: updatedNotes,
@@ -538,18 +522,17 @@ export function notesReducer(state, action) {
 
     case "REMOVE_LABEL": {
       const targetedNote = {
-        ...state.notes.get(action.note.uuid),
+        ...state.notes.get(action.note?.uuid),
       };
 
       const newNote = {
         ...targetedNote,
-        updatedAt: new Date(),
         labels: targetedNote.labels.filter(
           (noteLabelUUID) => noteLabelUUID !== action.labelUUID
         ),
       };
 
-      const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
+      const updatedNotes = new Map(state.notes).set(action.note?.uuid, newNote);
       return {
         ...state,
         notes: updatedNotes,
@@ -560,16 +543,9 @@ export function notesReducer(state, action) {
       const updatedNotes = new Map(state.notes);
       state.order.map((noteUUID) => {
         const note = state.notes.get(noteUUID);
-        const prevLength = note.labels.length;
-        note.labels = note.labels.filter(
+        note.labels = note?.labels.filter(
           (noteLabelUUID) => noteLabelUUID !== action.labelUUID
         );
-
-        const afterLength = note.labels.length;
-
-        if (prevLength !== afterLength) {
-          note.updatedAt = new Date();
-        }
 
         updatedNotes.set(noteUUID, note);
       });
@@ -581,11 +557,10 @@ export function notesReducer(state, action) {
 
     case "UPDATE_NOTE_LABELS": {
       const newNote = {
-        ...state.notes.get(action.note.uuid),
-        updatedAt: new Date(),
+        ...state.notes.get(action.note?.uuid),
         labels: action.newLabels,
       };
-      const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
+      const updatedNotes = new Map(state.notes).set(action.note?.uuid, newNote);
 
       return {
         ...state,
@@ -599,13 +574,12 @@ export function notesReducer(state, action) {
       action.selectedNotesIDs.forEach(({ uuid: noteUUID }) => {
         const note = updatedNotes.get(noteUUID);
 
-        const updatedLabels = note.labels.filter(
+        const updatedLabels = note?.labels.filter(
           (labelUUID) => labelUUID !== action.uuid
         );
 
         updatedNotes.set(noteUUID, {
           ...note,
-          updatedAt: new Date(),
           labels: updatedLabels,
         });
       });
@@ -622,11 +596,10 @@ export function notesReducer(state, action) {
         action.selectedNotesIDs.forEach(({ uuid: noteUUID }) => {
           const note = updatedNotes.get(noteUUID);
 
-          const updatedLabels = [action.uuid, ...note.labels];
+          const updatedLabels = [action.uuid, ...note?.labels];
 
           updatedNotes.set(noteUUID, {
             ...note,
-            updatedAt: new Date(),
             labels: updatedLabels,
           });
         });
@@ -649,7 +622,7 @@ export function notesReducer(state, action) {
 
       for (const noteUUID of state.order) {
         const note = state.notes.get(noteUUID);
-        if (!note.isTrash) {
+        if (!note?.isTrash) {
           updatedNotes.set(noteUUID, note);
           updatedOrder.push(noteUUID);
         }
@@ -668,8 +641,7 @@ export function notesReducer(state, action) {
       updatedNotes.set(action.noteUUID, {
         ...note,
         updatedAt: new Date(),
-        checkboxes: [...note.checkboxes, action.checkbox],
-        textUpdatedAt: new Date(),
+        checkboxes: [...note?.checkboxes, action.checkbox],
       });
 
       return {
@@ -683,8 +655,7 @@ export function notesReducer(state, action) {
       const note = updatedNotes.get(action.noteUUID);
       updatedNotes.set(action.noteUUID, {
         ...note,
-        updatedAt: new Date(),
-        showCheckboxes: !note.showCheckboxes,
+        showCheckboxes: !note?.showCheckboxes,
       });
 
       return {
@@ -696,7 +667,7 @@ export function notesReducer(state, action) {
     case "CHECKBOX_STATE": {
       const updatedNotes = new Map(state.notes);
       const note = updatedNotes.get(action.noteUUID);
-      const newCheckboxArr = note.checkboxes.map((checkbox) => {
+      const newCheckboxArr = note?.checkboxes.map((checkbox) => {
         if (checkbox.uuid !== action.checkboxUUID) return checkbox;
         return { ...checkbox, isCompleted: action.value };
       });
@@ -715,7 +686,7 @@ export function notesReducer(state, action) {
     case "DELETE_CHECKBOX": {
       const updatedNotes = new Map(state.notes);
       const note = updatedNotes.get(action.noteUUID);
-      const newCheckboxArr = note.checkboxes.filter(
+      const newCheckboxArr = note?.checkboxes.filter(
         (checkbox) => checkbox.uuid !== action.checkboxUUID
       );
       updatedNotes.set(action.noteUUID, {
@@ -733,7 +704,7 @@ export function notesReducer(state, action) {
     case "DELETE_CHECKED": {
       const updatedNotes = new Map(state.notes);
       const note = updatedNotes.get(action.noteUUID);
-      const newCheckboxArr = note.checkboxes.filter(
+      const newCheckboxArr = note?.checkboxes.filter(
         (checkbox) => !checkbox.isCompleted
       );
       updatedNotes.set(action.noteUUID, {
@@ -751,7 +722,7 @@ export function notesReducer(state, action) {
     case "UNCHECK_ALL": {
       const updatedNotes = new Map(state.notes);
       const note = updatedNotes.get(action.noteUUID);
-      const newCheckboxArr = note.checkboxes.map((checkbox) => {
+      const newCheckboxArr = note?.checkboxes.map((checkbox) => {
         if (!checkbox.isCompleted) return checkbox;
         return { ...checkbox, isCompleted: false };
       });
@@ -772,8 +743,21 @@ export function notesReducer(state, action) {
       const note = updatedNotes.get(action.noteUUID);
       updatedNotes.set(action.noteUUID, {
         ...note,
-        updatedAt: new Date(),
-        expandCompleted: !note.expandCompleted,
+        expandCompleted: !note?.expandCompleted,
+      });
+
+      return {
+        ...state,
+        notes: updatedNotes,
+      };
+    }
+
+    case "OPEN_NOTE": {
+      const updatedNotes = new Map(state.notes);
+      const note = updatedNotes.get(action.noteUUID);
+      updatedNotes.set(action.noteUUID, {
+        ...note,
+        openNote: true,
       });
 
       return {

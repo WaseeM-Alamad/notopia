@@ -33,8 +33,8 @@ export function useNoteActions({
 
         const redo = async () => {
           if (fadeNote) {
-            setFadingNotes((prev) => new Set(prev).add(data.note.uuid));
-            setVisibleItems((prev) => new Set(prev).add(data.note.uuid));
+            setFadingNotes((prev) => new Set(prev).add(data.note?.uuid));
+            setVisibleItems((prev) => new Set(prev).add(data.note?.uuid));
           }
           localDbReducer({
             notes: notesStateRef.current.notes,
@@ -52,12 +52,12 @@ export function useNoteActions({
               if (fadeNote) {
                 setFadingNotes((prev) => {
                   const newSet = new Set(prev);
-                  newSet.delete(data.note.uuid);
+                  newSet.delete(data.note?.uuid);
                   return newSet;
                 });
                 setVisibleItems((prev) => {
                   const updated = new Set(prev);
-                  updated.delete(data.note.uuid);
+                  updated.delete(data.note?.uuid);
                   return updated;
                 });
               }
@@ -71,8 +71,8 @@ export function useNoteActions({
               () =>
                 NoteUpdateAction({
                   type: "isArchived",
-                  value: !data.note.isArchived,
-                  noteUUIDs: [data.note.uuid],
+                  value: !data.note?.isArchived,
+                  noteUUIDs: [data.note?.uuid],
                   first: first,
                   clientID: clientID,
                 }),
@@ -87,7 +87,7 @@ export function useNoteActions({
           if (fadeNote) {
             setVisibleItems((prev) => {
               const updated = new Set(prev);
-              updated.add(data.note.uuid);
+              updated.add(data.note?.uuid);
               return updated;
             });
           }
@@ -110,9 +110,9 @@ export function useNoteActions({
               () =>
                 undoAction({
                   type: "UNDO_ARCHIVE",
-                  noteUUID: data.note.uuid,
-                  value: data.note.isArchived,
-                  pin: data.note.isPinned,
+                  noteUUID: data.note?.uuid,
+                  value: data.note?.isArchived,
+                  pin: data.note?.isPinned,
                   initialIndex: initialIndex,
                   endIndex: 0,
                   clientID: clientID,
@@ -123,9 +123,9 @@ export function useNoteActions({
         };
         openSnackRef.current({
           snackMessage: `${
-            data.note.isArchived
+            data.note?.isArchived
               ? "Note unarchived"
-              : data.note.isPinned
+              : data.note?.isPinned
                 ? "Note unpinned and archived"
                 : "Note Archived"
           }`,
@@ -136,7 +136,7 @@ export function useNoteActions({
         const initialIndex = data.index;
 
         const redo = async () => {
-          setFadingNotes((prev) => new Set(prev).add(data.note.uuid));
+          setFadingNotes((prev) => new Set(prev).add(data.note?.uuid));
           localDbReducer({
             notes: notesStateRef.current.notes,
             order: notesStateRef.current.order,
@@ -151,12 +151,12 @@ export function useNoteActions({
             });
             setFadingNotes((prev) => {
               const newSet = new Set(prev);
-              newSet.delete(data.note.uuid);
+              newSet.delete(data.note?.uuid);
               return newSet;
             });
             setVisibleItems((prev) => {
               const updated = new Set(prev);
-              updated.delete(data.note.uuid);
+              updated.delete(data.note?.uuid);
               return updated;
             });
           }, 250);
@@ -167,7 +167,7 @@ export function useNoteActions({
                 NoteUpdateAction({
                   type: "isTrash",
                   value: false,
-                  noteUUIDs: [data.note.uuid],
+                  noteUUIDs: [data.note?.uuid],
                   clientID: clientID,
                 }),
             ],
@@ -193,7 +193,7 @@ export function useNoteActions({
           });
           setVisibleItems((prev) => {
             const updated = new Set(prev);
-            updated.add(data.note.uuid);
+            updated.add(data.note?.uuid);
             return updated;
           });
 
@@ -202,7 +202,7 @@ export function useNoteActions({
               () =>
                 undoAction({
                   type: "UNDO_TRASH",
-                  noteUUID: data.note.uuid,
+                  noteUUID: data.note?.uuid,
                   value: true,
                   initialIndex: data.initialIndex,
                   endIndex: 0,
@@ -222,7 +222,7 @@ export function useNoteActions({
         const initialIndex = data.index;
 
         const redo = async () => {
-          setFadingNotes((prev) => new Set(prev).add(data.note.uuid));
+          setFadingNotes((prev) => new Set(prev).add(data.note?.uuid));
           localDbReducer({
             notes: notesStateRef.current.notes,
             order: notesStateRef.current.order,
@@ -237,12 +237,12 @@ export function useNoteActions({
             });
             setFadingNotes((prev) => {
               const newSet = new Set(prev);
-              newSet.delete(data.note.uuid);
+              newSet.delete(data.note?.uuid);
               return newSet;
             });
             setVisibleItems((prev) => {
               const updated = new Set(prev);
-              updated.delete(data.note.uuid);
+              updated.delete(data.note?.uuid);
               return updated;
             });
           }, 250);
@@ -266,7 +266,7 @@ export function useNoteActions({
           });
           setVisibleItems((prev) => {
             const updated = new Set(prev);
-            updated.add(data.note.uuid);
+            updated.add(data.note?.uuid);
             return updated;
           });
         };
@@ -278,7 +278,7 @@ export function useNoteActions({
                 NoteUpdateAction({
                   type: "isTrash",
                   value: true,
-                  noteUUIDs: [data.note.uuid],
+                  noteUUIDs: [data.note?.uuid],
                   clientID: clientID,
                 }),
             ],
@@ -286,10 +286,10 @@ export function useNoteActions({
           );
         };
 
-        if (!data.note.isTrash) {
+        if (!data.note?.isTrash) {
           openSnackRef.current({
             snackMessage: `${
-              data.note.isPinned ? "Note unpinned and trashed" : "Note trashed"
+              data.note?.isPinned ? "Note unpinned and trashed" : "Note trashed"
             }`,
             snackOnUndo: undoTrash,
             snackOnClose: onClose,
@@ -299,7 +299,7 @@ export function useNoteActions({
         }
         data.setIsOpen(false);
       } else if (data.type === "DELETE_NOTE") {
-        setFadingNotes((prev) => new Set(prev).add(data.note.uuid));
+        setFadingNotes((prev) => new Set(prev).add(data.note?.uuid));
         localDbReducer({
           notes: notesStateRef.current.notes,
           order: notesStateRef.current.order,
@@ -314,18 +314,18 @@ export function useNoteActions({
           });
           setFadingNotes((prev) => {
             const newSet = new Set(prev);
-            newSet.delete(data.note.uuid);
+            newSet.delete(data.note?.uuid);
             return newSet;
           });
           setVisibleItems((prev) => {
             const updated = new Set(prev);
-            updated.delete(data.note.uuid);
+            updated.delete(data.note?.uuid);
             return updated;
           });
         }, 250);
 
         handleServerCall(
-          [() => DeleteNoteAction(data.note.uuid, clientID)],
+          [() => DeleteNoteAction(data.note?.uuid, clientID)],
           openSnackRef.current
         );
       } else if (data.type === "PIN_ARCHIVED_NOTE") {
@@ -333,7 +333,7 @@ export function useNoteActions({
 
         const redo = async () => {
           if (fadeNote) {
-            setFadingNotes((prev) => new Set(prev).add(data.note.uuid));
+            setFadingNotes((prev) => new Set(prev).add(data.note?.uuid));
           }
 
           localDbReducer({
@@ -354,12 +354,12 @@ export function useNoteActions({
               if (fadeNote) {
                 setFadingNotes((prev) => {
                   const newSet = new Set(prev);
-                  newSet.delete(data.note.uuid);
+                  newSet.delete(data.note?.uuid);
                   return newSet;
                 });
                 setVisibleItems((prev) => {
                   const updated = new Set(prev);
-                  updated.delete(data.note.uuid);
+                  updated.delete(data.note?.uuid);
                   return updated;
                 });
               }
@@ -373,7 +373,7 @@ export function useNoteActions({
                 NoteUpdateAction({
                   type: "pinArchived",
                   value: true,
-                  noteUUIDs: [data.note.uuid],
+                  noteUUIDs: [data.note?.uuid],
                   clientID: clientID,
                 }),
             ],
@@ -399,7 +399,7 @@ export function useNoteActions({
           });
           setVisibleItems((prev) => {
             const updated = new Set(prev);
-            updated.add(data.note.uuid);
+            updated.add(data.note?.uuid);
             return updated;
           });
 
@@ -408,7 +408,7 @@ export function useNoteActions({
               () =>
                 undoAction({
                   type: "UNDO_PIN_ARCHIVED",
-                  noteUUID: data.note.uuid,
+                  noteUUID: data.note?.uuid,
                   initialIndex: initialIndex,
                   endIndex: 0,
                   clientID: clientID,
@@ -430,16 +430,16 @@ export function useNoteActions({
         const newCheckboxes = [];
         const oldToNewCBMap = new Map();
 
-        if (note.images.length > 0) {
-          note.images.forEach((image) => {
+        if (note?.images.length > 0) {
+          note?.images.forEach((image) => {
             const newUUID = uuid();
             const newImage = { uuid: newUUID, url: image.url };
             newImages.push(newImage);
           });
         }
 
-        if (note.checkboxes.length > 0) {
-          const copiedCheckboxes = note.checkboxes.map((checkbox) => {
+        if (note?.checkboxes.length > 0) {
+          const copiedCheckboxes = note?.checkboxes.map((checkbox) => {
             const newUUID = uuid();
             oldToNewCBMap.set(checkbox.uuid, newUUID);
             const newCheckbox = {
@@ -463,20 +463,19 @@ export function useNoteActions({
 
         const newNote = {
           uuid: newUUID,
-          title: note.title,
-          content: note.content,
-          color: note.color,
-          background: note.background,
-          labels: note.labels,
+          title: note?.title,
+          content: note?.content,
+          color: note?.color,
+          background: note?.background,
+          labels: note?.labels,
           checkboxes: newCheckboxes,
           showCheckboxes: true,
-          expandCompleted: note.expandCompleted,
+          expandCompleted: note?.expandCompleted,
           isPinned: false,
           isArchived: false,
-          isTrash: note.isTrash,
+          isTrash: note?.isTrash,
           createdAt: new Date(),
           updatedAt: new Date(),
-          textUpdatedAt: new Date(),
           images: newImages,
         };
 
@@ -505,10 +504,10 @@ export function useNoteActions({
             [
               () =>
                 copyNoteAction({
-                  originalNoteUUID: note.uuid,
+                  originalNoteUUID: note?.uuid,
                   newNoteUUID: newUUID,
                   newImages: newImages,
-                  note: { ...newNote, images: data.note.images },
+                  note: { ...newNote, images: data.note?.images },
                   clientID: clientID,
                 }),
             ],
@@ -566,7 +565,7 @@ export function useNoteActions({
                   undoAction({
                     type: "UNDO_COPY",
                     noteUUID: newNote.uuid,
-                    isImages: note.images.length,
+                    isImages: note?.images.length,
                     clientID: clientID,
                   }),
               ],
@@ -584,7 +583,7 @@ export function useNoteActions({
         const fadeNote =
           filters.label === data.labelUUID || labelObj?.uuid === data.labelUUID;
 
-        fadeNote && setFadingNotes((prev) => new Set(prev).add(data.note.uuid));
+        fadeNote && setFadingNotes((prev) => new Set(prev).add(data.note?.uuid));
         localDbReducer({
           notes: notesStateRef.current.notes,
           order: notesStateRef.current.order,
@@ -603,14 +602,14 @@ export function useNoteActions({
 
             setFadingNotes((prev) => {
               const newSet = new Set(prev);
-              newSet.delete(data.note.uuid);
+              newSet.delete(data.note?.uuid);
               return newSet;
             });
 
             fadeNote &&
               setVisibleItems((prev) => {
                 const updated = new Set(prev);
-                updated.delete(data.note.uuid);
+                updated.delete(data.note?.uuid);
                 return updated;
               });
           },
@@ -621,7 +620,7 @@ export function useNoteActions({
           [
             () =>
               removeLabelAction({
-                noteUUID: data.note.uuid,
+                noteUUID: data.note?.uuid,
                 labelUUID: data.labelUUID,
                 clientID: clientID,
               }),
@@ -629,14 +628,14 @@ export function useNoteActions({
           openSnackRef.current
         );
       } else if (data.type === "COLOR") {
-        if (data.note.color === data.newColor) return;
+        if (data.note?.color === data.newColor) return;
 
         const fadeNote = filters.color;
         const isUseEffectCall = data.isUseEffectCall;
 
         if (!isUseEffectCall && fadeNote) return;
 
-        fadeNote && setFadingNotes((prev) => new Set(prev).add(data.note.uuid));
+        fadeNote && setFadingNotes((prev) => new Set(prev).add(data.note?.uuid));
 
         localDbReducer({
           notes: notesStateRef.current.notes,
@@ -656,13 +655,13 @@ export function useNoteActions({
             });
             setFadingNotes((prev) => {
               const newSet = new Set(prev);
-              newSet.delete(data.note.uuid);
+              newSet.delete(data.note?.uuid);
               return newSet;
             });
             fadeNote &&
               setVisibleItems((prev) => {
                 const updated = new Set(prev);
-                updated.delete(data.note.uuid);
+                updated.delete(data.note?.uuid);
                 return updated;
               });
           },
@@ -671,7 +670,7 @@ export function useNoteActions({
       } else if (data.type === "REMOVE_FILTERED_LABEL") {
         setFadingNotes((prev) => {
           const updated = new Set(prev);
-          updated.add(data.note.uuid);
+          updated.add(data.note?.uuid);
           return updated;
         });
         localDbReducer({
@@ -690,12 +689,12 @@ export function useNoteActions({
           });
           setFadingNotes((prev) => {
             const updated = new Set(prev);
-            updated.delete(data.note.uuid);
+            updated.delete(data.note?.uuid);
             return updated;
           });
           setVisibleItems((prev) => {
             const updated = new Set(prev);
-            updated.delete(data.note.uuid);
+            updated.delete(data.note?.uuid);
             return updated;
           });
         }, 250);

@@ -3,9 +3,7 @@ import Button from "../Tools/Button";
 import MoreVert from "../icons/MoreVert";
 import { getNoteFormattedDate } from "@/utils/noteDateFormatter";
 import { AnimatePresence, motion } from "framer-motion";
-import LabelMenu from "./LabelMenu";
 import { useAppContext } from "@/context/AppContext";
-import DeleteModal from "./DeleteModal";
 import ColorSelectMenu from "./ColorSelectMenu";
 import MoreMenu from "./MoreMenu";
 import { useSearch } from "@/context/SearchContext";
@@ -35,6 +33,7 @@ const Label = ({
     hideTooltip,
     closeToolTip,
     openSnackRef,
+    setDialogInfoRef,
     calculateLayoutRef,
     labelsRef,
   } = useAppContext();
@@ -50,7 +49,6 @@ const Label = ({
   const [selected, setSelected] = useState(false);
   const [height, setHeight] = useState(0);
   const [labelExists, setLabelExists] = useState(false);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const labelDate = getNoteFormattedDate(labelData.createdAt);
   const [selectedColor, setSelectedColor] = useState(labelData.color);
   const labelRef = useRef(null);
@@ -73,9 +71,9 @@ const Label = ({
 
   const noteCount = order.filter((uuid) => {
     const note = notes.get(uuid);
-    if (note.isTrash) return false;
+    if (note?.isTrash) return false;
 
-    if (note.labels.includes(labelData.uuid)) return true;
+    if (note?.labels.includes(labelData.uuid)) return true;
   }).length;
 
   useEffect(() => {
@@ -345,7 +343,13 @@ const Label = ({
     {
       title: "Delete label",
       function: () => {
-        setDeleteModalOpen(true);
+        setDialogInfoRef.current({
+          func: handleDelete,
+          title: "Delete label",
+          message:
+            "This label will be deleted and removed from all of your notes. Your notes won't be deleted.",
+          btnMsg: "Delete",
+        });
         setIsOpen(false);
       },
       icon: "trash-menu-icon",
@@ -674,18 +678,7 @@ const Label = ({
           />
         )}
       </AnimatePresence>
-      <AnimatePresence>
-        {deleteModalOpen && (
-          <DeleteModal
-            setIsOpen={setDeleteModalOpen}
-            handleDelete={handleDelete}
-            title="Delete label"
-            message={
-              "This label will be deleted and removed from all of your notes. Your notes won't be deleted."
-            }
-          />
-        )}
-      </AnimatePresence>
+
       <AnimatePresence>
         {colorMenuOpen && (
           <ColorSelectMenu

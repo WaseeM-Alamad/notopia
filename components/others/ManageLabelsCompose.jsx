@@ -57,7 +57,7 @@ const ManageLabelsCompose = ({
     // }
     if (!isOpen) return;
 
-    setNoteLabels(new Set(note.labels));
+    setNoteLabels(new Set(note?.labels));
   }, []);
 
   const handleInputKeyDown = (e) => {

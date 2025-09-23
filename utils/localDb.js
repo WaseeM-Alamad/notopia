@@ -153,7 +153,7 @@ export async function updateLocalNotesAndOrder(
     const notesQueueStore = tx.objectStore("notesUpdateQueue");
 
     for (const note of notesArray) {
-      if (!note) continue;
+      if (!note?.uuid) continue;
       const { ref, ...noteWithoutRef } = note;
 
       if (!isOnline) {

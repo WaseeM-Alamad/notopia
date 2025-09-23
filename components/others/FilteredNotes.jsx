@@ -40,7 +40,7 @@ const NoteWrapper = memo(
         <div
           ref={ref}
           className={`grid-item ${
-            fadingNotes.has(note.uuid) ? "fade-out" : ""
+            fadingNotes.has(note?.uuid) ? "fade-out" : ""
           }`}
           onClick={(e) => handleNoteClick(e, note, index)}
           onKeyDown={(e) => {
@@ -113,6 +113,7 @@ const FilteredNotes = memo(
 
     const hasUnpinned = [...visibleItems].some((uuid) => {
       const note = notes.get(uuid);
+      if (!note) return false;
       return !note?.isPinned && !note?.isArchived;
     });
 
@@ -360,7 +361,7 @@ const FilteredNotes = memo(
             const note = notes.get(uuid);
             return (
               <NoteWrapper
-                key={note.uuid}
+                key={note?.uuid || index}
                 note={note}
                 noteActions={noteActions}
                 selectedNotesRef={selectedNotesRef}

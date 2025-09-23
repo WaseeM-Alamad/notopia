@@ -34,6 +34,7 @@ export function AppProvider({ children, initialUser }) {
   const clientID = useRef(uuid());
   const openSnackRef = useRef(() => {});
   const setTooltipRef = useRef(null);
+  const setDialogInfoRef = useRef(null);
   const notesStateRef = useRef(null);
   const labelsRef = useRef(new Map());
   const ignoreKeysRef = useRef(null);
@@ -384,6 +385,7 @@ export function AppProvider({ children, initialUser }) {
         isDarkModeRef,
         openSnackRef,
         setTooltipRef,
+        setDialogInfoRef,
         showTooltip,
         hideTooltip,
         closeToolTip,

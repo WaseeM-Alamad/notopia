@@ -47,6 +47,9 @@ const NoteImagesLayout = ({
       Promise.all(images.map((image) => loadImage(image.url, image.uuid)))
         .then(setLoadedImages)
         .catch(console.log);
+    } else if (loadedImages.length !== 0) {
+      // setLayout([]);
+      // setLoadedImages([]);
     }
   }, [images]);
 
@@ -117,6 +120,16 @@ const NoteImagesLayout = ({
 
   useEffect(() => {
     calculateLayout();
+    requestAnimationFrame(() => calculateLayout());
+  }, [loadedImages]);
+
+  useEffect(() => {
+    const handler = () => {
+      calculateLayout();
+    };
+
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
   }, [loadedImages]);
 
   const containerStyle = {

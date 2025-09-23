@@ -9,7 +9,7 @@ import {
 } from "@/utils/actions";
 import handleServerCall from "@/utils/handleServerCall";
 import localDbReducer from "@/utils/localDbReducer";
-import React, { memo, useCallback, useRef, useState } from "react";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 
 import Button from "../Tools/Button";
 import PinIcon from "../icons/PinIcon";
@@ -21,6 +21,8 @@ import ListItemsLayout from "./ListitemsLayout";
 import { AnimatePresence } from "framer-motion";
 import ImageDropZone from "../Tools/ImageDropZone";
 import TextLabelMenu from "./TextLabelMenu";
+import NoteLabels from "./NoteLabels";
+import NoteCollabs from "./NoteCollabs";
 
 const NoteEditor = ({
   note,
@@ -37,7 +39,6 @@ const NoteEditor = ({
   setRedoStack,
   modalRef,
   modalOpenRef,
-  inputsContainerRef,
   titleRef,
   contentRef,
   labelsRef,
@@ -61,7 +62,7 @@ const NoteEditor = ({
   const [labelAnchor, setLabelAnchor] = useState(null);
   const [labelSearch, setLabelSearch] = useState("");
   const formattedEditedDate = isOpen
-    ? getNoteFormattedDate(localNote?.textUpdatedAt)
+    ? getNoteFormattedDate(localNote?.updatedAt)
     : null;
 
   const formattedCreatedAtDate = isOpen
@@ -71,6 +72,7 @@ const NoteEditor = ({
   const ignoreTopRef = useRef(false);
   const inputRef = useRef(null);
   const dragCounter = useRef(0);
+  const inputsContainerRef = useRef(null);
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -175,7 +177,7 @@ const NoteEditor = ({
             NoteUpdateAction({
               type: "isPinned",
               value: !localIsPinned,
-              noteUUIDs: [note.uuid],
+              noteUUIDs: [note?.uuid],
               clientID: clientID,
             }),
         ],
@@ -190,7 +192,7 @@ const NoteEditor = ({
                 NoteUpdateAction({
                   type: "pinArchived",
                   value: true,
-                  noteUUIDs: [note.uuid],
+                  noteUUIDs: [note?.uuid],
                   clientID: clientID,
                 }),
             ],
@@ -202,7 +204,7 @@ const NoteEditor = ({
               () =>
                 undoAction({
                   type: "UNDO_PIN_ARCHIVED",
-                  noteUUID: note.uuid,
+                  noteUUID: note?.uuid,
                   initialIndex: initialStyle.index,
                   endIndex: 0,
                   clientID: clientID,
@@ -234,7 +236,7 @@ const NoteEditor = ({
             () =>
               undoAction({
                 type: "UNDO_PIN_ARCHIVED",
-                noteUUID: note.uuid,
+                noteUUID: note?.uuid,
                 initialIndex: initialStyle.index,
                 endIndex: 0,
                 clientID: clientID,
@@ -278,11 +280,11 @@ const NoteEditor = ({
       };
 
       const onClose = async () => {
-        const filePath = `${userID}/${note.uuid}/${imageUUID}`;
+        const filePath = `${userID}/${note?.uuid}/${imageUUID}`;
         handleServerCall(
           [
             () =>
-              NoteImageDeleteAction(filePath, note.uuid, imageUUID, clientID),
+              NoteImageDeleteAction(filePath, note?.uuid, imageUUID, clientID),
           ],
           openSnackRef.current
         );
@@ -313,7 +315,7 @@ const NoteEditor = ({
         openSnackRef.current
       );
     }, 600),
-    [note?.uuid] // Dependencies array, make sure it's updated when `note.uuid` changes
+    [note?.uuid] // Dependencies array, make sure it's updated when `note?.uuid` changes
   );
 
   const titleDebouncedSetUndo = debounce((data) => {
@@ -473,7 +475,7 @@ const NoteEditor = ({
       setLocalNote((prev) => ({
         ...prev,
         title: t,
-        textUpdatedAt: new Date(),
+        updatedAt: new Date(),
       }));
 
       updateTextDebounced({ title: t, content: localNote?.content });
@@ -495,7 +497,7 @@ const NoteEditor = ({
       setLocalNote((prev) => ({
         ...prev,
         content: t,
-        textUpdatedAt: new Date(),
+        updatedAt: new Date(),
       }));
 
       updateTextDebounced({ title: localNote?.title, content: t });
@@ -517,7 +519,7 @@ const NoteEditor = ({
       [
         () =>
           removeLabelAction({
-            noteUUID: note.uuid,
+            noteUUID: note?.uuid,
             labelUUID: labelUUID,
             clientID: clientID,
           }),
@@ -525,6 +527,27 @@ const NoteEditor = ({
       openSnackRef.current
     );
   };
+
+  const setCursorAtEnd = () => {
+    const element =
+      document.activeElement === titleRef?.current
+        ? titleRef.current
+        : document.activeElement === contentRef.current
+          ? contentRef.current
+          : null;
+    if (element) {
+      element.focus();
+
+      const selection = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      range.collapse(false); // Move to the end
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+  };
+
+  useEffect(() => {}, [note]);
 
   return (
     <div
@@ -536,21 +559,11 @@ const NoteEditor = ({
       onMouseLeave={handleNoteMouseLeave}
       className={"modall"}
     >
-      {/* <button
-        style={{ position: "absolute", width: "100%", zIndex: "1000000" }}
-        onClick={() => {
-          const modal = modalRef.current;
-          modal.style.height = "400px";
-        }}
-      >
-        dsad
-      </button> */}
       <div
         onClick={inputsContainerClick}
         ref={inputsContainerRef}
         style={{
           overflowY: !isOpen && "hidden",
-          opacity: "0.15",
         }}
         className={`modal-inputs-container ${"n-bg-" + localNote?.background}`}
       >
@@ -632,7 +645,7 @@ const NoteEditor = ({
           role="textbox"
           tabIndex="0"
           aria-multiline="true"
-          aria-label={!localNote?.isTrash ? "Take a note..." : ""}
+          aria-label={!localNote?.isTrash ? "Take a note?..." : ""}
           spellCheck="false"
         />
         {localNote?.checkboxes && (
@@ -645,45 +658,19 @@ const NoteEditor = ({
           />
         )}
 
-        {localNote?.labels?.length > 0 && (
-          <div
-            style={{ paddingBottom: "0.8rem" }}
-            className="note-labels-container"
-          >
-            {localNote?.labels
-              .sort((a, b) => {
-                const labelsMap = labelsRef.current;
-                const labelA = labelsMap.get(a)?.label || "";
-                const labelB = labelsMap.get(b)?.label || "";
-                return labelA.localeCompare(labelB);
-              })
-              .map((labelUUID, index) => {
-                const label = labelsRef.current.get(labelUUID)?.label;
-                return (
-                  <div
-                    onClick={(e) => handleLabelClick(e, label)}
-                    key={labelUUID}
-                    className={[
-                      "label-wrapper",
-                      !localNote?.isTrash && "label-wrapper-h",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                  >
-                    <label className="note-label">{label}</label>
-                    <div
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        closeToolTip();
-                        removeLabel(labelUUID);
-                      }}
-                      onMouseEnter={(e) => showTooltip(e, "Remove label")}
-                      onMouseLeave={hideTooltip}
-                      className="remove-label"
-                    />
-                  </div>
-                );
-              })}
+        {(localNote?.labels?.length > 0 ||
+          localNote?.collaborators?.length > 0) && (
+          <div className="note-labels-container">
+            {localNote?.labels.length !== 0 && (
+              <NoteLabels note={localNote} noteActions={noteActions} />
+            )}
+            {localNote?.collaborators && (
+              <NoteCollabs
+                note={localNote}
+                modalView={true}
+                openCollab={openCollab}
+              />
+            )}
           </div>
         )}
 

@@ -53,27 +53,27 @@ const Search = ({
     searchTerm.trim();
 
   const matchesFilters = (note) => {
-    if (note.isTrash) return false;
+    if (note?.isTrash) return false;
 
-    if (filters.color && note.color !== filters.color) {
+    if (filters.color && note?.color !== filters.color) {
       return false;
     }
 
     if (
       searchTerm &&
       !(
-        note.title.toLowerCase().includes(searchTerm.toLowerCase().trim()) ||
-        note.content.toLowerCase().includes(searchTerm.toLowerCase().trim())
+        note?.title.toLowerCase().includes(searchTerm.toLowerCase().trim()) ||
+        note?.content.toLowerCase().includes(searchTerm.toLowerCase().trim())
       )
     ) {
       return false;
     }
 
-    if (filters.label && !note.labels.includes(filters.label)) {
+    if (filters.label && !note?.labels.includes(filters.label)) {
       return false;
     }
 
-    if (filters.image && note.images.length === 0) {
+    if (filters.image && note?.images.length === 0) {
       return false;
     }
 
@@ -105,10 +105,10 @@ const Search = ({
     const types = new Set();
     order.forEach((order) => {
       const note = notes.get(order);
-      if (note.isTrash) return;
-      colors.add(note.color);
-      note.labels.forEach((labelUUID) => labels.add(labelUUID));
-      note.images.length > 0 && types.add("Images");
+      if (note?.isTrash) return;
+      colors.add(note?.color);
+      note?.labels.forEach((labelUUID) => labels.add(labelUUID));
+      note?.images.length > 0 && types.add("Images");
     });
     setColorsSet(colors);
     setLabelsSet(labels);
@@ -230,7 +230,7 @@ const Search = ({
                 >
                   <div className="filter-container-title">{item.title}</div>
                   <div className="filter-items-container">
-                    {[...item.set].map((setItem) => {
+                    {[...item.set].map((setItem, index) => {
                       let ariaLabel = "";
                       if (item.title === "Labels") {
                         ariaLabel = labelsRef.current.get(setItem).label;
@@ -250,7 +250,7 @@ const Search = ({
                             showTooltip(e, setItem);
                           }}
                           onMouseLeave={hideTooltip}
-                          key={setItem}
+                          key={setItem || index}
                         >
                           <div
                             className={`${

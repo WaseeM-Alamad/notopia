@@ -40,7 +40,7 @@ const AccountSettings = ({ rightHeader, selected, user, setUser }) => {
   const newEmailRef = useRef(null);
 
   const newUsername = nameRef.current?.value?.trim();
-  const oldUsername = user.name?.trim();
+  const oldUsername = user.username?.trim();
 
   useEffect(() => {
     setIsNameDisabled(true);
@@ -439,7 +439,7 @@ const AccountSettings = ({ rightHeader, selected, user, setUser }) => {
                     triggerRerender((prev) => !prev);
                   }}
                   disabled={isNameDisabled}
-                  defaultValue={user.name}
+                  defaultValue={user.username}
                   type="text"
                   className="form-input"
                   style={{

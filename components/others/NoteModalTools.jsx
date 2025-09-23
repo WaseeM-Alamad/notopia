@@ -6,7 +6,6 @@ import { DeleteNoteAction, NoteUpdateAction } from "@/utils/actions";
 import { v4 as uuid } from "uuid";
 import { AnimatePresence } from "framer-motion";
 import ManageModalLabels from "./ManageModalLabels";
-import DeleteModal from "./DeleteModal";
 import { useAppContext } from "@/context/AppContext";
 import MoreMenu from "./MoreMenu";
 import { validateImageFile } from "@/utils/validateImage";
@@ -43,12 +42,12 @@ const ModalTools = ({
     showTooltip,
     hideTooltip,
     closeToolTip,
+    setDialogInfoRef,
     openSnackRef,
     notesStateRef,
   } = useAppContext();
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
   const [colorAnchorEl, setColorAnchorEl] = useState(null);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [labelsOpen, setLabelsOpen] = useState(false);
@@ -86,7 +85,7 @@ const ModalTools = ({
           NoteUpdateAction({
             type: "color",
             value: color,
-            noteUUIDs: [note.uuid],
+            noteUUIDs: [note?.uuid],
             clientID: clientID,
           }),
       ],
@@ -112,7 +111,7 @@ const ModalTools = ({
             NoteUpdateAction({
               type: "background",
               value: newBG,
-              noteUUIDs: [note.uuid],
+              noteUUIDs: [note?.uuid],
               clientID: clientID,
             }),
         ],
@@ -133,7 +132,7 @@ const ModalTools = ({
     let isInvalidFile = false;
     let invalidCount = 0;
 
-    formData.append("noteUUID", note.uuid);
+    formData.append("noteUUID", note?.uuid);
 
     for (const file of files) {
       const { valid } = await validateImageFile(file);
@@ -224,10 +223,12 @@ const ModalTools = ({
           imagesMap: imagesMap,
         });
       } else {
-        const modalUpdatedImages = [...note.images, ...newImages].map((img) => {
-          if (imagesMap.has(img.uuid)) return imagesMap.get(img.uuid);
-          return img;
-        });
+        const modalUpdatedImages = [...note?.images, ...newImages].map(
+          (img) => {
+            if (imagesMap.has(img.uuid)) return imagesMap.get(img.uuid);
+            return img;
+          }
+        );
 
         setLocalNote((prev) => ({
           ...prev,
@@ -296,7 +297,17 @@ const ModalTools = ({
   };
 
   const handleDeleteClick = () => {
-    setDeleteModalOpen(true);
+    setDialogInfoRef.current({
+      func: handleDeleteNote,
+      title: "Delete note",
+      message: (
+        <>
+          Are you sure you want to delete this note? <br /> this action can't be
+          undone.
+        </>
+      ),
+      btnMsg: "Delete",
+    });
   };
 
   const handleDeleteNote = async () => {
@@ -306,7 +317,7 @@ const ModalTools = ({
       noteActions({
         type: "DELETE_NOTE",
         note: note,
-        noteRef: note.ref,
+        noteRef: note?.ref,
       });
     }, 220);
 
@@ -359,7 +370,7 @@ const ModalTools = ({
             type: "checkboxes",
             operation: "ADD",
             value: checkbox,
-            noteUUIDs: [note.uuid],
+            noteUUIDs: [note?.uuid],
             clientID: clientID,
           }),
       ],
@@ -383,7 +394,7 @@ const ModalTools = ({
           NoteUpdateAction({
             type: "checkboxes",
             operation: "UNCHECK_ALL",
-            noteUUIDs: [note.uuid],
+            noteUUIDs: [note?.uuid],
             clientID: clientID,
           }),
       ],
@@ -406,7 +417,7 @@ const ModalTools = ({
           NoteUpdateAction({
             type: "checkboxes",
             operation: "DELETE_CHECKED",
-            noteUUIDs: [note.uuid],
+            noteUUIDs: [note?.uuid],
             clientID: clientID,
           }),
       ],
@@ -423,8 +434,8 @@ const ModalTools = ({
         () =>
           NoteUpdateAction({
             type: "showCheckboxes",
-            value: !note.showCheckboxes,
-            noteUUIDs: [note.uuid],
+            value: !note?.showCheckboxes,
+            noteUUIDs: [note?.uuid],
             clientID: clientID,
           }),
       ],
@@ -508,7 +519,10 @@ const ModalTools = ({
                 className="reminder-icon btn-hover"
               />
               <Button
-                onClick={() => openCollab()}
+                onClick={() => {
+                  closeToolTip();
+                  openCollab();
+                }}
                 onMouseEnter={(e) => showTooltip(e, "Collaborator")}
                 onMouseLeave={hideTooltip}
                 className="person-add-icon btn-hover"
@@ -628,21 +642,6 @@ const ModalTools = ({
             isOpen={labelsOpen}
             setIsOpen={setLabelsOpen}
             anchorEl={anchorEl}
-          />
-        )}
-      </AnimatePresence>
-      <AnimatePresence>
-        {deleteModalOpen && (
-          <DeleteModal
-            setIsOpen={setDeleteModalOpen}
-            handleDelete={handleDeleteNote}
-            title="Delete note"
-            message={
-              <>
-                Are you sure you want to delete this note? <br /> this action
-                can't be undone.
-              </>
-            }
           />
         )}
       </AnimatePresence>

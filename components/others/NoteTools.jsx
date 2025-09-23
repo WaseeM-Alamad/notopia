@@ -5,7 +5,6 @@ import Button from "../Tools/Button";
 import { v4 as uuid } from "uuid";
 import MoreMenu from "./MoreMenu";
 import { AnimatePresence } from "framer-motion";
-import DeleteModal from "./DeleteModal";
 import { useAppContext } from "@/context/AppContext";
 import ManageLabelsMenu from "./ManageLabelsMenu";
 import { useSearch } from "@/context/SearchContext";
@@ -37,19 +36,27 @@ const NoteTools = ({
     hideTooltip,
     closeToolTip,
     setLoadingImages,
+    setDialogInfoRef,
     openSnackRef,
     notesStateRef,
   } = useAppContext();
   const { filters } = useSearch();
   const [colorAnchorEl, setColorAnchorEl] = useState(null);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [labelsOpen, setLabelsOpen] = useState(false);
+
+  const ImagesWithNoBottomContent =
+    note?.images?.length > 0 &&
+    note?.labels?.length === 0 &&
+    note?.collaborators?.length === 0 &&
+    !note?.title.trim() &&
+    !note?.content.trim() &&
+    (note?.checkboxes?.length === 0 || !note?.showCheckboxes);
 
   const isColorFiltered = filters.color;
 
   const handleColorClick = async (newColor) => {
     closeToolTip();
-    if (newColor === note.color && !isColorFiltered) return;
+    if (newColor === note?.color && !isColorFiltered) return;
     setSelectedColor(newColor);
 
     if (!isColorFiltered) {
@@ -65,7 +72,7 @@ const NoteTools = ({
             NoteUpdateAction({
               type: "color",
               value: newColor,
-              noteUUIDs: [note.uuid],
+              noteUUIDs: [note?.uuid],
               clientID: clientID,
             }),
         ],
@@ -84,7 +91,7 @@ const NoteTools = ({
               NoteUpdateAction({
                 type: "color",
                 value: newColor,
-                noteUUIDs: [note.uuid],
+                noteUUIDs: [note?.uuid],
                 clientID: clientID,
               }),
           ],
@@ -106,7 +113,7 @@ const NoteTools = ({
     if (!isColorFiltered) return;
 
     const handler = async () => {
-      if (!colorMenuOpen && selectedColor !== note.color) {
+      if (!colorMenuOpen && selectedColor !== note?.color) {
         noteActions({
           type: "COLOR",
           note: note,
@@ -120,7 +127,7 @@ const NoteTools = ({
               NoteUpdateAction({
                 type: "color",
                 value: selectedColor,
-                noteUUIDs: [note.uuid],
+                noteUUIDs: [note?.uuid],
                 clientID: clientID,
               }),
           ],
@@ -133,13 +140,13 @@ const NoteTools = ({
   }, [colorMenuOpen]);
 
   useEffect(() => {
-    setSelectedColor(note.color);
-  }, [note.color]);
+    setSelectedColor(note?.color);
+  }, [note?.color]);
 
   const handleBackground = useCallback(
     async (newBG) => {
       closeToolTip();
-      if (newBG === note.background) return;
+      if (newBG === note?.background) return;
 
       dispatchNotes({
         type: "UPDATE_BG",
@@ -153,7 +160,7 @@ const NoteTools = ({
             NoteUpdateAction({
               type: "background",
               value: newBG,
-              noteUUIDs: [note.uuid],
+              noteUUIDs: [note?.uuid],
               clientID: clientID,
             }),
         ],
@@ -168,7 +175,7 @@ const NoteTools = ({
         newBG: newBG,
       });
     },
-    [note.background]
+    [note?.background]
   );
 
   const toggleMenu = (e) => {
@@ -188,7 +195,7 @@ const NoteTools = ({
     let isInvalidFile = false;
     let invalidCount = 0;
 
-    formData.append("noteUUID", note.uuid);
+    formData.append("noteUUID", note?.uuid);
 
     for (const file of files) {
       const { valid } = await validateImageFile(file);
@@ -309,7 +316,7 @@ const NoteTools = ({
     noteActions({
       type: "DELETE_NOTE",
       note: note,
-      noteRef: note.ref,
+      noteRef: note?.ref,
     });
   };
 
@@ -317,7 +324,7 @@ const NoteTools = ({
     noteActions({
       type: "RESTORE_NOTE",
       note: note,
-      noteRef: note.ref,
+      noteRef: note?.ref,
       index: index,
     });
     setMoreMenuOpen(false);
@@ -332,7 +339,7 @@ const NoteTools = ({
       type: "TRASH_NOTE",
       note: note,
       index: index,
-      noteRef: note.ref,
+      noteRef: note?.ref,
       setIsOpen: setMoreMenuOpen,
     });
   };
@@ -361,7 +368,7 @@ const NoteTools = ({
     };
     dispatchNotes({
       type: "ADD_CHECKBOX",
-      noteUUID: note.uuid,
+      noteUUID: note?.uuid,
       checkbox: checkbox,
     });
     setMoreMenuOpen(false);
@@ -373,7 +380,7 @@ const NoteTools = ({
             type: "checkboxes",
             operation: "ADD",
             value: checkbox,
-            noteUUIDs: [note.uuid],
+            noteUUIDs: [note?.uuid],
             clientID: clientID,
           }),
       ],
@@ -384,7 +391,7 @@ const NoteTools = ({
       order: notesStateRef.current.order,
       userID: userID,
       type: "ADD_CHECKBOX",
-      noteUUID: note.uuid,
+      noteUUID: note?.uuid,
       checkbox: checkbox,
     });
   };
@@ -392,7 +399,7 @@ const NoteTools = ({
   const handleCheckboxVis = async () => {
     dispatchNotes({
       type: "CHECKBOX_VIS",
-      noteUUID: note.uuid,
+      noteUUID: note?.uuid,
     });
     setMoreMenuOpen(false);
 
@@ -401,8 +408,8 @@ const NoteTools = ({
         () =>
           NoteUpdateAction({
             type: "showCheckboxes",
-            value: !note.showCheckboxes,
-            noteUUIDs: [note.uuid],
+            value: !note?.showCheckboxes,
+            noteUUIDs: [note?.uuid],
             clientID: clientID,
           }),
       ],
@@ -413,14 +420,14 @@ const NoteTools = ({
       order: notesStateRef.current.order,
       userID: userID,
       type: "CHECKBOX_VIS",
-      noteUUID: note.uuid,
+      noteUUID: note?.uuid,
     });
   };
 
   const uncheckAllitems = async () => {
     dispatchNotes({
       type: "UNCHECK_ALL",
-      noteUUID: note.uuid,
+      noteUUID: note?.uuid,
     });
     setMoreMenuOpen(false);
 
@@ -430,7 +437,7 @@ const NoteTools = ({
           NoteUpdateAction({
             type: "checkboxes",
             operation: "UNCHECK_ALL",
-            noteUUIDs: [note.uuid],
+            noteUUIDs: [note?.uuid],
             clientID: clientID,
           }),
       ],
@@ -441,14 +448,14 @@ const NoteTools = ({
       order: notesStateRef.current.order,
       userID: userID,
       type: "UNCHECK_ALL",
-      noteUUID: note.uuid,
+      noteUUID: note?.uuid,
     });
   };
 
   const deleteCheckedItems = async () => {
     dispatchNotes({
       type: "DELETE_CHECKED",
-      noteUUID: note.uuid,
+      noteUUID: note?.uuid,
     });
     setMoreMenuOpen(false);
 
@@ -458,7 +465,7 @@ const NoteTools = ({
           NoteUpdateAction({
             type: "checkboxes",
             operation: "DELETE_CHECKED",
-            noteUUIDs: [note.uuid],
+            noteUUIDs: [note?.uuid],
             clientID: clientID,
           }),
       ],
@@ -469,19 +476,19 @@ const NoteTools = ({
       order: notesStateRef.current.order,
       userID: userID,
       type: "DELETE_CHECKED",
-      noteUUID: note.uuid,
+      noteUUID: note?.uuid,
     });
   };
 
   const menuItems = [
     {
-      title: !note.isTrash ? "Move to trash" : "",
+      title: !note?.isTrash ? "Move to trash" : "",
       function: handleTrashNote,
       icon: "trash-menu-icon",
     },
     {
-      title: !note.isTrash
-        ? note.labels.length > 0
+      title: !note?.isTrash
+        ? note?.labels?.length > 0
           ? "Change labels"
           : "Add label"
         : "",
@@ -489,8 +496,8 @@ const NoteTools = ({
       icon: "label-menu-icon",
     },
     {
-      title: !note.isTrash
-        ? note.checkboxes.some((checkbox) => checkbox.isCompleted)
+      title: !note?.isTrash
+        ? note?.checkboxes?.some((checkbox) => checkbox.isCompleted)
           ? "Uncheck all items"
           : ""
         : "",
@@ -498,8 +505,8 @@ const NoteTools = ({
       icon: "uncheck-checkbox-menu-icon",
     },
     {
-      title: !note.isTrash
-        ? note.checkboxes.some((checkbox) => checkbox.isCompleted)
+      title: !note?.isTrash
+        ? note?.checkboxes?.some((checkbox) => checkbox.isCompleted)
           ? "Delete checked items"
           : ""
         : "",
@@ -507,24 +514,24 @@ const NoteTools = ({
       icon: "delete-checkbox-menu-icon",
     },
     {
-      title: !note.isTrash
-        ? note.checkboxes.length > 0
-          ? note.showCheckboxes
+      title: !note?.isTrash
+        ? note?.checkboxes?.length > 0
+          ? note?.showCheckboxes
             ? "Hide checkboxes"
             : "Show checkboxes"
           : ""
         : "",
       function: handleCheckboxVis,
       icon:
-        note.checkboxes.length > 0
-          ? note.showCheckboxes
+        note?.checkboxes?.length > 0
+          ? note?.showCheckboxes
             ? "hide-checkbox-menu-icon"
             : "add-checkbox-menu-icon"
           : "",
     },
     {
-      title: !note.isTrash
-        ? note.checkboxes.length === 0
+      title: !note?.isTrash
+        ? note?.checkboxes?.length === 0
           ? "Add checkboxes"
           : ""
         : "",
@@ -533,18 +540,29 @@ const NoteTools = ({
     },
 
     {
-      title: !note.isTrash ? "Make a copy" : "",
+      title: !note?.isTrash ? "Make a copy" : "",
       function: handleMakeCopy,
       icon: "copy-menu-icon",
     },
     {
-      title: note.isTrash ? "Restore note" : "",
+      title: note?.isTrash ? "Restore note" : "",
       function: handleRestoreNote,
     },
     {
-      title: note.isTrash ? "Delete note forever" : "",
+      title: note?.isTrash ? "Delete note forever" : "",
       function: () => {
-        setDeleteModalOpen(true);
+        setDialogInfoRef.current({
+          func: handleDeleteNote,
+          title: "Delete note",
+          message: (
+            <>
+              Are you sure you want to delete this note? <br /> this action
+              can't be undone.
+            </>
+          ),
+
+          btnMsg: "Delete",
+        });
         setMoreMenuOpen(false);
       },
     },
@@ -562,7 +580,8 @@ const NoteTools = ({
   }, [labelsOpen]);
 
   const handleCollab = () => {
-    const element = note.ref.current.parentElement;
+    closeToolTip();
+    const element = note?.ref.current.parentElement;
     handleNoteClick({ currentTarget: element }, note, index, true);
   };
 
@@ -571,7 +590,7 @@ const NoteTools = ({
       <div
         onClick={containerClick}
         style={{
-          opacity: note.images.length > 0 ? "0.8" : "1",
+          opacity: ImagesWithNoBottomContent ? "0.8" : "1",
           transition: "all 0.3s ease",
         }}
       >
@@ -580,18 +599,12 @@ const NoteTools = ({
             opacity: (colorMenuOpen || moreMenuOpen) && "1",
           }}
           className={`note-bottom ${
-            note.images.length > 0 &&
-            note.labels.length === 0 &&
-            !note.title.trim() &&
-            !note.content.trim() &&
-            (note.checkboxes.length === 0 || !note.showCheckboxes)
-              ? note.color
-              : ""
+            ImagesWithNoBottomContent ? note?.color : ""
           }`}
         >
           {/* <p className="date">{FormattedDate}</p> */}
           <div className="note-bottom-icons">
-            {!note.isTrash ? (
+            {!note?.isTrash ? (
               <>
                 <Button
                   tabIndex="0"
@@ -613,7 +626,7 @@ const NoteTools = ({
                 <Button
                   tabIndex="0"
                   className={`${
-                    note.isArchived ? "unarchive-icon" : "archive-icon"
+                    note?.isArchived ? "unarchive-icon" : "archive-icon"
                   } btn-hover`}
                   onClick={() => {
                     closeToolTip();
@@ -621,20 +634,20 @@ const NoteTools = ({
                       type: "archive",
                       index: index,
                       note: note,
-                      noteRef: note.ref,
+                      noteRef: note?.ref,
                     });
                   }}
                   onMouseEnter={(e) =>
                     showTooltip(
                       e,
-                      `${note.isArchived ? "Unarchive" : "Archive"}`
+                      `${note?.isArchived ? "Unarchive" : "Archive"}`
                     )
                   }
                   onMouseLeave={hideTooltip}
                   onFocus={(e) =>
                     showTooltip(
                       e,
-                      `${note.isArchived ? "Unarchive" : "Archive"}`
+                      `${note?.isArchived ? "Unarchive" : "Archive"}`
                     )
                   }
                   onBlur={hideTooltip}
@@ -675,7 +688,7 @@ const NoteTools = ({
                       handleBackground={handleBackground}
                       anchorEl={colorAnchorEl}
                       selectedColor={selectedColor}
-                      selectedBG={note.background}
+                      selectedBG={note?.background}
                       isOpen={colorMenuOpen}
                       setIsOpen={setColorMenuOpen}
                     />
@@ -696,7 +709,20 @@ const NoteTools = ({
                 <Button
                   tabIndex="0"
                   className="note-delete-icon"
-                  onClick={() => setDeleteModalOpen(true)}
+                  onClick={() =>
+                    setDialogInfoRef.current({
+                      func: handleDeleteNote,
+                      title: "Delete note",
+                      message: (
+                        <>
+                          Are you sure you want to delete this note? <br /> this
+                          action can't be undone.
+                        </>
+                      ),
+
+                      btnMsg: "Delete",
+                    })
+                  }
                   onMouseEnter={(e) => showTooltip(e, "Delete forever")}
                   onMouseLeave={hideTooltip}
                   onFocus={(e) => showTooltip(e, "Delete forever")}
@@ -711,21 +737,6 @@ const NoteTools = ({
                   onFocus={(e) => showTooltip(e, "Restore")}
                   onBlur={hideTooltip}
                 />
-                <AnimatePresence>
-                  {deleteModalOpen && (
-                    <DeleteModal
-                      setIsOpen={setDeleteModalOpen}
-                      handleDelete={handleDeleteNote}
-                      title="Delete note"
-                      message={
-                        <>
-                          Are you sure you want to delete this note? <br /> this
-                          action can't be undone.
-                        </>
-                      }
-                    />
-                  )}
-                </AnimatePresence>
               </>
             )}
           </div>

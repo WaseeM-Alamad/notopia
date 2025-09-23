@@ -55,7 +55,7 @@ const ManageTopLabelsMenu = ({
     const allLabels = [];
     selectedNotesIDs.map(({ uuid }) => {
       const note = notes.get(uuid);
-      allLabels.push(...note.labels);
+      allLabels.push(...note?.labels);
     });
 
     const labelsMap = new Map();
@@ -207,9 +207,9 @@ const ManageTopLabelsMenu = ({
         selectedNotesIDs.forEach(({ uuid: noteUUID }) => {
           const note = updatedNotes.get(noteUUID);
 
-          if (!note.labels.includes(uuid)) {
+          if (!note?.labels.includes(uuid)) {
             notesUUIDs.push(noteUUID);
-            const updatedLabels = [uuid, ...note.labels];
+            const updatedLabels = [uuid, ...note?.labels];
             const newNote = { ...note, labels: updatedLabels };
             updatedNotes.set(noteUUID, newNote);
             newNotes.push(newNote);

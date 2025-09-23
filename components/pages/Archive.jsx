@@ -38,7 +38,7 @@ const NoteWrapper = memo(
         <div
           ref={ref}
           className={`grid-item ${
-            fadingNotes.has(note.uuid) ? "fade-out" : ""
+            fadingNotes.has(note?.uuid) ? "fade-out" : ""
           }`}
           onClick={(e) => handleNoteClick(e, note, index)}
           onKeyDown={(e) => {
@@ -63,6 +63,7 @@ const NoteWrapper = memo(
             selectedNotesRef={selectedNotesRef}
             noteActions={noteActions}
             handleSelectNote={handleSelectNote}
+            handleNoteClick={handleNoteClick}
             setSelectedNotesIDs={setSelectedNotesIDs}
             selectedNotes={selectedNotes}
           />
@@ -102,7 +103,8 @@ const Archive = memo(
 
     const notesExist = order.some((uuid, index) => {
       const note = notes.get(uuid);
-      if (!note.isArchived || note.isTrash) return false;
+      if (!note) return false;
+      if (!note?.isArchived || note?.isTrash) return false;
       if (!focusedIndex.current) {
         focusedIndex.current = index;
       }
@@ -238,11 +240,11 @@ const Archive = memo(
           <div ref={containerRef} className="section-container">
             {order.map((uuid, index) => {
               const note = notes.get(uuid);
-              if (!visibleItems.has(note.uuid)) return null;
-              if (note.isArchived && !note.isTrash)
+              if (!visibleItems.has(note?.uuid)) return null;
+              if (note?.isArchived && !note?.isTrash)
                 return (
                   <NoteWrapper
-                    key={note.uuid}
+                    key={note?.uuid}
                     note={note}
                     isGrid={isGrid}
                     selectedNotesRef={selectedNotesRef}

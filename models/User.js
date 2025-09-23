@@ -29,7 +29,7 @@ const UserSchema = new Schema({
   tempEmail: {
     type: String,
     unique: [true, "Email already exists!"],
-    default: null,
+    sparse: true,
   },
   password: {
     type: String,

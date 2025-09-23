@@ -42,11 +42,11 @@ export function useBatchLoading({
       return;
     }
     const scrollY = window.scrollY;
-    const totalHeight = container.offsetHeight;
+    const containerBottom = container.getBoundingClientRect().bottom;
     const viewportHeight = window.innerHeight;
 
     if (
-      totalHeight > viewportHeight + scrollY + 700 ||
+      containerBottom + scrollY > viewportHeight + scrollY + 700 ||
       version !== layoutVersionRef.current
     ) {
       isLoadingRef.current = false;
@@ -169,15 +169,15 @@ export function useBatchLoading({
   const filterUnrendered = (note) => {
     switch (currentSection?.toLowerCase()) {
       case "home":
-        return !note.isArchived && !note.isTrash;
+        return !note?.isArchived && !note?.isTrash;
       case "archive":
-        return note.isArchived && !note.isTrash;
+        return note?.isArchived && !note?.isTrash;
       case "trash":
-        return note.isTrash;
+        return note?.isTrash;
       case "search":
         return matchesFilters(note);
       case "dynamiclabel":
-        return note?.labels?.includes(labelObj?.uuid) && !note.isTrash;
+        return note?.labels?.includes(labelObj?.uuid) && !note?.isTrash;
     }
   };
 
@@ -323,6 +323,8 @@ export function useBatchLoading({
     });
   }, [notesState]);
 
+  // const last = Array.from(s).at(-1);
+
   // useEffect(() => {
   //   const handler = () => {
   //     const order = notesStateRef.current.order;
@@ -333,7 +335,7 @@ export function useBatchLoading({
   //       const note = notes.get(uuid);
   //       if (!note?.ref?.current) continue;
 
-  //       const noteElement = note.ref.current;
+  //       const noteElement = note?.ref.current;
   //       const scrollTop = window.scrollY;
   //       const viewportHeight = window.innerHeight;
   //       const noteBottom =
@@ -341,7 +343,7 @@ export function useBatchLoading({
 
   //       if (noteBottom  > scrollTop + viewportHeight + 700) {
   //         console.log(noteBottom)
-  //         stopID = note.uuid;
+  //         stopID = note?.uuid;
   //         break;
   //       }
   //     }

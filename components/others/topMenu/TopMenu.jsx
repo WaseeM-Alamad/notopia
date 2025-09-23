@@ -13,7 +13,6 @@ import MoreMenu from "../MoreMenu";
 import { useAppContext } from "@/context/AppContext";
 import { v4 as uuid } from "uuid";
 import ManageTopLabelsMenu from "../ManageTopLabelsMenu";
-import DeleteModal from "../DeleteModal";
 import { useSearch } from "@/context/SearchContext";
 import handleServerCall from "@/utils/handleServerCall";
 import localDbReducer from "@/utils/localDbReducer";
@@ -38,6 +37,7 @@ const TopMenuHome = ({
     hideTooltip,
     closeToolTip,
     openSnackRef,
+    setDialogInfoRef,
     fadeNote,
     notesStateRef,
   } = useAppContext();
@@ -48,7 +48,6 @@ const TopMenuHome = ({
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [labelsOpen, setLabelsOpen] = useState(false);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [inTrash, setInTrash] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedBG, setSelectedBG] = useState(null);
@@ -62,7 +61,7 @@ const TopMenuHome = ({
   const hasLabels = () => {
     const labelsExist = selectedNotesIDs.some((noteData) => {
       const note = notes.get(noteData.uuid);
-      return !!note.labels.length;
+      return !!note?.labels.length;
     });
     return labelsExist;
   };
@@ -139,14 +138,14 @@ const TopMenuHome = ({
       let archived = null;
       selectedNotesIDs.forEach((noteData) => {
         const note = notes.get(noteData.uuid);
-        const color = note.color;
-        const bg = note.background;
+        const color = note?.color;
+        const bg = note?.background;
 
         if (pinned !== false) {
-          pinned = note.isPinned ? true : false;
+          pinned = note?.isPinned ? true : false;
         }
         if (archived !== false) {
-          archived = note.isArchived ? true : false;
+          archived = note?.isArchived ? true : false;
         }
         sharedColor.add(color);
         sharedBG.add(bg);
@@ -668,10 +667,7 @@ const TopMenuHome = ({
     handleClose();
 
     handleServerCall(
-      [
-        () =>
-          batchDeleteNotes({ deletedUUIDs: selectedUUIDs, clientID: clientID }),
-      ],
+      [() => batchDeleteNotes(selectedUUIDs, clientID)],
       openSnackRef.current
     );
   };
@@ -694,18 +690,18 @@ const TopMenuHome = ({
       const newCheckboxes = [];
       const oldToNewCBMap = new Map();
 
-      if (note.images.length > 0) {
-        note.images.forEach((image) => {
+      if (note?.images.length > 0) {
+        note?.images.forEach((image) => {
           const newImageUUID = uuid();
           const newImage = { uuid: newImageUUID, url: image.url };
-          imagesMap.set(newImageUUID, `${note.uuid}/${image.uuid}`);
+          imagesMap.set(newImageUUID, `${note?.uuid}/${image.uuid}`);
           imagesToDel.push(`${userID}/${newNoteUUID}/`);
           newImages.push(newImage);
         });
       }
 
-      if (note.checkboxes.length > 0) {
-        const copiedCheckboxes = note.checkboxes.map((checkbox) => {
+      if (note?.checkboxes.length > 0) {
+        const copiedCheckboxes = note?.checkboxes.map((checkbox) => {
           const newUUID = uuid();
           oldToNewCBMap.set(checkbox.uuid, newUUID);
           const newCheckbox = {
@@ -728,21 +724,21 @@ const TopMenuHome = ({
       }
 
       const newNote = {
+        _id: newNoteUUID,
         uuid: newNoteUUID,
         title: note?.title,
-        content: note.content,
-        color: note.color,
-        background: note.background,
-        labels: note.labels,
+        content: note?.content,
+        color: note?.color,
+        background: note?.background,
+        labels: note?.labels,
         checkboxes: newCheckboxes,
         showCheckboxes: true,
-        expandCompleted: note.expandCompleted,
+        expandCompleted: note?.expandCompleted,
         isPinned: false,
         isArchived: false,
-        isTrash: note.isTrash,
+        isTrash: note?.isTrash,
         createdAt: new Date(),
         updatedAt: new Date(),
-        textUpdatedAt: new Date(),
         images: newImages,
       };
       selectedUUIDs.push(noteUUID);
@@ -937,7 +933,25 @@ const TopMenuHome = ({
               ) : (
                 <>
                   <Button
-                    onClick={() => setDeleteModalOpen(true)}
+                    onClick={() =>
+                      setDialogInfoRef.current({
+                        func: handleDeleteNotes,
+                        title:
+                          selectedNotesIDs.length > 1
+                            ? "Delete notes"
+                            : "Delete note",
+                        message: (
+                          <>
+                            {selectedNotesIDs.length > 1
+                              ? `Are you sure you want to delete selected notes?`
+                              : "Are you sure you want to delete this note?"}{" "}
+                            <br /> this action can't be undone.
+                          </>
+                        ),
+
+                        btnMsg: "Delete",
+                      })
+                    }
                     className="top-delete-icon"
                     style={{ width: "45px", height: "45px" }}
                   />
@@ -989,21 +1003,6 @@ const TopMenuHome = ({
             setFadingNotes={setFadingNotes}
             setVisibleItems={setVisibleItems}
             setSelectedNotesIDs={setSelectedNotesIDs}
-          />
-        )}
-      </AnimatePresence>
-      <AnimatePresence>
-        {deleteModalOpen && (
-          <DeleteModal
-            setIsOpen={setDeleteModalOpen}
-            handleDelete={handleDeleteNotes}
-            title="Delete note"
-            message={
-              <>
-                Are you sure you want to delete this note? <br /> this action
-                can't be undone.
-              </>
-            }
           />
         )}
       </AnimatePresence>

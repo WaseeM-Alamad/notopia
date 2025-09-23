@@ -111,7 +111,7 @@ const AddModalTools = ({
             };
             openSnackRef.current({
               snackMessage: `${
-                note.isArchived
+                note?.isArchived
                   ? "Note will be archived"
                   : "Note will be unarchived"
               }`,

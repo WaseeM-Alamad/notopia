@@ -21,6 +21,10 @@ import { useLastInputWasKeyboard } from "@/hooks/useLastInputWasKeyboard";
 import handleServerCall from "@/utils/handleServerCall";
 import localDbReducer from "@/utils/localDbReducer";
 import { useSearch } from "@/context/SearchContext";
+import NoteLabels from "./NoteLabels";
+import NoteCollabs from "./NoteCollabs";
+import { getNoteFormattedDate } from "@/utils/noteDateFormatter";
+import NoteOverlay from "./NoteOverlay";
 
 const Note = memo(
   ({
@@ -35,7 +39,6 @@ const Note = memo(
     index,
   }) => {
     const {
-      labelsRef,
       user,
       clientID,
       showTooltip,
@@ -52,11 +55,11 @@ const Note = memo(
     const [moreMenuOpen, setMoreMenuOpen] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
     const [selected, setSelected] = useState(
-      selectedNotesRef.current.has(note.uuid)
+      selectedNotesRef.current.has(note?.uuid)
     );
-    const [selectedColor, setSelectedColor] = useState(note.color);
-    const uncheckedItems = note?.checkboxes.filter((cb) => !cb.isCompleted);
-    const checkedItems = note?.checkboxes.filter((cb) => cb.isCompleted);
+    const [selectedColor, setSelectedColor] = useState(note?.color);
+    const uncheckedItems = note?.checkboxes?.filter((cb) => !cb.isCompleted);
+    const checkedItems = note?.checkboxes?.filter((cb) => cb.isCompleted);
     const noteDataRef = useRef(null);
     const inputsRef = useRef(null);
     const inputRef = useRef(null);
@@ -66,13 +69,29 @@ const Note = memo(
     const checkRef = useRef(null);
     const dragCounter = useRef(0);
 
+    const ImagesWithNoBottomContent =
+      note?.images?.length > 0 &&
+      note?.labels?.length === 0 &&
+      note?.collaborators?.length === 0 &&
+      !note?.title.trim() &&
+      !note?.content.trim() &&
+      (note?.checkboxes.length === 0 || !note?.showCheckboxes);
+
+    const isNoteEmpty =
+      note?.images?.length === 0 &&
+      note?.labels?.length === 0 &&
+      note?.collaborators?.length === 0 &&
+      !note?.title?.trim() &&
+      !note?.content?.trim() &&
+      (note?.checkboxes.length === 0 || !note?.showCheckboxes);
+
     const lastInputWasKeyboard = useLastInputWasKeyboard();
 
     const handlePinClick = async (e) => {
       closeToolTip();
       handleSelectNote({ clear: true });
       e.stopPropagation(); // Prevent note click event
-      if (!note.isArchived) {
+      if (!note?.isArchived) {
         dispatchNotes({
           type: "PIN_NOTE",
           note: note,
@@ -91,8 +110,8 @@ const Note = memo(
             () =>
               NoteUpdateAction({
                 type: "isPinned",
-                value: !note.isPinned,
-                noteUUIDs: [note.uuid],
+                value: !note?.isPinned,
+                noteUUIDs: [note?.uuid],
                 clientID: clientID,
               }),
           ],
@@ -102,7 +121,7 @@ const Note = memo(
         noteActions({
           type: "PIN_ARCHIVED_NOTE",
           note: note,
-          noteRef: note.ref,
+          noteRef: note?.ref,
           index: index,
         });
       }
@@ -136,7 +155,7 @@ const Note = memo(
       const handleBatchSelection = (e) => {
         const { select, deselect } = e.detail;
 
-        if (select.includes(note.uuid)) {
+        if (select.includes(note?.uuid)) {
           setSelected(true);
           handleSelectNote({
             source: "batch_select",
@@ -148,10 +167,10 @@ const Note = memo(
             isPinned: noteDataRef.current.isPinned,
           });
         }
-        if (deselect.includes(note.uuid)) {
+        if (deselect.includes(note?.uuid)) {
           setSelected(false);
           setSelectedNotesIDs((prev) =>
-            prev.filter((noteData) => noteData.uuid !== note.uuid)
+            prev.filter((noteData) => noteData.uuid !== note?.uuid)
           );
         }
       };
@@ -162,27 +181,13 @@ const Note = memo(
         window.removeEventListener("batchSelection", handleBatchSelection);
         window.removeEventListener("selectAllNotes", handleSelectAllNotes);
       };
-    }, [note.uuid, selected]);
-
-    const handleLabelClick = (e, label) => {
-      e.stopPropagation();
-      const encodedLabel = encodeURIComponent(label);
-      window.location.hash = `label/${encodedLabel.toLowerCase()}`;
-    };
-
-    const removeLabel = async (labelUUID) => {
-      noteActions({
-        type: "REMOVE_LABEL",
-        note: note,
-        labelUUID: labelUUID,
-      });
-    };
+    }, [note?.uuid, selected]);
 
     const handleCheckboxClick = async (e, checkboxUUID, value) => {
       e.stopPropagation();
       dispatchNotes({
         type: "CHECKBOX_STATE",
-        noteUUID: note.uuid,
+        noteUUID: note?.uuid,
         checkboxUUID: checkboxUUID,
         value: value,
       });
@@ -192,7 +197,7 @@ const Note = memo(
         order: notesStateRef.current.order,
         userID: userID,
         type: "CHECKBOX_STATE",
-        noteUUID: note.uuid,
+        noteUUID: note?.uuid,
         checkboxUUID: checkboxUUID,
         value: value,
       });
@@ -205,7 +210,7 @@ const Note = memo(
               operation: "MANAGE_COMPLETED",
               value: value,
               checkboxUUID: checkboxUUID,
-              noteUUIDs: [note.uuid],
+              noteUUIDs: [note?.uuid],
               clientID: clientID,
             }),
         ],
@@ -218,7 +223,7 @@ const Note = memo(
       const val = !note?.expandCompleted;
       dispatchNotes({
         type: "EXPAND_ITEMS",
-        noteUUID: note.uuid,
+        noteUUID: note?.uuid,
       });
 
       localDbReducer({
@@ -226,7 +231,7 @@ const Note = memo(
         order: notesStateRef.current.order,
         userID: userID,
         type: "EXPAND_ITEMS",
-        noteUUID: note.uuid,
+        noteUUID: note?.uuid,
       });
 
       handleServerCall(
@@ -235,7 +240,7 @@ const Note = memo(
             NoteUpdateAction({
               type: "expandCompleted",
               value: val,
-              noteUUIDs: [note.uuid],
+              noteUUIDs: [note?.uuid],
               clientID: clientID,
             }),
         ],
@@ -244,16 +249,18 @@ const Note = memo(
     };
 
     const noteClassName = useMemo(() => {
-      return `note ${note.color} n-bg-${note.background} ${isDragOver ? "transparent-border" : ""}`;
-    }, [note.color, note.background, selected, isDragOver]);
+      return `note ${note?.color} n-bg-${note?.background} ${isDragOver ? "transparent-border" : ""}`;
+    }, [note?.color, note?.background, selected, isDragOver]);
 
     const handleDragOver = (e) => {
       e.preventDefault();
+      if (note?.isTrash) return;
       setIsDragOver(true);
     };
 
     const handleDragLeave = (e) => {
       e.preventDefault();
+      if (note?.isTrash) return;
       dragCounter.current -= 1;
       if (dragCounter.current === 0) {
         setIsDragOver(false);
@@ -261,18 +268,20 @@ const Note = memo(
     };
 
     const handleNoteMouseLeave = (e) => {
+      if (note?.isTrash) return;
       setIsDragOver(false);
       dragCounter.current = 0;
     };
 
     const handleDragEnter = (e) => {
       e.preventDefault();
+      if (note?.isTrash) return;
       dragCounter.current += 1;
     };
 
     const handleOnDrop = (e) => {
       e.preventDefault();
-      if (!inputRef.current) return;
+      if (!inputRef.current || note?.isTrash) return;
       setIsDragOver(false);
       const files = Array.from(e.dataTransfer.files);
 
@@ -320,9 +329,9 @@ const Note = memo(
               e: e,
               selected: selected,
               setSelected: setSelected,
-              uuid: note.uuid,
+              uuid: note?.uuid,
               index: index,
-              isPinned: note.isPinned,
+              isPinned: note?.isPinned,
             })
           }
           onKeyDown={(e) => {
@@ -332,9 +341,9 @@ const Note = memo(
                 e: e,
                 selected: selected,
                 setSelected: setSelected,
-                uuid: note.uuid,
+                uuid: note?.uuid,
                 index: index,
-                isPinned: note.isPinned,
+                isPinned: note?.isPinned,
               });
             }
           }}
@@ -364,9 +373,9 @@ const Note = memo(
             setMoreMenuOpen((prev) => !prev);
           }}
           className="note-wrapper"
-          ref={note.ref}
+          ref={note?.ref}
         >
-          {/* <button onClick={()=> console.log(note.images)}>click</button> */}
+          {/* <button onClick={()=> console.log(note?.images)}>click</button> */}
           <span
             style={{
               opacity: (selected || colorMenuOpen || moreMenuOpen) && "1",
@@ -379,9 +388,9 @@ const Note = memo(
                 e: e,
                 selected: selected,
                 setSelected: setSelected,
-                uuid: note.uuid,
+                uuid: note?.uuid,
                 index: index,
-                isPinned: note.isPinned,
+                isPinned: note?.isPinned,
               })
             }
             onMouseEnter={(e) =>
@@ -390,20 +399,14 @@ const Note = memo(
             onMouseLeave={hideTooltip}
           >
             <CheckMark
-              color={selected ? "note-checkmark-selected" : note.color}
+              color={selected ? "note-checkmark-selected" : note?.color}
               size="23"
             />
           </span>
           <div
             style={{
-              paddingBottom:
-                note.images.length === 0 ||
-                note.labels.length !== 0 ||
-                note.title ||
-                note.content ||
-                !(note.checkboxes.length === 0 || !note.showCheckboxes)
-                  ? "45px"
-                  : "0px  ",
+              paddingBottom: !ImagesWithNoBottomContent ? "45px" : "0px  ",
+              minHeight: note?.openNote === false && "180px",
             }}
             className={noteClassName}
           >
@@ -421,10 +424,10 @@ const Note = memo(
                 <div
                   style={{
                     position:
-                      (note.images.length > 0 ||
-                        (note.checkboxes.length > 0 &&
-                          !note.title.trim() &&
-                          !note.content.trim())) &&
+                      (note?.images?.length > 0 ||
+                        (note?.checkboxes?.length > 0 &&
+                          !note?.title?.trim() &&
+                          !note?.content?.trim())) &&
                       "absolute",
                   }}
                   className="corner"
@@ -437,22 +440,22 @@ const Note = memo(
                   className="pin"
                   tabIndex="0"
                 >
-                  {!note.isTrash && (
+                  {!note?.isTrash && (
                     <Button
                       onMouseEnter={(e) =>
-                        showTooltip(e, `${note.isPinned ? "Unpin" : "Pin"}`)
+                        showTooltip(e, `${note?.isPinned ? "Unpin" : "Pin"}`)
                       }
                       onMouseLeave={hideTooltip}
                       onFocus={(e) =>
-                        showTooltip(e, `${note.isPinned ? "Unpin" : "Pin"}`)
+                        showTooltip(e, `${note?.isPinned ? "Unpin" : "Pin"}`)
                       }
                       onBlur={hideTooltip}
                       onClick={handlePinClick}
                       tabIndex="0"
                     >
                       <PinIcon
-                        isPinned={note.isPinned}
-                        rotation={note.isPinned ? "-45deg" : "-5deg"}
+                        isPinned={note?.isPinned}
+                        rotation={note?.isPinned ? "-45deg" : "-5deg"}
                       />
                     </Button>
                   )}
@@ -460,55 +463,51 @@ const Note = memo(
                 <div
                   style={{
                     position: "relative",
-                    // opacity: isLoading && note.images.length > 0 ? "0.6" : "1",
+                    // opacity: isLoading && note?.images.length > 0 ? "0.6" : "1",
                     transition: "all 0.2s ease",
                   }}
                   ref={imagesRef}
                 >
-                  <NoteImagesLayout images={note.images} />
-                  {false && note.images.length > 0 && (
+                  <NoteImagesLayout images={note?.images} />
+                  {false && note?.images.length > 0 && (
                     <div className="linear-loader" />
                   )}
                 </div>
 
-                {note.images.length === 0 &&
-                  note.labels.length === 0 &&
-                  !note.title?.trim() &&
-                  !note.content?.trim() &&
-                  (note.checkboxes.length === 0 || !note.showCheckboxes) && (
-                    <div className="empty-note" aria-label="Empty note" />
-                  )}
+                {isNoteEmpty && (
+                  <div className="empty-note" aria-label="Empty note" />
+                )}
                 <div ref={inputsRef}>
-                  {note.title?.trim() && (
+                  {note?.title?.trim() && (
                     <div dir="auto" ref={titleRef} className="title">
-                      {highlightMatch(note.title)}
+                      {highlightMatch(note?.title)}
                     </div>
                   )}
-                  {note.content?.trim() && (
+                  {note?.content?.trim() && (
                     <div dir="auto" ref={contentRef} className="content">
-                      {highlightMatch(note.content)}
+                      {highlightMatch(note?.content)}
                     </div>
                   )}
                 </div>
 
-                {note.checkboxes.length > 0 && note.showCheckboxes && (
+                {note?.checkboxes?.length > 0 && note?.showCheckboxes && (
                   <div
                     style={{
-                      paddingTop: !note.content.trim() && "0.625rem",
+                      paddingTop: !note?.content?.trim() && "0.625rem",
                       paddingBottom: "0.4rem",
                     }}
                   >
                     {uncheckedItems.map((checkbox, index) => {
                       return (
                         <div
-                          key={checkbox.uuid}
+                          key={checkbox?.uuid || index}
                           className="checkbox-wrapper note-checkbox-wrapper"
                           style={{
                             wordBreak: "break-all",
                             paddingLeft: checkbox.parent ? "1.8rem" : "0.7rem",
                             paddingRight:
-                              !note.content.trim() &&
-                              !note.title.trim() &&
+                              !note?.content.trim() &&
+                              !note?.title.trim() &&
                               index === 0 &&
                               "2.5rem",
                           }}
@@ -555,7 +554,7 @@ const Note = memo(
                       )}
                     </div>
 
-                    {checkedItems.length > 0 && !note.expandCompleted && (
+                    {checkedItems.length > 0 && !note?.expandCompleted && (
                       <div
                         className="completed-items completed-items-note"
                         aria-label={`${checkedItems.length} Completed item${
@@ -564,7 +563,7 @@ const Note = memo(
                       />
                     )}
 
-                    {note.expandCompleted &&
+                    {note?.expandCompleted &&
                       checkedItems.map((checkbox) => {
                         return (
                           <div
@@ -604,58 +603,24 @@ const Note = memo(
                       })}
                   </div>
                 )}
-                {note.labels.length !== 0 && (
-                  <>
-                    <div className="note-labels-container">
-                      {note.labels
-                        .sort((a, b) => {
-                          const labelsMap = labelsRef.current;
-                          const labelA = labelsMap.get(a)?.label || "";
-                          const labelB = labelsMap.get(b)?.label || "";
-                          return labelA.localeCompare(labelB);
-                        })
-                        .map((labelUUID, index) => {
-                          if (index + 1 >= 3 && note.labels.length > 3) return;
-                          const label = labelsRef.current.get(labelUUID)?.label;
-                          return (
-                            <div
-                              onClick={(e) => handleLabelClick(e, label)}
-                              key={labelUUID}
-                              className={[
-                                "label-wrapper",
-                                !note.isTrash && "label-wrapper-h",
-                              ]
-                                .filter(Boolean)
-                                .join(" ")}
-                            >
-                              <label className="note-label">{label}</label>
-                              <div
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  closeToolTip();
-                                  removeLabel(labelUUID);
-                                }}
-                                onMouseEnter={(e) =>
-                                  showTooltip(e, "Remove label")
-                                }
-                                onMouseLeave={hideTooltip}
-                                className="remove-label"
-                              />
-                            </div>
-                          );
-                        })}
-                      {note.labels.length > 3 && (
-                        <div className="more-labels">
-                          <label className="more-labels-label">
-                            +{note.labels.length - 2}
-                          </label>
-                        </div>
-                      )}
-                    </div>
-                  </>
+                {(note?.labels?.length > 0 ||
+                  note?.collaborators?.length > 0) && (
+                  <div className="note-labels-container">
+                    {note?.labels.length !== 0 && (
+                      <NoteLabels note={note} noteActions={noteActions} />
+                    )}
+                    {note?.collaborators && (
+                      <NoteCollabs
+                        note={note}
+                        index={index}
+                        handleNoteClick={handleNoteClick}
+                      />
+                    )}
+                  </div>
                 )}
               </div>
             </div>
+            {note?.openNote === false && <NoteOverlay note={note} />}
           </div>
           <NoteTools
             colorMenuOpen={colorMenuOpen}
@@ -679,7 +644,7 @@ const Note = memo(
             className={`note-border ${
               selected
                 ? "element-selected"
-                : note.color === "Default"
+                : note?.color === "Default"
                   ? "default-border"
                   : "transparent-border"
             }`}

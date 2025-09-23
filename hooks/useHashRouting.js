@@ -265,10 +265,10 @@ export function useHashRouting({
           const typeSet = new Set();
           notesStateRef.current.order.forEach((order) => {
             const note = notesStateRef.current.notes.get(order);
-            if (note.isTrash) return;
-            colorSet.add(note.color);
-            note.labels.forEach((label) => labelSet.add(label));
-            note.images.length > 0 && typeSet.add("images");
+            if (note?.isTrash) return;
+            colorSet.add(note?.color);
+            note?.labels.forEach((label) => labelSet.add(label));
+            note?.images.length > 0 && typeSet.add("images");
           });
           let filtersNum = 0;
 

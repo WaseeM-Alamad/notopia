@@ -48,16 +48,16 @@ export function useKeyBindings({
   const checkInSection = (note) => {
     switch (currentSection?.toLowerCase()) {
       case "home":
-        return !note.isArchived && !note.isTrash;
+        return !note?.isArchived && !note?.isTrash;
       case "archive":
-        return note.isArchived && !note.isTrash;
+        return note?.isArchived && !note?.isTrash;
       case "trash":
-        return note.isTrash;
+        return note?.isTrash;
       case "search":
         return matchesFilters(note);
       case "dynamiclabel":
         return (
-          note?.labels?.includes(labelObjRef.current?.uuid) && !note.isTrash
+          note?.labels?.includes(labelObjRef.current?.uuid) && !note?.isTrash
         );
     }
   };
@@ -126,7 +126,7 @@ export function useKeyBindings({
         const filter = (note) => {
           switch (currentSection) {
             case "Home": {
-              if (note.isTrash || note.isArchived) return false;
+              if (note?.isTrash || note?.isArchived) return false;
               break;
             }
             case "Reminders": {
@@ -134,11 +134,11 @@ export function useKeyBindings({
               break;
             }
             case "Archive": {
-              if (!note.isArchived || note.isTrash) return false;
+              if (!note?.isArchived || note?.isTrash) return false;
               break;
             }
             case "Trash": {
-              if (!note.isTrash) return false;
+              if (!note?.isTrash) return false;
               break;
             }
             case "Search": {
@@ -156,7 +156,7 @@ export function useKeyBindings({
                 }
               });
 
-              if (!note.labels.includes(targetedLabel?.uuid) || note.isTrash)
+              if (!note?.labels.includes(targetedLabel?.uuid) || note?.isTrash)
                 return false;
               break;
             }
@@ -167,15 +167,15 @@ export function useKeyBindings({
 
         notesStateRef.current.order.forEach((uuid, index) => {
           const note = notesStateRef.current.notes.get(uuid);
-          if (!filter(note)) return;
+          if (!note || !filter(note)) return;
 
           const noteData = {
-            uuid: note.uuid,
+            uuid: note?.uuid,
             index: index,
-            isPinned: note.isPinned,
+            isPinned: note?.isPinned,
           };
           selectedNotes.push(noteData);
-          selectedNotesRef.current.add(note.uuid);
+          selectedNotesRef.current.add(note?.uuid);
         });
         setSelectedNotesIDs(selectedNotes);
         window.dispatchEvent(new Event("selectAllNotes"));
@@ -380,7 +380,7 @@ export function useKeyBindings({
               updateOrderAction({
                 initialIndex,
                 endIndex: finalIndex,
-                clientID: clientID
+                clientID: clientID,
               }),
           ],
           openSnackRef.current
@@ -430,12 +430,12 @@ export function useKeyBindings({
           if (!uuid) return;
 
           const note = notes.get(uuid);
-          if (note.isTrash) return;
+          if (note?.isTrash) return;
           noteActions({
             type: "archive",
             index: index,
             note: note,
-            noteRef: note.ref,
+            noteRef: note?.ref,
           });
         }
       }
@@ -476,12 +476,12 @@ export function useKeyBindings({
           if (!uuid) return;
 
           const note = notes.get(uuid);
-          if (note.isTrash) return;
+          if (note?.isTrash) return;
           noteActions({
             type: "TRASH_NOTE",
             note: note,
             index: index,
-            noteRef: note.ref,
+            noteRef: note?.ref,
             setIsOpen: () => {},
           });
         }
@@ -517,7 +517,7 @@ export function useKeyBindings({
 
           const note = notes.get(uuid);
 
-          if (note.isTrash) return;
+          if (note?.isTrash) return;
 
           const section = currentSection.toLowerCase();
 
@@ -525,7 +525,7 @@ export function useKeyBindings({
             noteActions({
               type: "PIN_ARCHIVED_NOTE",
               note: note,
-              noteRef: note.ref,
+              noteRef: note?.ref,
               index: index,
             });
           } else {
@@ -546,9 +546,9 @@ export function useKeyBindings({
                 () =>
                   NoteUpdateAction({
                     type: "isPinned",
-                    value: !note.isPinned,
-                    noteUUIDs: [note.uuid],
-                    clientID: clientID
+                    value: !note?.isPinned,
+                    noteUUIDs: [note?.uuid],
+                    clientID: clientID,
                   }),
               ],
               openSnackRef.current
@@ -578,7 +578,7 @@ export function useKeyBindings({
         window.dispatchEvent(
           new CustomEvent("batchSelection", {
             detail: {
-              select: [note.uuid],
+              select: [note?.uuid],
               deselect: [],
             },
           })
@@ -603,17 +603,17 @@ export function useKeyBindings({
 
         const note = notes.get(uuid);
 
-        if (note.checkboxes.length === 0) return;
+        if (note?.checkboxes.length === 0) return;
         localDbReducer({
           notes: notesStateRef.current.notes,
           order: notesStateRef.current.order,
           userID: userID,
           type: "CHECKBOX_VIS",
-          noteUUID: note.uuid,
+          noteUUID: note?.uuid,
         });
         dispatchNotes({
           type: "CHECKBOX_VIS",
-          noteUUID: note.uuid,
+          noteUUID: note?.uuid,
         });
 
         handleServerCall(
@@ -621,9 +621,9 @@ export function useKeyBindings({
             () =>
               NoteUpdateAction({
                 type: "showCheckboxes",
-                value: !note.showCheckboxes,
-                noteUUIDs: [note.uuid],
-                clientID: clientID
+                value: !note?.showCheckboxes,
+                noteUUIDs: [note?.uuid],
+                clientID: clientID,
               }),
           ],
           openSnackRef.current

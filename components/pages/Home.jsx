@@ -58,7 +58,7 @@ const NoteWrapper = memo(
             targetElement === noteRef.current &&
             !target.classList.contains("not-draggable")
           ) {
-            handleDragStart(e, targetElement, index, note.isPinned);
+            handleDragStart(e, targetElement, index, note?.isPinned);
           }
         }
       };
@@ -74,7 +74,7 @@ const NoteWrapper = memo(
 
     const handleMouseEnter = () => {
       overIndexRef.current = index;
-      overIsPinnedRef.current = note.isPinned;
+      overIsPinnedRef.current = note?.isPinned;
     };
 
     return (
@@ -94,7 +94,7 @@ const NoteWrapper = memo(
             }
           }}
           className={`grid-item ${
-            fadingNotes.has(note.uuid) ? "fade-out" : ""
+            fadingNotes.has(note?.uuid) ? "fade-out" : ""
           }`}
           style={{
             maxWidth: `${isGrid ? 240 : 600}px`,
@@ -170,11 +170,13 @@ const Home = memo(
 
     const hasUnpinned = [...visibleItems].some((uuid) => {
       const note = notes.get(uuid);
+      if (!note) return false;
       return !note?.isPinned;
     });
 
     const notesExist = order.some((uuid, index) => {
       const note = notes.get(uuid);
+      if (!note) return false;
       if (note?.isArchived || note?.isTrash) return false;
       if (!focusedIndex.current) {
         focusedIndex.current = index;
@@ -395,7 +397,7 @@ const Home = memo(
                       updateOrderAction({
                         initialIndex: draggedInitialIndex,
                         endIndex: endIndexRef.current,
-                        clientID: clientID
+                        clientID: clientID,
                       }),
                   ],
                   openSnackRef.current
@@ -494,8 +496,8 @@ const Home = memo(
       let lastRef = null;
       for (let uuid of order) {
         const note = notes.get(uuid);
-        if (!note.isArchived && !note.isTrash) {
-          lastRef = note.ref.current;
+        if (!note?.isArchived && !note?.isTrash) {
+          lastRef = note?.ref.current;
           lastAddedNoteRef.current = lastRef;
           return lastRef;
         }
@@ -512,6 +514,23 @@ const Home = memo(
           ref={rootContainerRef}
           className={`starting-div ${isExpanded ? "sidebar-expanded" : "sidebar-collapsed"}`}
         >
+          {/* <button
+            style={{ position: "fixed" }}
+            onClick={() => {
+              const containerBottom =
+                containerRef.current.getBoundingClientRect().bottom +
+                window.scrollY;
+              console.log("containerBottom", containerBottom);
+              const last = Array.from(visibleItems).at(-1);
+              const lastNote = notes.get(last);
+              const lastNoteBottom =
+                lastNote.ref.current.getBoundingClientRect().bottom +
+                window.scrollY;
+              console.log("lastNoteBottom", Math.floor(lastNoteBottom + 15));
+            }}
+          >
+            gg
+          </button> */}
           <div
             ref={containerRef}
             className="section-container"
@@ -541,14 +560,14 @@ const Home = memo(
 
             {order.map((uuid, index) => {
               const note = notes.get(uuid);
-              if (!visibleItems.has(note.uuid)) return null;
+              if (!visibleItems.has(note?.uuid)) return null;
 
               return (
-                !note.isArchived &&
-                !note.isTrash && (
+                !note?.isArchived &&
+                !note?.isTrash && (
                   <NoteWrapper
                     selectedNotesRef={selectedNotesRef}
-                    key={note.uuid}
+                    key={note?.uuid || index}
                     note={note}
                     isGrid={isGrid}
                     overIndexRef={overIndexRef}

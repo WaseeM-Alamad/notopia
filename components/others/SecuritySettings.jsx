@@ -266,7 +266,7 @@ const SecuritySettings = ({ rightHeader, selected }) => {
             <button
               type="submit"
               form="change-pass-form"
-              className="settings-bottom-btn"
+              className="settings-bottom-btn blue-btn"
             >
               {isSaveLoading && (
                 <HorizontalLoader2

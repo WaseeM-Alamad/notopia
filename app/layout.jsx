@@ -26,7 +26,7 @@ const MainLayout = async ({ children }) => {
         />
       </head>
       <body suppressHydrationWarning>
-        <FatalErrorBoundary>
+        {/* <FatalErrorBoundary> */}
           <AuthProvider>
             <SearchProvider>
               <AppProvider initialUser={initialUser}>
@@ -41,7 +41,7 @@ const MainLayout = async ({ children }) => {
               </AppProvider>
             </SearchProvider>
           </AuthProvider>
-        </FatalErrorBoundary>
+        {/* </FatalErrorBoundary> */}
       </body>
     </html>
   );

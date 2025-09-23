@@ -68,7 +68,7 @@ const ListItem = ({
       checkboxes: prev.checkboxes.map((cb) =>
         cb.uuid === checkbox.uuid ? { ...cb, content: t } : cb
       ),
-      textUpdatedAt: new Date(),
+      updatedAt: new Date(),
     }));
     updateListItemContent(t, checkbox.uuid);
 
@@ -88,7 +88,7 @@ const ListItem = ({
 
         return true;
       }),
-      textUpdatedAt: new Date(),
+      updatedAt: new Date(),
     }));
 
     handleServerCall(

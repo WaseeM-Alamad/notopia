@@ -1,12 +1,11 @@
 "use client";
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import Note from "../others/Note";
-import { AnimatePresence, motion } from "framer-motion";
-import { emptyTrashAction } from "@/utils/actions";
-import DeleteModal from "../others/DeleteModal";
+import { motion } from "framer-motion";
 import { useAppContext } from "@/context/AppContext";
 import handleServerCall from "@/utils/handleServerCall";
 import localDbReducer from "@/utils/localDbReducer";
+import { batchDeleteNotes } from "@/utils/actions";
 
 const GUTTER = 15;
 
@@ -42,7 +41,7 @@ const NoteWrapper = memo(
         <div
           ref={ref}
           className={`grid-item ${
-            fadingNotes.has(note.uuid) ? "fade-out" : ""
+            fadingNotes.has(note?.uuid) ? "fade-out" : ""
           }`}
           onClick={(e) => handleNoteClick(e, note, index)}
           onKeyDown={(e) => {
@@ -68,6 +67,7 @@ const NoteWrapper = memo(
             selectedNotes={selectedNotes}
             dispatchNotes={dispatchNotes}
             handleSelectNote={handleSelectNote}
+            handleNoteClick={handleNoteClick}
             index={index}
           />
           {/* <p>{index}</p> */}
@@ -104,19 +104,19 @@ const Trash = memo(
       focusedIndex,
       openSnackRef,
       user,
+      setDialogInfoRef,
       clientID,
       isExpanded,
     } = useAppContext();
     const userID = user?.id;
-    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const COLUMN_WIDTH = layout === "grid" ? 240 : 600;
     const resizeTimeoutRef = useRef(null);
-    const isFirstRenderRef = useRef(true);
     const layoutFrameRef = useRef(null);
 
     const notesExist = order.some((uuid, index) => {
       const note = notes.get(uuid);
-      if (!note.isTrash) return false;
+      if (!note) return false;
+      if (!note?.isTrash) return false;
       if (!focusedIndex.current) {
         focusedIndex.current = index;
       }
@@ -205,7 +205,7 @@ const Trash = memo(
 
       order.map((uuid) => {
         const note = notes.get(uuid);
-        if (note.isTrash) {
+        if (note?.isTrash) {
           deletedNotesUUIDs.push(uuid);
         }
       });
@@ -222,7 +222,10 @@ const Trash = memo(
         setFadingNotes(new Set());
       }, 250);
 
-      handleServerCall([() => emptyTrashAction(clientID)], openSnackRef.current);
+      handleServerCall(
+        [() => batchDeleteNotes(deletedNotesUUIDs, clientID)],
+        openSnackRef.current
+      );
     };
 
     useEffect(() => {
@@ -254,7 +257,12 @@ const Trash = memo(
         );
 
         if (trashNotes) {
-          setDeleteModalOpen(true);
+          setDialogInfoRef.current({
+            func: handleEmptyTrash,
+            title: "Empty trash",
+            message: "All notes in Trash will be permanently deleted.",
+            btnMsg: "Delete",
+          });
         }
       };
 
@@ -275,12 +283,12 @@ const Trash = memo(
           <div ref={containerRef} className="section-container">
             {order.map((uuid, index) => {
               const note = notes.get(uuid);
-              if (!visibleItems.has(note.uuid)) return null;
-              if (note.isTrash)
+              if (!visibleItems.has(note?.uuid)) return null;
+              if (note?.isTrash)
                 return (
                   <NoteWrapper
                     isGrid={isGrid}
-                    key={note.uuid}
+                    key={note?.uuid}
                     note={note}
                     selectedNotesRef={selectedNotesRef}
                     noteActions={noteActions}
@@ -329,16 +337,6 @@ const Trash = memo(
             )}
           </div>
         </div>
-        <AnimatePresence>
-          {deleteModalOpen && (
-            <DeleteModal
-              setIsOpen={setDeleteModalOpen}
-              handleDelete={handleEmptyTrash}
-              title="Empty trash"
-              message={"All notes in Trash will be permanently deleted."}
-            />
-          )}
-        </AnimatePresence>
       </>
     );
   }

@@ -118,7 +118,7 @@ const ListItemsLayout = ({
     setLocalNote((prev) => ({
       ...prev,
       checkboxes: [...prev.checkboxes, checkbox],
-      textUpdatedAt: new Date(),
+      updatedAt: new Date(),
     }));
 
     requestAnimationFrame(() => {
@@ -162,7 +162,7 @@ const ListItemsLayout = ({
             ? { ...cb, isCompleted: value }
             : cb;
         }),
-        textUpdatedAt: new Date(),
+        updatedAt: new Date(),
       }));
 
       handleServerCall(
@@ -427,10 +427,10 @@ const ListItemsLayout = ({
     setLocalNote((prev) => ({
       ...prev,
       checkboxes: newList,
-      textUpdatedAt:
+      updatedAt:
         initialIndex !== draggedIndexRef.current || updatedItems.size > 0
           ? new Date()
-          : prev.textUpdatedAt,
+          : prev.updatedAt,
     }));
 
     const reOrder =

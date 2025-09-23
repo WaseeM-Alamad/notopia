@@ -190,7 +190,7 @@ svg {
   }
 }
 
-.note-overlay {
+.note-modal-overlay {
   display: none;
   opacity: 0;
   position: fixed;
@@ -305,6 +305,7 @@ svg {
 }
 
 .collab-container {
+  position: relative;
   padding: 15px 15px 0;
   height: 100%;
 }
@@ -317,11 +318,14 @@ svg {
 }
 
 .collab-users-container {
-  padding: 10px 0;
+  padding-top: 10px;
+  padding-bottom: 20px;
   min-height: 132px;
 }
 
 .collab-user {
+  position: relative;
+  width: 100%;
   display: flex;
   align-items: center;
   padding: 5px;
@@ -330,13 +334,15 @@ svg {
 
 .collab-user-img {
   background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbDpzcGFjZT0icHJlc2VydmUiIGhlaWdodD0iMTZweCIgd2lkdGg9IjE2cHgiIHZlcnNpb249IjEuMSIgeT0iMHB4IiB4PSIwcHgiIHZpZXdCb3g9IjAgMCA5NiA5NiIgZW5hYmxlLWJhY2tncm91bmQ9Im5ldyAwIDAgOTYgOTYiPgo8ZyBpZD0iSWNvbiI+CgkJCTxjaXJjbGUgY3k9IjQ4IiBjeD0iNDgiIHI9IjQ4IiBmaWxsPSIjQzZEQUZDIi8+CgkJCTxnIGZpbGw9IiM1RTk3RjYiPgoJCQkJPHBhdGggZD0ibTQ4IDIzYy04LjI4IDAtMTUgNi43Mi0xNSAxNXM2LjcyIDE1IDE1IDE1IDE1LTYuNzIgMTUtMTUtNi43Mi0xNS0xNS0xNXoiLz4KCQkJCTxwYXRoIGQ9Im00OCA2MWMtMTAuMzMgMC0zMSA1LjE3LTMxIDE1LjV2OC4xM2M4LjM2IDcuMDkgMTkuMTggMTEuMzcgMzEgMTEuMzdzMjIuNjQtNC4yOCAzMS0xMS4zN3YtOC4xM2MwLTEwLjMzLTIwLjY3LTE1LjUtMzEtMTUuNXoiLz4KCQkJPC9nPgoJCTxyZWN0IHk9IjAiIHg9IjAiIGhlaWdodD0iOTYiIHdpZHRoPSI5NiIgZmlsbD0ibm9uZSIvPgo8L2c+Cjwvc3ZnPgo=);
-  background-size: 100%;
+  background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   border-radius: 50%;
   height: 40px;
   width: 40px;
   flex-shrink: 0;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 1px 1px rgba(60, 64, 67, 0.15);
 }
 
 .collab-bottom {
@@ -349,10 +355,19 @@ svg {
 
 .collab-input {
   width: 100%;
+  background-color: transparent;
   margin-right: 11px;
   border: none;
   height: 25px;
   outline: none;
+}
+
+.collab-input-img {
+  background: url("data:image/svg+xml,%3Csvg width='18' height='18' viewBox='0 0 18 18' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cg clip-path='url(%23clip0_937_32)'%3E%3Cpath d='M9.71422 9C11.3834 9.00012 12.9847 9.68075 14.1651 10.8924C15.2599 12.0165 15.9102 13.5124 15.9988 15.0908C16.0121 15.3286 15.9151 15.5593 15.751 15.7277C15.5715 15.9118 15.3342 15.998 15.1015 15.9897L4.29685 16C4.07929 16.0002 3.86019 15.9152 3.69194 15.7425L3.6752 15.7254C3.51134 15.557 3.41633 15.3285 3.42967 15.0908C3.51823 13.5125 4.16746 12.0164 5.26224 10.8924C6.44269 9.6805 8.04483 9.0001 9.71422 9Z' fill='black'/%3E%3Cpath d='M2.85712 4.33333C3.10964 4.33333 3.35154 4.43597 3.53011 4.61816C3.70853 4.8004 3.80903 5.04746 3.80913 5.30518V6.27816H4.76225C5.01472 6.27826 5.25673 6.38072 5.43523 6.56299C5.61363 6.74533 5.71425 6.99225 5.71425 7.25C5.71425 7.50775 5.61363 7.75467 5.43523 7.93701C5.25673 8.11928 5.01472 8.22174 4.76225 8.22184H3.80913V9.19482C3.80901 9.4525 3.70851 9.69968 3.53011 9.88184C3.35154 10.064 3.10962 10.1667 2.85712 10.1667C2.60463 10.1667 2.36271 10.064 2.18414 9.88184C2.00574 9.69968 1.90524 9.4525 1.90512 9.19482V8.22184H0.952003C0.69953 8.22174 0.457521 8.11928 0.279016 7.93701C0.100617 7.75467 2.45453e-06 7.50775 0 7.25C0 6.99225 0.100621 6.74533 0.279016 6.56299C0.457521 6.38072 0.69953 6.27826 0.952003 6.27816H1.90512V5.30518C1.90522 5.04746 2.00572 4.8004 2.18414 4.61816C2.36271 4.43597 2.60461 4.33333 2.85712 4.33333Z' fill='black'/%3E%3Cpath d='M9.71422 2C11.2922 2 12.5713 3.30584 12.5713 4.91667C12.5713 6.5275 11.2922 7.83333 9.71422 7.83333C8.13628 7.83333 6.8571 6.5275 6.8571 4.91667C6.8571 3.30584 8.13628 2 9.71422 2Z' fill='black'/%3E%3C/g%3E%3Cdefs%3E%3CclipPath id='clip0_937_32'%3E%3Crect width='18' height='18' fill='white'/%3E%3C/clipPath%3E%3C/defs%3E%3C/svg%3E%0A")
+    no-repeat center center;
+  border: 1px solid rgba(0, 0, 0, 0.6);
+  background-size: 18px 24px;
+  opacity: 0.55;
 }
 
 .note-modal-wrapper {
@@ -378,8 +393,10 @@ svg {
   transform-origin: top left;
   z-index: 201;
   border: solid 1px transparent;
+  border-radius: 0.7rem;
   outline: none;
-  transition: opacity 0.12s ease-in-out;
+  will-change: transform;
+  transition: opacity 0.12s ease-in;
 }
 
 .modal-shadow {
@@ -485,7 +502,7 @@ svg {
 }
 
 .modal-inputs-container::-webkit-scrollbar {
-  width: 7px;
+  width: 12px;
 }
 
 .modal-inputs-container::-webkit-scrollbar-track {
@@ -594,7 +611,7 @@ svg {
   transition: opacity 0.2s !important;
 }
 
-.delete-modal {
+.action-modal {
   display: flex;
   align-items: center;
   box-sizing: border-box;
@@ -603,8 +620,7 @@ svg {
   position: fixed;
   padding: 1.2rem 1rem;
   transform-origin: center center;
-  width: 100%;
-  max-width: 360px;
+  max-width: 500px;
   min-height: 180px;
   box-shadow:
     0 1px 3px 0 rgba(60, 64, 67, 0.3),
@@ -615,7 +631,7 @@ svg {
   top: 40%;
 }
 
-.dark-mode .delete-modal {
+.dark-mode .action-modal {
   box-shadow:
     0 1px 3px 0 rgba(0, 0, 0, 0.6),
     0 4px 8px 3px rgba(0, 0, 0, 0.3);
@@ -630,13 +646,8 @@ svg {
   min-height: 2.3rem;
   width: 6rem;
   border-radius: 0.5rem;
-  background-color: rgb(240, 240, 240);
   cursor: pointer;
   transition: background-color 0.3s;
-}
-
-.modal-bottom-btn:hover {
-  background-color: rgb(223, 222, 222);
 }
 
 .delete-btn {
@@ -649,6 +660,20 @@ svg {
 
 .collab-btn {
   background-color: transparent;
+}
+
+.collab-note-image {
+  border: 2px solid #fff;
+  box-shadow: 0 1px 1px 1px rgba(60, 64, 67, 0.15);
+  height: 21px;
+  width: 21px;
+  cursor: pointer;
+}
+
+.modal-collab-image {
+  height: 27px;
+  width: 27px;
+  cursor: pointer;
 }
 
 .buttons-con {
@@ -4348,7 +4373,6 @@ img {
   display: flex;
   justify-content: center;
   position: relative;
-  background-color: #5166ee;
   width: fit-content;
   font-size: 0.85rem;
   font-weight: 550;
@@ -4356,11 +4380,18 @@ img {
   color: #ffffff;
   cursor: pointer;
   border-radius: 0.5rem;
+  transition: background-color 0.3s;
 }
 
 .settings-reset-btn {
-  background-color: #ffffff;
+  background-color: transparent;
   color: #6c6c6c;
+  transition: color 0.3s;
+}
+
+.settings-reset-btn:hover {
+  color: #505050;
+  text-decoration: underline;
 }
 
 .settings-form {
@@ -4956,4 +4987,65 @@ aside svg {
 
 .check-icon:hover {
   opacity: 0.87;
+}
+
+.blue-btn {
+  background-color: #566af1;
+}
+
+.blue-btn:hover {
+  background-color: #465be2;
+}
+
+.dark-mode .blue-btn {
+  background-color: #6478fd;
+}
+
+.dark-mode .blue-btn:hover {
+  background-color: #6e81fd;
+}
+
+.cancel-btn {
+  background-color: rgb(240, 240, 240);
+}
+
+.cancel-btn:hover {
+  background-color: rgb(223, 222, 222);
+}
+
+.dark-mode .cancel-btn {
+  background-color: rgb(60, 60, 60);
+  color: #fff;
+}
+
+.dark-mode .cancel-btn:hover {
+  background-color: rgb(80, 80, 80);
+}
+
+.note-overlay {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 15px 15px 45px 15px;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0) 10%,
+    rgba(32, 33, 36, 0.75) 50%,
+    rgba(32, 33, 36, 0.75) 100%
+  );
+}
+
+.dark-mode .note-overlay {
+  background: linear-gradient(
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0) 10%,
+    rgba(32, 33, 36, 0.9) 50%,
+    rgba(32, 33, 36, 0.9) 100%
+  );
 }

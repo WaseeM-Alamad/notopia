@@ -2,6 +2,10 @@ import { Schema, model, models } from "mongoose";
 
 const NoteSchema = new Schema(
   {
+    _id: {
+      type: String,
+      required: true,
+    },
     uuid: {
       type: String,
       required: [true, "UUID is required!"],
@@ -17,23 +21,7 @@ const NoteSchema = new Schema(
       ref: "User",
       required: [true, "Creator is required!"],
     },
-    color: {
-      type: String,
-      trim: true,
-      default: "Default",
-    },
 
-    background: {
-      type: "String",
-      trim: true,
-      default: "DefaultBG",
-    },
-
-    labels: [
-      {
-        type: String,
-      },
-    ],
     checkboxes: [
       {
         _id: false,
@@ -48,26 +36,7 @@ const NoteSchema = new Schema(
         ],
       },
     ],
-    showCheckboxes: {
-      type: Boolean,
-      default: true,
-    },
-    expandCompleted: {
-      type: Boolean,
-      default: true,
-    },
-    isPinned: {
-      type: Boolean,
-      default: false,
-    },
-    isArchived: {
-      type: Boolean,
-      default: false,
-    },
-    isTrash: {
-      type: Boolean,
-      default: false,
-    },
+
     images: [
       {
         _id: false,
@@ -75,16 +44,19 @@ const NoteSchema = new Schema(
         uuid: { type: String, required: true },
       },
     ],
+
     collaborators: [
       {
-        type: Schema.Types.ObjectId,
-        ref: "User",
+        _id: false,
+        data: { type: Schema.Types.ObjectId, ref: "User" },
+        id: { type: Schema.Types.ObjectId, required: true },
+        snapshot: {
+          displayName: String,
+          username: String,
+          image: String,
+        },
       },
     ],
-    textUpdatedAt: {
-      type: Date,
-      default: Date.now,
-    },
     lastModifiedBy: {
       type: String,
       default: null,

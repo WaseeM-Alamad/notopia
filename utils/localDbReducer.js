@@ -46,7 +46,7 @@ const localDbReducer = (payload) => {
       const newNotes = [];
 
       payload.newNotes.forEach((note) => {
-        updatedOrder.unshift(note.uuid);
+        updatedOrder.unshift(note?.uuid);
         newNotes.push({ ...note, ...(isOnline ? {} : { type: "create" }) });
       });
       updateLocalNotesAndOrder(newNotes, updatedOrder, payload.userID);
@@ -81,15 +81,14 @@ const localDbReducer = (payload) => {
     }
 
     case "PIN_NOTE": {
-      const note = payload.notes.get(payload.note.uuid);
+      const note = payload.notes.get(payload.note?.uuid);
       const newNote = {
-        ...payload.notes.get(payload.note.uuid),
-        updatedAt: new Date(),
-        isPinned: !note.isPinned,
+        ...payload.notes.get(payload.note?.uuid),
+        isPinned: !note?.isPinned,
         isArchived: false,
       };
       const updatedOrder = [...payload.order].filter(
-        (uuid) => uuid !== payload.note.uuid
+        (uuid) => uuid !== payload.note?.uuid
       );
       updateLocalNotesAndOrder(
         [newNote],
@@ -101,13 +100,12 @@ const localDbReducer = (payload) => {
 
     case "ARCHIVE_NOTE": {
       const newNote = {
-        ...payload.notes.get(payload.note.uuid),
-        updatedAt: new Date(),
-        isArchived: !payload.note.isArchived,
+        ...payload.notes.get(payload.note?.uuid),
+        isArchived: !payload.note?.isArchived,
         isPinned: false,
       };
       const updatedOrder = [...payload.order].filter(
-        (uuid) => uuid !== payload.note.uuid
+        (uuid) => uuid !== payload.note?.uuid
       );
       updateLocalNotesAndOrder(
         [newNote],
@@ -118,10 +116,9 @@ const localDbReducer = (payload) => {
     }
     case "UNDO_ARCHIVE": {
       const newNote = {
-        ...payload.notes.get(payload.note.uuid),
-        updatedAt: new Date(),
-        isArchived: payload.note.isArchived,
-        isPinned: payload.note.isPinned,
+        ...payload.notes.get(payload.note?.uuid),
+        isArchived: payload.note?.isArchived,
+        isPinned: payload.note?.isPinned,
       };
 
       let targetedNote = null;
@@ -149,13 +146,14 @@ const localDbReducer = (payload) => {
       const newNotes = [];
 
       sortedNotes.forEach((noteData) => {
-        const newNote = {
-          ...payload.notes.get(noteData.uuid),
-          updatedAt: new Date(),
-          [payload.property]: !payload.val,
-          isPinned: false,
-        };
-        newNotes.push(newNote);
+        if (noteData) {
+          const newNote = {
+            ...payload.notes.get(noteData.uuid),
+            [payload.property]: !payload.val,
+            isPinned: false,
+          };
+          newNotes.push(newNote);
+        }
         sortedUUIDS.push(noteData.uuid);
       });
 
@@ -178,7 +176,6 @@ const localDbReducer = (payload) => {
       sortedNotes.forEach((noteData) => {
         const newNote = {
           ...payload.notes.get(noteData.uuid),
-          updatedAt: new Date(),
           isPinned: !payload.isPinned,
           isArchived: false,
         };
@@ -220,8 +217,8 @@ const localDbReducer = (payload) => {
       for (const noteUUID of payload.order) {
         const note = payload.notes.get(noteUUID);
         if (deletedUUIDs.length === payload.deletedIDsSet.size) break;
-        if (note && payload.deletedIDsSet.has(note._id))
-          deletedUUIDs.push(note.uuid);
+        if (note && payload.deletedIDsSet.has(note?._id))
+          deletedUUIDs.push(note?.uuid);
       }
 
       deleteLocalNotesAndUpdateOrder(deletedUUIDs, null, payload.userID);
@@ -239,7 +236,6 @@ const localDbReducer = (payload) => {
       sortedNotes.forEach((noteData) => {
         const newNote = {
           ...payload.notes.get(noteData.uuid),
-          updatedAt: new Date(),
           [payload.property]: payload.val,
           isPinned: noteData.isPinned,
         };
@@ -260,7 +256,6 @@ const localDbReducer = (payload) => {
       sortedNotes.forEach((noteData) => {
         const newNote = {
           ...payload.notes.get(noteData.uuid),
-          updatedAt: new Date(),
           isArchived: true,
           isPinned: false,
         };
@@ -273,13 +268,12 @@ const localDbReducer = (payload) => {
 
     case "TRASH_NOTE": {
       const newNote = {
-        ...payload.notes.get(payload.note.uuid),
-        updatedAt: new Date(),
-        isTrash: !payload.note.isTrash,
+        ...payload.notes.get(payload.note?.uuid),
+        isTrash: !payload.note?.isTrash,
         isPinned: false,
       };
       const updatedOrder = [...payload.order].filter(
-        (uuid) => uuid !== payload.note.uuid
+        (uuid) => uuid !== payload.note?.uuid
       );
       updateLocalNotesAndOrder(
         [newNote],
@@ -290,10 +284,9 @@ const localDbReducer = (payload) => {
     }
     case "UNDO_TRASH": {
       const newNote = {
-        ...payload.notes.get(payload.note.uuid),
-        updatedAt: new Date(),
-        isTrash: payload.note.isTrash,
-        isPinned: payload.note.isPinned,
+        ...payload.notes.get(payload.note?.uuid),
+        isTrash: payload.note?.isTrash,
+        isPinned: payload.note?.isPinned,
       };
 
       let targetedNote = null;
@@ -313,10 +306,10 @@ const localDbReducer = (payload) => {
     }
     case "DELETE_NOTE": {
       const updatedOrder = [...payload.order].filter(
-        (uuid) => uuid !== payload.note.uuid
+        (uuid) => uuid !== payload.note?.uuid
       );
       deleteLocalNotesAndUpdateOrder(
-        [payload.note.uuid],
+        [payload.note?.uuid],
         updatedOrder,
         payload.userID
       );
@@ -324,8 +317,7 @@ const localDbReducer = (payload) => {
     }
     case "UNDO_PIN_ARCHIVED": {
       const newNote = {
-        ...payload.notes.get(payload.note.uuid),
-        updatedAt: new Date(),
+        ...payload.notes.get(payload.note?.uuid),
         isPinned: false,
         isArchived: true,
       };
@@ -347,8 +339,7 @@ const localDbReducer = (payload) => {
     }
     case "UPDATE_COLOR": {
       const newNote = {
-        ...payload.notes.get(payload.note.uuid),
-        updatedAt: new Date(),
+        ...payload.notes.get(payload.note?.uuid),
         color: payload.newColor,
       };
 
@@ -361,7 +352,6 @@ const localDbReducer = (payload) => {
       payload.selectedNotes.forEach((data) => {
         const newNote = {
           ...payload.notes.get(data.uuid),
-          updatedAt: new Date(),
           color: payload.color,
         };
         newNotes.push(newNote);
@@ -372,8 +362,7 @@ const localDbReducer = (payload) => {
 
     case "UPDATE_BG": {
       const newNote = {
-        ...payload.notes.get(payload.note.uuid),
-        updatedAt: new Date(),
+        ...payload.notes.get(payload.note?.uuid),
         background: payload.newBG,
       };
       updateLocalNotesAndOrder([newNote], null, payload.userID);
@@ -384,7 +373,6 @@ const localDbReducer = (payload) => {
       payload.selectedNotes.forEach((data) => {
         const newNote = {
           ...payload.notes.get(data.uuid),
-          updatedAt: new Date(),
           background: payload.background,
         };
         newNotes.push(newNote);
@@ -394,32 +382,31 @@ const localDbReducer = (payload) => {
     }
     case "ADD_IMAGES": {
       const newNote = {
-        ...payload.notes.get(payload.note.uuid),
+        ...payload.notes.get(payload.note?.uuid),
         updatedAt: new Date(),
-        images: [...payload.note.images, ...payload.newImages],
+        images: [...payload.note?.images, ...payload.newImages],
       };
       const updatedNotes = new Map(payload.notes).set(
-        payload.note.uuid,
+        payload.note?.uuid,
         newNote
       );
     }
     case "UPDATE_TEXT": {
       const newNote = {
-        ...payload.notes.get(payload.note.uuid),
+        ...payload.notes.get(payload.note?.uuid),
         updatedAt: new Date(),
         title: payload.newTitle,
         content: payload.newContent,
-        textUpdatedAt: new Date(),
       };
       updateLocalNotesAndOrder([newNote], null, payload.userID);
     }
     case "UPDATE_IMAGES": {
-      const note = payload.notes.get(payload.note.uuid);
+      const note = payload.notes.get(payload.note?.uuid);
       const imagesMap = payload.imagesMap;
       const newNote = {
         ...note,
         updatedAt: new Date(),
-        images: note.images.map((img) => {
+        images: note?.images.map((img) => {
           if (imagesMap.has(img.uuid)) return imagesMap.get(img.uuid);
           return img;
         }),
@@ -442,9 +429,8 @@ const localDbReducer = (payload) => {
 
     case "ADD_LABEL": {
       const newNote = {
-        ...payload.notes.get(payload.note.uuid),
-        updatedAt: new Date(),
-        labels: [...payload.note.labels, payload.labelUUID],
+        ...payload.notes.get(payload.note?.uuid),
+        labels: [...payload.note?.labels, payload.labelUUID],
       };
       updateLocalNotesAndOrder([newNote], null, payload.userID);
       break;
@@ -452,12 +438,11 @@ const localDbReducer = (payload) => {
 
     case "REMOVE_LABEL": {
       const targetedNote = {
-        ...payload.notes.get(payload.note.uuid),
+        ...payload.notes.get(payload.note?.uuid),
       };
 
       const newNote = {
         ...targetedNote,
-        updatedAt: new Date(),
         labels: targetedNote.labels.filter(
           (noteLabelUUID) => noteLabelUUID !== payload.labelUUID
         ),
@@ -470,15 +455,14 @@ const localDbReducer = (payload) => {
       const updatedNotes = [];
       payload.order.map((noteUUID) => {
         const note = payload.notes.get(noteUUID);
-        const prevLength = note.labels.length;
-        note.labels = note.labels.filter(
+        const prevLength = note?.labels.length;
+        note.labels = note?.labels.filter(
           (noteLabelUUID) => noteLabelUUID !== payload.labelUUID
         );
 
-        const afterLength = note.labels.length;
+        const afterLength = note?.labels.length;
 
         if (prevLength !== afterLength) {
-          note.updatedAt = new Date();
           updatedNotes.push(note);
         }
       });
@@ -490,8 +474,7 @@ const localDbReducer = (payload) => {
 
     case "UPDATE_NOTE_LABELS": {
       const newNote = {
-        ...payload.notes.get(payload.note.uuid),
-        updatedAt: new Date(),
+        ...payload.notes.get(payload.note?.uuid),
         labels: payload.newLabels,
       };
       updateLocalNotesAndOrder([newNote], null, payload.userID);
@@ -502,12 +485,11 @@ const localDbReducer = (payload) => {
       payload.selectedNotesIDs.forEach(({ uuid: noteUUID }) => {
         const note = payload.notes.get(noteUUID);
 
-        const updatedLabels = note.labels.filter(
+        const updatedLabels = note?.labels.filter(
           (labelUUID) => labelUUID !== payload.uuid
         );
         const newNote = {
           ...note,
-          updatedAt: new Date(),
           labels: updatedLabels,
         };
         newNotes.push(newNote);
@@ -522,10 +504,9 @@ const localDbReducer = (payload) => {
         payload.selectedNotesIDs.forEach(({ uuid: noteUUID }) => {
           const note = payload.notes.get(noteUUID);
 
-          const updatedLabels = [payload.uuid, ...note.labels];
+          const updatedLabels = [payload.uuid, ...note?.labels];
           const newNote = {
             ...note,
-            updatedAt: new Date(),
             labels: updatedLabels,
           };
           newNotes.push(newNote);
@@ -544,7 +525,7 @@ const localDbReducer = (payload) => {
 
       for (const noteUUID of payload.order) {
         const note = payload.notes.get(noteUUID);
-        if (!note.isTrash) {
+        if (!note?.isTrash) {
           updatedOrder.push(noteUUID);
         } else {
           notesToDel.push(noteUUID);
@@ -559,8 +540,7 @@ const localDbReducer = (payload) => {
       const newNote = {
         ...note,
         updatedAt: new Date(),
-        checkboxes: [...note.checkboxes, payload.checkbox],
-        textUpdatedAt: new Date(),
+        checkboxes: [...note?.checkboxes, payload.checkbox],
       };
       updateLocalNotesAndOrder([newNote], null, payload.userID);
       break;
@@ -570,8 +550,7 @@ const localDbReducer = (payload) => {
       const note = payload.notes.get(payload.noteUUID);
       const newNote = {
         ...note,
-        updatedAt: new Date(),
-        showCheckboxes: !note.showCheckboxes,
+        showCheckboxes: !note?.showCheckboxes,
       };
       updateLocalNotesAndOrder([newNote], null, payload.userID);
       break;
@@ -579,7 +558,7 @@ const localDbReducer = (payload) => {
 
     case "CHECKBOX_STATE": {
       const note = payload.notes.get(payload.noteUUID);
-      const newCheckboxArr = note.checkboxes.map((checkbox) => {
+      const newCheckboxArr = note?.checkboxes.map((checkbox) => {
         if (checkbox.uuid !== payload.checkboxUUID) return checkbox;
         return { ...checkbox, isCompleted: payload.value };
       });
@@ -595,7 +574,7 @@ const localDbReducer = (payload) => {
     case "DELETE_CHECKBOX": {
       const updatedNotes = new Map(payload.notes);
       const note = updatedNotes.get(payload.noteUUID);
-      const newCheckboxArr = note.checkboxes.filter(
+      const newCheckboxArr = note?.checkboxes.filter(
         (checkbox) => checkbox.uuid !== payload.checkboxUUID
       );
       updatedNotes.set(payload.noteUUID, {
@@ -607,7 +586,7 @@ const localDbReducer = (payload) => {
 
     case "DELETE_CHECKED": {
       const note = payload.notes.get(payload.noteUUID);
-      const newCheckboxArr = note.checkboxes.filter(
+      const newCheckboxArr = note?.checkboxes.filter(
         (checkbox) => !checkbox.isCompleted
       );
       const newNote = {
@@ -621,7 +600,7 @@ const localDbReducer = (payload) => {
 
     case "UNCHECK_ALL": {
       const note = payload.notes.get(payload.noteUUID);
-      const newCheckboxArr = note.checkboxes.map((checkbox) => {
+      const newCheckboxArr = note?.checkboxes.map((checkbox) => {
         if (!checkbox.isCompleted) return checkbox;
         return { ...checkbox, isCompleted: false };
       });
@@ -638,8 +617,17 @@ const localDbReducer = (payload) => {
       const note = payload.notes.get(payload.noteUUID);
       const newNote = {
         ...note,
-        updatedAt: new Date(),
-        expandCompleted: !note.expandCompleted,
+        expandCompleted: !note?.expandCompleted,
+      };
+      updateLocalNotesAndOrder([newNote], null, payload.userID);
+      break;
+    }
+
+    case "OPEN_NOTE": {
+      const note = payload.notes.get(payload.noteUUID);
+      const newNote = {
+        ...note,
+        openNote: true,
       };
       updateLocalNotesAndOrder([newNote], null, payload.userID);
       break;

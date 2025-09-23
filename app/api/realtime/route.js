@@ -1,6 +1,7 @@
 import connectDB from "@/config/database";
 import Note from "@/models/Note";
 import User from "@/models/User";
+import UserSettings from "@/models/UserSettings";
 import { authOptions } from "@/utils/authOptions";
 import mongoose from "mongoose";
 import { getServerSession } from "next-auth";
@@ -25,11 +26,10 @@ export async function GET(request) {
         [
           {
             $match: {
-              operationType: { $in: ["insert", "update", "delete", "replace"] },
+              operationType: { $in: ["update", "replace"] },
               $or: [
                 { "fullDocument.creator": userID }, // user is creator
-                { "fullDocument.collaborators": userID }, // user is a collaborator
-                { operationType: "delete" }, // optional: include deletes
+                { "fullDocument.collaborators.data": userID }, // user is a collaborator
               ],
             },
           },
@@ -50,19 +50,67 @@ export async function GET(request) {
         { fullDocument: "updateLookup" }
       );
 
+      const settingsStream = UserSettings.collection.watch(
+        [
+          {
+            $match: {
+              operationType: { $in: ["insert", "update", "replace"] },
+              $or: [
+                { "fullDocument.user": userID }, // only the current user's settings
+              ],
+            },
+          },
+        ],
+        { fullDocument: "updateLookup" }
+      );
+
+      settingsStream.on("change", async (change) => {
+        if (change.fullDocument.lastModifiedBy === clientID) return;
+
+        if (change.operationType === "insert") {
+          const fullDoc = change?.fullDocument;
+          if (!fullDoc?.note) return;
+          const receivedNote = await UserSettings.findById(fullDoc._id)
+            .populate({
+              path: "note",
+              populate: [
+                {
+                  path: "collaborators.data",
+                  select: "displayName username image",
+                },
+                {
+                  path: "creator",
+                  select: "_id displayName username image",
+                },
+              ],
+            })
+            .lean();
+          const { note, ...settings } = receivedNote;
+          const newNote = { ...note, ...settings, _id: note._id };
+          noteBuffer.push({
+            type: "settings",
+            operationType: change.operationType,
+            documentId: change.documentKey._id,
+            fullDocument: newNote,
+          });
+        } else {
+          noteBuffer.push({
+            type: "settings",
+            operationType: change.operationType,
+            documentId: change.documentKey._id,
+            fullDocument: change?.fullDocument ?? null,
+          });
+        }
+      });
+
       // Handle note changes
       noteStream.on("change", (change) => {
-        if (
-          change.operationType !== "delete" &&
-          change.fullDocument.lastModifiedBy === clientID &&
-          !change.fullDocument?.collaborators?.some((id) => id.equals(userID))
-        )
-          return;
+        if (change.fullDocument.lastModifiedBy === clientID) return;
         noteBuffer.push({
           type: "note",
           operationType: change.operationType,
           documentId: change.documentKey._id,
-          fullDocument: change.fullDocument,
+          fullDocument: change.fullDocument ?? null,
         });
       });
 
@@ -145,6 +193,7 @@ export async function GET(request) {
         clearInterval(heartbeat);
         noteStream.close();
         userStream.close();
+        settingsStream.close();
         controller.close();
       });
     },

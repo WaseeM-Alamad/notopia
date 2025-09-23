@@ -1,6 +1,11 @@
 import React, { memo, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { NoteUpdateAction, undoAction } from "@/utils/actions";
+import {
+  NoteUpdateAction,
+  removeSelfAction,
+  undoAction,
+  updateCollabsAction,
+} from "@/utils/actions";
 import { useAppContext } from "@/context/AppContext";
 import { useSearch } from "@/context/SearchContext";
 import handleServerCall from "@/utils/handleServerCall";
@@ -31,6 +36,7 @@ const NoteModal = ({
     user,
     clientID,
     openSnackRef,
+    setDialogInfoRef,
     notesStateRef,
   } = useAppContext();
   const { skipHashChangeRef, searchTerm, filters } = useSearch();
@@ -39,6 +45,13 @@ const NoteModal = ({
   const note = initialStyle?.initialNote;
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
+  const [isCollabOpen, setIsCollabOpen] = useState(false);
+
+  const noteEditorRef = useRef(null);
+  const collabRef = useRef(null);
+  const skipCenterRef = useRef(false);
+
+  const collabTimeoutRef = useRef(null);
 
   const userID = user?.id;
   const titleRef = useRef(null);
@@ -46,10 +59,10 @@ const NoteModal = ({
   const modalRef = useRef(null);
   const archiveRef = useRef(false);
   const trashRef = useRef(false);
+  const removeSelfRef = useRef(false);
   const delayLabelDispatchRef = useRef(false);
   const delayImageDispatchRef = useRef(false);
   const prevHash = useRef(null);
-  const inputsContainerRef = useRef(null);
   const modalOpenRef = useRef(false);
 
   const timeoutRef = useRef(null);
@@ -79,6 +92,31 @@ const NoteModal = ({
   const isArchivePinned =
     currentSection.toLowerCase() === "archive" && localIsPinned;
 
+  const positionModal = () => {
+    if (!modalRef.current) return;
+    const modal = modalRef.current;
+    if (initialStyle?.initialNote?.ref?.current && initialStyle?.element) {
+      const rect = initialStyle.element.getBoundingClientRect();
+
+      modal.style.left = `${rect.left}px`;
+      modal.style.top = `${rect.top}px`;
+      modal.style.transformOrigin = "top left";
+
+      const scaleX = rect.width / modal.offsetWidth;
+      const scaleY = rect.height / modal.offsetHeight;
+
+      // Set starting scale + no translation (start at note)
+      modal.style.transform = `translate(0px, 0px) scale(${scaleX}, ${scaleY})`;
+    } else {
+      if (modal) {
+        center();
+        const modalHeight = modal.offsetHeight;
+        modal.style.marginTop = modalHeight / 4 + "px";
+        requestAnimationFrame(() => modal.style.removeProperty("margin-top"));
+      }
+    }
+  };
+
   const centerModal = () => {
     if (!modalRef.current || !initialStyle.element) return;
     requestAnimationFrame(() => {
@@ -98,27 +136,6 @@ const NoteModal = ({
         modal.style.transform = `translate(${translateX}px, ${translateY}px) scale(1, 1)`;
       }, 10);
     });
-  };
-
-  const positionModal = () => {
-    if (!modalRef.current) return;
-    const modal = modalRef.current;
-    if (initialStyle.element) {
-      const rect = initialStyle.element.getBoundingClientRect();
-
-      modal.style.left = `${rect.left}px`;
-      modal.style.top = `${rect.top}px`;
-      modal.style.transformOrigin = "top left";
-
-      const scaleX = rect.width / modal.offsetWidth;
-      const scaleY = rect.height / modal.offsetHeight;
-
-      // Set starting scale + no translation (start at note)
-      modal.style.transform = `translate(0px, 0px) scale(${scaleX}, ${scaleY})`;
-    } else {
-      modal.style.right = `10%`;
-      modal.style.top = `30%`;
-    }
   };
 
   const center = () => {
@@ -157,7 +174,16 @@ const NoteModal = ({
     });
   };
 
+  const resetCollab = () => {
+    // const modal = modalRef?.current;
+    // const collabBox = collabRef?.current;
+    setIsCollabOpen(false);
+    const editorBox = noteEditorRef?.current;
+    editorBox.removeAttribute("style");
+  };
+
   const reset = () => {
+    resetCollab();
     setLocalNote(null);
     setLocalIsPinned(null);
     setRedoStack([]);
@@ -185,7 +211,19 @@ const NoteModal = ({
     modalRef.current.removeAttribute("style");
     overlay.removeAttribute("style");
 
-    if (archiveRef.current) {
+    if (removeSelfRef.current) {
+      localDbReducer({
+        notes: notesStateRef.current.notes,
+        order: notesStateRef.current.order,
+        userID: userID,
+        type: "DELETE_NOTE",
+        note: note,
+      });
+      dispatchNotes({
+        type: "DELETE_NOTE",
+        note: note,
+      });
+    } else if (archiveRef.current) {
       setTimeout(() => {
         handleArchive();
       }, 20);
@@ -225,6 +263,7 @@ const NoteModal = ({
       skipHashChangeRef.current = false;
       archiveRef.current = false;
       trashRef.current = false;
+      removeSelfRef.current = false;
       setInitialStyle(null);
       reset();
     });
@@ -244,6 +283,99 @@ const NoteModal = ({
     return () => window.removeEventListener("hashchange", handler);
   }, []);
 
+  function updateWithCursor(ref, newText) {
+    if (!ref?.current) return;
+
+    const el = ref.current;
+    const selection = window.getSelection();
+    const isFocused = document.activeElement === el;
+
+    let startOffset = null;
+    let endOffset = null;
+
+    if (isFocused && selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      startOffset = range.startOffset;
+      endOffset = range.endOffset;
+    }
+
+    if (el.textContent !== newText) {
+      el.textContent = newText || "";
+    }
+
+    if (isFocused && startOffset !== null) {
+      const node = el.firstChild || el;
+
+      const length = node.textContent?.length || 0;
+      const safeStart = Math.min(startOffset, length);
+      const safeEnd = Math.min(endOffset, length);
+
+      const range = document.createRange();
+      range.setStart(node, safeStart);
+      range.setEnd(node, safeEnd);
+
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+  }
+
+  const onOpen = () => {
+    Object.entries(filters).forEach((filter) => {
+      const title = filter[0];
+      const content = filter[1];
+
+      if (content) {
+        if (title === "label") {
+          const matchingLabel = note?.labels.find(
+            (labelUUID) => labelUUID === content
+          );
+          if (matchingLabel === content) {
+            delayLabelDispatchRef.current = true;
+          }
+        } else if (title === "image") {
+          delayImageDispatchRef.current = content;
+        }
+      }
+    });
+
+    updateWithCursor(contentRef, note?.content);
+    updateWithCursor(titleRef, note?.title);
+  };
+
+  const openWithCollab = () => {
+    setIsCollabOpen(true);
+    requestAnimationFrame(() => {
+      const modal = modalRef?.current;
+      const collabBox = collabRef?.current;
+      const editorBox = noteEditorRef?.current;
+      if (!editorBox || !collabBox || !modal) return;
+      skipCenterRef.current = true;
+      editorBox.style.display = "none";
+      collabBox.style.display = "flex";
+
+      modal.style.backgroundColor = "#ffffff";
+      editorBox.style.opacity = "0";
+      collabBox.style.transition = "opacity 0.19s ease-in";
+      requestAnimationFrame(() => {
+        collabBox.style.opacity = 1;
+        setTimeout(() => {
+          collabBox.style.removeProperty("transition");
+        }, 200);
+      });
+
+      collabBox.style.position = "relative";
+      setTimeout(() => {
+        if (skipCenterRef?.current) {
+          skipCenterRef.current = false;
+        }
+      }, 40);
+    });
+  };
+
+  useEffect(() => {
+    onOpen();
+  }, [initialStyle?.initialNote]);
+
   useEffect(() => {
     if (!modalRef.current || !initialStyle) return;
 
@@ -258,37 +390,39 @@ const NoteModal = ({
         delayLabelDispatchRef.current = true;
       }
 
-      Object.entries(filters).forEach((filter) => {
-        const title = filter[0];
-        const content = filter[1];
-
-        if (content) {
-          if (title === "label") {
-            const matchingLabel = note.labels.find(
-              (labelUUID) => labelUUID === content
-            );
-            if (matchingLabel === content) {
-              delayLabelDispatchRef.current = true;
-            }
-          } else if (title === "image") {
-            delayImageDispatchRef.current = content;
-          }
-        }
-      });
+      onOpen();
 
       setLocalIsPinned(note?.isPinned);
       ignoreKeysRef.current = true;
       archiveRef.current = false;
       trashRef.current = false;
 
-      if (contentRef?.current) {
-        contentRef.current.textContent = note?.content;
+      const willOpenCollab = initialStyle?.collab;
+      if (willOpenCollab) {
+        requestAnimationFrame(() => {
+          openWithCollab();
+          requestAnimationFrame(() => requestAnimationFrame(() => center()));
+        });
+        setInitialStyle((prev) => ({ ...prev, collab: false }));
       }
-      if (titleRef?.current) {
-        titleRef.current.innerText = note?.title;
+
+      const editorBox = noteEditorRef.current;
+
+      if (editorBox) {
+        editorBox.style.opacity = 0;
+        editorBox.style.transition = "opacity 0.19s ease-in";
       }
 
       modalRef.current.style.display = "flex";
+
+      if (editorBox) {
+        requestAnimationFrame(() => {
+          editorBox.style.opacity = 1;
+          setTimeout(() => {
+            editorBox.style.removeProperty("transition");
+          }, 200);
+        });
+      }
 
       positionModal();
 
@@ -297,32 +431,43 @@ const NoteModal = ({
       overlay.style.opacity = "1";
 
       modalRef.current.offsetHeight;
-      inputsContainerRef.current.style.opacity = "1";
 
       modalRef.current.style.transition =
         "all 0.22s cubic-bezier(0.35, 0.9, 0.25, 1), opacity 0.13s, background-color 0s";
 
       timeoutRef.current = setTimeout(() => {
         modalRef.current.style.transition =
-          "top 0s, opacity 0.13s, background-color 0.25s ease-in-out, height 0.19s ease-in";
+          "top 0s, opacity 0.13s, background-color 0.25s ease-in-out, height 0.19s ease-in, margin 0.15s ease";
         modalOpenRef.current = true;
         center();
 
         setTimeout(() => {
           requestAnimationFrame(() => {
             modalRef.current.style.transition =
-              "top 0.22s ease, opacity 0.13s, background-color 0.25s ease-in-out, height 0.19s ease-in";
+              "top 0.22s ease, opacity 0.13s, background-color 0.25s ease-in-out, height 0.19s ease-in, margin 0.15s ease";
           });
         }, 30);
       }, 220);
 
-      if (initialStyle.element) {
-        // console.log("center modal");
+      if (initialStyle?.initialNote?.ref?.current) {
         centerModal();
       } else {
         center();
       }
     } else {
+      const editorBox = noteEditorRef.current;
+      editorBox && (editorBox.style.opacity = 0.3);
+
+      const collabBox = collabRef.current;
+      if (collabBox) {
+        const modal = modalRef.current;
+        collabBox.style.opacity = 0.2;
+        if (localNote?.color) {
+          modal.style.removeProperty("background-color");
+        }
+      }
+
+      clearTimeout(collabTimeoutRef.current);
       clearTimeout(timeoutRef.current);
       skipHashChangeRef.current = true;
       ignoreKeysRef.current = false;
@@ -344,9 +489,8 @@ const NoteModal = ({
         "all 0.22s cubic-bezier(0.35, 0.9, 0.25, 1), opacity 0.5s";
       modalRef.current.offsetHeight;
       overlay.style.opacity = "0";
-      inputsContainerRef.current.style.opacity = "0.15";
       modalOpenRef.current = false;
-      if (initialStyle.element) {
+      if (initialStyle?.initialNote?.ref?.current) {
         if (noFilterMatch || dynamicLabelNoMatch) {
           setTimeout(() => {
             updateNote();
@@ -360,9 +504,11 @@ const NoteModal = ({
             reverseModalToNote();
           });
         });
+      } else {
+        updateNote();
       }
 
-      if (initialStyle.element) {
+      if (initialStyle?.element && initialStyle?.initialNote?.ref?.current) {
         setTimeout(() => {
           delayLabelDispatchRef.current = false;
           delayImageDispatchRef.current = false;
@@ -370,7 +516,7 @@ const NoteModal = ({
         }, 220);
       } else {
         modalRef.current.style.transition =
-          "opacity 0.09s, 0.22s cubic-bezier(0.35, 0.9, 0.25, 1)";
+          "all 0.22s cubic-bezier(0.35, 0.9, 0.25, 1), opacity 0.09s";
         modalRef.current.style.opacity = 0;
         setTimeout(() => {
           delayLabelDispatchRef.current = false;
@@ -408,7 +554,7 @@ const NoteModal = ({
   const handleArchive = async () => {
     const passedNote =
       localIsPinned && localNote?.isArchived
-        ? { ...note, isArchived: !note.isArchived }
+        ? { ...note, isArchived: !note?.isArchived }
         : note;
     const undoArchive = async () => {
       if (localIsPinned && localNote?.isArchived) {
@@ -496,7 +642,7 @@ const NoteModal = ({
             NoteUpdateAction({
               type: "isArchived",
               value: !passedNote.isArchived,
-              noteUUIDs: [note.uuid],
+              noteUUIDs: [note?.uuid],
               first: first,
               clientID: clientID,
             }),
@@ -557,7 +703,7 @@ const NoteModal = ({
             NoteUpdateAction({
               type: "isTrash",
               value: true,
-              noteUUIDs: [note.uuid],
+              noteUUIDs: [note?.uuid],
               clientID: clientID,
             }),
         ],
@@ -594,7 +740,7 @@ const NoteModal = ({
   }, [isOpen]);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || isCollabOpen) return;
 
     const observer = new ResizeObserver(() => {
       if (!modalOpenRef.current || skipCenterRef?.current) return;
@@ -603,73 +749,136 @@ const NoteModal = ({
     if (modalRef.current) observer.observe(modalRef.current);
 
     return () => observer.disconnect();
-  }, [isOpen]);
-
-  const noteEditorRef = useRef(null);
-  const collabRef = useRef(null);
-  const skipCenterRef = useRef(false);
-
-  const collabTimeoutRef = useRef(null);
+  }, [isOpen, isCollabOpen]);
 
   const openCollab = () => {
-    const modal = modalRef?.current;
-    const collabBox = collabRef?.current;
-    const editorBox = noteEditorRef?.current;
-    if (!editorBox || !collabBox || !modal) return;
-    clearTimeout(collabTimeoutRef.current);
-    skipCenterRef.current = true;
-    collabBox.style.display = "flex";
-    const collabHeight = collabBox.offsetHeight;
-    const modalHeight = modal.offsetHeight;
-    modal.style.height = modalHeight + "px";
+    setIsCollabOpen(true);
     requestAnimationFrame(() => {
-      modal.style.height = collabHeight + "px";
-      modal.style.backgroundColor = "#ffffff";
-      editorBox.style.opacity = "0";
+      const modal = modalRef?.current;
+      const collabBox = collabRef?.current;
+      const editorBox = noteEditorRef?.current;
+      if (!editorBox || !collabBox || !modal) return;
+      clearTimeout(collabTimeoutRef.current);
+      skipCenterRef.current = true;
+      collabBox.style.display = "flex";
+      const collabHeight = collabBox.offsetHeight;
+      const modalHeight = modal.offsetHeight;
+      modal.style.height = modalHeight + "px";
+      requestAnimationFrame(() => {
+        modal.style.height = collabHeight + "px";
+        modal.style.backgroundColor = "#ffffff";
+        editorBox.style.opacity = "0";
+      });
+      collabTimeoutRef.current = setTimeout(() => {
+        collabBox.style.opacity = "1";
+        collabBox.style.position = "relative";
+        modal.style.removeProperty("height");
+        editorBox.style.display = "none";
+        setTimeout(() => {
+          if (skipCenterRef?.current) {
+            skipCenterRef.current = false;
+          }
+        }, 40);
+        // center();
+      }, 240);
     });
-    collabTimeoutRef.current = setTimeout(() => {
-      collabBox.style.opacity = "1";
-      collabBox.style.position = "relative";
-      modal.style.removeProperty("height");
-      editorBox.style.display = "none";
-      setTimeout(() => {
-        if (skipCenterRef?.current) {
-          skipCenterRef.current = false;
-        }
-      }, 40);
-      // center();
-    }, 240);
+  };
+
+  const removeSelfCollab = () => {
+    setIsOpen(false);
+    handleServerCall(
+      [() => removeSelfAction(note?.uuid, clientID)],
+      openSnackRef.current
+    );
   };
 
   const closeCollab = () => {
-    const modal = modalRef?.current;
-    const collabBox = collabRef?.current;
-    const editorBox = noteEditorRef?.current;
-    if (!editorBox || !collabBox || !modal) return;
-    clearTimeout(collabTimeoutRef.current);
-
-    skipCenterRef.current = true;
-    editorBox.style.display = "flex";
-    editorBox.style.position = "absolute";
-    modal.style.removeProperty("background-color");
-    const modalHeight = modal.offsetHeight;
-    const editorHeight = editorBox.offsetHeight;
-    modal.style.height = modalHeight + "px";
     requestAnimationFrame(() => {
-      modal.style.height = editorHeight + "px";
-      collabBox.style.opacity = "0";
+      const modal = modalRef?.current;
+      const collabBox = collabRef?.current;
+      const editorBox = noteEditorRef?.current;
+      if (!editorBox || !collabBox || !modal) return;
+
+      clearTimeout(collabTimeoutRef.current);
+      skipCenterRef.current = true;
+      editorBox.style.display = "flex";
+      editorBox.style.position = "absolute";
+      modal.style.removeProperty("background-color");
+      const modalHeight = modal.offsetHeight;
+      const editorHeight = editorBox.offsetHeight;
+      modal.style.height = modalHeight + "px";
+      requestAnimationFrame(() => {
+        modal.style.height = editorHeight + "px";
+        collabBox.style.opacity = "0";
+      });
+      collabTimeoutRef.current = setTimeout(() => {
+        modal.style.removeProperty("height");
+        editorBox.style.position = "relative";
+        editorBox.removeAttribute("style");
+        collabBox.removeAttribute("style");
+        setIsCollabOpen(false);
+        if (skipCenterRef?.current) {
+          skipCenterRef.current = false;
+        }
+        center();
+      }, 240);
     });
-    collabTimeoutRef.current = setTimeout(() => {
-      modal.style.removeProperty("height");
-      editorBox.style.position = "relative";
-      editorBox.removeAttribute("style");
-      collabBox.removeAttribute("style");
-      
-      if (skipCenterRef?.current) {
-        skipCenterRef.current = false;
+  };
+
+  const saveCollabFun = async (collabOpsMap, collaborators) => {
+    if (collabOpsMap.size === 0) {
+      closeCollab();
+      return;
+    }
+    if (removeSelfRef.current) {
+      setDialogInfoRef.current({
+        func: removeSelfCollab,
+        title: "Remove note",
+        message: "This note will no longer be shared with you.",
+        btnMsg: "Remove",
+      });
+      return;
+    }
+
+    if (note?.creator._id !== userID) {
+      openSnackRef.current({
+        snackMessage: "Only creator manage collaborators",
+        showUndo: false,
+      });
+      closeCollab();
+      return;
+    }
+
+    handleServerCall(
+      [
+        () =>
+          updateCollabsAction({
+            collabOpsMap,
+            noteUUID: note?.uuid,
+            creatorID: note?.creator._id,
+            clientID,
+          }),
+      ],
+      openSnackRef.current
+    );
+
+    const noEmailCollabs = collaborators.map((collab) => {
+      if (collab?.data?.email) {
+        return {
+          ...collab,
+          data: {
+            displayName: collab?.data?.displayName,
+            username: collab?.data?.username,
+            image: collab?.data?.image,
+          },
+        };
       }
-      center();
-    }, 240);
+      return collab;
+    });
+
+    setLocalNote((prev) => ({ ...prev, collaborators: noEmailCollabs }));
+
+    closeCollab();
   };
 
   if (!isMounted) return;
@@ -689,42 +898,49 @@ const NoteModal = ({
           .filter(Boolean)
           .join(" ")}
       >
-        <NoteEditor
-          noteEditorRef={noteEditorRef}
-          note={note}
-          localNote={localNote}
-          setLocalNote={setLocalNote}
-          localIsPinned={localIsPinned}
-          setLocalIsPinned={setLocalIsPinned}
-          isOpen={isOpen}
-          setIsOpen={setIsOpen}
-          setModalStyle={setModalStyle}
-          undoStack={undoStack}
-          setUndoStack={setUndoStack}
-          redoStack={redoStack}
-          setRedoStack={setRedoStack}
-          modalRef={modalRef}
-          modalOpenRef={modalOpenRef}
-          inputsContainerRef={inputsContainerRef}
-          titleRef={titleRef}
-          contentRef={contentRef}
-          labelsRef={labelsRef}
-          archiveRef={archiveRef}
-          trashRef={trashRef}
-          delayLabelDispatchRef={delayLabelDispatchRef}
-          openSnackRef={openSnackRef}
-          noteActions={noteActions}
-          dispatchNotes={dispatchNotes}
-          notesStateRef={notesStateRef}
-          initialStyle={initialStyle}
-          setInitialStyle={setInitialStyle}
-          openCollab={openCollab}
-        />
-        <CollabLayout
-          closeCollab={closeCollab}
-          collabRef={collabRef}
-          setInitialStyle={setInitialStyle}
-        />
+        <div>
+          <NoteEditor
+            noteEditorRef={noteEditorRef}
+            note={note}
+            localNote={localNote}
+            setLocalNote={setLocalNote}
+            localIsPinned={localIsPinned}
+            setLocalIsPinned={setLocalIsPinned}
+            isOpen={isOpen}
+            setIsOpen={setIsOpen}
+            setModalStyle={setModalStyle}
+            undoStack={undoStack}
+            setUndoStack={setUndoStack}
+            redoStack={redoStack}
+            setRedoStack={setRedoStack}
+            modalRef={modalRef}
+            modalOpenRef={modalOpenRef}
+            titleRef={titleRef}
+            contentRef={contentRef}
+            labelsRef={labelsRef}
+            archiveRef={archiveRef}
+            trashRef={trashRef}
+            delayLabelDispatchRef={delayLabelDispatchRef}
+            openSnackRef={openSnackRef}
+            noteActions={noteActions}
+            dispatchNotes={dispatchNotes}
+            notesStateRef={notesStateRef}
+            initialStyle={initialStyle}
+            setInitialStyle={setInitialStyle}
+            openCollab={openCollab}
+          />
+
+          {isCollabOpen && (
+            <CollabLayout
+              note={localNote}
+              closeCollab={closeCollab}
+              collabRef={collabRef}
+              saveCollabFun={saveCollabFun}
+              removeSelfRef={removeSelfRef}
+              setIsOpen={setIsOpen}
+            />
+          )}
+        </div>
       </div>
     </>,
     document.getElementById("modal-portal")

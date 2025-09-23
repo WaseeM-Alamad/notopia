@@ -25,7 +25,7 @@ export function useMouseSelection({
     notesStateRef.current.order.forEach((noteUUID) => {
       const note = notesStateRef.current.notes.get(noteUUID);
       if (note?.ref?.current) {
-        const rect = note.ref.current.getBoundingClientRect();
+        const rect = note?.ref.current.getBoundingClientRect();
         notePositionsRef.current.set(noteUUID, {
           left: rect.left + window.scrollX,
           top: rect.top + window.scrollY,

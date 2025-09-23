@@ -99,7 +99,7 @@ const ManageModalLabels = ({
         [
           () =>
             removeLabelAction({
-              noteUUID: note.uuid,
+              noteUUID: note?.uuid,
               labelUUID: uuid,
               clientID: clientID,
             }),
@@ -113,7 +113,7 @@ const ManageModalLabels = ({
         [
           () =>
             addLabelAction({
-              noteUUID: note.uuid,
+              noteUUID: note?.uuid,
               labelUUID: uuid,
               clientID: clientID,
             }),

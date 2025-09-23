@@ -3,7 +3,7 @@ import { saveOrderArray } from "@/utils/localDb";
 import localDbReducer from "@/utils/localDbReducer";
 import { useEffect, useRef } from "react";
 
-export function useRealtimeUpdates({ dispatchNotes }) {
+export function useRealtimeUpdates({ dispatchNotes, updateModalRef }) {
   const { user, clientID, labelsRef, notesStateRef, isOnline } =
     useAppContext();
 
@@ -27,26 +27,48 @@ export function useRealtimeUpdates({ dispatchNotes }) {
     eventSourceRef.current.onmessage = async (event) => {
       try {
         const data = JSON.parse(event.data);
+        updateModalRef.current = true;
         console.log(data);
         const updatedNotes = new Map();
         const deletedNotesIDs = new Set();
         const newNotes = [];
         for (let item of data) {
           if (item.type === "note") {
-            const note = item?.fullDocument;
+            const doc = item?.fullDocument;
             switch (item.operationType) {
               case "update":
-              case "replace":
-                item?.fullDocument && updatedNotes.set(note.uuid, note);
+              case "replace": {
+                const { creator, ...newNote } = doc;
+                doc && updatedNotes.set(doc?.uuid, newNote);
                 break;
-              case "insert":
-                item?.fullDocument && newNotes.push(note);
+              }
+            }
+          } else if (item.type === "settings") {
+            switch (item.operationType) {
+              case "update":
+              case "replace": {
+                const settings = item?.fullDocument;
+                const { _v, _id, user, note, ...newSettings } = settings;
+                settings &&
+                  updatedNotes.set(note, { ...newSettings, uuid: note });
                 break;
-              case "delete":
-                item?.documentId && deletedNotesIDs.add(item.documentId);
+              }
+              case "insert": {
+                const note = item?.fullDocument;
+                note && newNotes.push(note);
                 break;
+              }
             }
           } else if (item.type === "order") {
+            const orderSet = new Set(item.notesOrder);
+            const existingOrder = notesStateRef.current.order;
+
+            existingOrder.forEach((uuid) => {
+              if (!orderSet.has(uuid)) {
+                deletedNotesIDs.add(uuid);
+              }
+            });
+
             dispatchNotes({ type: "SET_ORDER", newOrder: item.notesOrder });
             await saveOrderArray(item.notesOrder, user?.id);
           } else if (item.type === "labels") {
@@ -63,17 +85,35 @@ export function useRealtimeUpdates({ dispatchNotes }) {
         }
 
         if (updatedNotes.size > 0) {
-          dispatchNotes({
-            type: "SET_NOTES",
-            notes: [...updatedNotes.values()],
-          });
-          localDbReducer({
-            notes: notesStateRef.current.notes,
-            order: notesStateRef.current.order,
-            userID: userID,
-            type: "SET_NOTES",
-            notes: [...updatedNotes.values()],
-          });
+          const newUpdatedNotes = [];
+          let willUpdate = true;
+          for (let newNote of [...updatedNotes.values()]) {
+            const originalNote = notesStateRef.current.notes.get(newNote.uuid);
+            if (!originalNote) {
+              willUpdate = false;
+              break;
+            }
+            const updatedNote = {
+              ...originalNote,
+              ...newNote,
+              creator: originalNote.creator,
+            };
+            newUpdatedNotes.push(updatedNote);
+          }
+
+          if (willUpdate) {
+            dispatchNotes({
+              type: "SET_NOTES",
+              notes: newUpdatedNotes,
+            });
+            localDbReducer({
+              notes: notesStateRef.current.notes,
+              order: notesStateRef.current.order,
+              userID: userID,
+              type: "SET_NOTES",
+              notes: newUpdatedNotes,
+            });
+          }
         }
 
         if (newNotes.length > 0) {

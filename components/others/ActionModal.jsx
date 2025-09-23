@@ -2,7 +2,15 @@ import React, { memo, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 
-const DeleteModal = ({ setIsOpen, handleDelete, title, message }) => {
+const ActionModal = ({
+  setDialogInfo,
+  func,
+  cancelFunc = () => {},
+  title,
+  message,
+  btnMsg,
+  cancelBtnMsg = "Cancel",
+}) => {
   const [isMounted, setIsMounted] = useState(false);
   const containerRef = useRef(null);
 
@@ -32,11 +40,11 @@ const DeleteModal = ({ setIsOpen, handleDelete, title, message }) => {
         },
       }}
       onClick={(e) => {
-        if (e.target === containerRef.current) setIsOpen(false);
+        if (e.target === containerRef.current) setDialogInfo(null);
       }}
     >
       <motion.div
-        className="delete-modal"
+        className="action-modal"
         initial={{
           transform: "translate(-50%, -40%) scale(0.97)",
           opacity: 0,
@@ -70,21 +78,24 @@ const DeleteModal = ({ setIsOpen, handleDelete, title, message }) => {
         <div style={{ textAlign: "center", fontSize: ".95rem" }}>{message}</div>
         <div className="buttons-con">
           <button
-            className="modal-bottom-btn"
-            onClick={() => setIsOpen(false)}
+            className="modal-bottom-btn cancel-btn"
+            onClick={() => {
+              cancelFunc();
+              setDialogInfo(null);
+            }}
           >
-            Cancel
+            {cancelBtnMsg}
           </button>
           <button
-            className="modal-bottom-btn delete-btn"
+            className="modal-bottom-btn blue-btn"
             onClick={() => {
-              handleDelete();
-              setIsOpen(false);
+              func();
+              setDialogInfo(null);
             }}
             style={{ color: "#ffffff" }}
           >
             {" "}
-            Delete{" "}
+            {btnMsg}{" "}
           </button>
         </div>
       </motion.div>
@@ -93,4 +104,4 @@ const DeleteModal = ({ setIsOpen, handleDelete, title, message }) => {
   );
 };
 
-export default memo(DeleteModal);
+export default memo(ActionModal);
