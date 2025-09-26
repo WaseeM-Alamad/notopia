@@ -24,6 +24,7 @@ export function useDataManager({ notesState, dispatchNotes, setNotesReady }) {
     setIsOnline,
     labelsRef,
     setLabelsReady,
+    notesIndexMapRef,
     notesStateRef,
     openSnackRef,
   } = useAppContext();
@@ -31,6 +32,14 @@ export function useDataManager({ notesState, dispatchNotes, setNotesReady }) {
   useEffect(() => {
     notesStateRef.current = notesState;
   }, [notesState]);
+
+  useEffect(() => {
+    const indexMap = new Map(
+      notesState.order.map((uuid, index) => [uuid, index])
+    );
+
+    notesIndexMapRef.current = indexMap;
+  }, [notesState.order]);
 
   const setLabels = async (fetchedLables) => {
     labelsRef.current = new Map(
@@ -122,7 +131,7 @@ export function useDataManager({ notesState, dispatchNotes, setNotesReady }) {
       setIsOnline(true);
       fetchAndUpdateLocally();
       await clearQueuedNotes(user?.id);
-      return
+      return;
       const { syncOrder, queuedNotes } = await getQueue(user?.id);
       let queuedOrder = [];
       if (syncOrder) {

@@ -24,7 +24,7 @@ const NoteWrapper = memo(
     setFadingNotes,
     setSelectedNotesIDs,
     handleDragStart,
-    index,
+    notesIndexMapRef,
     handleSelectNote,
     handleNoteClick,
   }) => {
@@ -58,7 +58,12 @@ const NoteWrapper = memo(
             targetElement === noteRef.current &&
             !target.classList.contains("not-draggable")
           ) {
-            handleDragStart(e, targetElement, index, note?.isPinned);
+            handleDragStart(
+              e,
+              targetElement,
+              notesIndexMapRef.current.get(note.uuid),
+              note?.isPinned
+            );
           }
         }
       };
@@ -73,7 +78,7 @@ const NoteWrapper = memo(
     };
 
     const handleMouseEnter = () => {
-      overIndexRef.current = index;
+      overIndexRef.current = notesIndexMapRef.current.get(note.uuid);
       overIsPinnedRef.current = note?.isPinned;
     };
 
@@ -87,10 +92,10 @@ const NoteWrapper = memo(
           ref={noteRef}
           onMouseDown={handleMouseDown}
           onMouseEnter={handleMouseEnter}
-          onClick={(e) => handleNoteClick(e, note, index)}
+          onClick={(e) => handleNoteClick(e, note, notesIndexMapRef.current.get(note.uuid))}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
-              handleNoteClick(e, note, index);
+              handleNoteClick(e, note, notesIndexMapRef.current.get(note.uuid));
             }
           }}
           className={`grid-item ${
@@ -115,9 +120,7 @@ const NoteWrapper = memo(
             setSelectedNotesIDs={setSelectedNotesIDs}
             handleSelectNote={handleSelectNote}
             handleNoteClick={handleNoteClick}
-            index={index}
           />
-          {/* <p>{index}</p> */}
         </div>
       </motion.div>
     );
@@ -153,6 +156,7 @@ const Home = memo(
       focusedIndex,
       openSnackRef,
       notesStateRef,
+      notesIndexMapRef,
       isExpanded,
     } = useAppContext();
     const userID = user?.id;
@@ -578,6 +582,7 @@ const Home = memo(
                     noteActions={noteActions}
                     dispatchNotes={dispatchNotes}
                     handleDragStart={handleDragStart}
+                    notesIndexMapRef={notesIndexMapRef}
                     setSelectedNotesIDs={setSelectedNotesIDs}
                     handleNoteClick={handleNoteClick}
                     handleSelectNote={handleSelectNote}

@@ -261,7 +261,7 @@ const Trash = memo(
             func: handleEmptyTrash,
             title: "Empty trash",
             message: "All notes in Trash will be permanently deleted.",
-            btnMsg: "Delete",
+            btnMsg: "Empty trash",
           });
         }
       };

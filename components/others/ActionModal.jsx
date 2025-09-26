@@ -1,16 +1,19 @@
 import React, { memo, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
+import { useAppContext } from "@/context/AppContext";
 
 const ActionModal = ({
   setDialogInfo,
   func,
   cancelFunc = () => {},
+  showCloseBtn = false,
   title,
   message,
   btnMsg,
   cancelBtnMsg = "Cancel",
 }) => {
+  const { closeToolTip, hideTooltip, showTooltip } = useAppContext();
   const [isMounted, setIsMounted] = useState(false);
   const containerRef = useRef(null);
 
@@ -64,21 +67,23 @@ const ActionModal = ({
           mass: 1.05,
         }}
       >
-        <div
-          style={{
-            // padding: "2rem",
-            boxSizing: "border-box",
-            fontWeight: "600",
-            fontSize: "1.5rem",
-            paddingBottom: ".3rem",
-          }}
-        >
-          {title}
-        </div>
-        <div style={{ textAlign: "center", fontSize: ".95rem" }}>{message}</div>
+        {showCloseBtn && (
+          <div
+            style={{ top: ".5rem", right: "0.7rem" }}
+            onClick={() => {
+              closeToolTip();
+              setDialogInfo(null);
+            }}
+            onMouseEnter={(e) => showTooltip(e, "Close")}
+            onMouseLeave={hideTooltip}
+            className="clear-icon btn small-btn"
+          />
+        )}
+        <div className="action-title">{title}</div>
+        <div className="action-msg">{message}</div>
         <div className="buttons-con">
           <button
-            className="modal-bottom-btn cancel-btn"
+            className="action-modal-bottom-btn action-cancel"
             onClick={() => {
               cancelFunc();
               setDialogInfo(null);
@@ -87,12 +92,11 @@ const ActionModal = ({
             {cancelBtnMsg}
           </button>
           <button
-            className="modal-bottom-btn blue-btn"
+            className="action-modal-bottom-btn action-blue"
             onClick={() => {
               func();
               setDialogInfo(null);
             }}
-            style={{ color: "#ffffff" }}
           >
             {" "}
             {btnMsg}{" "}

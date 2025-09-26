@@ -236,6 +236,7 @@ svg {
 
 .modal-container {
   position: fixed;
+  will-change: transform;
   perspective: 1200px;
   top: 0;
   left: 0;
@@ -612,16 +613,14 @@ svg {
 }
 
 .action-modal {
-  display: flex;
-  align-items: center;
-  box-sizing: border-box;
-  flex-direction: column;
+  width: 100%;
+  max-width: 348px;
+  line-height: 1.1rem;
   overflow: hidden;
   position: fixed;
-  padding: 1.2rem 1rem;
+  padding: 24px;
+  padding-bottom: 12px;
   transform-origin: center center;
-  max-width: 500px;
-  min-height: 180px;
   box-shadow:
     0 1px 3px 0 rgba(60, 64, 67, 0.3),
     0 4px 8px 3px rgba(60, 64, 67, 0.15);
@@ -636,6 +635,85 @@ svg {
     0 1px 3px 0 rgba(0, 0, 0, 0.6),
     0 4px 8px 3px rgba(0, 0, 0, 0.3);
   background-color: rgb(30, 30, 30);
+}
+
+.action-modal-bottom-btn {
+  background-color: transparent;
+  padding: 0.55rem 0.8rem;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.action-title {
+  font-weight: 550;
+  color: rgb(34, 36, 37);
+  margin-bottom: 0.5rem;
+}
+
+.dark-mode .action-title {
+  color: rgb(232, 234, 237);
+}
+
+.action-msg {
+  font-size: 14px;
+  color: rgb(60, 64, 67);
+  margin-bottom: 1rem;
+}
+
+.dark-mode .action-msg {
+  color: rgb(232, 234, 237);
+}
+
+.action-blue {
+  color: #203dff;
+}
+
+.action-blue:hover {
+  background-color: #edf0ff;
+}
+
+.action-blue:active {
+  background-color: #e0e7ff;
+}
+
+.dark-mode .action-blue {
+  color: #84a8f5;
+}
+
+.dark-mode .action-blue:hover {
+  /* background-color: #292c3b; */
+  background-color: rgb(32, 35, 44);
+}
+
+.dark-mode .action-blue:active {
+  background-color: rgb(42, 45, 54);
+}
+
+.action-cancel {
+  color: #000;
+  background-color: transparent;
+}
+
+.action-cancel:hover {
+  background-color: #f0f0f0;
+}
+
+.action-cancel:active {
+  background-color: #e5e6e7;
+}
+
+.dark-mode .action-cancel {
+  color: rgb(232, 234, 237);
+}
+
+.dark-mode .action-cancel:hover {
+  background-color: #252525;
+}
+
+.dark-mode .action-cancel:active {
+  background-color: #303030;
 }
 
 .modal-bottom-btn {
@@ -678,7 +756,7 @@ svg {
 
 .buttons-con {
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
   gap: 0.8rem;
   width: 100%;
   margin-top: auto;

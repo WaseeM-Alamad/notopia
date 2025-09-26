@@ -46,6 +46,7 @@ export function AppProvider({ children, initialUser }) {
   const setBindsOpenRef = useRef(null);
   const rootContainerRef = useRef(null);
   const loadNextBatchRef = useRef(null);
+  const notesIndexMapRef = useRef(null);
 
   const fadeNote =
     currentSection !== "DynamicLabel" && currentSection !== "Search";
@@ -401,6 +402,7 @@ export function AppProvider({ children, initialUser }) {
         setIsExpanded,
         rootContainerRef,
         loadNextBatchRef,
+        notesIndexMapRef,
         clientID: clientID.current,
       }}
     >

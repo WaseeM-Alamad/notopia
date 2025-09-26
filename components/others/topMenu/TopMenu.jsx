@@ -284,8 +284,6 @@ const TopMenuHome = ({
 
   const handleArchive = async () => {
     closeToolTip();
-    const firstItem = selectedNotesIDs[0];
-    const val = notes.get(firstItem.uuid).isArchived;
     const length = selectedNotesIDs.length;
     let clearSet = false;
 

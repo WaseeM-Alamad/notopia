@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
-import { NoteUpdateAction } from "@/utils/actions";
+import { NoteUpdateAction, removeSelfAction } from "@/utils/actions";
 import ColorSelectMenu from "./ColorSelectMenu";
 import Button from "../Tools/Button";
 import { v4 as uuid } from "uuid";
@@ -13,10 +13,8 @@ import handleServerCall from "@/utils/handleServerCall";
 import localDbReducer from "@/utils/localDbReducer";
 
 const NoteTools = ({
-  index,
   note = {},
   anchorEl,
-  setFadingNotes,
   handleNoteClick,
   setAnchorEl,
   selectedColor,
@@ -37,6 +35,7 @@ const NoteTools = ({
     closeToolTip,
     setLoadingImages,
     setDialogInfoRef,
+    notesIndexMapRef,
     openSnackRef,
     notesStateRef,
   } = useAppContext();
@@ -325,7 +324,7 @@ const NoteTools = ({
       type: "RESTORE_NOTE",
       note: note,
       noteRef: note?.ref,
-      index: index,
+      index: notesIndexMapRef.current.get(note.uuid),
     });
     setMoreMenuOpen(false);
   };
@@ -338,9 +337,36 @@ const NoteTools = ({
     noteActions({
       type: "TRASH_NOTE",
       note: note,
-      index: index,
+      index: notesIndexMapRef.current.get(note.uuid),
       noteRef: note?.ref,
       setIsOpen: setMoreMenuOpen,
+    });
+  };
+
+  const handleRemoveSelf = () => {
+    setMoreMenuOpen(false);
+    const func = () => {
+      localDbReducer({
+        notes: notesStateRef.current.notes,
+        order: notesStateRef.current.order,
+        userID: userID,
+        type: "DELETE_NOTE",
+        note: note,
+      });
+      dispatchNotes({
+        type: "DELETE_NOTE",
+        note: note,
+      });
+      handleServerCall(
+        [() => removeSelfAction(note?.uuid, clientID)],
+        openSnackRef.current
+      );
+    };
+    setDialogInfoRef.current({
+      func: func,
+      title: "Remove note?",
+      message: "This note will no longer be shared with you.",
+      btnMsg: "Remove",
     });
   };
 
@@ -482,8 +508,13 @@ const NoteTools = ({
 
   const menuItems = [
     {
-      title: !note?.isTrash ? "Move to trash" : "",
-      function: handleTrashNote,
+      title: !note?.isTrash
+        ? note?.creator?.id === userID
+          ? "Move to trash"
+          : "Remove myself"
+        : "",
+      function:
+        note?.creator?.id === userID ? handleTrashNote : handleRemoveSelf,
       icon: "trash-menu-icon",
     },
     {
@@ -582,7 +613,12 @@ const NoteTools = ({
   const handleCollab = () => {
     closeToolTip();
     const element = note?.ref.current.parentElement;
-    handleNoteClick({ currentTarget: element }, note, index, true);
+    handleNoteClick(
+      { currentTarget: element },
+      note,
+      notesIndexMapRef.current.get(note.uuid),
+      true
+    );
   };
 
   return (
@@ -632,7 +668,7 @@ const NoteTools = ({
                     closeToolTip();
                     noteActions({
                       type: "archive",
-                      index: index,
+                      index: notesIndexMapRef.current.get(note.uuid),
                       note: note,
                       noteRef: note?.ref,
                     });

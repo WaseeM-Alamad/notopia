@@ -36,7 +36,6 @@ const Note = memo(
     setFadingNotes,
     handleSelectNote,
     handleNoteClick,
-    index,
   }) => {
     const {
       user,
@@ -45,6 +44,7 @@ const Note = memo(
       hideTooltip,
       closeToolTip,
       focusedIndex,
+      notesIndexMapRef,
       openSnackRef,
       notesStateRef,
     } = useAppContext();
@@ -60,7 +60,6 @@ const Note = memo(
     const [selectedColor, setSelectedColor] = useState(note?.color);
     const uncheckedItems = note?.checkboxes?.filter((cb) => !cb.isCompleted);
     const checkedItems = note?.checkboxes?.filter((cb) => cb.isCompleted);
-    const noteDataRef = useRef(null);
     const inputsRef = useRef(null);
     const inputRef = useRef(null);
     const imagesRef = useRef(null);
@@ -122,7 +121,7 @@ const Note = memo(
           type: "PIN_ARCHIVED_NOTE",
           note: note,
           noteRef: note?.ref,
-          index: index,
+          index: notesIndexMapRef.current.get(note.uuid),
         });
       }
     };
@@ -144,10 +143,6 @@ const Note = memo(
     }, []);
 
     useEffect(() => {
-      noteDataRef.current = { ...note, index: index };
-    }, [note, index]);
-
-    useEffect(() => {
       const handleSelectAllNotes = () => {
         setSelected(true);
       };
@@ -162,9 +157,9 @@ const Note = memo(
             e: e,
             selected: selected,
             setSelected: setSelected,
-            uuid: noteDataRef.current.uuid,
-            index: noteDataRef.current.index,
-            isPinned: noteDataRef.current.isPinned,
+            uuid: note.uuid,
+            index: notesIndexMapRef.current.get(note.uuid),
+            isPinned: note.isPinned,
           });
         }
         if (deselect.includes(note?.uuid)) {
@@ -181,7 +176,7 @@ const Note = memo(
         window.removeEventListener("batchSelection", handleBatchSelection);
         window.removeEventListener("selectAllNotes", handleSelectAllNotes);
       };
-    }, [note?.uuid, selected]);
+    }, [note?.uuid, note?.isPinned, selected]);
 
     const handleCheckboxClick = async (e, checkboxUUID, value) => {
       e.stopPropagation();
@@ -297,7 +292,7 @@ const Note = memo(
     const handleOnFocus = () => {
       if (!lastInputWasKeyboard.current) return;
 
-      focusedIndex.current = index;
+      focusedIndex.current = notesIndexMapRef.current.get(note.uuid);
     };
 
     function highlightMatch(text) {
@@ -330,7 +325,7 @@ const Note = memo(
               selected: selected,
               setSelected: setSelected,
               uuid: note?.uuid,
-              index: index,
+              index: notesIndexMapRef.current.get(note.uuid),
               isPinned: note?.isPinned,
             })
           }
@@ -342,7 +337,7 @@ const Note = memo(
                 selected: selected,
                 setSelected: setSelected,
                 uuid: note?.uuid,
-                index: index,
+                index: notesIndexMapRef.current.get(note.uuid),
                 isPinned: note?.isPinned,
               });
             }
@@ -389,7 +384,7 @@ const Note = memo(
                 selected: selected,
                 setSelected: setSelected,
                 uuid: note?.uuid,
-                index: index,
+                index: notesIndexMapRef.current.get(note.uuid),
                 isPinned: note?.isPinned,
               })
             }
@@ -612,7 +607,6 @@ const Note = memo(
                     {note?.collaborators && (
                       <NoteCollabs
                         note={note}
-                        index={index}
                         handleNoteClick={handleNoteClick}
                       />
                     )}
@@ -637,7 +631,6 @@ const Note = memo(
             dispatchNotes={dispatchNotes}
             userID={userID}
             noteActions={noteActions}
-            index={index}
             inputRef={inputRef}
           />
           <div

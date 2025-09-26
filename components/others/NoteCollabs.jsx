@@ -3,12 +3,12 @@ import React, { useEffect, useState } from "react";
 
 const NoteCollabs = ({
   note,
-  index,
   handleNoteClick,
   modalView = false,
   openCollab = () => {},
 }) => {
-  const { user, showTooltip, hideTooltip, closeToolTip } = useAppContext();
+  const { user, showTooltip, hideTooltip, closeToolTip, notesIndexMapRef } =
+    useAppContext();
   const userID = user?.id;
   const [collaborators, setCollaborators] = useState([]);
 
@@ -51,7 +51,12 @@ const NoteCollabs = ({
                 return;
               }
               const element = note?.ref.current.parentElement;
-              handleNoteClick({ currentTarget: element }, note, index, true);
+              handleNoteClick(
+                { currentTarget: element },
+                note,
+                notesIndexMapRef.current.get(note.uuid),
+                true
+              );
             }}
             onMouseEnter={(e) => showTooltip(e, displayName)}
             onMouseLeave={hideTooltip}

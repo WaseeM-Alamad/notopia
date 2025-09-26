@@ -165,7 +165,16 @@ const page = () => {
           handleOpenNote();
         },
         title: "This note has been shared with you",
-        message: `The owner of this note is ${note?.creator?.username || "Owner"}. You should only open notes from someone you trust. How would you like to proceed?`,
+        message: (
+          <span>
+            The owner of this note is <br />{" "}
+            <span style={{ fontWeight: "bold" }}>
+              {note?.creator?.username || "Owner"}
+            </span>
+            . You should only open notes from someone you trust. How would you
+            like to proceed?
+          </span>
+        ),
         btnMsg: "Open note",
         cancelFunc: () => {
           localDbReducer({
@@ -185,6 +194,7 @@ const page = () => {
           );
         },
         cancelBtnMsg: "Delete note",
+        showCloseBtn: true,
       });
       return;
     }
@@ -595,6 +605,7 @@ const page = () => {
             message={dialogInfo?.message || ""}
             btnMsg={dialogInfo?.btnMsg || "okay"}
             cancelBtnMsg={dialogInfo?.cancelBtnMsg || "Cancel"}
+            showCloseBtn={dialogInfo?.showCloseBtn || false}
           />
         )}
       </AnimatePresence>

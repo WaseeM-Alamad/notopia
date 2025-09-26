@@ -109,10 +109,13 @@ const NoteModal = ({
       modal.style.transform = `translate(0px, 0px) scale(${scaleX}, ${scaleY})`;
     } else {
       if (modal) {
-        center();
         const modalHeight = modal.offsetHeight;
         modal.style.marginTop = modalHeight / 4 + "px";
-        requestAnimationFrame(() => modal.style.removeProperty("margin-top"));
+        requestAnimationFrame(() => {
+          center();
+
+          requestAnimationFrame(() => modal.style.removeProperty("margin-top"));
+        });
       }
     }
   };
@@ -397,6 +400,8 @@ const NoteModal = ({
       archiveRef.current = false;
       trashRef.current = false;
 
+      modalRef.current.style.display = "flex";
+
       const willOpenCollab = initialStyle?.collab;
       if (willOpenCollab) {
         requestAnimationFrame(() => {
@@ -413,7 +418,7 @@ const NoteModal = ({
         editorBox.style.transition = "opacity 0.19s ease-in";
       }
 
-      modalRef.current.style.display = "flex";
+      
 
       if (editorBox) {
         requestAnimationFrame(() => {
