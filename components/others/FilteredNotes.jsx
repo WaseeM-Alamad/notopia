@@ -275,7 +275,9 @@ const FilteredNotes = memo(
     useEffect(() => {
       // Set layoutReady to false before any new calculations
       setLayoutReady(false);
-      calculateLayout();
+      setTimeout(() => {
+        calculateLayout();
+      }, 0);
       window.addEventListener("resize", debouncedCalculateLayout);
 
       return () => {

@@ -189,7 +189,9 @@ const Archive = memo(
     }, [visibleItems]);
 
     useEffect(() => {
-      calculateLayout();
+      setTimeout(() => {
+        calculateLayout();
+      }, 0);
       window.addEventListener("resize", debouncedCalculateLayout);
 
       return () => {

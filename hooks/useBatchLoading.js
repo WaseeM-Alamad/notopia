@@ -15,8 +15,14 @@ export function useBatchLoading({
   containerRef,
   matchesFilters,
 }) {
-  const { labelsRef, layout, labelsReady, currentSection, loadNextBatchRef } =
-    useAppContext();
+  const {
+    labelsRef,
+    layout,
+    labelsReady,
+    currentSection,
+    loadNextBatchRef,
+    notesIndexMapRef,
+  } = useAppContext();
 
   const {
     filters,
@@ -30,6 +36,13 @@ export function useBatchLoading({
   const layoutTimeoutRef = useRef(null);
   const layoutVersionRef = useRef(0);
   const isFirstBatchRef = useRef(true);
+  const visibleItemsRef = useRef(null);
+
+  const BUFFER = 700;
+
+  useEffect(() => {
+    visibleItemsRef.current = visibleItems;
+  }, [visibleItems]);
 
   const loadNextBatch = (data = {}) => {
     const {
@@ -42,13 +55,11 @@ export function useBatchLoading({
       return;
     }
     const scrollY = window.scrollY;
-    const containerBottom = container.getBoundingClientRect().bottom;
+    const containerBottom = container.getBoundingClientRect().bottom + scrollY;
     const viewportHeight = window.innerHeight;
+    const threshold = viewportHeight + scrollY + BUFFER;
 
-    if (
-      containerBottom + scrollY > viewportHeight + scrollY + 700 ||
-      version !== layoutVersionRef.current
-    ) {
+    if (containerBottom > threshold || version !== layoutVersionRef.current) {
       isLoadingRef.current = false;
       return;
     }
@@ -83,7 +94,7 @@ export function useBatchLoading({
             })
         : currentOrder.filter((uuid) => {
             const note = currentNotes.get(uuid);
-            if (!currentVisibleSet.has(uuid) && filterUnrendered(note)) {
+            if (!currentVisibleSet.has(uuid) && isInCurrentSection(note)) {
               sectionCount++;
               return true;
             }
@@ -106,10 +117,16 @@ export function useBatchLoading({
         : unrendered;
 
     const nextBatch = sortedUnrendered.slice(0, batchSize);
-    if (nextBatch.length === 0) return;
+    if (nextBatch.length === 0) {
+      isLoadingRef.current = false;
+      return;
+    }
 
     requestIdleCallback(() => {
-      if (version !== layoutVersionRef.current) return;
+      if (version !== layoutVersionRef.current) {
+        isLoadingRef.current = false;
+        return;
+      }
       setVisibleItems((prev) => {
         const updated = new Set(prev);
         currentSection?.toLowerCase() !== "labels"
@@ -117,7 +134,10 @@ export function useBatchLoading({
           : nextBatch.forEach(([uuid, label]) => updated.add(uuid));
 
         setTimeout(() => {
-          if (version !== layoutVersionRef.current) return;
+          if (version !== layoutVersionRef.current) {
+            isLoadingRef.current = false;
+            return;
+          }
 
           requestAnimationFrame(() => {
             setTimeout(() => {
@@ -125,7 +145,7 @@ export function useBatchLoading({
                 currentSet: updated,
                 version: version,
               });
-            }, 800);
+            }, 700);
           });
         }, 50);
 
@@ -166,7 +186,7 @@ export function useBatchLoading({
     });
   };
 
-  const filterUnrendered = (note) => {
+  const isInCurrentSection = (note) => {
     switch (currentSection?.toLowerCase()) {
       case "home":
         return !note?.isArchived && !note?.isTrash;
@@ -187,15 +207,15 @@ export function useBatchLoading({
       const viewportHeight = window.innerHeight;
       const fullHeight = document.body.offsetHeight;
       const version = layoutVersionRef.current;
-      if (scrollTop + viewportHeight >= fullHeight - 700) {
+      if (scrollTop + viewportHeight >= fullHeight - BUFFER) {
         requestAnimationFrame(() => {
           setTimeout(() => {
             if (isLoadingRef.current) return;
             loadNextBatch({
-              currentSet: visibleItems,
+              currentSet: visibleItemsRef.current,
               version: version,
             });
-          }, 800);
+          }, 500);
         });
       }
     };
@@ -203,7 +223,7 @@ export function useBatchLoading({
     window.addEventListener("scroll", handler);
 
     return () => window.removeEventListener("scroll", handler);
-  }, [visibleItems, layout]);
+  }, [loadNextBatch, layout]);
 
   useEffect(() => {
     const handler = () => {
@@ -323,43 +343,97 @@ export function useBatchLoading({
     });
   }, [notesState]);
 
-  // const last = Array.from(s).at(-1);
+  useEffect(() => {
+    const handler = () => {
+      const order = notesStateRef.current.order;
+      const notes = notesStateRef.current.notes;
 
-  // useEffect(() => {
-  //   const handler = () => {
-  //     const order = notesStateRef.current.order;
-  //     const notes = notesStateRef.current.notes;
-  //     let stopID = null;
+      const container = containerRef.current;
 
-  //     for (let uuid of order) {
-  //       const note = notes.get(uuid);
-  //       if (!note?.ref?.current) continue;
+      if (!container) return;
+      const scrollY = window.scrollY;
+      const viewportHeight = window.innerHeight;
+      const containerBottom =
+        container.getBoundingClientRect().bottom + scrollY;
 
-  //       const noteElement = note?.ref.current;
-  //       const scrollTop = window.scrollY;
-  //       const viewportHeight = window.innerHeight;
-  //       const noteBottom =
-  //         noteElement.getBoundingClientRect().bottom + scrollTop;
+      const threshold = viewportHeight + BUFFER + scrollY;
 
-  //       if (noteBottom  > scrollTop + viewportHeight + 700) {
-  //         console.log(noteBottom)
-  //         stopID = note?.uuid;
-  //         break;
-  //       }
-  //     }
-  //     const newSet = new Set();
+      if (containerBottom <= threshold || isLoadingRef.current) {
+        return;
+      }
 
-  //     for (let uuid of visibleItems) {
-  //       newSet.add(uuid);
-  //       if (uuid === stopID) break;
-  //     }
+      const GUTTER = 15;
+      const isGrid = layout === "grid";
+      const COLUMN_WIDTH = isGrid ? 240 : 600;
 
-  //     // setVisibleItems(newSet);
-  //     // console.log(newSet.size);
-  //   };
+      const parent = container.parentElement;
+      const parentWidth = parent.clientWidth;
+      const style = window.getComputedStyle(parent);
+      const paddingLeft = parseFloat(style.paddingLeft) || 0;
+      const paddingRight = parseFloat(style.paddingRight) || 0;
+      const availableWidth = parentWidth - paddingLeft - paddingRight;
 
-  //   window.addEventListener("focus", handler);
-  //   return () => window.removeEventListener("focus", handler);
-  // }, [visibleItems]);
+      const columns = !isGrid
+        ? 1
+        : Math.max(1, Math.floor(availableWidth / (COLUMN_WIDTH + GUTTER)));
+
+      let lastUUID = null;
+
+      const visibleOrder = [];
+      for (const uuid of visibleItemsRef.current) {
+        const index = notesIndexMapRef.current.get(uuid);
+        visibleOrder.push(index);
+      }
+
+      const positionsMap = new Map();
+
+      for (let i = 5; i < visibleOrder.length; i += 5) {
+        const positions = [];
+        let tempLastUUID = null;
+        for (let j = i - columns; j < i; j++) {
+          if (j < 0) continue;
+          const noteIndex = visibleOrder[j];
+          const note = notes.get(order[noteIndex]);
+          const noteElement = note?.ref?.current;
+          if (!noteElement || !isInCurrentSection(note)) continue;
+          tempLastUUID = note.uuid;
+          let bottom = positionsMap.get(note.uuid);
+
+          if (!bottom) {
+            bottom =
+              noteElement.getBoundingClientRect().bottom + window.scrollY;
+            positionsMap.set(note.uuid, bottom);
+          }
+
+          positions.push(bottom);
+        }
+        if (positions.length === 0) continue;
+        const max = Math.max(...positions);
+        const tallestNote = Math.floor(max + 15);
+        if (tallestNote > viewportHeight + window.scrollY + BUFFER) {
+          lastUUID = tempLastUUID;
+          break;
+        }
+      }
+
+      setVisibleItems(() => {
+        const newItems = new Set();
+
+        for (let noteUUID of order) {
+          if (!visibleItemsRef.current.has(noteUUID)) continue;
+          newItems.add(noteUUID);
+          if (noteUUID === lastUUID) {
+            break;
+          }
+        }
+
+        return newItems;
+      });
+    };
+
+    window.addEventListener("focus", handler);
+    return () => window.removeEventListener("focus", handler);
+  }, [currentSection, layout]);
+
   if (!currentSection) return;
 }

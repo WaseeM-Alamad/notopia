@@ -17,6 +17,13 @@ const ActionModal = ({
   const [isMounted, setIsMounted] = useState(false);
   const containerRef = useRef(null);
 
+  const background = {
+    open: document.documentElement.classList.contains("dark-mode")
+      ? "rgba(22, 23, 26, 0.5)"
+      : "rgba(0, 0, 0, 0.5)",
+    close: "rgba(0, 0, 0, 0.0)",
+  };
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -27,14 +34,9 @@ const ActionModal = ({
     <motion.div
       ref={containerRef}
       className="modal-container"
-      initial={{ backgroundColor: "rgba(0,0,0,0.0)", pointerEvents: "auto" }}
-      animate={{ backgroundColor: "rgba(0,0,0,0.5)", pointerEvents: "auto" }}
-      exit={{ backgroundColor: "rgba(0,0,0,0.0)" }}
-      onAnimationComplete={(def) => {
-        if (def.backgroundColor === "rgba(0,0,0,0.0)") {
-          containerRef.current.style.pointerEvents = "none";
-        }
-      }}
+      initial={{ backgroundColor: background.close }}
+      animate={{ backgroundColor: background.open }}
+      exit={{ backgroundColor: background.close }}
       transition={{
         backgroundColor: {
           type: "tween",

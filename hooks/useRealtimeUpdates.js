@@ -39,7 +39,16 @@ export function useRealtimeUpdates({ dispatchNotes, updateModalRef }) {
               case "update":
               case "replace": {
                 const { creator, ...newNote } = doc;
-                doc && updatedNotes.set(doc?.uuid, newNote);
+                if (!doc) continue;
+                let lastVersion = newNote;
+                const existingUpdatedNote = updatedNotes.get(doc?.uuid);
+                if (
+                  existingUpdatedNote &&
+                  existingUpdatedNote?.ut === "settings"
+                ) {
+                  lastVersion = { ...newNote, ...existingUpdatedNote };
+                }
+                updatedNotes.set(doc?.uuid, { ...lastVersion, ut: "note" });
                 break;
               }
             }
@@ -49,13 +58,22 @@ export function useRealtimeUpdates({ dispatchNotes, updateModalRef }) {
               case "replace": {
                 const settings = item?.fullDocument;
                 const { _v, _id, user, note, ...newSettings } = settings;
-                settings &&
-                  updatedNotes.set(note, { ...newSettings, uuid: note });
+                if (!settings) continue;
+                let lastVersion = newSettings;
+                const existingUpdatedNote = updatedNotes.get(note);
+                if (existingUpdatedNote && existingUpdatedNote?.ut === "note") {
+                  lastVersion = { ...existingUpdatedNote, ...newSettings };
+                }
+                updatedNotes.set(note, {
+                  ...lastVersion,
+                  uuid: note,
+                  ut: "settings",
+                });
                 break;
               }
               case "insert": {
                 const note = item?.fullDocument;
-                note && newNotes.push(note);
+                note && newNotes.push({ ...note, ut: "settings" });
                 break;
               }
             }
@@ -93,9 +111,10 @@ export function useRealtimeUpdates({ dispatchNotes, updateModalRef }) {
               willUpdate = false;
               break;
             }
+            const { ut, ...clearNewNote } = newNote;
             const updatedNote = {
               ...originalNote,
-              ...newNote,
+              ...clearNewNote,
               creator: originalNote.creator,
             };
             newUpdatedNotes.push(updatedNote);

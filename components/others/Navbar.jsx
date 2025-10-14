@@ -486,7 +486,7 @@ const Navbar = () => {
             }}
             className="side-expand-btn"
           />
-          <Logo style={{ margin: "auto 0", flexShrink: "0" }} />
+          {/* <Logo style={{ margin: "auto 0", flexShrink: "0" }} /> */}
           <span
             style={{
               marginLeft: ".8rem",

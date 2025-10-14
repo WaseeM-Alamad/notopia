@@ -92,7 +92,9 @@ const NoteWrapper = memo(
           ref={noteRef}
           onMouseDown={handleMouseDown}
           onMouseEnter={handleMouseEnter}
-          onClick={(e) => handleNoteClick(e, note, notesIndexMapRef.current.get(note.uuid))}
+          onClick={(e) =>
+            handleNoteClick(e, note, notesIndexMapRef.current.get(note.uuid))
+          }
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               handleNoteClick(e, note, notesIndexMapRef.current.get(note.uuid));
@@ -121,6 +123,7 @@ const NoteWrapper = memo(
             handleSelectNote={handleSelectNote}
             handleNoteClick={handleNoteClick}
           />
+          {/* <p style={{position: "absolute", bottom: "40px", color: "blue"}}>{notesIndexMapRef.current.get(note.uuid)}</p> */}
         </div>
       </motion.div>
     );
@@ -298,7 +301,10 @@ const Home = memo(
     }, [calculateLayout]);
 
     useEffect(() => {
-      calculateLayout();
+      setTimeout(() => {
+        calculateLayout();
+      }, 0);
+
       window.addEventListener("resize", debouncedCalculateLayout);
 
       return () => {
@@ -418,7 +424,7 @@ const Home = memo(
               ghostElement.style.left = `${rect.left}px`;
               pin.style.opacity = "0";
               isDragging.current = false;
-
+              lastEl = null;
               setTimeout(() => {
                 if (document.body.contains(ghostElement)) {
                   document.body.removeChild(ghostElement);
@@ -448,7 +454,7 @@ const Home = memo(
       [calculateLayout, layout]
     );
 
-    const handleDragOver = async () => {
+    const handleDragOver = async (noteElement) => {
       if (!isDragging.current) return;
       if (draggedIsPinnedRef.current !== overIsPinnedRef.current) {
         return;
@@ -456,6 +462,8 @@ const Home = memo(
 
       const now = Date.now();
       if (now - lastSwapRef.current < 150) return;
+
+      noteElement && (lastEl = noteElement);
 
       lastSwapRef.current = now;
       localDbReducer({
@@ -476,21 +484,90 @@ const Home = memo(
       draggedIndexRef.current = endIndexRef.current;
     };
 
-    const handleMouseMove = (e) => {
-      //attached to container of notes
-      if (!isDragging.current) return;
+    // const handleMouseMove = (e) => {
+    //   if (!isDragging.current) return;
+    //   const mouseX = e.clientX;
+    //   const mouseY = e.clientY;
+    //   const overNoteElement = document
+    //     .elementFromPoint(mouseX, mouseY)
+    //     .closest(".grid-item");
+    //   if (!overNoteElement) return;
+    //   handleDragOver();
+    // };
+    let lastEl = null;
+    useEffect(() => {
+      let animationFrame;
+      let lastMouseX = 0;
+      let lastMouseY = 0;
 
-      const mouseX = e.clientX;
-      const mouseY = e.clientY;
+      const checkCollisions = () => {
+        if (!isDragging.current) {
+          animationFrame = requestAnimationFrame(checkCollisions);
+          return;
+        }
 
-      const overNoteElement = document
-        .elementFromPoint(mouseX, mouseY)
-        .closest(".grid-item");
+        for (const uuid of notesStateRef.current.order) {
+          const note = notesStateRef.current.notes.get(uuid);
+          const noteElement = note?.ref?.current;
+          if (!noteElement) continue;
+          if (noteElement.parentElement === draggedNoteRef.current) continue;
 
-      if (!overNoteElement) return;
+          const rect = noteElement.parentElement.getBoundingClientRect();
+          const height = Math.abs(rect.top - rect.bottom);
 
-      handleDragOver();
-    };
+          if (lastEl) {
+            const lastElRect = lastEl.getBoundingClientRect();
+            if (
+              lastMouseX < lastElRect.left ||
+              lastMouseX > lastElRect.right ||
+              lastMouseY < lastElRect.top ||
+              lastMouseY > lastElRect.bottom
+            ) {
+              lastEl = null;
+            }
+          }
+
+          if (lastEl === noteElement) {
+            if (height < 250) continue;
+            const halfHeight = height * 0.5;
+            if (
+              lastMouseX >= rect.left &&
+              lastMouseX <= rect.right &&
+              lastMouseY >= rect.top + halfHeight - 20 &&
+              lastMouseY <= rect.bottom - halfHeight + 20
+            ) {
+              handleDragOver();
+              break;
+            }
+          } else {
+            if (
+              lastMouseX >= rect.left &&
+              lastMouseX <= rect.right &&
+              lastMouseY >= rect.top &&
+              lastMouseY <= rect.bottom
+            ) {
+              handleDragOver(noteElement);
+              break;
+            }
+          }
+        }
+
+        animationFrame = requestAnimationFrame(checkCollisions);
+      };
+
+      const handleMouseMove = (e) => {
+        lastMouseX = e.clientX;
+        lastMouseY = e.clientY;
+      };
+
+      document.addEventListener("mousemove", handleMouseMove);
+      animationFrame = requestAnimationFrame(checkCollisions);
+
+      return () => {
+        document.removeEventListener("mousemove", handleMouseMove);
+        cancelAnimationFrame(animationFrame);
+      };
+    }, []);
 
     useEffect(() => {
       calculateLayout();
@@ -525,12 +602,6 @@ const Home = memo(
                 containerRef.current.getBoundingClientRect().bottom +
                 window.scrollY;
               console.log("containerBottom", containerBottom);
-              const last = Array.from(visibleItems).at(-1);
-              const lastNote = notes.get(last);
-              const lastNoteBottom =
-                lastNote.ref.current.getBoundingClientRect().bottom +
-                window.scrollY;
-              console.log("lastNoteBottom", Math.floor(lastNoteBottom + 15));
             }}
           >
             gg
@@ -539,7 +610,7 @@ const Home = memo(
             ref={containerRef}
             className="section-container"
             style={{ opacity: !layoutReady && "0" }}
-            onMouseMove={handleMouseMove}
+            // onMouseMove={handleMouseMove}
           >
             <p
               className="section-label"
@@ -578,7 +649,6 @@ const Home = memo(
                     overIsPinnedRef={overIsPinnedRef}
                     fadingNotes={fadingNotes}
                     setFadingNotes={setFadingNotes}
-                    index={index}
                     noteActions={noteActions}
                     dispatchNotes={dispatchNotes}
                     handleDragStart={handleDragStart}

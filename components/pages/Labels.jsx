@@ -29,8 +29,14 @@ const Labels = memo(
     containerRef,
     isGrid,
   }) => {
-    const { createLabel, labelsRef, labelsReady, layout, calculateLayoutRef, isExpanded } =
-      useAppContext();
+    const {
+      createLabel,
+      labelsRef,
+      labelsReady,
+      layout,
+      calculateLayoutRef,
+      isExpanded,
+    } = useAppContext();
     const { labelSearchTerm } = useSearch();
     const [reRender, triggerReRender] = useState(false);
     const resizeTimeoutRef = useRef(null);
@@ -162,7 +168,9 @@ const Labels = memo(
     }, []);
 
     useEffect(() => {
-      calculateLayout();
+      setTimeout(() => {
+        calculateLayout();
+      }, 0);
       window.addEventListener("resize", debouncedCalculateLayout);
 
       return () => {

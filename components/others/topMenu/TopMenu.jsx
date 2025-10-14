@@ -100,6 +100,7 @@ const TopMenuHome = ({
         !e.target.closest(".top-menu") &&
         !e.target.closest("aside") &&
         !e.target.closest(".color-menu") &&
+        !e.target.closest("#modal-portal") &&
         !rootContainerRef.current?.classList.contains("dragging")
       ) {
         handleClose();
@@ -384,7 +385,7 @@ const TopMenuHome = ({
         selectedNotes: selectedNotesIDs,
         property: "isArchived",
         val: archiveNotes,
-        length: length,
+        selectedUUIDs,
       });
 
       dispatchNotes({
@@ -392,7 +393,7 @@ const TopMenuHome = ({
         selectedNotes: selectedNotesIDs,
         property: "isArchived",
         val: archiveNotes,
-        length: length,
+        selectedUUIDs,
       });
     };
 
@@ -449,12 +450,12 @@ const TopMenuHome = ({
             userID: userID,
             type: "UNDO_BATCH_PIN_ARCHIVED",
             selectedNotes: selectedNotesIDs,
-            length: length,
+            selectedUUIDs,
           });
           dispatchNotes({
             type: "UNDO_BATCH_PIN_ARCHIVED",
             selectedNotes: selectedNotesIDs,
-            length: length,
+            selectedUUIDs,
           });
 
           ArchiveVal &&
@@ -534,107 +535,156 @@ const TopMenuHome = ({
     const val = notes.get(firstItem.uuid).isTrash;
     const length = selectedNotesIDs.length;
 
-    const selectedUUIDs = selectedNotesIDs.map(({ uuid }) => uuid);
+    const notesWithCollabs = [];
+    const selectedUUIDs = [];
+    const sharedNotesSet = new Set();
 
-    const redo = async () => {
-      setFadingNotes((prev) => new Set([...prev, ...selectedUUIDs]));
-      localDbReducer({
-        notes: notesStateRef.current.notes,
-        order: notesStateRef.current.order,
-        userID: userID,
-        type: "BATCH_ARCHIVE/TRASH",
-        selectedNotes: selectedNotesIDs,
-        property: "isTrash",
-        val: val,
-      });
-      setTimeout(() => {
-        dispatchNotes({
+    selectedNotesIDs.forEach(({ uuid }) => {
+      const note = notesStateRef.current.notes.get(uuid);
+      if (note?.collaborators?.length > 0) {
+        if (note?.creator?._id === userID) {
+          const collabIDs = note?.collaborators?.map((collab) => collab.id);
+          selectedUUIDs.push(uuid);
+          notesWithCollabs.push({
+            uuid,
+            isCreator: true,
+            collabIDs: collabIDs || [],
+          });
+        } else {
+          notesWithCollabs.push({ uuid, isCreator: false });
+          sharedNotesSet.add(uuid);
+        }
+      }
+      selectedUUIDs.push(uuid);
+    });
+
+    const execute = () => {
+      const redo = async () => {
+        setFadingNotes((prev) => new Set([...prev, ...selectedUUIDs]));
+        localDbReducer({
+          notes: notesStateRef.current.notes,
+          order: notesStateRef.current.order,
+          userID: userID,
           type: "BATCH_ARCHIVE/TRASH",
           selectedNotes: selectedNotesIDs,
           property: "isTrash",
-          val: val,
+          sharedNotesSet,
+          val,
         });
-        setFadingNotes(new Set());
+        requestAnimationFrame(() => {
+          localDbReducer({
+            notes: notesStateRef.current.notes,
+            order: notesStateRef.current.order,
+            userID: userID,
+            type: "BATCH_DELETE_NOTES",
+            deletedUUIDs: [...sharedNotesSet],
+          });
+        });
+        setTimeout(() => {
+          dispatchNotes({
+            type: "BATCH_ARCHIVE/TRASH",
+            selectedNotes: selectedNotesIDs,
+            property: "isTrash",
+            sharedNotesSet,
+            val,
+          });
+          setFadingNotes(new Set());
+          setVisibleItems((prev) => {
+            const updated = new Set(prev);
+            selectedUUIDs.forEach((uuid) => {
+              updated.delete(uuid);
+            });
+            return updated;
+          });
+        }, 250);
+
+        handleServerCall(
+          [
+            () =>
+              batchUpdateAction({
+                type: "BATCH_ARCHIVE/TRASH",
+                selectedNotes: selectedNotesIDs,
+                property: "isTrash",
+                val: val,
+                notesWithCollabs,
+                clientID,
+              }),
+          ],
+          openSnackRef.current
+        );
+      };
+
+      redo();
+
+      const undo = () => {
+        localDbReducer({
+          notes: notesStateRef.current.notes,
+          order: notesStateRef.current.order,
+          userID: userID,
+          type: "UNDO_BATCH_ARCHIVE/TRASH",
+          selectedNotes: selectedNotesIDs,
+          property: "isTrash",
+          val: val,
+          selectedUUIDs,
+        });
+
+        dispatchNotes({
+          type: "UNDO_BATCH_ARCHIVE/TRASH",
+          selectedNotes: selectedNotesIDs,
+          property: "isTrash",
+          val: val,
+          selectedUUIDs,
+        });
+
         setVisibleItems((prev) => {
           const updated = new Set(prev);
           selectedUUIDs.forEach((uuid) => {
-            updated.delete(uuid);
+            updated.add(uuid);
           });
           return updated;
         });
-      }, 250);
+        handleServerCall(
+          [
+            () =>
+              undoAction({
+                type: "UNDO_BATCH_ARCHIVE/TRASH",
+                selectedNotes: selectedNotesIDs,
+                property: "isTrash",
+                val: val,
+                clientID,
+              }),
+          ],
+          openSnackRef.current
+        );
+      };
 
-      handleServerCall(
-        [
-          () =>
-            batchUpdateAction({
-              type: "BATCH_ARCHIVE/TRASH",
-              selectedNotes: selectedNotesIDs,
-              property: "isTrash",
-              val: val,
-              clientID,
-            }),
-        ],
-        openSnackRef.current
-      );
+      const snackMessage =
+        length === 1
+          ? `Note ${val ? "restored" : "trashed"}`
+          : `${length} notes ${val ? "restored" : "trashed"}`;
+
+      openSnackRef.current({
+        snackMessage: snackMessage,
+        snackOnUndo: undo,
+        snackRedo: redo,
+      });
+
+      handleClose();
     };
 
-    redo();
-
-    const undo = () => {
-      localDbReducer({
-        notes: notesStateRef.current.notes,
-        order: notesStateRef.current.order,
-        userID: userID,
-        type: "UNDO_BATCH_ARCHIVE/TRASH",
-        selectedNotes: selectedNotesIDs,
-        property: "isTrash",
-        val: val,
-        length: length,
+    if (notesWithCollabs.length > 0) {
+      setMoreMenuOpen(false);
+      setDialogInfoRef.current({
+        func: execute,
+        title: "Move to trash?",
+        message:
+          "Once trashed, shared notes won't be visible to anyone that the note was shared with.",
+        btnMsg: "Move to trash",
       });
+      return;
+    }
 
-      dispatchNotes({
-        type: "UNDO_BATCH_ARCHIVE/TRASH",
-        selectedNotes: selectedNotesIDs,
-        property: "isTrash",
-        val: val,
-        length: length,
-      });
-
-      setVisibleItems((prev) => {
-        const updated = new Set(prev);
-        selectedUUIDs.forEach((uuid) => {
-          updated.add(uuid);
-        });
-        return updated;
-      });
-      handleServerCall(
-        [
-          () =>
-            undoAction({
-              type: "UNDO_BATCH_ARCHIVE/TRASH",
-              selectedNotes: selectedNotesIDs,
-              property: "isTrash",
-              val: val,
-              clientID,
-            }),
-        ],
-        openSnackRef.current
-      );
-    };
-
-    const snackMessage =
-      length === 1
-        ? `Note ${val ? "restored" : "trashed"}`
-        : `${length} notes ${val ? "restored" : "trashed"}`;
-
-    openSnackRef.current({
-      snackMessage: snackMessage,
-      snackOnUndo: undo,
-      snackRedo: redo,
-    });
-
-    handleClose();
+    execute();
   };
 
   const handleDeleteNotes = async () => {

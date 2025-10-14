@@ -1045,19 +1045,129 @@ export const batchUpdateAction = async (data) => {
 
       updatedOrder.unshift(...sortedUUIDs);
 
-      await UserSettings.updateMany(
-        { note: { $in: sortedUUIDs }, user: userID },
-        {
-          $set: {
-            [data.property]: !data.val,
-            isPinned: false,
-            lastModifiedBy: data.clientID,
-          },
-        }
-      );
+      if (data.property === "isTrash") {
+        const notesWithCollabs = data.notesWithCollabs;
 
-      user.orderLastModifiedBy = data.clientID;
-      user.notesOrder = updatedOrder;
+        const noteBulkOps = [];
+        const userBulkOps = [
+          {
+            updateOne: {
+              filter: { _id: userID },
+              update: {
+                $set: {
+                  orderLastModifiedBy: data.clientID,
+                  notesOrder: updatedOrder,
+                },
+              },
+            },
+          },
+        ];
+        const settingsBulkOps = [
+          {
+            updateMany: {
+              filter: { note: { $in: sortedUUIDs }, user: userID },
+              update: {
+                $set: {
+                  isTrash: !data.val,
+                  isPinned: false,
+                  lastModifiedBy: data.clientID,
+                },
+              },
+            },
+          },
+        ];
+
+        if (notesWithCollabs.length > 0) {
+          notesWithCollabs.forEach(
+            ({ uuid: noteUUID, isCreator, collabIDs }) => {
+              if (isCreator) {
+                if (collabIDs?.length === 0) return;
+
+                noteBulkOps.push({
+                  updateOne: {
+                    filter: { uuid: noteUUID },
+                    update: {
+                      $set: {
+                        lastModifiedBy: data.clientID,
+                        collaborators: [],
+                      },
+                    },
+                  },
+                });
+
+                settingsBulkOps.push({
+                  deleteMany: {
+                    filter: {
+                      note: noteUUID,
+                      user: { $ne: userID },
+                    },
+                  },
+                });
+
+                userBulkOps.push({
+                  updateMany: {
+                    filter: { _id: { $in: collabIDs } },
+                    update: {
+                      $pull: { notesOrder: noteUUID },
+                      $set: { orderLastModifiedBy: data.clientID },
+                    },
+                  },
+                });
+              } else {
+                noteBulkOps.push({
+                  updateOne: {
+                    filter: { uuid: noteUUID },
+                    update: {
+                      $pull: { collaborators: { id: userID } },
+                      $set: { lastModifiedBy: data.clientID },
+                    },
+                  },
+                });
+
+                settingsBulkOps.push({
+                  deleteOne: {
+                    filter: { user: userID, note: noteUUID },
+                  },
+                });
+
+                userBulkOps.push({
+                  updateOne: {
+                    filter: { _id: userID },
+                    update: {
+                      $pull: { notesOrder: noteUUID },
+                      $set: { orderLastModifiedBy: data.clientID },
+                    },
+                  },
+                });
+              }
+            }
+          );
+        }
+
+        const session = await startSession();
+        await session.withTransaction(async () => {
+          {
+            noteBulkOps.length > 0 &&
+              (await Note.bulkWrite(noteBulkOps, { session }));
+          }
+          await UserSettings.bulkWrite(settingsBulkOps, { session });
+          await User.bulkWrite(userBulkOps, { session });
+        });
+      } else {
+        await UserSettings.updateMany(
+          { note: { $in: sortedUUIDs }, user: userID },
+          {
+            $set: {
+              isArchived: !data.val,
+              isPinned: false,
+              lastModifiedBy: data.clientID,
+            },
+          }
+        );
+        user.orderLastModifiedBy = data.clientID;
+        user.notesOrder = updatedOrder;
+      }
+
       await user.save();
     } else if (data.type === "BATCH_PIN") {
       await connectDB();
@@ -1363,6 +1473,7 @@ export const undoAction = async (data) => {
               $set: {
                 [data.property]: data.val,
                 isPinned: noteData.isPinned,
+                isArchived: noteData?.isArchived,
                 lastModifiedBy: data.clientID,
               },
             },
@@ -2156,6 +2267,13 @@ export const submitCollabUserAction = async (input, noteUUID) => {
         };
       }
       user = await User.findOne({ email: finalInput });
+    }
+
+    if (!user) {
+      return {
+        success: false,
+        message: "User does not exist",
+      };
     }
 
     const passedUser = {

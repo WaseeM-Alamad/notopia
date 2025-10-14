@@ -509,12 +509,12 @@ const NoteTools = ({
   const menuItems = [
     {
       title: !note?.isTrash
-        ? note?.creator?.id === userID
+        ? note?.creator?._id === userID
           ? "Move to trash"
           : "Remove myself"
         : "",
       function:
-        note?.creator?.id === userID ? handleTrashNote : handleRemoveSelf,
+        note?.creator?._id === userID ? handleTrashNote : handleRemoveSelf,
       icon: "trash-menu-icon",
     },
     {

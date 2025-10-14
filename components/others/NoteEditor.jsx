@@ -528,27 +528,6 @@ const NoteEditor = ({
     );
   };
 
-  const setCursorAtEnd = () => {
-    const element =
-      document.activeElement === titleRef?.current
-        ? titleRef.current
-        : document.activeElement === contentRef.current
-          ? contentRef.current
-          : null;
-    if (element) {
-      element.focus();
-
-      const selection = window.getSelection();
-      const range = document.createRange();
-      range.selectNodeContents(element);
-      range.collapse(false); // Move to the end
-      selection.removeAllRanges();
-      selection.addRange(range);
-    }
-  };
-
-  useEffect(() => {}, [note]);
-
   return (
     <div
       ref={noteEditorRef}
@@ -645,7 +624,7 @@ const NoteEditor = ({
           role="textbox"
           tabIndex="0"
           aria-multiline="true"
-          aria-label={!localNote?.isTrash ? "Take a note?..." : ""}
+          aria-label={!localNote?.isTrash ? "Take a note..." : ""}
           spellCheck="false"
         />
         {localNote?.checkboxes && (
@@ -662,7 +641,7 @@ const NoteEditor = ({
           localNote?.collaborators?.length > 0) && (
           <div className="note-labels-container">
             {localNote?.labels.length !== 0 && (
-              <NoteLabels note={localNote} noteActions={noteActions} />
+              <NoteLabels note={localNote} modalRemoveLabel={removeLabel} />
             )}
             {localNote?.collaborators && (
               <NoteCollabs

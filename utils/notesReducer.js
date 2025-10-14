@@ -31,8 +31,9 @@ export function notesReducer(state, action) {
       const updatedNotes = new Map(state.notes);
 
       action.newNotes.forEach((note) => {
+        const { ut, ...newNote } = note;
         updatedNotes.set(note?.uuid, {
-          ...note,
+          ...newNote,
           updatedAt: new Date(),
           ref: createRef(),
         });
@@ -178,14 +179,26 @@ export function notesReducer(state, action) {
       let sortedUUIDS = [];
       const updatedNotes = new Map(state.notes);
 
+      const sharedNotesSet = action?.sharedNotesSet || new Set();
+
       sortedNotes.forEach((noteData) => {
         const newNote = {
           ...updatedNotes.get(noteData.uuid),
           [action.property]: !action.val,
+          ...(action.property === "isTrash" ? { collaborators: [] } : {}),
           isPinned: false,
         };
-        updatedNotes.set(noteData.uuid, newNote);
-        sortedUUIDS.push(noteData.uuid);
+        if (action.property === "isTrash") {
+          if (sharedNotesSet.has(noteData.uuid)) {
+            updatedNotes.delete(noteData.uuid);
+          } else {
+            updatedNotes.set(noteData.uuid, newNote);
+            sortedUUIDS.push(noteData.uuid);
+          }
+        } else {
+          updatedNotes.set(noteData.uuid, newNote);
+          sortedUUIDS.push(noteData.uuid);
+        }
       });
 
       const updatedOrder = state.order.filter(
@@ -269,13 +282,16 @@ export function notesReducer(state, action) {
         (a, b) => a.index - b.index
       );
       const updatedNotes = new Map(state.notes);
-      const updatedOrder = state.order.slice(action.length);
+      const updatedOrder = state.order.filter(
+        (uuid) => !action.selectedUUIDs.includes(uuid)
+      );
 
       sortedNotes.forEach((noteData) => {
         const newNote = {
           ...updatedNotes.get(noteData.uuid),
           [action.property]: action.val,
           isPinned: noteData.isPinned,
+          isArchived: noteData?.isArchived,
         };
         updatedNotes.set(noteData.uuid, newNote);
         updatedOrder.splice(noteData.index, 0, noteData.uuid);
@@ -293,7 +309,9 @@ export function notesReducer(state, action) {
         (a, b) => a.index - b.index
       );
       const updatedNotes = new Map(state.notes);
-      const updatedOrder = state.order.slice(action.length);
+      const updatedOrder = state.order.filter(
+        (uuid) => !action.selectedUUIDs.includes(uuid)
+      );
 
       sortedNotes.forEach((noteData) => {
         const newNote = {

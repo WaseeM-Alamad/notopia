@@ -160,6 +160,7 @@ const Note = memo(
             uuid: note.uuid,
             index: notesIndexMapRef.current.get(note.uuid),
             isPinned: note.isPinned,
+            isArchived: note.isArchived,
           });
         }
         if (deselect.includes(note?.uuid)) {
@@ -176,7 +177,7 @@ const Note = memo(
         window.removeEventListener("batchSelection", handleBatchSelection);
         window.removeEventListener("selectAllNotes", handleSelectAllNotes);
       };
-    }, [note?.uuid, note?.isPinned, selected]);
+    }, [note?.uuid, note?.isPinned, note?.isArchived, selected]);
 
     const handleCheckboxClick = async (e, checkboxUUID, value) => {
       e.stopPropagation();
@@ -327,6 +328,7 @@ const Note = memo(
               uuid: note?.uuid,
               index: notesIndexMapRef.current.get(note.uuid),
               isPinned: note?.isPinned,
+              isArchived: note.isArchived,
             })
           }
           onKeyDown={(e) => {
@@ -339,6 +341,7 @@ const Note = memo(
                 uuid: note?.uuid,
                 index: notesIndexMapRef.current.get(note.uuid),
                 isPinned: note?.isPinned,
+                isArchived: note.isArchived,
               });
             }
           }}
@@ -386,6 +389,7 @@ const Note = memo(
                 uuid: note?.uuid,
                 index: notesIndexMapRef.current.get(note.uuid),
                 isPinned: note?.isPinned,
+                isArchived: note.isArchived,
               })
             }
             onMouseEnter={(e) =>
@@ -634,13 +638,7 @@ const Note = memo(
             inputRef={inputRef}
           />
           <div
-            className={`note-border ${
-              selected
-                ? "element-selected"
-                : note?.color === "Default"
-                  ? "default-border"
-                  : "transparent-border"
-            }`}
+            className="note-border element-selected"
             style={{ opacity: selected && !isDragOver ? "1" : "0" }}
           />
           <AnimatePresence>{isDragOver && <ImageDropZone />}</AnimatePresence>

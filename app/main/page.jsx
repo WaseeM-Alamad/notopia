@@ -346,7 +346,12 @@ const page = () => {
       data.setSelected(true);
       setSelectedNotesIDs((prev) => [
         ...prev,
-        { uuid: data.uuid, index: data.index, isPinned: data.isPinned },
+        {
+          uuid: data.uuid,
+          index: data.index,
+          isPinned: data.isPinned,
+          isArchived: data.isArchived,
+        },
       ]);
 
       selectedNotesRef.current.add(data.uuid);
@@ -392,7 +397,7 @@ const page = () => {
   };
 
   const updateModalRef = useRef(false);
-  useRealtimeUpdates({ dispatchNotes, updateModalRef });
+  useRealtimeUpdates({ dispatchNotes, updateModalRef, notesState });
 
   useDataManager({ notesState, dispatchNotes, notesReady, setNotesReady });
 

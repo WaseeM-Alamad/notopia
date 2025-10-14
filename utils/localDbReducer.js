@@ -29,12 +29,15 @@ const localDbReducer = (payload) => {
 
     case "ADD_NOTES": {
       const isOnline = navigator.onLine;
-      const newNotes = payload.newNotes.map((note) => ({
-        ...note,
-        updatedAt: new Date(),
-        ref: createRef(),
-        ...(isOnline ? {} : { type: "create" }),
-      }));
+      const newNotes = payload.newNotes.map((note) => {
+        const { ut, ...newNote } = note;
+        return {
+          ...newNote,
+          updatedAt: new Date(),
+          ref: createRef(),
+          ...(isOnline ? {} : { type: "create" }),
+        };
+      });
 
       updateLocalNotesAndOrder(newNotes, null, payload.userID);
       break;
@@ -231,13 +234,16 @@ const localDbReducer = (payload) => {
         (a, b) => a.index - b.index
       );
       const newNotes = [];
-      const updatedOrder = payload.order.slice(payload.length);
+      const updatedOrder = payload.order.filter(
+        (uuid) => !payload.selectedUUIDs.includes(uuid)
+      );
 
       sortedNotes.forEach((noteData) => {
         const newNote = {
           ...payload.notes.get(noteData.uuid),
           [payload.property]: payload.val,
           isPinned: noteData.isPinned,
+          isArchived: noteData?.isArchived,
         };
         newNotes.push(newNote);
         updatedOrder.splice(noteData.index, 0, noteData.uuid);
@@ -251,7 +257,9 @@ const localDbReducer = (payload) => {
         (a, b) => a.index - b.index
       );
       const newNotes = [];
-      const updatedOrder = payload.order.slice(payload.length);
+      const updatedOrder = payload.order.filter(
+        (uuid) => !payload.selectedUUIDs.includes(uuid)
+      );
 
       sortedNotes.forEach((noteData) => {
         const newNote = {
@@ -262,7 +270,7 @@ const localDbReducer = (payload) => {
         newNotes.push(newNote);
         updatedOrder.splice(noteData.index, 0, noteData.uuid);
       });
-      updateLocalNotesAndOrder(newNote, updatedOrder, payload.userID);
+      updateLocalNotesAndOrder(newNotes, updatedOrder, payload.userID);
       break;
     }
 

@@ -418,8 +418,6 @@ const NoteModal = ({
         editorBox.style.transition = "opacity 0.19s ease-in";
       }
 
-      
-
       if (editorBox) {
         requestAnimationFrame(() => {
           editorBox.style.opacity = 1;
@@ -845,9 +843,9 @@ const NoteModal = ({
       return;
     }
 
-    if (note?.creator._id !== userID) {
+    if (note?.creator?._id !== userID) {
       openSnackRef.current({
-        snackMessage: "Only creator manage collaborators",
+        snackMessage: "Only creator can manage collaborators",
         showUndo: false,
       });
       closeCollab();
@@ -860,7 +858,7 @@ const NoteModal = ({
           updateCollabsAction({
             collabOpsMap,
             noteUUID: note?.uuid,
-            creatorID: note?.creator._id,
+            creatorID: note?.creator?._id,
             clientID,
           }),
       ],
@@ -882,8 +880,9 @@ const NoteModal = ({
     });
 
     setLocalNote((prev) => ({ ...prev, collaborators: noEmailCollabs }));
-
-    closeCollab();
+    requestAnimationFrame(() => {
+      closeCollab();
+    });
   };
 
   if (!isMounted) return;

@@ -90,7 +90,7 @@ const MoreMenu = ({
             onClick={containerClick}
             initial={{ opacity: 0, transform: "scale(0.97)" }}
             animate={{ opacity: 1, transform: "scale(1)" }}
-            exit={{ opacity: 0, transform: "scale(0.97)" }}
+            exit={{ opacity: 0, transform: "scale(0.97)", pointerEvents: "none" }}
             transition={{
               transform: {
                 type: "spring",
@@ -108,7 +108,7 @@ const MoreMenu = ({
               borderRadius: "0.6rem",
               position: "relative",
               paddingTop: navTitle?.trim() && "0",
-              pointerEvents: !isOpen && "none",
+              // pointerEvents: !isOpen && "none",
             }}
             ref={menuRef}
             className="menu not-draggable menu-border"

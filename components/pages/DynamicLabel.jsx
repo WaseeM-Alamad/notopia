@@ -280,7 +280,9 @@ const DynamicLabel = ({
   }, [calculateLayout, layout]);
 
   useEffect(() => {
-    calculateLayout();
+    setTimeout(() => {
+      calculateLayout();
+    }, 0);
     window.addEventListener("resize", debouncedCalculateLayout);
 
     return () => {
