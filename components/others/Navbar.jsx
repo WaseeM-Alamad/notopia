@@ -54,6 +54,7 @@ const Navbar = () => {
     setBindsOpenRef,
     isOnline,
     setIsExpanded,
+    floatingBtnRef,
   } = useAppContext();
   const [isLoading, setIsLoading] = useState(0);
   const [UpToDatetrigger, setUpToDateTrigger] = useState(true);
@@ -80,7 +81,7 @@ const Navbar = () => {
 
   useEffect(() => {
     const width = window.innerWidth;
-    setShowInput(!(width < 795))
+    setShowInput(!(width < 795));
     requestAnimationFrame(() => {
       handleResizeLayout();
     });
@@ -94,6 +95,7 @@ const Navbar = () => {
   useEffect(() => {
     ignoreKeysRef.current = settingsOpen;
     const nav = document.querySelector("nav");
+    const floatingBtn = floatingBtnRef?.current;
     const scrollbarWidth =
       window.innerWidth - document.documentElement.clientWidth;
 
@@ -101,10 +103,12 @@ const Navbar = () => {
       document.body.style.overflow = "hidden";
       document.body.style.paddingRight = `${scrollbarWidth}px`;
       if (nav) nav.style.paddingRight = `${scrollbarWidth}px`;
+      if (floatingBtn) floatingBtn.style.paddingRight = `${scrollbarWidth}px`;
     } else {
       document.body.style.overflow = "auto";
       document.body.style.paddingRight = "";
       if (nav) nav.style.paddingRight = "0px";
+      if (floatingBtn) floatingBtn.style.paddingRight = "0px";
 
       if (settingsRef.current) {
         settingsRef.current.style.marginLeft = `${scrollbarWidth / 2}px`;
@@ -430,14 +434,18 @@ const Navbar = () => {
       setShowNav(true);
     }
 
-    if (width < 605 && !modalOpenRef.current) {
-      setLayout("list");
+    if (width < 605) {
+      !modalOpenRef.current
+        ? setLayout("list")
+        : localStorage.setItem("layout", layout);
       setThreshold2(true);
       setShowLayoutBtn(false);
     } else {
       setThreshold2(false);
       const savedLayout = localStorage.getItem("layout");
-      setLayout(savedLayout);
+      !modalOpenRef.current
+        ? setLayout(savedLayout)
+        : localStorage.setItem("layout", layout);
       if (currentSection?.toLowerCase() === "search") {
         if (isFiltered) {
           setShowLayoutBtn(true);
@@ -483,7 +491,10 @@ const Navbar = () => {
             onClick={() => {
               closeToolTip();
               const width = window.innerWidth;
-              setIsExpanded((prev) => ({open: !prev.open, threshold: width < 605 ? "before": "after" }));
+              setIsExpanded((prev) => ({
+                open: !prev.open,
+                threshold: width < 605 ? "before" : "after",
+              }));
             }}
             className="side-expand-btn"
           />

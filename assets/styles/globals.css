@@ -4838,7 +4838,7 @@ img {
 
 aside {
   position: fixed;
-  padding-top: 2.5rem;
+  padding-top: .5rem;
   top: 64px;
   z-index: 99;
   background-color: #ffffff;
@@ -4969,7 +4969,7 @@ aside svg {
   color: #000000;
 }
 
-.menu-expanded .add-btn {
+.menu-expanded .add-btn-expand {
   margin-left: 0;
   padding-left: 16px;
   width: 100%;
@@ -5137,4 +5137,15 @@ aside svg {
     rgba(32, 33, 36, 0.9) 50%,
     rgba(32, 33, 36, 0.9) 100%
   );
+}
+
+.floating-btn {
+  position: fixed;
+  right: 1.2rem;
+  z-index: 190 !important;
+  margin: 0;
+}
+
+.side-add-btn {
+  margin-top: 2rem;
 }

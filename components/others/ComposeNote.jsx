@@ -32,6 +32,7 @@ const ComposeNote = ({
     openSnackRef,
     notesStateRef,
     clientID,
+    floatingBtnRef,
   } = useAppContext();
   const [isDragOver, setIsDragOver] = useState(false);
   const [isClient, setIsClient] = useState(false);
@@ -304,16 +305,19 @@ const ComposeNote = ({
 
   useEffect(() => {
     const nav = document.querySelector("nav");
+    const floatingBtn = floatingBtnRef?.current;
     if (isOpen) {
       const scrollbarWidth =
         window.innerWidth - document.documentElement.clientWidth;
       document.body.style.overflow = "hidden";
       document.body.style.paddingRight = `${scrollbarWidth}px`;
       if (nav) nav.style.paddingRight = `${scrollbarWidth}px`;
+      if (floatingBtn) floatingBtn.style.paddingRight = `${scrollbarWidth}px`;
     } else {
       document.body.style.overflow = "auto";
       document.body.style.paddingRight = "";
       if (nav) nav.style.paddingRight = "0px";
+      if (floatingBtn) floatingBtn.style.paddingRight = "0px";
     }
   }, [isOpen]);
 

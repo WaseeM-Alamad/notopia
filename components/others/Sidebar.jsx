@@ -18,6 +18,7 @@ import { useAppContext } from "@/context/AppContext";
 import SideButtons from "./SideButtons";
 import SideTooltip from "../Tools/SideTooltip";
 import { AnimatePresence } from "framer-motion";
+import FloatingButton from "./FloatingButton";
 
 const Sidebar = memo(() => {
   const {
@@ -34,6 +35,7 @@ const Sidebar = memo(() => {
   const [isDragging, setIsDragging] = useState(null);
   const [actionTitle, setActionTitle] = useState("");
   const [tooltipOpen, setTooltipOpen] = useState(false);
+  const [triggerFloatingBtn, setTriggerFloatingBtn] = useState(false);
 
   const layoutFrameRef = useRef(null);
   const tooltipTimeoutRef = useRef(null);
@@ -63,6 +65,18 @@ const Sidebar = memo(() => {
     } else {
       setCurrentHash("home");
     }
+  }, []);
+
+  useEffect(() => {
+    const handler = () => {
+      const width = window.innerWidth;
+      setTriggerFloatingBtn(width < 605);
+    };
+
+    handler();
+
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
   }, []);
 
   useEffect(() => {
@@ -292,22 +306,34 @@ const Sidebar = memo(() => {
         <aside
           className={`${isDragging ? "side-dragging" : ""} ${isExpanded.threshold === "before" && isExpanded.open ? "sidebar-shadow" : ""}`}
         >
-          <button
-            ref={addButtonRef}
-            onClick={handleAddNote}
-            id="add-btn"
-            className="add-btn"
-            onMouseEnter={showSideTooltip}
-            onMouseLeave={hideSideTooltip}
-          >
-            <AnimatePresence>
-              {tooltipOpen && (
-                <SideTooltip text={actionTitle} anchor={tooltipAnc} />
-              )}
-            </AnimatePresence>
-            <AddButton />
-            <span className="side-btn-title">{actionTitle}</span>
-          </button>
+          <AnimatePresence>
+            {triggerFloatingBtn && (
+              <FloatingButton
+                addButtonRef={addButtonRef}
+                handleAddNote={handleAddNote}
+              />
+            )}
+          </AnimatePresence>
+
+          {!triggerFloatingBtn && (
+            <button
+              ref={addButtonRef}
+              onClick={handleAddNote}
+              id="add-btn"
+              className="add-btn add-btn-expand side-add-btn"
+              onMouseEnter={showSideTooltip}
+              onMouseLeave={hideSideTooltip}
+            >
+              <AnimatePresence>
+                {tooltipOpen && (
+                  <SideTooltip text={actionTitle} anchor={tooltipAnc} />
+                )}
+              </AnimatePresence>
+              <AddButton />
+              <span className="side-btn-title">{actionTitle}</span>
+            </button>
+          )}
+
           <div ref={containerRef} className="btns-container">
             <SideButtons
               navItems={navItems}
