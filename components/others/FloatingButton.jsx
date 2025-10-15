@@ -11,7 +11,7 @@ const FloatingButton = ({ addButtonRef, handleAddNote }) => {
       ref={floatingBtnRef}
       className="floating-btn"
       initial={{ bottom: -50 }}
-      animate={{ bottom: 25.6 }}
+      animate={{ bottom: 30.6 }}
       exit={{ bottom: -50 }}
       transition={{
         type: "spring",
@@ -24,7 +24,7 @@ const FloatingButton = ({ addButtonRef, handleAddNote }) => {
         ref={addButtonRef}
         onClick={handleAddNote}
         id="add-btn"
-        className="add-btn"
+        className="add-btn add-btn-sm"
         style={{ margin: 0 }}
         onMouseEnter={showSideTooltip}
         onMouseLeave={hideSideTooltip}

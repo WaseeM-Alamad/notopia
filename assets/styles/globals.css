@@ -4838,7 +4838,7 @@ img {
 
 aside {
   position: fixed;
-  padding-top: .5rem;
+  padding-top: 0.5rem;
   top: 64px;
   z-index: 99;
   background-color: #ffffff;
@@ -5141,11 +5141,18 @@ aside svg {
 
 .floating-btn {
   position: fixed;
-  right: 1.2rem;
+  right: 1.6rem;
   z-index: 190 !important;
   margin: 0;
 }
 
 .side-add-btn {
   margin-top: 2rem;
+}
+
+.add-btn-sm {
+  margin: 0;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
 }
