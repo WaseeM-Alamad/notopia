@@ -6,6 +6,7 @@ import { v4 as uuid } from "uuid";
 import { AnimatePresence } from "framer-motion";
 import { validateImageFile } from "@/utils/validateImage";
 import { useAppContext } from "@/context/AppContext";
+import ColorDrawer from "./ColorDrawer";
 
 const AddModalTools = ({
   isOpen,
@@ -23,9 +24,11 @@ const AddModalTools = ({
   setLabelsOpen,
   inputRef,
 }) => {
-  const { showTooltip, hideTooltip, closeToolTip, openSnackRef } = useAppContext();
+  const { showTooltip, hideTooltip, closeToolTip, openSnackRef } =
+    useAppContext();
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
   const [colorAnchorEl, setColorAnchorEl] = useState();
+  const [colorDrawerOpen, setColorDrawerOpen] = useState(false);
   const colorButtonRef = useRef(null);
   const closeRef = useRef(null);
 
@@ -37,6 +40,12 @@ const AddModalTools = ({
 
   const toggleMenu = (e) => {
     closeToolTip();
+    const width = window.innerWidth;
+
+    if (width < 605) {
+      setColorDrawerOpen(true);
+      return;
+    }
     setColorAnchorEl(e.currentTarget);
     setColorMenuOpen((prev) => !prev);
   };
@@ -90,7 +99,10 @@ const AddModalTools = ({
   };
 
   return (
-    <div style={{ opacity: isOpen ? "1" : "0", marginTop: "auto" }} className="modal-bottom">
+    <div
+      style={{ opacity: isOpen ? "1" : "0", marginTop: "auto" }}
+      className="modal-bottom"
+    >
       {/* <p className="date">{FormattedDate}</p> */}
       <div className="modal-bottom-icons">
         <Button
@@ -156,6 +168,14 @@ const AddModalTools = ({
             />
           )}
         </AnimatePresence>
+        <ColorDrawer
+          handleColorClick={handleColorClick}
+          handleBackground={handleBackground}
+          selectedColor={selectedColor}
+          open={colorDrawerOpen}
+          setOpen={setColorDrawerOpen}
+          selectedBG={note?.background}
+        />
         <Button
           onClick={(e) => {
             closeToolTip();

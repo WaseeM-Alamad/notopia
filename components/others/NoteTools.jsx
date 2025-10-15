@@ -11,6 +11,7 @@ import { useSearch } from "@/context/SearchContext";
 import { validateImageFile } from "@/utils/validateImage";
 import handleServerCall from "@/utils/handleServerCall";
 import localDbReducer from "@/utils/localDbReducer";
+import ColorDrawer from "./ColorDrawer.jsx";
 
 const NoteTools = ({
   note = {},
@@ -42,6 +43,7 @@ const NoteTools = ({
   const { filters } = useSearch();
   const [colorAnchorEl, setColorAnchorEl] = useState(null);
   const [labelsOpen, setLabelsOpen] = useState(false);
+  const [colorDrawerOpen, setColorDrawerOpen] = useState(false);
 
   const ImagesWithNoBottomContent =
     note?.images?.length > 0 &&
@@ -139,6 +141,36 @@ const NoteTools = ({
   }, [colorMenuOpen]);
 
   useEffect(() => {
+    if (!isColorFiltered) return;
+
+    const handler = async () => {
+      if (!colorDrawerOpen && selectedColor !== note?.color) {
+        noteActions({
+          type: "COLOR",
+          note: note,
+          newColor: selectedColor,
+          isUseEffectCall: true,
+        });
+
+        handleServerCall(
+          [
+            () =>
+              NoteUpdateAction({
+                type: "color",
+                value: selectedColor,
+                noteUUIDs: [note?.uuid],
+                clientID: clientID,
+              }),
+          ],
+          openSnackRef.current
+        );
+      }
+    };
+
+    handler();
+  }, [colorDrawerOpen]);
+
+  useEffect(() => {
     setSelectedColor(note?.color);
   }, [note?.color]);
 
@@ -179,6 +211,13 @@ const NoteTools = ({
 
   const toggleMenu = (e) => {
     closeToolTip();
+    const width = window.innerWidth;
+
+    if (width < 605) {
+      setColorDrawerOpen(true);
+      return;
+    }
+
     setColorAnchorEl(e.currentTarget);
     setColorMenuOpen(!colorMenuOpen);
   };
@@ -800,6 +839,14 @@ const NoteTools = ({
           />
         )}
       </AnimatePresence>
+      <ColorDrawer
+        handleColorClick={handleColorClick}
+        handleBackground={handleBackground}
+        open={colorDrawerOpen}
+        setOpen={setColorDrawerOpen}
+        selectedColor={selectedColor}
+        selectedBG={note?.background}
+      />
     </>
   );
 };

@@ -1802,10 +1802,14 @@ svg {
 
 .default-color-icon {
   background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M21.19 21.19l-3.06-3.06-1.43-1.43-8.3-8.3L7 7 2.81 2.81 1.39 4.22l4.25 4.25A8.056 8.056 0 0 0 4.01 13H4c0 4.42 3.58 8 8 8 1.74 0 3.35-.57 4.66-1.51l3.12 3.12 1.41-1.42zM12 19c-3.22 0-5.86-2.55-5.99-5.74l.01-.19c.04-1.14.42-2.25 1.06-3.18l8.16 8.16c-.95.6-2.05.95-3.24.95zm0-14.17l4.25 4.24a6.014 6.014 0 0 1 1.74 4.01l.01.17c-.02.56-.13 1.11-.3 1.62l1.53 1.53c.49-1.03.77-2.18.77-3.4h-.01a7.975 7.975 0 0 0-2.33-5.35L12 2 8.41 5.58 9.83 7 12 4.83z'%3E%3C/path%3E%3C/svg%3E");
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .dark-mode .default-color-icon {
   background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff' d='M21.19 21.19l-3.06-3.06-1.43-1.43-8.3-8.3L7 7 2.81 2.81 1.39 4.22l4.25 4.25A8.056 8.056 0 0 0 4.01 13H4c0 4.42 3.58 8 8 8 1.74 0 3.35-.57 4.66-1.51l3.12 3.12 1.41-1.42zM12 19c-3.22 0-5.86-2.55-5.99-5.74l.01-.19c.04-1.14.42-2.25 1.06-3.18l8.16 8.16c-.95.6-2.05.95-3.24.95zm0-14.17l4.25 4.24a6.014 6.014 0 0 1 1.74 4.01l.01.17c-.02.56-.13 1.11-.3 1.62l1.53 1.53c.49-1.03.77-2.18.77-3.4h-.01a7.975 7.975 0 0 0-2.33-5.35L12 2 8.41 5.58 9.83 7 12 4.83z'%3E%3C/path%3E%3C/svg%3E");
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .menu-color-btn {
@@ -5156,4 +5160,193 @@ aside svg {
   justify-content: center;
   width: 53px;
   height: 53px;
+}
+
+.drawer-overlay {
+  position: fixed;
+  z-index: 300;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+}
+
+.drawer-content {
+  position: fixed;
+  background-color: #fff;
+  z-index: 301;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  max-height: 50%; /* adjust as needed */
+  /* background: #fff; */
+  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);
+  /* padding: 16px; */
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  animation: slideUp 0.25s ease-out;
+  padding-bottom: 12px;
+}
+
+.dark-mode .drawer-content {
+  background-color: rgb(23, 23, 23);
+}
+
+.drawer-handle {
+  display: none; /* optional */
+}
+
+/* Slide up animation */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.drawer-content:active {
+  cursor: grabbing;
+}
+
+.open-button {
+  padding: 12px 24px;
+  font-size: 16px;
+  background: #1a73e8;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 300;
+}
+
+.drawer-handle {
+  width: 32px;
+  height: 4px;
+  background-color: #dadce0;
+  border-radius: 2px;
+  margin: 8px auto 4px;
+}
+
+.drawer-body {
+  /* padding: 8px 16px 4px; */
+}
+
+.drawer-top {
+  /* background-color: red; */
+  display: flex;
+  padding-top: 13px;
+  height: 10px;
+  width: 100%;
+}
+
+.drawer-top::before {
+  content: "";
+  background-color: #dadce0;
+  margin: auto;
+  height: 7px;
+  width: 25%;
+  border-radius: 1rem;
+}
+
+.dark-mode .drawer-top::before {
+  background-color: #3c4043;
+}
+
+.carousel-container {
+  padding-top: 13px;
+}
+
+.drawer-title {
+  padding-left: 25px;
+  padding-bottom: 5px;
+  font-weight: 500;
+}
+
+.carousel-scroll-container {
+  display: flex;
+  overflow-x: auto;
+  padding: 8px 0;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  /* cursor: grab; */
+}
+
+.carousel-scroll-container > :first-child {
+  background-color: transparent;
+  margin-left: 25px;
+}
+
+.carousel-scroll-container::-webkit-scrollbar {
+  display: none;
+}
+
+.carousel-scroll-container:active {
+  cursor: grabbing;
+}
+
+.drawer-carousel-item {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  margin: 0 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  transition: transform 0.15s ease;
+}
+
+.drawer-carousel-item:active {
+  cursor: grabbing;
+}
+
+.drawer-bg {
+  width: 56px;
+  height: 56px;
+}
+
+.drawer-selected-bg {
+  background-image: url("data:image/svg+xml,%3Csvg width='42' height='42' viewBox='0 0 42 42' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M15.75 28.35L9.62496 22.225C9.4648 22.0628 9.27404 21.9341 9.06376 21.8463C8.85348 21.7584 8.62786 21.7132 8.39996 21.7132C8.17207 21.7132 7.94644 21.7584 7.73616 21.8463C7.52588 21.9341 7.33513 22.0628 7.17496 22.225C6.49246 22.9075 6.49246 23.9925 7.17496 24.675L14.5075 32.0075C15.19 32.69 16.2925 32.69 16.975 32.0075L35.525 13.475C36.2075 12.7925 36.2075 11.7075 35.525 11.025C35.3648 10.8628 35.174 10.7341 34.9638 10.6463C34.7535 10.5584 34.5279 10.5132 34.3 10.5132C34.0721 10.5132 33.8464 10.5584 33.6362 10.6463C33.4259 10.7341 33.2351 10.8628 33.075 11.025L15.75 28.35Z' fill='%2300aeff'/%3E%3C/svg%3E%0A");
+  background-size: 80%;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.dark-mode .drawer-selected-bg {
+  background-image: url("data:image/svg+xml,%3Csvg width='42' height='42' viewBox='0 0 42 42' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M15.75 28.35L9.62496 22.225C9.4648 22.0628 9.27404 21.9341 9.06376 21.8463C8.85348 21.7584 8.62786 21.7132 8.39996 21.7132C8.17207 21.7132 7.94644 21.7584 7.73616 21.8463C7.52588 21.9341 7.33513 22.0628 7.17496 22.225C6.49246 22.9075 6.49246 23.9925 7.17496 24.675L14.5075 32.0075C15.19 32.69 16.2925 32.69 16.975 32.0075L35.525 13.475C36.2075 12.7925 36.2075 11.7075 35.525 11.025C35.3648 10.8628 35.174 10.7341 34.9638 10.6463C34.7535 10.5584 34.5279 10.5132 34.3 10.5132C34.0721 10.5132 33.8464 10.5584 33.6362 10.6463C33.4259 10.7341 33.2351 10.8628 33.075 11.025L15.75 28.35Z' fill='%236ab3f7'/%3E%3C/svg%3E%0A");
+}
+
+.drawer-item-selected {
+  border-color: #00aeff;
+}
+
+.dark-mode .drawer-item-selected {
+  border-color: #6ab3f7;
+}
+
+.selected-check-wrapper {
+  background-color: #00aeff;
+  position: absolute;
+  top: -5px;
+  right: -4.5px;
+  font-size: 19px;
+  display: flex;
+  border-radius: 50%;
+}
+
+.dark-mode .selected-check-wrapper {
+  background-color: #3e92f9;
 }

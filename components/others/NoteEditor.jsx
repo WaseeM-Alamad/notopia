@@ -641,7 +641,7 @@ const NoteEditor = ({
           localNote?.collaborators?.length > 0) && (
           <div className="note-labels-container">
             {localNote?.labels.length !== 0 && (
-              <NoteLabels note={localNote} modalRemoveLabel={removeLabel} />
+              <NoteLabels note={localNote} modalRemoveLabel={removeLabel} noteActions={noteActions} />
             )}
             {localNote?.collaborators && (
               <NoteCollabs

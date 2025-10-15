@@ -1,7 +1,7 @@
 import { useAppContext } from "@/context/AppContext";
 import React from "react";
 
-const NoteLabels = ({ note, modalRemoveLabel = null }) => {
+const NoteLabels = ({ note, modalRemoveLabel = null, noteActions }) => {
   const { labelsRef, closeToolTip, showTooltip, hideTooltip } = useAppContext();
 
   const handleLabelClick = (e, label) => {
@@ -43,7 +43,9 @@ const NoteLabels = ({ note, modalRemoveLabel = null }) => {
                 onClick={(e) => {
                   e.stopPropagation();
                   closeToolTip();
-                  modalRemoveLabel(labelUUID) || removeLabel(labelUUID);
+                  modalRemoveLabel
+                    ? modalRemoveLabel(labelUUID)
+                    : removeLabel(labelUUID);
                 }}
                 onMouseEnter={(e) => showTooltip(e, "Remove label")}
                 onMouseLeave={hideTooltip}

@@ -11,6 +11,7 @@ import MoreMenu from "./MoreMenu";
 import { validateImageFile } from "@/utils/validateImage";
 import handleServerCall from "@/utils/handleServerCall";
 import localDbReducer from "@/utils/localDbReducer";
+import ColorDrawer from "./ColorDrawer";
 
 const ModalTools = ({
   localNote,
@@ -52,6 +53,7 @@ const ModalTools = ({
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [labelsOpen, setLabelsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [colorDrawerOpen, setColorDrawerOpen] = useState(false);
   const userID = user?.id;
   const closeRef = useRef(null);
 
@@ -285,6 +287,12 @@ const ModalTools = ({
 
   const toggleColorMenu = (e) => {
     closeToolTip();
+    const width = window.innerWidth;
+
+    if (width < 605) {
+      setColorDrawerOpen(true);
+      return;
+    }
     setColorAnchorEl(e.currentTarget);
     setColorMenuOpen(!colorMenuOpen);
   };
@@ -568,6 +576,14 @@ const ModalTools = ({
                   />
                 )}
               </AnimatePresence>
+              <ColorDrawer
+                handleColorClick={handleColorClick}
+                handleBackground={handleBackground}
+                selectedColor={localNote?.color}
+                selectedBG={localNote?.background}
+                open={colorDrawerOpen}
+                setOpen={setColorDrawerOpen}
+              />
               <Button
                 onClick={(e) => {
                   closeToolTip();
