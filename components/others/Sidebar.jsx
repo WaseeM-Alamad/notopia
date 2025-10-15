@@ -255,7 +255,7 @@ const Sidebar = memo(() => {
   );
 
   const showSideTooltip = (e) => {
-    if (isExpanded) return;
+    if (isExpanded.open) return;
     const scrollContainer = containerRef.current;
     const currentTarget = e.currentTarget;
     tooltipTimeoutRef.current = setTimeout(() => {
@@ -288,8 +288,10 @@ const Sidebar = memo(() => {
 
   return (
     <>
-      <div className={isExpanded ? "menu-expanded" : ""}>
-        <aside className={isDragging ? "side-dragging" : ""}>
+      <div className={isExpanded.open ? "menu-expanded" : ""}>
+        <aside
+          className={`${isDragging ? "side-dragging" : ""} ${isExpanded.threshold === "before" && isExpanded.open ? "sidebar-shadow" : ""}`}
+        >
           <button
             ref={addButtonRef}
             onClick={handleAddNote}
@@ -300,10 +302,7 @@ const Sidebar = memo(() => {
           >
             <AnimatePresence>
               {tooltipOpen && (
-                <SideTooltip
-                  text={actionTitle}
-                  anchor={tooltipAnc}
-                />
+                <SideTooltip text={actionTitle} anchor={tooltipAnc} />
               )}
             </AnimatePresence>
             <AddButton />

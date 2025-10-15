@@ -100,6 +100,7 @@ const Archive = memo(
     const COLUMN_WIDTH = layout === "grid" ? 240 : 600;
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
+    const [addPadding, setAddPadding] = useState(false);
 
     const notesExist = order.some((uuid, index) => {
       const note = notes.get(uuid);
@@ -181,6 +182,11 @@ const Archive = memo(
     }, [calculateLayout]);
 
     useEffect(() => {
+      const width = window.innerWidth;
+      setAddPadding(width >= 605 && isExpanded.open);
+    }, [isExpanded.open]);
+
+    useEffect(() => {
       calculateLayoutRef.current = calculateLayout;
     }, [calculateLayout, layout]);
 
@@ -216,7 +222,7 @@ const Archive = memo(
       <>
         <div
           ref={rootContainerRef}
-          className={`starting-div ${isExpanded ? "sidebar-expanded" : "sidebar-collapsed"}`}
+          className={`starting-div ${addPadding ? "sidebar-expanded" : "sidebar-collapsed"}`}
         >
           {/* <div style={{ padding: "0 2rem" }} className="page-header"> */}
           {/* <ArchiveIcon size={22} color="#212121" /> */}

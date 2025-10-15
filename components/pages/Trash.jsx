@@ -113,6 +113,8 @@ const Trash = memo(
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
 
+    const [addPadding, setAddPadding] = useState(false);
+
     const notesExist = order.some((uuid, index) => {
       const note = notes.get(uuid);
       if (!note) return false;
@@ -191,6 +193,11 @@ const Trash = memo(
         calculateLayout();
       }, 100);
     }, [calculateLayout]);
+
+    useEffect(() => {
+      const width = window.innerWidth;
+      setAddPadding(width >= 605 && isExpanded.open);
+    }, [isExpanded.open]);
 
     useEffect(() => {
       calculateLayoutRef.current = calculateLayout;
@@ -277,7 +284,7 @@ const Trash = memo(
       <>
         <div
           ref={rootContainerRef}
-          className={`starting-div ${isExpanded ? "sidebar-expanded" : "sidebar-collapsed"}`}
+          className={`starting-div ${addPadding ? "sidebar-expanded" : "sidebar-collapsed"}`}
         >
           <div className="trash-section-header">
             Notes in Trash are deleted after 7 days.

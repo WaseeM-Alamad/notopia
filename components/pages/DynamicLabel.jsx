@@ -105,6 +105,7 @@ const DynamicLabel = ({
   const [pinnedHeight, setPinnedHeight] = useState(null);
   const [sectionsHeight, setSectionsHeight] = useState(null);
   const [layoutReady, setLayoutReady] = useState(false);
+  const [addPadding, setAddPadding] = useState(false);
   const resizeTimeoutRef = useRef(null);
   const layoutFrameRef = useRef(null);
   const lastAddedNoteRef = useRef(null);
@@ -276,6 +277,11 @@ const DynamicLabel = ({
   }, [calculateLayout, labelObj]);
 
   useEffect(() => {
+    const width = window.innerWidth;
+    setAddPadding(width >= 605 && isExpanded.open);
+  }, [isExpanded.open]);
+
+  useEffect(() => {
     calculateLayoutRef.current = calculateLayout;
   }, [calculateLayout, layout]);
 
@@ -327,7 +333,7 @@ const DynamicLabel = ({
     <>
       <div
         ref={rootContainerRef}
-        className={`starting-div ${isExpanded ? "sidebar-expanded" : "sidebar-collapsed"}`}
+        className={`starting-div ${addPadding ? "sidebar-expanded" : "sidebar-collapsed"}`}
       >
         <div
           ref={containerRef}

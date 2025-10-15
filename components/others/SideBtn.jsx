@@ -57,7 +57,7 @@ const SideBtn = ({
     const currentTarget = e.currentTarget;
     let virtualAnchor = null;
 
-    if (!isExpanded) {
+    if (!isExpanded.open) {
       virtualAnchor = {
         getBoundingClientRect: () => {
           const targetRect = currentTarget.getBoundingClientRect();
@@ -180,7 +180,7 @@ const SideBtn = ({
   const tooltipTimeoutRef = useRef(null);
 
   const showSideTooltip = (e) => {
-    if (isExpanded || moreMenuOpen) return;
+    if (isExpanded.open || moreMenuOpen) return;
     const scrollContainer = containerRef.current;
     const currentTarget = e.currentTarget;
     tooltipTimeoutRef.current = setTimeout(() => {

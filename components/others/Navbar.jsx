@@ -482,7 +482,8 @@ const Navbar = () => {
             onMouseLeave={hideTooltip}
             onClick={() => {
               closeToolTip();
-              setIsExpanded((prev) => !prev);
+              const width = window.innerWidth;
+              setIsExpanded((prev) => ({open: !prev.open, threshold: width < 605 ? "before": "after" }));
             }}
             className="side-expand-btn"
           />

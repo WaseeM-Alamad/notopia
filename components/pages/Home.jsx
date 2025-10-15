@@ -168,6 +168,7 @@ const Home = memo(
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
     const [layoutReady, setLayoutReady] = useState(false);
+    const [addPadding, setAddPadding] = useState(false);
     const COLUMN_WIDTH = layout === "grid" ? 240 : 600;
 
     const hasPinned = [...visibleItems].some((uuid) => {
@@ -286,6 +287,11 @@ const Home = memo(
         });
       });
     }, [isGrid]);
+
+    useEffect(() => {
+      const width = window.innerWidth;
+      setAddPadding(width >= 605 && isExpanded.open);
+    }, [isExpanded.open]);
 
     useEffect(() => {
       calculateLayoutRef.current = calculateLayout;
@@ -593,7 +599,7 @@ const Home = memo(
       <>
         <div
           ref={rootContainerRef}
-          className={`starting-div ${isExpanded ? "sidebar-expanded" : "sidebar-collapsed"}`}
+          className={`starting-div ${addPadding ? "sidebar-expanded" : "sidebar-collapsed"}`}
         >
           {/* <button
             style={{ position: "fixed" }}

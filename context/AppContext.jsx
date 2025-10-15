@@ -28,7 +28,7 @@ export function AppProvider({ children, initialUser }) {
   const [isFiltered, setIsFiltered] = useState(false);
   const [layout, setLayout] = useState(null);
   const [isOnline, setIsOnline] = useState(true);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState({ open: null, threshold: null });
   const focusedIndex = useRef(null);
 
   const clientID = useRef(uuid());
@@ -52,14 +52,53 @@ export function AppProvider({ children, initialUser }) {
     currentSection !== "DynamicLabel" && currentSection !== "Search";
 
   useEffect(() => {
+    const width = window.innerWidth;
     const sidebarExpanded = localStorage.getItem("sidebar-expanded");
-    setIsExpanded(sidebarExpanded === "true");
+    setIsExpanded({
+      open: width < 605 ? false : sidebarExpanded === "true",
+      threshold: width < 605 ? "before" : "after",
+    });
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme === "dark") {
       document.documentElement.classList.add("dark-mode");
       isDarkModeRef.current = true;
     }
   }, []);
+
+  useEffect(() => {
+    if (!calculateLayoutRef.current) return;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        calculateLayoutRef.current();
+      });
+    });
+  }, [isExpanded.open]);
+
+  useEffect(() => {
+    const handler = (e) => {
+      const width = window.innerWidth;
+
+      if (width < 605) {
+        if (isExpanded.threshold === "before") return;
+        setIsExpanded({ open: false, threshold: "before" });
+      } else {
+        if (isExpanded.threshold === "after") return;
+        setIsExpanded({ open: false, threshold: "after" });
+      }
+    };
+
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, [isExpanded]);
+
+  useEffect(() => {
+    const width = window.innerWidth;
+    if (width < 605) return;
+    localStorage.setItem(
+      "sidebar-expanded",
+      isExpanded.open ? "true" : "false"
+    );
+  }, [isExpanded.open]);
 
   useEffect(() => {
     focusedIndex.current = null;
@@ -341,17 +380,6 @@ export function AppProvider({ children, initialUser }) {
       text: prev?.text,
     }));
   }, []);
-
-  useEffect(() => {
-    if (!calculateLayoutRef.current) return;
-    requestAnimationFrame(() => {
-      calculateLayoutRef.current();
-    });
-  }, [isExpanded]);
-
-  useEffect(() => {
-    localStorage.setItem("sidebar-expanded", isExpanded ? "true" : "false");
-  }, [isExpanded]);
 
   return (
     <AppContext.Provider
