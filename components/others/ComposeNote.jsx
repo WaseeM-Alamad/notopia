@@ -314,11 +314,15 @@ const ComposeNote = ({
       if (nav) nav.style.paddingRight = `${scrollbarWidth}px`;
       if (floatingBtn) floatingBtn.style.paddingRight = `${scrollbarWidth}px`;
     } else {
-      document.body.style.overflow = "auto";
-      document.body.style.paddingRight = "";
-      if (nav) nav.style.paddingRight = "0px";
-      if (floatingBtn) floatingBtn.style.paddingRight = "0px";
+      document.body.removeAttribute("style");
+      if (floatingBtn) floatingBtn.style.removeProperty("padding-right");
+      if (nav) nav.style.removeProperty("padding-right");
     }
+    return () => {
+      document.body.removeAttribute("style");
+      if (floatingBtn) floatingBtn.style.removeProperty("padding-right");
+      if (nav) nav.style.removeProperty("padding-right");
+    };
   }, [isOpen]);
 
   useEffect(() => {

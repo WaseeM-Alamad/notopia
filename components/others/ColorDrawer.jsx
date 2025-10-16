@@ -3,7 +3,7 @@ import { Drawer } from "vaul";
 import DrawerCarousel from "./DrawerCarousel";
 import { useAppContext } from "@/context/AppContext";
 
-const ColorMenu = ({
+const ColorDrawer = ({
   open,
   setOpen,
   selectedBG,
@@ -46,27 +46,37 @@ const ColorMenu = ({
   }, []);
 
   useEffect(() => {
-    if (open) {
+    const handler = () => {
+      const width = window.innerWidth;
+      if (width < 605) return;
+      setOpen(false);
+    };
+
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+
+  useEffect(() => {
+    if (open) { 
       const nav = document.querySelector("nav");
+      const topMenu = document.querySelector("#top-menu");
       const floatingBtn = floatingBtnRef?.current;
       const scrollbarWidth =
         window.innerWidth - document.documentElement.clientWidth;
-      document.body.style.overflow = "hidden";
-      document.body.style.paddingRight = `${scrollbarWidth}px`;
+      if (topMenu) topMenu.style.paddingRight = `${scrollbarWidth}px`;
       if (nav) nav.style.paddingRight = `${scrollbarWidth}px`;
       if (floatingBtn) floatingBtn.style.paddingRight = `${scrollbarWidth}px`;
     }
   }, [open]);
 
-  const onAnimationEnd = () => {
-    setTimeout(() => {
-      const nav = document.querySelector("nav");
-      const floatingBtn = floatingBtnRef?.current;
-      document.body.style.overflow = "auto";
-      document.body.style.paddingRight = "";
-      if (nav) nav.style.paddingRight = "0px";
-      if (floatingBtn) floatingBtn.style.paddingRight = "0px";
-    }, 100);
+  const onClose = () => {
+    const nav = document.querySelector("nav");
+    const floatingBtn = floatingBtnRef?.current;
+    const topMenu = document.querySelector("#top-menu");
+    document.body.removeAttribute("data-scroll-locked");
+    if (topMenu) topMenu.style.removeProperty("padding-right");
+    if (floatingBtn) floatingBtn.style.removeProperty("padding-right");
+    if (nav) nav.style.removeProperty("padding-right");
   };
 
   return (
@@ -75,15 +85,15 @@ const ColorMenu = ({
         if (!isDragging) setIsDragging(true);
       }}
       onRelease={() => setIsDragging(false)}
-      onAnimationEnd={onAnimationEnd}
+      onClose={onClose}
       open={open}
-      onOpenChange={setOpen}
+      onOpenChange={(val) => setOpen(val)}
     >
       <Drawer.Portal>
         <Drawer.Overlay
-          onTouchEnd={() => setOpen(false)}
           onClick={handleContentClick}
           onMouseMove={handleContentClick}
+          onTouchEnd={() => setOpen(false)}
           className="drawer-overlay"
         />
         <Drawer.Content
@@ -91,6 +101,7 @@ const ColorMenu = ({
           onMouseMove={handleContentClick}
           className="drawer-content"
         >
+          <Drawer.Description />
           <Drawer.Title></Drawer.Title>
           <div className="drawer-handle" />
 
@@ -121,4 +132,4 @@ const ColorMenu = ({
   );
 };
 
-export default memo(ColorMenu);
+export default memo(ColorDrawer);

@@ -1570,12 +1570,14 @@ svg {
   background-image: url("/menu-bgs/menu-bg-Default.svg");
   background-repeat: no-repeat;
   background-position: center;
+  background-color: rgba(255, 255, 255, 1);
   outline: solid 0.1rem #e0e0e0;
   border: solid 0.03rem #e0e0e0;
 }
 
 .dark-mode .menu-bg-DefaultBG {
   background-image: url("/menu-bgs/menu-bg-d-Default.svg");
+  background-color: rgb(23, 23, 23);
   outline: solid 0.1rem #5f6368;
   border: solid 0.03rem #5f6368;
 }
@@ -2156,6 +2158,7 @@ img {
   color: rgb(60, 64, 67);
   white-space: nowrap;
   user-select: none;
+  box-sizing: border-box;
 }
 
 .dark-mode .top-menu {
@@ -5167,7 +5170,6 @@ aside svg {
   z-index: 300;
   inset: 0;
   background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(2px);
 }
 
 .drawer-content {
@@ -5237,12 +5239,7 @@ aside svg {
   margin: 8px auto 4px;
 }
 
-.drawer-body {
-  /* padding: 8px 16px 4px; */
-}
-
 .drawer-top {
-  /* background-color: red; */
   display: flex;
   padding-top: 13px;
   height: 10px;
@@ -5282,7 +5279,6 @@ aside svg {
 }
 
 .carousel-scroll-container > :first-child {
-  background-color: transparent;
   margin-left: 25px;
 }
 
@@ -5313,6 +5309,29 @@ aside svg {
   cursor: grabbing;
 }
 
+.drawer-carousel-item::before {
+  content: "";
+  position: absolute;
+  transform-origin: center;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(1);
+  background-color: rgba(20, 20, 20, 0.15);
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  z-index: -1;
+  transition: transform 0.23s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark-mode .drawer-carousel-item::before {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.drawer-carousel-item:active::before {
+  transform: translate(-50%, -50%) scale(1.3);
+}
+
 .drawer-bg {
   width: 56px;
   height: 56px;
@@ -5331,10 +5350,12 @@ aside svg {
 
 .drawer-item-selected {
   border-color: #00aeff;
+  outline-color: #00aeff;
 }
 
 .dark-mode .drawer-item-selected {
   border-color: #6ab3f7;
+  outline-color: #6ab3f7;
 }
 
 .selected-check-wrapper {
@@ -5349,4 +5370,34 @@ aside svg {
 
 .dark-mode .selected-check-wrapper {
   background-color: #3e92f9;
+}
+
+.drawer-item-selected::after {
+  content: "";
+  position: absolute;
+  transform-origin: center;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(1.3);
+  background-color: rgba(20, 20, 20, 0.1);
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  z-index: -1;
+  animation: ripple 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark-mode .drawer-item-selected::after {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+@keyframes ripple {
+  0% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
 }

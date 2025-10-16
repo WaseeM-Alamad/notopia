@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { memo, useRef, useState } from "react";
 import DoneRoundedIcon from "@mui/icons-material/DoneRounded";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -20,6 +20,7 @@ const DrawerCarousel = ({
   const [lastX, setLastX] = useState(0);
   const [lastTime, setLastTime] = useState(0);
   const animationRef = useRef(null);
+  const cancelClickRef = useRef(null);
 
   const classes = (item) => {
     return type === "colors"
@@ -44,6 +45,8 @@ const DrawerCarousel = ({
   const handleMouseMove = (e) => {
     if (!isDragging || isDrawerDragging) return;
     e.preventDefault();
+
+    cancelClickRef.current = true;
 
     const x = e.pageX - scrollRef.current.offsetLeft;
     const walk = (x - startX) * 1.5;
@@ -70,6 +73,11 @@ const DrawerCarousel = ({
   const handleMouseUp = () => {
     if (isDrawerDragging) return;
     setIsDragging(false);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        cancelClickRef.current = false;
+      });
+    });
 
     if (Math.abs(velocityRef.current) > 0.05) {
       applyMomentum();
@@ -87,6 +95,10 @@ const DrawerCarousel = ({
   };
 
   const handleItemClick = (item) => {
+    if (cancelClickRef.current) {
+      cancelClickRef.current = false;
+      return;
+    }
     if (type === "colors") {
       handleColorClick(item);
     } else {
@@ -143,4 +155,4 @@ const DrawerCarousel = ({
   );
 };
 
-export default DrawerCarousel;
+export default memo(DrawerCarousel);

@@ -16,6 +16,7 @@ import ManageTopLabelsMenu from "../ManageTopLabelsMenu";
 import { useSearch } from "@/context/SearchContext";
 import handleServerCall from "@/utils/handleServerCall";
 import localDbReducer from "@/utils/localDbReducer";
+import ColorDrawer from "../ColorDrawer";
 
 const TopMenuHome = ({
   notes,
@@ -46,6 +47,7 @@ const TopMenuHome = ({
   const [selectedNumber, setSelectedNumber] = useState(false);
   const [colorAnchorEl, setColorAnchorEl] = useState(null);
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
+  const [colorDrawerOpen, setColorDrawerOpen] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [labelsOpen, setLabelsOpen] = useState(false);
   const [inTrash, setInTrash] = useState(false);
@@ -171,6 +173,12 @@ const TopMenuHome = ({
 
   const handleOpenColor = (e) => {
     closeToolTip();
+    const width = window.innerWidth;
+
+    if (width < 605) {
+      setColorDrawerOpen(true);
+      return;
+    }
     setColorAnchorEl(e.currentTarget);
     setColorMenuOpen((prev) => !prev);
   };
@@ -211,7 +219,7 @@ const TopMenuHome = ({
   };
 
   useEffect(() => {
-    if (!colorMenuOpen) {
+    if (!colorMenuOpen || !colorDrawerOpen) {
       if (
         filters.color &&
         selectedColor &&
@@ -249,7 +257,7 @@ const TopMenuHome = ({
 
       initialColorRef.current = null;
     }
-  }, [colorMenuOpen]);
+  }, [colorMenuOpen, colorDrawerOpen]);
 
   const handleBackground = async (newBG) => {
     if (selectedBG === newBG) return;
@@ -911,6 +919,7 @@ const TopMenuHome = ({
           <motion.div
             ref={topMenuRef}
             className="top-menu"
+            id="top-menu"
             initial={{ opacity: 0, y: -20 }}
             animate={{
               opacity: selectedNumber > 0 ? 1 : 0,
@@ -1054,6 +1063,14 @@ const TopMenuHome = ({
           />
         )}
       </AnimatePresence>
+      <ColorDrawer
+        handleColorClick={handleColorClick}
+        handleBackground={handleBackground}
+        open={colorDrawerOpen}
+        setOpen={setColorDrawerOpen}
+        selectedColor={selectedColor}
+        selectedBG={selectedBG}
+      />
     </>
   );
 };

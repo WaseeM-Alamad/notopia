@@ -263,7 +263,7 @@ const page = () => {
     const btn = addButtonRef?.current;
     requestAnimationFrame(() => {
       if (order.length === 0 && currentSection === "Trash") {
-        if (btn && btn.disabled) {
+        if (btn) {
           btn.disabled = true;
         }
         return;
@@ -278,6 +278,7 @@ const page = () => {
           btn.disabled = false;
         }
       } else {
+        if (!btn) return;
         btn.disabled = false;
       }
     });

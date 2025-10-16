@@ -839,14 +839,14 @@ const NoteTools = ({
           />
         )}
       </AnimatePresence>
-      <ColorDrawer
-        handleColorClick={handleColorClick}
-        handleBackground={handleBackground}
-        open={colorDrawerOpen}
-        setOpen={setColorDrawerOpen}
-        selectedColor={selectedColor}
-        selectedBG={note?.background}
-      />
+        <ColorDrawer
+          handleColorClick={handleColorClick}
+          handleBackground={handleBackground}
+          open={colorDrawerOpen}
+          setOpen={setColorDrawerOpen}
+          selectedColor={selectedColor}
+          selectedBG={note?.background}
+        />
     </>
   );
 };

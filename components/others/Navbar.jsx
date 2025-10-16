@@ -105,10 +105,9 @@ const Navbar = () => {
       if (nav) nav.style.paddingRight = `${scrollbarWidth}px`;
       if (floatingBtn) floatingBtn.style.paddingRight = `${scrollbarWidth}px`;
     } else {
-      document.body.style.overflow = "auto";
-      document.body.style.paddingRight = "";
-      if (nav) nav.style.paddingRight = "0px";
-      if (floatingBtn) floatingBtn.style.paddingRight = "0px";
+      document.body.removeAttribute("style");
+      if (nav) nav.style.removeProperty("padding-right");
+      if (floatingBtn) floatingBtn.style.removeProperty("padding-right");
 
       if (settingsRef.current) {
         settingsRef.current.style.marginLeft = `${scrollbarWidth / 2}px`;
@@ -116,15 +115,16 @@ const Navbar = () => {
     }
 
     return () => {
-      document.body.style.overflow = "auto";
-      document.body.style.paddingRight = "";
-      if (nav) nav.style.paddingRight = "0px";
+      document.body.removeAttribute("style");
+      if (floatingBtn) floatingBtn.style.removeProperty("padding-right");
+      if (nav) nav.style.removeProperty("padding-right");
     };
   }, [settingsOpen]);
 
   useEffect(() => {
     ignoreKeysRef.current = bindsOpen;
     const nav = document.querySelector("nav");
+    const floatingBtn = floatingBtnRef?.current;
     const scrollbarWidth =
       window.innerWidth - document.documentElement.clientWidth;
 
@@ -132,10 +132,11 @@ const Navbar = () => {
       document.body.style.overflow = "hidden";
       document.body.style.paddingRight = `${scrollbarWidth}px`;
       if (nav) nav.style.paddingRight = `${scrollbarWidth}px`;
+      if (floatingBtn) floatingBtn.style.paddingRight = `${scrollbarWidth}px`;
     } else {
-      document.body.style.overflow = "auto";
-      document.body.style.paddingRight = "";
-      if (nav) nav.style.paddingRight = "0px";
+      document.body.removeAttribute("style");
+      if (floatingBtn) floatingBtn.style.removeProperty("padding-right");
+      if (nav) nav.style.removeProperty("padding-right");
 
       if (keybindsRef.current) {
         keybindsRef.current.style.marginLeft = `${scrollbarWidth / 2}px`;
@@ -143,9 +144,9 @@ const Navbar = () => {
     }
 
     return () => {
-      document.body.style.overflow = "auto";
-      document.body.style.paddingRight = "";
-      if (nav) nav.style.paddingRight = "0px";
+      document.body.removeAttribute("style");
+      if (floatingBtn) floatingBtn.style.removeProperty("padding-right");
+      if (nav) nav.style.removeProperty("padding-right");
     };
   }, [bindsOpen]);
 
