@@ -5350,12 +5350,11 @@ aside svg {
 
 .drawer-item-selected {
   border-color: #00aeff;
-  outline-color: #00aeff;
+  outline-color: transparent;
 }
 
 .dark-mode .drawer-item-selected {
   border-color: #6ab3f7;
-  outline-color: #6ab3f7;
 }
 
 .selected-check-wrapper {
