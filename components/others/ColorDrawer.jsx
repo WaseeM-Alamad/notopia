@@ -57,7 +57,7 @@ const ColorDrawer = ({
   }, []);
 
   useEffect(() => {
-    if (open) { 
+    if (open) {
       const nav = document.querySelector("nav");
       const topMenu = document.querySelector("#top-menu");
       const floatingBtn = floatingBtnRef?.current;
@@ -99,32 +99,34 @@ const ColorDrawer = ({
         <Drawer.Content
           onClick={handleContentClick}
           onMouseMove={handleContentClick}
-          className="drawer-content"
+          className={`drawer-content ${selectedColor}`}
         >
-          <Drawer.Description />
-          <Drawer.Title></Drawer.Title>
-          <div className="drawer-handle" />
+          <div className={`drawer-content-color ${selectedColor}`}>
+            <Drawer.Description />
+            <Drawer.Title></Drawer.Title>
+            <div className="drawer-handle" />
 
-          <div className="drawer-body">
-            <div className="drawer-top" />
-            <DrawerCarousel
-              items={colors}
-              type="colors"
-              title="Color"
-              isDrawerDragging={isDragging}
-              selectedColor={selectedColor}
-              handleColorClick={handleColorClick}
-              handleBackground={handleBackground}
-            />
-            <DrawerCarousel
-              items={backgrounds}
-              type="backgrounds"
-              title="Background"
-              isDrawerDragging={isDragging}
-              selectedBG={selectedBG}
-              handleColorClick={handleColorClick}
-              handleBackground={handleBackground}
-            />
+            <div className="drawer-body">
+              <div className="drawer-top" />
+              <DrawerCarousel
+                items={colors}
+                type="colors"
+                title="Color"
+                isDrawerDragging={isDragging}
+                selectedColor={selectedColor}
+                handleColorClick={handleColorClick}
+                handleBackground={handleBackground}
+              />
+              <DrawerCarousel
+                items={backgrounds}
+                type="backgrounds"
+                title="Background"
+                isDrawerDragging={isDragging}
+                selectedBG={selectedBG}
+                handleColorClick={handleColorClick}
+                handleBackground={handleBackground}
+              />
+            </div>
           </div>
         </Drawer.Content>
       </Drawer.Portal>

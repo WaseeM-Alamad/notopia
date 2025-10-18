@@ -936,15 +936,12 @@ const TopMenuHome = ({
               onClick={handleClose}
               onMouseEnter={(e) => showTooltip(e, "Clear selection")}
               onMouseLeave={hideTooltip}
-              className="clear-icon"
-              style={{
-                display: "flex",
-                width: "52px",
-                height: "52px",
-                margin: "0 0.9rem 0 0.8rem",
-              }}
+              className="clear-icon top-clear-icon"
             />
-            <span>{selectedNumber} Selected</span>
+            <span>
+              {selectedNumber}{" "}
+              <span className="top-selected-txt">Selected</span>
+            </span>
             <div className="top-menu-tools">
               {!inTrash ? (
                 <>
@@ -954,14 +951,16 @@ const TopMenuHome = ({
                     }
                     onMouseLeave={hideTooltip}
                     onClick={handlePin}
-                    className={pinNotes ? "top-pinned-icon" : "top-pin-icon"}
-                    style={{ width: "45px", height: "45px" }}
+                    className={
+                      pinNotes
+                        ? "top-pinned-icon top-btn"
+                        : "top-pin-icon top-btn"
+                    }
                   />
                   <Button
                     onMouseEnter={(e) => showTooltip(e, "Remind me")}
                     onMouseLeave={hideTooltip}
-                    className="top-reminder-icon"
-                    style={{ width: "45px", height: "45px" }}
+                    className="top-reminder-icon top-btn"
                   />
                   <Button
                     onMouseEnter={(e) =>
@@ -969,22 +968,19 @@ const TopMenuHome = ({
                     }
                     onMouseLeave={hideTooltip}
                     onClick={handleArchive}
-                    className="top-archive-icon"
-                    style={{ width: "45px", height: "45px" }}
+                    className="top-archive-icon top-btn"
                   />
                   <Button
                     onMouseEnter={(e) => showTooltip(e, "Background options")}
                     onMouseLeave={hideTooltip}
                     onClick={handleOpenColor}
-                    className="top-color-icon"
-                    style={{ width: "45px", height: "45px" }}
+                    className="top-color-icon top-btn"
                   />
                   <Button
                     onMouseEnter={(e) => showTooltip(e, "More")}
                     onMouseLeave={hideTooltip}
                     onClick={handleOpenMenu}
-                    className="top-more-icon"
-                    style={{ width: "45px", height: "45px" }}
+                    className="top-more-icon top-btn"
                   />
                 </>
               ) : (
@@ -1009,13 +1005,11 @@ const TopMenuHome = ({
                         btnMsg: "Delete",
                       })
                     }
-                    className="top-delete-icon"
-                    style={{ width: "45px", height: "45px" }}
+                    className="top-delete-icon top-btn"
                   />
                   <Button
                     onClick={handleTrashNotes}
-                    className="top-restore-icon"
-                    style={{ width: "45px", height: "45px" }}
+                    className="top-restore-icon top-btn"
                   />
                 </>
               )}

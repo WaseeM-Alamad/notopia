@@ -330,7 +330,7 @@ const Sidebar = memo(() => {
                 )}
               </AnimatePresence>
               <AddButton />
-              <span className="side-btn-title">{actionTitle}</span>
+              {/* <span className="side-btn-title">{actionTitle}</span> */}
             </button>
           )}
 
