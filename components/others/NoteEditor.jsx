@@ -536,7 +536,7 @@ const NoteEditor = ({
       onDragLeave={handleDragLeave}
       onDrop={handleOnDrop}
       onMouseLeave={handleNoteMouseLeave}
-      className={"modall"}
+      className={`modall n-bg-${localNote?.background}`}
     >
       <div
         onClick={inputsContainerClick}

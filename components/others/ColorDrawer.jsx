@@ -13,6 +13,7 @@ const ColorDrawer = ({
 }) => {
   const { floatingBtnRef } = useAppContext();
   const [isDragging, setIsDragging] = useState(false);
+  const [isOpen, setIsOpen] = useState(open);
   const colors = [
     "Default",
     "Coral",
@@ -57,7 +58,7 @@ const ColorDrawer = ({
   }, []);
 
   useEffect(() => {
-    if (open) {
+    if (isOpen) {
       const nav = document.querySelector("nav");
       const topMenu = document.querySelector("#top-menu");
       const floatingBtn = floatingBtnRef?.current;
@@ -67,7 +68,7 @@ const ColorDrawer = ({
       if (nav) nav.style.paddingRight = `${scrollbarWidth}px`;
       if (floatingBtn) floatingBtn.style.paddingRight = `${scrollbarWidth}px`;
     }
-  }, [open]);
+  }, [isOpen]);
 
   const onClose = () => {
     const nav = document.querySelector("nav");
@@ -79,6 +80,14 @@ const ColorDrawer = ({
     if (nav) nav.style.removeProperty("padding-right");
   };
 
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      !isOpen && setIsOpen(open);
+    });
+  }, [open]);
+
+  if (!isOpen) return null;
+
   return (
     <Drawer.Root
       onDrag={() => {
@@ -87,6 +96,7 @@ const ColorDrawer = ({
       onRelease={() => setIsDragging(false)}
       onClose={onClose}
       open={open}
+      onAnimationEnd={() => setIsOpen(false)}
       onOpenChange={(val) => setOpen(val)}
     >
       <Drawer.Portal>
@@ -99,9 +109,11 @@ const ColorDrawer = ({
         <Drawer.Content
           onClick={handleContentClick}
           onMouseMove={handleContentClick}
-          className={`drawer-content ${selectedColor}`}
+          className={`drawer-content-wrapper ${selectedColor ? selectedColor : ""} ${selectedBG ? "drawer-bg-" + selectedBG : ""}`}
         >
-          <div className={`drawer-content-color ${selectedColor}`}>
+          <div
+            className={`drawer-content ${selectedColor ? selectedColor : ""} ${selectedBG ? "drawer-bg-" + selectedBG : ""}`}
+          >
             <Drawer.Description />
             <Drawer.Title></Drawer.Title>
             <div className="drawer-handle" />

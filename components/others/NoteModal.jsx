@@ -179,8 +179,6 @@ const NoteModal = ({
   };
 
   const resetCollab = () => {
-    // const modal = modalRef?.current;
-    // const collabBox = collabRef?.current;
     setIsCollabOpen(false);
     const editorBox = noteEditorRef?.current;
     editorBox.removeAttribute("style");
@@ -341,7 +339,7 @@ const NoteModal = ({
         }
       }
     });
-
+    setLocalIsPinned(note?.isPinned);
     updateWithCursor(contentRef, note?.content);
     updateWithCursor(titleRef, note?.title);
   };
@@ -396,7 +394,6 @@ const NoteModal = ({
 
       onOpen();
 
-      setLocalIsPinned(note?.isPinned);
       ignoreKeysRef.current = true;
       archiveRef.current = false;
       trashRef.current = false;
@@ -905,7 +902,6 @@ const NoteModal = ({
           .filter(Boolean)
           .join(" ")}
       >
-        <div>
           <NoteEditor
             noteEditorRef={noteEditorRef}
             note={note}
@@ -947,7 +943,6 @@ const NoteModal = ({
               setIsOpen={setIsOpen}
             />
           )}
-        </div>
       </div>
     </>,
     document.getElementById("modal-portal")

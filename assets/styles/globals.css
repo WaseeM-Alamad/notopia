@@ -149,7 +149,7 @@ svg {
 
 .loading-dots--dot {
   animation: dot-keyframes 1.5s infinite ease-in-out;
-  background-color: #fff;
+
   border-radius: 10px;
   display: inline-block;
   height: 10px;
@@ -401,7 +401,9 @@ svg {
   border-radius: 0.7rem;
   outline: none;
   will-change: transform;
-  transition: opacity 0.12s ease-in;
+  transition:
+    opacity 0.12s ease-in,
+    background-image 0.25s ease;
 }
 
 .modal-shadow {
@@ -554,12 +556,14 @@ svg {
   box-sizing: border-box;
   z-index: 11;
   margin-top: 4px;
-  transition: opacity 0.15s ease;
+  transition:
+    opacity 0.15s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-.bottom-box-shadow {
+.distinct-section {
   box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
-  transition: all 0.3s ease;
 }
 
 .modal-bottom-icons {
@@ -1661,129 +1665,133 @@ svg {
 }
 
 .n-bg-Groceries {
-  background: url("/n-bgs/n-bg-Groceries.svg");
+  background-image: url("/n-bgs/n-bg-Groceries.svg");
   background-position-x: right;
   background-position-y: bottom;
   background-size: cover;
 }
 
 .dark-mode .n-bg-Groceries {
-  background: url("/n-bgs/n-bg-d-Groceries.svg");
+  background-image: url("/n-bgs/n-bg-d-Groceries.svg");
   background-position-x: right;
   background-position-y: bottom;
   background-size: cover;
 }
 
 .n-bg-Food {
-  background: url("/n-bgs/n-bg-Food.svg");
+  background-image: url("/n-bgs/n-bg-Food.svg");
   background-position-x: right;
   background-position-y: bottom;
   background-size: cover;
 }
 
 .dark-mode .n-bg-Food {
-  background: url("/n-bgs/n-bg-d-Food.svg");
+  background-image: url("/n-bgs/n-bg-d-Food.svg");
   background-position-x: right;
   background-position-y: bottom;
   background-size: cover;
 }
 
 .n-bg-Music {
-  background: url("/n-bgs/n-bg-Music.svg");
+  background-image: url("/n-bgs/n-bg-Music.svg");
   background-position-x: right;
   background-position-y: bottom;
   background-size: cover;
 }
 
 .dark-mode .n-bg-Music {
-  background: url("/n-bgs/n-bg-d-Music.svg");
+  background-image: url("/n-bgs/n-bg-d-Music.svg");
   background-position-x: right;
   background-position-y: bottom;
   background-size: cover;
 }
 
 .n-bg-Recipes {
-  background: url("/n-bgs/n-bg-Recipes.svg");
+  background-image: url("/n-bgs/n-bg-Recipes.svg");
   background-position-x: right;
   background-position-y: bottom;
   background-size: cover;
 }
 
 .dark-mode .n-bg-Recipes {
-  background: url("/n-bgs/n-bg-d-Recipes.svg");
+  background-image: url("/n-bgs/n-bg-d-Recipes.svg");
   background-position-x: right;
   background-position-y: bottom;
   background-size: cover;
 }
 
 .n-bg-Notes {
-  background: url("/n-bgs/n-bg-Notes.svg");
+  background-image: url("/n-bgs/n-bg-Notes.svg");
   background-position-x: right;
   background-position-y: bottom;
   background-size: cover;
 }
 
 .dark-mode .n-bg-Notes {
-  background: url("/n-bgs/n-bg-d-Notes.svg");
+  background-image: url("/n-bgs/n-bg-d-Notes.svg");
   background-position-x: right;
   background-position-y: bottom;
   background-size: cover;
 }
 
 .n-bg-Places {
-  background: url("/n-bgs/n-bg-Places.svg");
+  background-image: url("/n-bgs/n-bg-Places.svg");
   background-position-x: right;
   background-position-y: bottom;
   background-size: cover;
 }
 
 .dark-mode .n-bg-Places {
-  background: url("/n-bgs/n-bg-d-Places.svg");
+  background-image: url("/n-bgs/n-bg-d-Places.svg");
   background-position-x: right;
   background-position-y: bottom;
   background-size: cover;
 }
 
 .n-bg-Travel {
-  background: url("/n-bgs/n-bg-Travel.svg");
+  background-image: url("/n-bgs/n-bg-Travel.svg");
   background-position-x: right;
   background-position-y: bottom;
   background-size: cover;
 }
 
 .dark-mode .n-bg-Travel {
-  background: url("/n-bgs/n-bg-d-Travel.svg");
+  background-image: url("/n-bgs/n-bg-d-Travel.svg");
   background-position-x: right;
   background-position-y: bottom;
   background-size: cover;
 }
 
 .n-bg-Video {
-  background: url("/n-bgs/n-bg-Video.svg");
+  background-image: url("/n-bgs/n-bg-Video.svg");
   background-position-x: right;
   background-position-y: bottom;
   background-size: cover;
 }
 
 .dark-mode .n-bg-Video {
-  background: url("/n-bgs/n-bg-d-Video.svg");
+  background-image: url("/n-bgs/n-bg-d-Video.svg");
   background-position-x: right;
   background-position-y: bottom;
   background-size: cover;
 }
 
 .n-bg-Celebration {
-  background: url("/n-bgs/n-bg-Celebration.svg");
+  background-image: url("/n-bgs/n-bg-Celebration.svg");
   background-position-x: right;
   background-position-y: bottom;
   background-size: cover;
 }
 
 .dark-mode .n-bg-Celebration {
-  background: url("/n-bgs/n-bg-d-Celebration.svg");
+  background-image: url("/n-bgs/n-bg-d-Celebration.svg");
   background-position-x: right;
   background-position-y: bottom;
   background-size: cover;
+}
+
+.modall {
+  /* background-image: none; */
 }
 
 .checkmark-circle {
@@ -1869,7 +1877,7 @@ svg {
 }
 
 .menu-item-default {
-  outline: solid 0.1rem #5c5c5c;
+  outline: solid 0.1rem #e0e0e0;
   border: solid 0.03rem #e0e0e0;
 }
 
@@ -5159,15 +5167,15 @@ aside svg {
   background: rgba(0, 0, 0, 0.4);
 }
 
-.drawer-content {
+.drawer-content-wrapper {
   position: fixed;
-  /* background-color: #fff; */
+  /*  */
   z-index: 301;
   left: 0;
   bottom: 0;
   width: 100%;
   max-height: 50%; /* adjust as needed */
-  /* background: #fff; */
+  background: #fff;
   box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);
   /* padding: 16px; */
   box-sizing: border-box;
@@ -5178,11 +5186,11 @@ aside svg {
   animation: slideUp 0.25s ease-out;
 }
 
-.dark-mode .drawer-content {
-  /* background-color: rgb(23, 23, 23); */
+.dark-mode .drawer-content-wrapper {
+  background-color: rgb(23, 23, 23);
 }
 
-.drawer-content-color {
+.drawer-content {
   padding-bottom: 12px;
   transition: background-color 0.25s ease-in-out;
 }
@@ -5201,7 +5209,7 @@ aside svg {
   }
 }
 
-.drawer-content:active {
+.drawer-content-wrapper:active {
   cursor: grabbing;
 }
 
@@ -5271,12 +5279,6 @@ aside svg {
 }
 
 .carousel-scroll-container > :first-child {
-  background-color: #fff;
-  margin-left: 25px;
-}
-
-.dark-mode .carousel-scroll-container > :first-child {
-  background-color: #fff;
   margin-left: 25px;
 }
 
@@ -5293,7 +5295,7 @@ aside svg {
   width: 46px;
   height: 46px;
   border-radius: 50%;
-  border: 1px solid #777777;
+  border: 1px solid rgba(0, 0, 0, 0.3);
   outline-color: transparent;
   margin: 0 10px;
   cursor: pointer;
@@ -5302,6 +5304,10 @@ aside svg {
   justify-content: center;
   flex: 0 0 auto;
   transition: transform 0.15s ease;
+}
+
+.dark-mode .drawer-carousel-item {
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .drawer-carousel-item:active {
@@ -5354,6 +5360,7 @@ aside svg {
 
 .dark-mode .drawer-item-selected {
   border-color: #6ab3f7;
+  outline-color: transparent;
 }
 
 .selected-check-wrapper {
@@ -5414,6 +5421,15 @@ aside svg {
   flex-shrink: 0;
 }
 
+@media (min-width: 605px) {
+  .modall {
+    background-image: none;
+  }
+  .dark-mode .modall {
+    background-image: none;
+  }
+}
+
 @media (max-width: 605px) {
   .note-modal-wrapper {
     height: 100dvh;
@@ -5425,10 +5441,36 @@ aside svg {
 
   .modall {
     height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    border: none;
   }
 
   .menu-bg-DefaultBG {
+    background-image: url("data:image/svg+xml,%3Csvg width='29' height='29' viewBox='0 0 29 29' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M4.2996 4.97389C4.63657 4.63697 5.18237 4.63694 5.51933 4.97389L23.3523 22.8059C23.6891 23.1429 23.6892 23.6897 23.3523 24.0266C23.0154 24.3635 22.4686 24.3634 22.1316 24.0266L20.659 22.553H8.36112C6.93161 22.553 5.77246 21.3946 5.77226 19.9651V7.66725L4.2996 6.19362C3.96263 5.85665 3.96263 5.31086 4.2996 4.97389ZM11.3738 16.1878C11.0743 15.8758 10.5899 15.8336 10.241 16.0891L7.49784 18.1008V19.9651C7.49804 20.4415 7.8847 20.8274 8.36112 20.8274H15.8279L11.3738 16.1878ZM15.5799 18.0774L18.2205 20.8274H18.9334L15.9041 17.7991L15.5799 18.0774ZM7.49784 15.9612L9.2205 14.6975C10.2669 13.9303 11.7203 14.0564 12.6189 14.9924L14.3826 16.8303L14.6805 16.5755L7.49784 9.39284V15.9612Z' fill='%23444746'/%3E%3Cpath d='M20.4402 5.29616C21.8699 5.29616 23.0291 6.45538 23.0291 7.88503V18.2385C23.0291 18.715 22.6431 19.1016 22.1668 19.1018C21.9265 19.1018 21.7089 19.0034 21.5525 18.845L19.8308 17.1233C19.4939 16.7863 19.4939 16.2396 19.8308 15.9026C20.1678 15.5662 20.7137 15.5662 21.0506 15.9026L21.3035 16.1555V7.88503C21.3035 7.40847 20.9168 7.02175 20.4402 7.02175H10.1482C9.67185 7.02156 9.28593 6.63489 9.28593 6.15846C9.28616 5.68224 9.67199 5.29634 10.1482 5.29616H20.4402Z' fill='%23444746'/%3E%3C/svg%3E%0A");
     background-color: transparent !important;
+  }
+
+  .menu-item-default {
+    outline-color: transparent !important;
+  }
+
+  .modal-inputs-container {
+    background-image: none !important;
+    max-height: 100%;
+  }
+
+  .modal-bottom {
+    margin-top: auto;
+  }
+
+  .distinct-section {
+    box-shadow: none;
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+
+  .dark-mode .distinct-section {
+    background-color: transparent;
   }
 }
 
@@ -5450,4 +5492,76 @@ aside svg {
     width: 40px;
     height: 40px;
   }
+}
+
+.drawer-bg-Groceries {
+  background-color: #f8f2e1;
+}
+
+.dark-mode .drawer-bg-Groceries {
+  background-color: #364b6d;
+}
+
+.drawer-bg-Food {
+  background-color: #ffe8df;
+}
+
+.dark-mode .drawer-bg-Food {
+  background-color: #3a5c63;
+}
+
+.drawer-bg-Music {
+  background-color: #b9d6ec;
+}
+
+.dark-mode .drawer-bg-Music {
+  background-color: #383838;
+}
+
+.drawer-bg-Recipes {
+  background-color: #ffcdb2;
+}
+
+.dark-mode .drawer-bg-Recipes {
+  background-color: #511c22;
+}
+
+.drawer-bg-Notes {
+  background-color: #ffe498;
+}
+
+.dark-mode .drawer-bg-Notes {
+  background-color: #382c63;
+}
+
+.drawer-bg-Places {
+  background-color: #f9f1ed;
+}
+
+.dark-mode .drawer-bg-Places {
+  background-color: #583a4f;
+}
+
+.drawer-bg-Travel {
+  background-image: #bddff2;
+}
+
+.dark-mode .drawer-bg-Travel {
+  background-color: #103259;
+}
+
+.drawer-bg-Video {
+  background-color: #ffe1b4;
+}
+
+.dark-mode .drawer-bg-Video {
+  background-color: #424459;
+}
+
+.drawer-bg-Celebration {
+  background-color: #ff756b;
+}
+
+.dark-mode .drawer-bg-Celebration {
+  background-color: #382d50;
 }

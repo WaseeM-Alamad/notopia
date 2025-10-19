@@ -516,7 +516,7 @@ const ModalTools = ({
     <>
       <div
         style={{ opacity: !isOpen && "0" }}
-        className={`modal-bottom ${!isScrolled ? "bottom-box-shadow" : ""}`}
+        className={`modal-bottom ${!isScrolled ? "distinct-section" : ""}`}
       >
         <div className="modal-bottom-icons">
           {!localNote?.isTrash ? (
