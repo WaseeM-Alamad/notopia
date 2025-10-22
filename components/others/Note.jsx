@@ -436,7 +436,7 @@ const Note = memo(
                     opacity: colorMenuOpen ? "1" : undefined,
                     opacity: (colorMenuOpen || moreMenuOpen) && "1",
                   }}
-                  className="pin"
+                  className="pin pc-btn"
                   tabIndex="0"
                 >
                   {!note?.isTrash && (

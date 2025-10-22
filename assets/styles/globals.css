@@ -5449,13 +5449,17 @@ aside svg {
   justify-content: center;
   align-items: center;
   background-size: 24px;
-  background-color: rgba(0, 0, 0, 0.12);
+  background-color: rgba(0, 0, 0, 0.09);
   border-radius: 0.7rem;
   padding: 1.1rem;
   height: 32px;
   width: 32px;
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+.dark-mode .modal-mobile-btn {
+  background-color: rgba(255, 255, 255, 0.09);
 }
 
 .modal-mobile-btn:hover,
@@ -5479,6 +5483,14 @@ aside svg {
     max-width: 100%;
     max-height: 100dvh;
     border-radius: 0;
+  }
+
+  .note-bottom {
+    display: none;
+  }
+
+  .corner {
+    display: none;
   }
 
   .modal-top-section {
@@ -5518,7 +5530,7 @@ aside svg {
     padding-bottom: 0.8rem;
   }
 
-  .modal-pc-btn {
+  .pc-btn {
     display: none;
   }
 
@@ -5528,11 +5540,11 @@ aside svg {
 
   .distinct-section-mobile {
     box-shadow: none;
-    background-color: rgba(0, 0, 0, 0.15);
+    background-color: rgba(0, 0, 0, 0.1);
   }
 
   .dark-mode .distinct-section-mobile {
-    background-color: rgba(255, 255, 255, 0.15);
+    background-color: rgba(255, 255, 255, 0.1);
   }
 
   .modal-corner {
@@ -5552,7 +5564,11 @@ aside svg {
   }
 
   .distinct-section-mobile .modal-mobile-btn {
-    background-color: rgba(255, 255, 255, 0.7);
+    background-color: rgba(255, 255, 255, 0.9);
+  }
+
+  .dark-mode .distinct-section-mobile .modal-mobile-btn {
+    background-color: rgba(0, 0, 0, 0.7);
   }
 
   .modal-bottom-icons {

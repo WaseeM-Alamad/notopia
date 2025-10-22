@@ -534,12 +534,12 @@ const ModalTools = ({
       type: "mobile",
     },
     {
-      className: "modal-pc-btn reminder-icon btn-hover",
+      className: "pc-btn reminder-icon btn-hover",
       onClick: () => {},
       tooltip: "Reminders",
     },
     {
-      className: "modal-pc-btn person-add-icon btn-hover",
+      className: "pc-btn person-add-icon btn-hover",
       onClick: () => {
         closeToolTip();
         openCollab();
@@ -547,12 +547,12 @@ const ModalTools = ({
       tooltip: "Collaborator",
     },
     {
-      className: "modal-pc-btn close archive-icon btn-hover",
+      className: "pc-btn close archive-icon btn-hover",
       onClick: handleModalArchive,
       tooltip: localNote?.isArchived ? "Unarchive" : "Archive",
     },
     {
-      className: "modal-pc-btn image-icon btn-hover",
+      className: "pc-btn image-icon btn-hover",
       onClick: () => {
         closeToolTip();
         inputRef.current.click();
@@ -560,18 +560,18 @@ const ModalTools = ({
       tooltip: "Add image",
     },
     {
-      className: "modal-pc-btn color-icon btn-hover",
+      className: "pc-btn color-icon btn-hover",
       onClick: toggleColorMenu,
       tooltip: "Background options",
     },
     {
-      className: "modal-pc-btn more-icon btn-hover",
+      className: "pc-btn more-icon btn-hover",
       onClick: handleMoreMenu,
       tooltip: "More",
     },
     {
       Icon: BackIcon,
-      className: "modal-pc-btn",
+      className: "pc-btn",
       onClick: handleUndo,
       disabled: undoStack.length === 0,
       tooltip: "Undo",
@@ -579,7 +579,7 @@ const ModalTools = ({
     {
       Icon: BackIcon,
       direction: "1",
-      className: "modal-pc-btn",
+      className: "pc-btn",
       onClick: handleRedo,
       disabled: redoStack.length === 0,
       tooltip: "Redo",
@@ -655,7 +655,7 @@ const ModalTools = ({
         <button
           ref={closeRef}
           onClick={() => setIsOpen(false)}
-          className="modal-pc-btn close close-btn"
+          className="pc-btn close close-btn"
         >
           Close
         </button>
