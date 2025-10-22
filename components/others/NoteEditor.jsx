@@ -61,6 +61,7 @@ const NoteEditor = ({
   const [isDragOver, setIsDragOver] = useState(false);
   const [labelAnchor, setLabelAnchor] = useState(null);
   const [labelSearch, setLabelSearch] = useState("");
+  const [isScrolled, setIsScrolled] = useState(false);
   const formattedEditedDate = isOpen
     ? getNoteFormattedDate(localNote?.updatedAt)
     : null;
@@ -73,6 +74,27 @@ const NoteEditor = ({
   const inputRef = useRef(null);
   const dragCounter = useRef(0);
   const inputsContainerRef = useRef(null);
+
+  useEffect(() => {
+    const inputsContainer = inputsContainerRef.current;
+    if (!inputsContainer || !isOpen) return;
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = inputsContainer;
+      const fromBottom = !(scrollTop + clientHeight >= scrollHeight - 1);
+      const fromTop = scrollTop !== 0;
+      setIsScrolled({ fromTop, fromBottom });
+    };
+
+    inputsContainer.addEventListener("scroll", handleScroll);
+    requestAnimationFrame(() => {
+      handleScroll();
+    });
+
+    return () => {
+      inputsContainer.removeEventListener("scroll", handleScroll);
+    };
+  }, [isOpen]);
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -539,6 +561,30 @@ const NoteEditor = ({
       className={`modall n-bg-${localNote?.background}`}
     >
       <div
+        className={`modal-top-section ${isScrolled.fromTop && localNote?.background === "DefaultBG" && localNote?.color === "Default" ? "distinct-section-mobile" : ""}`}
+      >
+        <Button
+          className="modal-back-icon btn-hover"
+          onClick={() => setIsOpen(false)}
+        />
+
+        <button className="modal-mobile-btn" onClick={handlePinClick}>
+          <PinIcon
+            rotation={localIsPinned ? "-45deg" : "-5deg"}
+            isPinned={localIsPinned}
+          />
+        </button>
+        <button
+          onClick={() => {
+            closeToolTip();
+            archiveRef.current = true;
+            setIsOpen(false);
+          }}
+          className="modal-mobile-btn archive-icon"
+        />
+        <button className="modal-mobile-btn reminder-icon" />
+      </div>
+      <div
         onClick={inputsContainerClick}
         ref={inputsContainerRef}
         style={{
@@ -551,10 +597,13 @@ const NoteEditor = ({
         )}
         {!localNote?.isTrash && (
           <div style={{ opacity: !isOpen && "0" }} className="modal-pin">
-            <Button onClick={handlePinClick} disabled={!isOpen}>
+            <Button
+              onClick={handlePinClick}
+              disabled={!isOpen}
+              className="btn-hover"
+            >
               <PinIcon
                 isPinned={localIsPinned}
-                opacity={0.8}
                 rotation={localIsPinned ? "-45deg" : "-5deg"}
                 images={localNote?.images.length !== 0}
               />
@@ -641,7 +690,11 @@ const NoteEditor = ({
           localNote?.collaborators?.length > 0) && (
           <div className="note-labels-container">
             {localNote?.labels.length !== 0 && (
-              <NoteLabels note={localNote} modalRemoveLabel={removeLabel} noteActions={noteActions} />
+              <NoteLabels
+                note={localNote}
+                modalRemoveLabel={removeLabel}
+                noteActions={noteActions}
+              />
             )}
             {localNote?.collaborators && (
               <NoteCollabs
@@ -692,8 +745,8 @@ const NoteEditor = ({
         handleUndo={handleUndo}
         handleRedo={handleRedo}
         inputRef={inputRef}
-        inputsContainerRef={inputsContainerRef}
         setInitialStyle={setInitialStyle}
+        isScrolled={isScrolled}
       />
       <AnimatePresence>{isDragOver && <ImageDropZone />}</AnimatePresence>
       <AnimatePresence>

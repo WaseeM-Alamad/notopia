@@ -12,6 +12,7 @@ import { validateImageFile } from "@/utils/validateImage";
 import handleServerCall from "@/utils/handleServerCall";
 import localDbReducer from "@/utils/localDbReducer";
 import ColorDrawer from "./ColorDrawer";
+import MoreMenuDrawer from "./MoreMenuDrawer";
 
 const ModalTools = ({
   localNote,
@@ -32,9 +33,9 @@ const ModalTools = ({
   handleUndo,
   handleRedo,
   inputRef,
-  inputsContainerRef,
   setInitialStyle,
   openCollab,
+  isScrolled,
 }) => {
   const {
     setLoadingImages,
@@ -51,31 +52,11 @@ const ModalTools = ({
   const [colorAnchorEl, setColorAnchorEl] = useState(null);
   const [anchorEl, setAnchorEl] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  const [menuDrawerOpen, setMenuDrawerOpen] = useState(false);
   const [labelsOpen, setLabelsOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
   const [colorDrawerOpen, setColorDrawerOpen] = useState(false);
   const userID = user?.id;
   const closeRef = useRef(null);
-
-  useEffect(() => {
-    const inputsContainer = inputsContainerRef.current;
-    if (!inputsContainer || !isOpen) return;
-
-    const handleScroll = () => {
-      const { scrollTop, scrollHeight, clientHeight } = inputsContainer;
-      const isAtBottom = scrollTop + clientHeight >= scrollHeight - 1;
-      setIsScrolled(isAtBottom);
-    };
-
-    inputsContainer.addEventListener("scroll", handleScroll);
-    requestAnimationFrame(() => {
-      handleScroll();
-    });
-
-    return () => {
-      inputsContainer.removeEventListener("scroll", handleScroll);
-    };
-  }, [isOpen]);
 
   const handleColorClick = useCallback(async (color) => {
     if (color === localNote?.color) return;
@@ -451,9 +432,21 @@ const ModalTools = ({
     );
   };
 
+  const handleMoreMenu = (e) => {
+    closeToolTip();
+    const width = window.innerWidth;
+    if (width < 605) {
+      setMenuDrawerOpen(true);
+      return;
+    }
+    setAnchorEl(e.currentTarget);
+    setMoreMenuOpen((prev) => !prev);
+    setLabelsOpen(false);
+  };
+
   const menuItems = [
     {
-      title: "Delete note",
+      title: "Move to trash",
       function: handleTrashNote,
       icon: "trash-menu-icon",
     },
@@ -512,107 +505,115 @@ const ModalTools = ({
     },
   ];
 
+  const buttons = [
+    {
+      className: "modal-mobile-btn color-icon round",
+      tooltip: "Background options",
+      style: { backgroundSize: "22px" },
+      onClick: toggleColorMenu,
+      type: "mobile",
+    },
+    {
+      className: "modal-pc-btn reminder-icon btn-hover",
+      onClick: () => {},
+      tooltip: "Reminders",
+    },
+    {
+      className: "modal-pc-btn person-add-icon btn-hover",
+      onClick: () => {
+        closeToolTip();
+        openCollab();
+      },
+      tooltip: "Collaborator",
+    },
+    {
+      className: "modal-pc-btn close archive-icon btn-hover",
+      onClick: handleModalArchive,
+      tooltip: localNote?.isArchived ? "Unarchive" : "Archive",
+    },
+    {
+      className: "modal-pc-btn image-icon btn-hover",
+      onClick: () => {
+        closeToolTip();
+        inputRef.current.click();
+      },
+      tooltip: "Add image",
+    },
+    {
+      className: "modal-pc-btn color-icon btn-hover",
+      onClick: toggleColorMenu,
+      tooltip: "Background options",
+    },
+    {
+      className: "modal-pc-btn more-icon btn-hover",
+      onClick: handleMoreMenu,
+      tooltip: "More",
+    },
+    {
+      Icon: BackIcon,
+      className: "modal-pc-btn",
+      onClick: handleUndo,
+      disabled: undoStack.length === 0,
+      tooltip: "Undo",
+    },
+    {
+      Icon: BackIcon,
+      direction: "1",
+      className: "modal-pc-btn",
+      onClick: handleRedo,
+      disabled: redoStack.length === 0,
+      tooltip: "Redo",
+    },
+  ];
+
   return (
     <>
       <div
         style={{ opacity: !isOpen && "0" }}
-        className={`modal-bottom ${!isScrolled ? "distinct-section" : ""}`}
+        className={`modal-bottom ${isScrolled.fromBottom ? "distinct-section" : ""} ${isScrolled.fromBottom && localNote?.background === "DefaultBG" && localNote?.color === "Default" ? "distinct-section-mobile" : ""}`}
       >
         <div className="modal-bottom-icons">
           {!localNote?.isTrash ? (
             <>
-              <Button
-                onMouseEnter={(e) => showTooltip(e, "Reminders")}
-                onMouseLeave={hideTooltip}
-                className="reminder-icon btn-hover"
-              />
-              <Button
-                onClick={() => {
-                  closeToolTip();
-                  openCollab();
-                }}
-                onMouseEnter={(e) => showTooltip(e, "Collaborator")}
-                onMouseLeave={hideTooltip}
-                className="person-add-icon btn-hover"
-              />
-              <Button
-                className="close archive-icon btn-hover"
-                onClick={handleModalArchive}
-                onMouseEnter={(e) => showTooltip(e, "Archive")}
-                onMouseLeave={hideTooltip}
-              />
-              <Button
-                className="image-icon btn-hover"
-                onClick={() => {
-                  closeToolTip();
-                  inputRef.current.click();
-                }}
-                onMouseEnter={(e) => showTooltip(e, "Add image")}
-                onMouseLeave={hideTooltip}
-              >
-                <input
-                  ref={inputRef}
-                  style={{ display: "none" }}
-                  type="file"
-                  onChange={handleOnChange}
-                />
-              </Button>
-              <Button
-                className="color-icon btn-hover"
-                onClick={toggleColorMenu}
-                onMouseEnter={(e) => showTooltip(e, "Background options")}
-                onMouseLeave={hideTooltip}
-              />
-              <AnimatePresence>
-                {colorMenuOpen && (
-                  <ColorSelectMenu
-                    handleColorClick={handleColorClick}
-                    handleBackground={handleBackground}
-                    anchorEl={colorAnchorEl}
-                    selectedColor={localNote?.color}
-                    selectedBG={localNote?.background}
-                    isOpen={colorMenuOpen}
-                    setIsOpen={setColorMenuOpen}
-                  />
-                )}
-              </AnimatePresence>
-              <ColorDrawer
-                handleColorClick={handleColorClick}
-                handleBackground={handleBackground}
-                selectedColor={localNote?.color}
-                selectedBG={localNote?.background}
-                open={colorDrawerOpen}
-                setOpen={setColorDrawerOpen}
-              />
-              <Button
-                onClick={(e) => {
-                  closeToolTip();
-                  setAnchorEl(e.currentTarget);
-                  setMoreMenuOpen((prev) => !prev);
-                  setLabelsOpen(false);
-                }}
-                onMouseEnter={(e) => showTooltip(e, "More")}
-                onMouseLeave={hideTooltip}
-                className="more-icon btn-hover"
-              />
-              <>
-                <Button
-                  onClick={handleUndo}
-                  onMouseEnter={(e) => showTooltip(e, "Undo")}
-                  onMouseLeave={hideTooltip}
-                  disabled={undoStack.length === 0}
-                >
-                  <BackIcon />
-                </Button>
-                <Button
-                  onClick={handleRedo}
-                  onMouseEnter={(e) => showTooltip(e, "Redo")}
-                  onMouseLeave={hideTooltip}
-                  disabled={redoStack.length === 0}
-                >
-                  <BackIcon direction="1" />
-                </Button>
-              </>
+              {buttons.map(
+                (
+                  {
+                    className = "",
+                    onClick = () => {},
+                    direction,
+                    disabled = false,
+                    Icon,
+                    tooltip,
+                    style = {},
+                    type = "pc",
+                  },
+                  index
+                ) => {
+                  return type === "mobile" ? (
+                    <button
+                      key={index}
+                      onMouseEnter={(e) => showTooltip(e, tooltip)}
+                      onMouseLeave={hideTooltip}
+                      className={className}
+                      style={style}
+                      onClick={onClick}
+                      disabled={disabled}
+                    />
+                  ) : (
+                    <Button
+                      key={index}
+                      onMouseEnter={(e) => showTooltip(e, tooltip)}
+                      onMouseLeave={hideTooltip}
+                      className={className}
+                      style={style}
+                      onClick={onClick}
+                      disabled={disabled}
+                    >
+                      {Icon && <Icon direction={direction} />}
+                    </Button>
+                  );
+                }
+              )}
             </>
           ) : (
             <>
@@ -634,7 +635,7 @@ const ModalTools = ({
         <button
           ref={closeRef}
           onClick={() => setIsOpen(false)}
-          className="close close-btn"
+          className="modal-pc-btn close close-btn"
         >
           Close
         </button>
@@ -649,6 +650,14 @@ const ModalTools = ({
           />
         )}
       </AnimatePresence>
+      <MoreMenuDrawer
+        open={menuDrawerOpen}
+        setOpen={setMenuDrawerOpen}
+        selectedColor={localNote?.color}
+        selectedBG={localNote?.background}
+        menuItems={menuItems}
+        updatedAt={localNote?.updatedAt}
+      />
       <AnimatePresence>
         {labelsOpen && (
           <ManageModalLabels
@@ -661,6 +670,33 @@ const ModalTools = ({
           />
         )}
       </AnimatePresence>
+      <AnimatePresence>
+        {colorMenuOpen && (
+          <ColorSelectMenu
+            handleColorClick={handleColorClick}
+            handleBackground={handleBackground}
+            anchorEl={colorAnchorEl}
+            selectedColor={localNote?.color}
+            selectedBG={localNote?.background}
+            isOpen={colorMenuOpen}
+            setIsOpen={setColorMenuOpen}
+          />
+        )}
+      </AnimatePresence>
+      <ColorDrawer
+        handleColorClick={handleColorClick}
+        handleBackground={handleBackground}
+        selectedColor={localNote?.color}
+        selectedBG={localNote?.background}
+        open={colorDrawerOpen}
+        setOpen={setColorDrawerOpen}
+      />
+      <input
+        ref={inputRef}
+        style={{ display: "none" }}
+        type="file"
+        onChange={handleOnChange}
+      />
     </>
   );
 };
