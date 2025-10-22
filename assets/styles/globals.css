@@ -5509,8 +5509,9 @@ aside svg {
   .modal-bottom {
     margin-top: auto;
     box-sizing: content-box;
-    padding-top: 0.6rem;
-    padding-bottom: 0.6rem;
+    /* padding-top: 0.6rem; */
+    /* padding-bottom: 0.6rem; */
+    padding: 0.6rem 1.1rem;
   }
 
   .modal-inputs-container {
@@ -5552,6 +5553,11 @@ aside svg {
 
   .distinct-section-mobile .modal-mobile-btn {
     background-color: rgba(255, 255, 255, 0.7);
+  }
+
+  .modal-bottom-icons {
+    width: calc(100% - 2.2rem);
+    gap: 0.4rem;
   }
 }
 

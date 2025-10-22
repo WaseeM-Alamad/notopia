@@ -507,10 +507,30 @@ const ModalTools = ({
 
   const buttons = [
     {
+      className: "modal-mobile-btn image-icon round",
+      tooltip: "Add image",
+      style: { backgroundSize: "22px" },
+      onClick: () => {
+        closeToolTip();
+        inputRef.current.click();
+      },
+      type: "mobile",
+    },
+    {
       className: "modal-mobile-btn color-icon round",
       tooltip: "Background options",
       style: { backgroundSize: "22px" },
       onClick: toggleColorMenu,
+      type: "mobile",
+    },
+    {
+      className: "modal-mobile-btn more-icon round",
+      tooltip: "More",
+      style: {
+        backgroundSize: "22px",
+        marginLeft: "auto",
+      },
+      onClick: handleMoreMenu,
       type: "mobile",
     },
     {
