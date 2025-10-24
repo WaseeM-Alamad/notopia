@@ -67,6 +67,8 @@ const Note = memo(
     const contentRef = useRef(null);
     const checkRef = useRef(null);
     const dragCounter = useRef(0);
+    const touchTimerRef = useRef(null);
+    const touchActiveRef = useRef(false);
 
     const ImagesWithNoBottomContent =
       note?.images?.length > 0 &&
@@ -355,6 +357,7 @@ const Note = memo(
           onContextMenu={(e) => {
             e.preventDefault();
             closeToolTip();
+            if (touchActiveRef.current) return;
 
             const virtualAnchor = {
               getBoundingClientRect: () =>
@@ -369,6 +372,28 @@ const Note = memo(
 
             setAnchorEl(virtualAnchor);
             setMoreMenuOpen((prev) => !prev);
+          }}
+          onTouchStart={(e) => {
+            touchTimerRef.current = setTimeout(() => {
+              touchActiveRef.current = true;
+              handleSelectNote({
+                source: "checkmark",
+                e: e,
+                selected: selected,
+                setSelected: setSelected,
+                uuid: note?.uuid,
+                index: notesIndexMapRef.current.get(note.uuid),
+                isPinned: note?.isPinned,
+                isArchived: note.isArchived,
+              });
+            }, 300);
+          }}
+          onTouchEnd={() => {
+            clearTimeout(touchTimerRef.current);
+            touchTimerRef.current = null;
+            requestAnimationFrame(() => {
+              touchActiveRef.current = false;
+            });
           }}
           className="note-wrapper"
           ref={note?.ref}

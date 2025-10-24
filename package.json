@@ -17,6 +17,8 @@
     "bcryptjs": "^3.0.2",
     "cloudinary": "^2.7.0",
     "date-fns": "^4.1.0",
+    "embla-carousel-class-names": "^8.6.0",
+    "embla-carousel-react": "^8.6.0",
     "framer-motion": "^11.11.17",
     "idb": "^8.0.3",
     "lodash": "^4.17.21",

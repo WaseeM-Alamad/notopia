@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef, memo, useCallback } from "react";
-import ImageTrashIcon from "../icons/ImageTrashIcon";
 import "@/assets/styles/LinearLoader.css";
 import { useAppContext } from "@/context/AppContext";
+import GalleryCarousel from "../others/GalleryCarousel";
+import { AnimatePresence } from "framer-motion";
 
 const NoteImagesLayout = ({
   images = [],
-  modalOpen,
+  modalOpen = false,
   isTrash = false,
   deleteSource,
   noteImageDelete,
@@ -22,6 +23,15 @@ const NoteImagesLayout = ({
   const containerRef = useRef(null);
   const [layout, setLayout] = useState([]);
   const [loadedImages, setLoadedImages] = useState([]);
+  const [carouselOpen, setCarouselOpen] = useState(false);
+  const startIndexRef = useRef(0);
+
+  useEffect(() => {
+    if (!modalOpen) {
+      setCarouselOpen(false);
+      startIndexRef.current = 0;
+    }
+  }, [modalOpen]);
 
   useEffect(() => {
     const loadImage = (src, id) => {
@@ -132,14 +142,6 @@ const NoteImagesLayout = ({
     return () => window.removeEventListener("resize", handler);
   }, [loadedImages]);
 
-  const containerStyle = {
-    display: "flex",
-    flexDirection: "column",
-    gap: "3px",
-    zIndex: "10",
-    overflow: "hidden",
-  };
-
   const rowStyle = {
     display: "flex",
     gap: "3px",
@@ -169,7 +171,7 @@ const NoteImagesLayout = ({
         e.stopPropagation();
       }}
       ref={containerRef}
-      style={containerStyle}
+      className="images-layout-container"
     >
       {layout.length > 0 ? (
         layout.map((row, rowIndex) => (
@@ -180,6 +182,14 @@ const NoteImagesLayout = ({
                   opacity: loadingImages.has(item.id) ? "0.6" : "1",
                 }}
                 className="img-wrapper"
+                onClick={() => {
+                  if (!modalOpen) return;
+                  const index = images.findIndex(
+                    (image) => image.url === item.src
+                  );
+                  startIndexRef.current = index;
+                  setCarouselOpen(true);
+                }}
                 key={item.src}
               >
                 <img
@@ -200,11 +210,12 @@ const NoteImagesLayout = ({
                   <div
                     onMouseEnter={(e) => showTooltip(e, "Remove image")}
                     onMouseLeave={hideTooltip}
-                    onClick={() => handleImageDeletion(item.id, item.src)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleImageDeletion(item.id, item.src);
+                    }}
                     className="img-delete"
-                  >
-                    <ImageTrashIcon />
-                  </div>
+                  />
                 )}
               </div>
             ))}
@@ -213,6 +224,16 @@ const NoteImagesLayout = ({
       ) : (
         <></>
       )}
+      <AnimatePresence>
+        {carouselOpen && (
+          <GalleryCarousel
+            images={images}
+            setIsOpen={setCarouselOpen}
+            startIndex={startIndexRef.current}
+            handleImageDeletion={handleImageDeletion}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
