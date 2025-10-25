@@ -13,6 +13,7 @@ const SideButtons = ({
   overUUID,
   isDragging,
   isExpanded,
+  setIsExpanded,
 }) => {
   return (
     <AnimatePresence>
@@ -33,6 +34,7 @@ const SideButtons = ({
           overUUID={overUUID}
           isDragging={isDragging}
           isExpanded={isExpanded}
+          setIsExpanded={setIsExpanded}
         />
       ))}
     </AnimatePresence>

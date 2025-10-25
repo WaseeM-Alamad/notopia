@@ -27,6 +27,7 @@ const Sidebar = memo(() => {
     swapPinnedLabels,
     currentSection,
     addButtonRef,
+    setIsExpanded,
     isExpanded,
   } = useAppContext();
   const containerRef = useRef(null);
@@ -302,9 +303,15 @@ const Sidebar = memo(() => {
 
   return (
     <>
-      <div className={isExpanded.open ? "menu-expanded" : ""}>
+      <div
+        className={`aside-wrapper ${isExpanded.open && isExpanded.threshold === "after" ? "menu-expanded" : ""} ${isExpanded.threshold === "before" ? "menu-expanded" : ""} ${isExpanded.open && isExpanded.threshold === "before" ? "side-mobile-open" : ""}`}
+        onClick={() => {
+          setIsExpanded((prev) => ({ ...prev, open: false }));
+        }}
+      >
         <aside
           className={`${isDragging ? "side-dragging" : ""} ${isExpanded.threshold === "before" && isExpanded.open ? "sidebar-shadow" : ""}`}
+          onClick={(e)=> e.stopPropagation()}
         >
           <AnimatePresence>
             {triggerFloatingBtn && (
@@ -346,6 +353,7 @@ const Sidebar = memo(() => {
               overUUID={overUUID}
               isDragging={isDragging}
               isExpanded={isExpanded}
+              setIsExpanded={setIsExpanded}
             />
           </div>
           <div style={{ height: "2rem", width: "2rem" }} />

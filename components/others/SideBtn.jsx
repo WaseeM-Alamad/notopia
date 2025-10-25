@@ -19,6 +19,7 @@ const SideBtn = ({
   overUUID,
   isDragging,
   isExpanded,
+  setIsExpanded,
 }) => {
   const { handlePin, labelsRef, currentSection } = useAppContext();
   const [mounted, setMounted] = useState(null);
@@ -91,15 +92,15 @@ const SideBtn = ({
 
   const handleIconClick = (e, hash) => {
     hideSideTooltip();
+    window.innerWidth < 605 &&
+      setIsExpanded((prev) => ({ ...prev, open: false }));
     const currentHash = window.location.hash.replace("#", "");
     if (hash === currentHash.toLowerCase()) return;
     e.preventDefault();
     e.stopPropagation();
 
-    // Update hash without triggering scroll, but preserve history
     history.pushState(null, null, `#${hash}`);
 
-    // Manually trigger hashchange event so your other logic still works
     window.dispatchEvent(new HashChangeEvent("hashchange"));
   };
 

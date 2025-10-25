@@ -4902,15 +4902,24 @@ img {
   opacity: 1;
 }
 
+.aside-wrapper {
+  position: fixed;
+  width: 100%;
+  height: 100dvh;
+  background-color: rgba(0, 0, 0, 0);
+  z-index: 99;
+  pointer-events: none;
+}
+
 aside {
   position: fixed;
   padding-top: 0.5rem;
   top: 64px;
-  z-index: 99;
   background-color: #ffffff;
   width: 80px;
   height: 100%;
   user-select: none;
+  pointer-events: auto;
   transition: width 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -5203,7 +5212,7 @@ aside svg {
 .floating-btn {
   position: fixed;
   right: 2rem;
-  z-index: 190 !important;
+  z-index: 98 !important;
   margin: 0;
 }
 
@@ -5473,6 +5482,39 @@ aside svg {
 }
 
 @media (max-width: 605px) {
+  .starting-div {
+    padding: 0 !important;
+  }
+
+  .aside-wrapper {
+    opacity: 0;
+    z-index: 101;
+    transition: all 0.26s cubic-bezier(0.5, 0.2, 0.3, 1);
+  }
+
+  aside {
+    top: 0;
+    left: 0;
+    transform: translateX(-20rem);
+    width: 280px;
+    transition:
+      width 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+      transform 0.44s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .side-mobile-open aside {
+    transform: none;
+    transition:
+      width 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+      transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .side-mobile-open {
+    pointer-events: auto;
+    opacity: 1;
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+
   .modal-inputs-container::-webkit-scrollbar {
     width: 4px;
   }

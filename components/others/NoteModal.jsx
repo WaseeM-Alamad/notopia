@@ -773,7 +773,7 @@ const NoteModal = ({
       const modalHeight = modal.offsetHeight;
       const width = window.innerWidth;
       if (width < 605) {
-        collabBox.style.padding = "30rem 0 0 0";
+        collabBox.style.padding = "70% 0 0 0";
       }
       modal.style.height = modalHeight + "px";
 
@@ -793,7 +793,7 @@ const NoteModal = ({
       if (width < 605) {
         setTimeout(() => {
           collabBox.style.opacity = "1";
-        }, 160);
+        }, 180);
       }
       collabTimeoutRef.current = setTimeout(() => {
         if (width >= 605) {
@@ -831,7 +831,7 @@ const NoteModal = ({
       skipCenterRef.current = true;
 
       if (width < 650) {
-        collabBox.style.padding = "30rem 0 0 0";
+        collabBox.style.padding = "70% 0 0 0";
       }
       editorBox.style.display = "flex";
       editorBox.style.position = "absolute";
