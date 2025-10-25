@@ -143,14 +143,20 @@ const NoteModal = ({
   };
 
   const center = () => {
-    modalRef.current.style.transform = "none";
-    const modalWidth = modalRef.current.offsetWidth;
-    const modalHeight = modalRef.current.offsetHeight;
+    const modal = modalRef.current;
+    modal.style.transform = "none";
+    if (window.innerWidth < 605) {
+      modal.style.top = "0";
+      modal.style.left = "0";
+      return;
+    }
+    const modalWidth = modal.offsetWidth;
+    const modalHeight = modal.offsetHeight;
     const centerLeft = (window.innerWidth - modalWidth) / 2;
     const centerTop = (window.innerHeight - modalHeight) / 3;
 
-    modalRef.current.style.left = `${centerLeft}px`;
-    modalRef.current.style.top = `${centerTop}px`;
+    modal.style.left = `${centerLeft}px`;
+    modal.style.top = `${centerTop}px`;
   };
 
   const reverseModalToNote = () => {
@@ -764,16 +770,35 @@ const NoteModal = ({
       clearTimeout(collabTimeoutRef.current);
       skipCenterRef.current = true;
       collabBox.style.display = "flex";
-      const collabHeight = collabBox.offsetHeight;
       const modalHeight = modal.offsetHeight;
+      const width = window.innerWidth;
+      if (width < 605) {
+        collabBox.style.padding = "30rem 0 0 0";
+      }
       modal.style.height = modalHeight + "px";
+
       requestAnimationFrame(() => {
-        modal.style.height = collabHeight + "px";
+        collabBox.style.transition =
+          "opacity .12s ease-in-out, padding 0.45s cubic-bezier(0.5, 0.2, 0.3, 1)";
+        if (width >= 605) {
+          const collabHeight = collabBox.offsetHeight;
+          modal.style.height = collabHeight + "px";
+        } else {
+          collabBox.style.removeProperty("padding");
+          // collabBox.style.padding = "0";
+        }
         modal.style.backgroundColor = "#ffffff";
         editorBox.style.opacity = "0";
       });
+      if (width < 605) {
+        setTimeout(() => {
+          collabBox.style.opacity = "1";
+        }, 160);
+      }
       collabTimeoutRef.current = setTimeout(() => {
-        collabBox.style.opacity = "1";
+        if (width >= 605) {
+          collabBox.style.opacity = "1";
+        }
         collabBox.style.position = "relative";
         modal.style.removeProperty("height");
         editorBox.style.display = "none";
@@ -782,7 +807,6 @@ const NoteModal = ({
             skipCenterRef.current = false;
           }
         }, 40);
-        // center();
       }, 240);
     });
   };
@@ -797,6 +821,7 @@ const NoteModal = ({
 
   const closeCollab = () => {
     requestAnimationFrame(() => {
+      const width = window.innerWidth;
       const modal = modalRef?.current;
       const collabBox = collabRef?.current;
       const editorBox = noteEditorRef?.current;
@@ -804,6 +829,10 @@ const NoteModal = ({
 
       clearTimeout(collabTimeoutRef.current);
       skipCenterRef.current = true;
+
+      if (width < 650) {
+        collabBox.style.padding = "30rem 0 0 0";
+      }
       editorBox.style.display = "flex";
       editorBox.style.position = "absolute";
       modal.style.removeProperty("background-color");
@@ -902,47 +931,47 @@ const NoteModal = ({
           .filter(Boolean)
           .join(" ")}
       >
-          <NoteEditor
-            noteEditorRef={noteEditorRef}
-            note={note}
-            localNote={localNote}
-            setLocalNote={setLocalNote}
-            localIsPinned={localIsPinned}
-            setLocalIsPinned={setLocalIsPinned}
-            isOpen={isOpen}
-            setIsOpen={setIsOpen}
-            setModalStyle={setModalStyle}
-            undoStack={undoStack}
-            setUndoStack={setUndoStack}
-            redoStack={redoStack}
-            setRedoStack={setRedoStack}
-            modalRef={modalRef}
-            modalOpenRef={modalOpenRef}
-            titleRef={titleRef}
-            contentRef={contentRef}
-            labelsRef={labelsRef}
-            archiveRef={archiveRef}
-            trashRef={trashRef}
-            delayLabelDispatchRef={delayLabelDispatchRef}
-            openSnackRef={openSnackRef}
-            noteActions={noteActions}
-            dispatchNotes={dispatchNotes}
-            notesStateRef={notesStateRef}
-            initialStyle={initialStyle}
-            setInitialStyle={setInitialStyle}
-            openCollab={openCollab}
-          />
+        <NoteEditor
+          noteEditorRef={noteEditorRef}
+          note={note}
+          localNote={localNote}
+          setLocalNote={setLocalNote}
+          localIsPinned={localIsPinned}
+          setLocalIsPinned={setLocalIsPinned}
+          isOpen={isOpen}
+          setIsOpen={setIsOpen}
+          setModalStyle={setModalStyle}
+          undoStack={undoStack}
+          setUndoStack={setUndoStack}
+          redoStack={redoStack}
+          setRedoStack={setRedoStack}
+          modalRef={modalRef}
+          modalOpenRef={modalOpenRef}
+          titleRef={titleRef}
+          contentRef={contentRef}
+          labelsRef={labelsRef}
+          archiveRef={archiveRef}
+          trashRef={trashRef}
+          delayLabelDispatchRef={delayLabelDispatchRef}
+          openSnackRef={openSnackRef}
+          noteActions={noteActions}
+          dispatchNotes={dispatchNotes}
+          notesStateRef={notesStateRef}
+          initialStyle={initialStyle}
+          setInitialStyle={setInitialStyle}
+          openCollab={openCollab}
+        />
 
-          {isCollabOpen && (
-            <CollabLayout
-              note={localNote}
-              closeCollab={closeCollab}
-              collabRef={collabRef}
-              saveCollabFun={saveCollabFun}
-              removeSelfRef={removeSelfRef}
-              setIsOpen={setIsOpen}
-            />
-          )}
+        {isCollabOpen && (
+          <CollabLayout
+            note={localNote}
+            closeCollab={closeCollab}
+            collabRef={collabRef}
+            saveCollabFun={saveCollabFun}
+            removeSelfRef={removeSelfRef}
+            setIsOpen={setIsOpen}
+          />
+        )}
       </div>
     </>,
     document.getElementById("modal-portal")

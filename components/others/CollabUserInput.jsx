@@ -194,7 +194,7 @@ const CollabUserInput = ({
               type="submit"
               onMouseEnter={(e) => showTooltip(e, "Add collaborator")}
               onMouseLeave={hideTooltip}
-              className="small-btn check-icon"
+              className="small-btn check-icon collab-check-btn"
               style={{ marginRight: ".8rem" }}
             />
           )

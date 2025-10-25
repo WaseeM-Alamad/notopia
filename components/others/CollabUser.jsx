@@ -42,7 +42,7 @@ const CollabUser = ({
   return (
     <div className="collab-user">
       <div
-        className="collab-user-img"
+        className="collab-user-img collab-layout-img"
         style={image ? { backgroundImage: `url(${image})` } : undefined}
       />
       <div style={{ fontSize: "0.9rem", width: "100%" }}>
@@ -73,16 +73,7 @@ const CollabUser = ({
       {(ownUser || (!isOwner && isCreator)) && (
         <Button
           onClick={handleRemoveCollab}
-          className="clear-icon btn small-btn"
-          style={{
-            position: "relative",
-            width: "26px",
-            height: "26px",
-            flexShrink: 0,
-            margin: "auto .8rem auto 0",
-            left: 0,
-            top: 0,
-          }}
+          className="clear-icon btn small-btn del-collab"
         />
       )}
     </div>

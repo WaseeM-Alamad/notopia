@@ -306,7 +306,6 @@ svg {
   position: absolute;
   z-index: 202;
   opacity: 0;
-  transition: opacity 0.12s ease-in-out;
 }
 
 .collab-container {
@@ -316,6 +315,8 @@ svg {
 }
 
 .collab-title {
+  display: flex;
+  align-items: center;
   border-bottom: 1px solid rgba(0, 0, 0, 0.15);
   padding-bottom: 10px;
   font-size: 1.13rem;
@@ -346,7 +347,6 @@ svg {
   height: 40px;
   width: 40px;
   flex-shrink: 0;
-  border: 2px solid #fff;
   box-shadow: 0 1px 1px 1px rgba(60, 64, 67, 0.15);
 }
 
@@ -749,17 +749,21 @@ svg {
 }
 
 .collab-note-image {
-  border: 2px solid #fff;
+  /* border: 2px solid #fff; */
   box-shadow: 0 1px 1px 1px rgba(60, 64, 67, 0.15);
-  height: 21px;
-  width: 21px;
+  height: 25px;
+  width: 25px;
   cursor: pointer;
 }
 
 .modal-collab-image {
-  height: 27px;
-  width: 27px;
+  height: 31px;
+  width: 31px;
   cursor: pointer;
+}
+
+.collab-layout-img {
+  border: solid 2px #fff;
 }
 
 .buttons-con {
@@ -3746,6 +3750,26 @@ img {
   background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNHB4IiBoZWlnaHQ9IjI0cHgiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzhhYjRmOCI+CiAgICA8cGF0aCBmaWxsPSJub25lIiBkPSJNMCAwaDI0djI0SDBWMHoiLz4KICAgIDxwYXRoIGQ9Ik02IDE5YzAgMS4xLjkgMiAyIDJoOGMxLjEgMCAyLS45IDItMlY3SDZ2MTJ6bTIuNDYtNy4xMmwxLjQxLTEuNDFMMTIgMTIuNTlsMi4xMi0yLjEyIDEuNDEgMS40MUwxMy40MSAxNGwyLjEyIDIuMTItMS40MSAxLjQxTDEyIDE1LjQxbC0yLjEyIDIuMTItMS40MS0xLjQxTDEwLjU5IDE0bC0yLjEzLTIuMTJ6TTE1LjUgNGwtMS0xaC01bC0xIDFINXYyaDE0VjR6Ii8+CiAgICA8cGF0aCBmaWxsPSJub25lIiBkPSJNMCAwaDI0djI0SDB6Ii8+Cjwvc3ZnPgo=);
 }
 
+.collab-close {
+  display: none;
+  background-size: 18px;
+  margin: 0;
+  margin-right: 0.7rem;
+}
+
+.collab-top-save {
+  display: none;
+  margin-left: auto;
+  font-size: 14px;
+  padding: 0.55rem 1.2rem;
+  font-weight: 500;
+  color: #1379fd;
+}
+
+.dark-mode .collab-top-save {
+  color: #4c8dff;
+}
+
 .search-section {
   position: relative;
   display: flex;
@@ -5429,6 +5453,16 @@ aside svg {
   border-radius: 0.4rem;
 }
 
+.del-collab {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  margin: auto 0.8rem auto 0;
+  left: 0;
+  top: 0;
+}
+
 @media (min-width: 605px) {
   .modall {
     background-image: none;
@@ -5451,19 +5485,52 @@ aside svg {
     padding-bottom: 0.8rem;
   }
 
+  .del-collab {
+    padding: 0.9rem;
+  }
+
+  .collab-top-save {
+    display: block;
+  }
+
+  .collab-close {
+    display: block;
+  }
+
+  .collab-user {
+    padding: 7px 5px;
+  }
+
+  .collab-bottom {
+    display: none;
+  }
+
+  .collab-title {
+    border-bottom: none;
+  }
+
   .collab-note-image {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
   }
 
   .modal-collab-image {
-    width: 31px;
-    height: 31px;
+    width: 35px;
+    height: 35px;
+  }
+
+  .collab-layout-img {
+    width: 43px;
+    height: 43px;
+  }
+
+  .collab-check-btn {
+    padding: 0.9rem;
   }
 
   .modal-inputs-container .images-layout-container {
     /* border-radius: 1.3rem; */
-    margin: 1rem;
+    margin: 0.5rem;
   }
 
   .modal-inputs-container .img-wrapper {
@@ -5517,6 +5584,7 @@ aside svg {
   .modal-inputs-container {
     background-image: none !important;
     max-height: 100%;
+    padding: 0 0.5rem;
   }
 
   .modal-bottom {

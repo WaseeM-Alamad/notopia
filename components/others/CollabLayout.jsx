@@ -2,6 +2,7 @@ import React, { memo, useState } from "react";
 import CollabUser from "./CollabUser";
 import CollabUserInput from "./CollabUserInput";
 import { useAppContext } from "@/context/AppContext";
+import Button from "../Tools/Button";
 
 const CollabLayout = ({
   note,
@@ -17,22 +18,25 @@ const CollabLayout = ({
 
   const isCreator = note?.creator?._id === user.id;
 
+  const handleCancel = () => {
+    removeSelfRef.current = false;
+    closeCollab();
+  };
+  const handleSave = () => saveCollabFun(collabOpsMap, collaborators);
+
   return (
     <div ref={collabRef} className="collab-box">
       <div className="collab-container">
-        {/* <button
-          onClick={() =>
-            console.log(
-              "collabOpsMap",
-              collabOpsMap,
-              "removeSelfRef",
-              removeSelfRef.current
-            )
-          }
-        >
-          check
-        </button> */}
-        <div className="collab-title">Collaborators</div>
+        <div className="collab-title">
+          <Button onClick={handleCancel} className="clear-icon collab-close" />
+          <span>Collaborators</span>
+          <button
+            onClick={handleSave}
+            className="action-blue action-modal-bottom-btn collab-top-save"
+          >
+            Save
+          </button>
+        </div>
         <div className="collab-users-container">
           <CollabUser
             displayName={note?.creator?.displayName}
@@ -67,17 +71,14 @@ const CollabLayout = ({
       </div>
       <div className="collab-bottom">
         <button
-          onClick={() => {
-            removeSelfRef.current = false;
-            closeCollab();
-          }}
+          onClick={handleCancel}
           style={{ fontWeight: "500" }}
           className="modal-bottom-btn collab-btn"
         >
           Cancel
         </button>
         <button
-          onClick={() => saveCollabFun(collabOpsMap, collaborators)}
+          onClick={handleSave}
           style={{ fontWeight: "500" }}
           className="modal-bottom-btn collab-btn"
         >
