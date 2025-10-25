@@ -509,7 +509,7 @@ svg {
 }
 
 .modal-inputs-container::-webkit-scrollbar {
-  width: 12px;
+  width: 10px;
 }
 
 .modal-inputs-container::-webkit-scrollbar-track {
@@ -1158,6 +1158,10 @@ svg {
   overflow-wrap: break-word;
   word-wrap: break-word;
   white-space: pre-wrap;
+}
+
+.note-bottom-padding {
+  padding-bottom: 45px;
 }
 
 .note-border {
@@ -5435,6 +5439,28 @@ aside svg {
 }
 
 @media (max-width: 605px) {
+  .modal-inputs-container::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .note-bottom-padding {
+    padding-bottom: 0 !important;
+  }
+
+  .note-labels-container {
+    padding-bottom: 0.8rem;
+  }
+
+  .collab-note-image {
+    width: 24px;
+    height: 24px;
+  }
+
+  .modal-collab-image {
+    width: 31px;
+    height: 31px;
+  }
+
   .modal-inputs-container .images-layout-container {
     /* border-radius: 1.3rem; */
     margin: 1rem;
@@ -5729,6 +5755,8 @@ aside svg {
   overflow: hidden;
   height: 100vh;
   width: 100vw;
+  padding: 5rem 0;
+  box-sizing: border-box;
 }
 .gallery-container {
   display: flex;

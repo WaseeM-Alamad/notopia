@@ -247,8 +247,8 @@ const Note = memo(
     };
 
     const noteClassName = useMemo(() => {
-      return `note ${note?.color} n-bg-${note?.background} ${isDragOver ? "transparent-border" : ""}`;
-    }, [note?.color, note?.background, selected, isDragOver]);
+      return `note ${note?.color} n-bg-${note?.background} ${isDragOver ? "transparent-border" : ""} ${!ImagesWithNoBottomContent ? "note-bottom-padding" : ""}`;
+    }, [note?.color, note?.background, selected, isDragOver, ImagesWithNoBottomContent]);
 
     const handleDragOver = (e) => {
       e.preventDefault();
@@ -429,7 +429,6 @@ const Note = memo(
           </span>
           <div
             style={{
-              paddingBottom: !ImagesWithNoBottomContent ? "45px" : "0px  ",
               minHeight: note?.openNote === false && "180px",
             }}
             className={noteClassName}

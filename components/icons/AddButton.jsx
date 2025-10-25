@@ -19,6 +19,7 @@ const AddButton = () => {
         initial={{
           scale: currentSection.toLowerCase() === "trash" ? 0.6 : 1,
           rotate: currentSection.toLowerCase() === "trash" ? 45 : 0,
+          strokeWidth: currentSection.toLowerCase() === "trash" ? "0.5" : "0",
         }}
         animate={{
           scale: currentSection.toLowerCase() === "trash" ? 0.6 : 1,

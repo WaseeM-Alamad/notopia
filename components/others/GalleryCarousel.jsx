@@ -99,6 +99,7 @@ const GalleryCarousel = ({
           })}
         </div>
       </motion.div>
+      <div style={{ height: "16rem", width: "100%", backgroundColor: "red", bottom: "0" }} />
     </motion.div>,
 
     document.getElementById("modal-portal")

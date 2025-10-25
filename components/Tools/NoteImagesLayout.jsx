@@ -184,11 +184,13 @@ const NoteImagesLayout = ({
                 className="img-wrapper"
                 onClick={() => {
                   if (!modalOpen) return;
-                  const index = images.findIndex(
-                    (image) => image.url === item.src
-                  );
-                  startIndexRef.current = index;
-                  setCarouselOpen(true);
+                  requestIdleCallback(() => {
+                    const index = images.findIndex(
+                      (image) => image.url === item.src
+                    );
+                    startIndexRef.current = index;
+                    setCarouselOpen(true);
+                  });
                 }}
                 key={item.src}
               >

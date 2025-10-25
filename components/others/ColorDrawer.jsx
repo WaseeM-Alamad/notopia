@@ -46,16 +46,22 @@ const ColorDrawer = ({
     e.stopPropagation();
   }, []);
 
-  useEffect(() => {
-    const handler = () => {
-      const width = window.innerWidth;
-      if (width < 605) return;
-      setOpen(false);
-    };
+  const handleResize = () => {
+    const width = window.innerWidth;
+    if (width < 605) return;
+    setOpen(false);
+  };
 
-    window.addEventListener("resize", handler);
-    return () => window.removeEventListener("resize", handler);
-  }, []);
+  useEffect(() => {
+    if (open) {
+      document.activeElement?.blur();
+      window.addEventListener("resize", handleResize);
+    } else {
+      window.removeEventListener("resize", handleResize);
+    }
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, [open]);
 
   useEffect(() => {
     if (isOpen) {
