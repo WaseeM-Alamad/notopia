@@ -435,7 +435,7 @@ const Navbar = () => {
       setShowNav(true);
     }
 
-    if (width < 605) {
+    if (width <= 605) {
       setThreshold2(true);
       setShowLayoutBtn(false);
     } else {
@@ -531,8 +531,12 @@ const Navbar = () => {
                 display: !showInput && "none",
                 position: threshold1 && "absolute",
                 top: threshold1 && 0,
-                right: threshold1 ? "146px" : null,
-                width: threshold1 ? "calc(100% - 156px)" : null,
+                right: threshold1 ? (showLayoutBtn ? "146px" : "100px") : null,
+                width: threshold1
+                  ? showLayoutBtn
+                    ? "calc(100% - 156px)"
+                    : "calc(100% - 110px)"
+                  : null,
               }}
               className="search-wrapper"
               onBlur={(e) => {
@@ -693,7 +697,7 @@ const Navbar = () => {
               onClick={toggleLayout}
               className="nav-btn"
               style={{
-                // display: !showLayoutBtn && "none",
+                display: !showLayoutBtn && "none",
               }}
             >
               {layout === "grid" ? <ListIcon /> : <GridIcon />}
