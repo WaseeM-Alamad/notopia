@@ -12,11 +12,12 @@ import { motion } from "framer-motion";
 import { getNoteFormattedDate } from "@/utils/noteDateFormatter";
 import ComposeNote from "../others/ComposeNote";
 
-const GUTTER = 15;
 const GAP_BETWEEN_SECTIONS = 88;
 
 const NoteWrapper = memo(
   ({
+    gridNoteWidth,
+    GUTTER,
     dispatchNotes,
     selectedNotesRef,
     isGrid,
@@ -54,8 +55,7 @@ const NoteWrapper = memo(
             fadingNotes.has(note?.uuid) ? "fade-out" : ""
           }`}
           style={{
-            maxWidth: `${isGrid ? 240 : 600}px`,
-            minWidth: !isGrid && "15rem",
+            maxWidth: `${isGrid ? gridNoteWidth : 600}px`,
             width: "100%",
             marginBottom: `${GUTTER}px`,
             transition: `transform ${
@@ -100,7 +100,7 @@ const DynamicLabel = ({
   containerRef,
   isGrid,
 }) => {
-  const { layout, calculateLayoutRef, focusedIndex, isExpanded } =
+  const { layout, calculateLayoutRef, focusedIndex, isExpanded, breakpoint } =
     useAppContext();
   const [pinnedHeight, setPinnedHeight] = useState(null);
   const [sectionsHeight, setSectionsHeight] = useState(null);
@@ -109,7 +109,9 @@ const DynamicLabel = ({
   const resizeTimeoutRef = useRef(null);
   const layoutFrameRef = useRef(null);
   const lastAddedNoteRef = useRef(null);
-  const COLUMN_WIDTH = layout === "grid" ? 240 : 600;
+  const gridNoteWidth = breakpoint === 1 ? 240 : breakpoint === 2 ? 180 : 240;
+  const COLUMN_WIDTH = layout === "grid" ? gridNoteWidth : 600;
+  const GUTTER = breakpoint === 1 ? 15 : 8;
 
   const hasPinned = [...visibleItems].some((uuid) => {
     const note = notes.get(uuid);
@@ -265,7 +267,7 @@ const DynamicLabel = ({
       container.style.height = `${archivedHeight}px`;
       setLayoutReady(true);
     });
-  }, [labelObj, isGrid]);
+  }, [labelObj, isGrid, COLUMN_WIDTH, GUTTER]);
 
   const debouncedCalculateLayout = useCallback(() => {
     if (resizeTimeoutRef.current) {
@@ -387,6 +389,8 @@ const DynamicLabel = ({
                 setSelectedNotesIDs={setSelectedNotesIDs}
                 handleNoteClick={handleNoteClick}
                 handleSelectNote={handleSelectNote}
+                gridNoteWidth={gridNoteWidth}
+                GUTTER={GUTTER}
               />
             );
           })}

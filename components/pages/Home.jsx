@@ -8,11 +8,11 @@ import { useAppContext } from "@/context/AppContext";
 import handleServerCall from "@/utils/handleServerCall";
 import localDbReducer from "@/utils/localDbReducer";
 
-const GUTTER = 15;
 const GAP_BETWEEN_SECTIONS = 88;
 
 const NoteWrapper = memo(
   ({
+    GUTTER,
     isGrid,
     dispatchNotes,
     selectedNotesRef,
@@ -27,6 +27,7 @@ const NoteWrapper = memo(
     notesIndexMapRef,
     handleSelectNote,
     handleNoteClick,
+    gridNoteWidth,
   }) => {
     const [mounted, setMounted] = useState(false);
     const noteRef = useRef(null);
@@ -104,8 +105,7 @@ const NoteWrapper = memo(
             fadingNotes.has(note?.uuid) ? "fade-out" : ""
           }`}
           style={{
-            maxWidth: `${isGrid ? 240 : 600}px`,
-            minWidth: !isGrid && "15rem",
+            maxWidth: `${isGrid ? gridNoteWidth : 600}px`,
             width: "100%",
             marginBottom: `${GUTTER}px`,
             transition: `transform ${
@@ -161,6 +161,7 @@ const Home = memo(
       notesStateRef,
       notesIndexMapRef,
       isExpanded,
+      breakpoint,
     } = useAppContext();
     const userID = user?.id;
     const [pinnedHeight, setPinnedHeight] = useState(null);
@@ -169,7 +170,9 @@ const Home = memo(
     const layoutFrameRef = useRef(null);
     const [layoutReady, setLayoutReady] = useState(false);
     const [addPadding, setAddPadding] = useState(false);
-    const COLUMN_WIDTH = layout === "grid" ? 240 : 600;
+    const gridNoteWidth = breakpoint === 1 ? 240 : breakpoint === 2 ? 180 : 240;
+    const COLUMN_WIDTH = layout === "grid" ? gridNoteWidth : 600;
+    const GUTTER = breakpoint === 1 ? 15 : 8;
 
     const hasPinned = [...visibleItems].some((uuid) => {
       const note = notes.get(uuid);
@@ -216,7 +219,7 @@ const Home = memo(
           : columns * (COLUMN_WIDTH + GUTTER) - GUTTER;
 
         container.style.width = `${contentWidth}px`;
-        container.style.maxWidth = isGrid ? "100%" : "90%";
+        container.style.maxWidth = isGrid ? "100%" : "96%";
         container.style.position = "relative";
         container.style.left = "50%";
         container.style.transform = "translateX(-50%)";
@@ -286,7 +289,7 @@ const Home = memo(
           setLayoutReady(true);
         });
       });
-    }, [isGrid]);
+    }, [isGrid, COLUMN_WIDTH, GUTTER]);
 
     useEffect(() => {
       const width = window.innerWidth;
@@ -662,6 +665,8 @@ const Home = memo(
                     setSelectedNotesIDs={setSelectedNotesIDs}
                     handleNoteClick={handleNoteClick}
                     handleSelectNote={handleSelectNote}
+                    gridNoteWidth={gridNoteWidth}
+                    GUTTER={GUTTER}
                   />
                 )
               );

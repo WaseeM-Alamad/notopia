@@ -7,10 +7,10 @@ import handleServerCall from "@/utils/handleServerCall";
 import localDbReducer from "@/utils/localDbReducer";
 import { batchDeleteNotes } from "@/utils/actions";
 
-const GUTTER = 15;
-
 const NoteWrapper = memo(
   ({
+    gridNoteWidth,
+    GUTTER,
     isGrid,
     note,
     noteActions,
@@ -50,8 +50,7 @@ const NoteWrapper = memo(
             }
           }}
           style={{
-            maxWidth: `${isGrid ? 240 : 600}px`,
-            minWidth: !isGrid && "15rem",
+            maxWidth: `${isGrid ? gridNoteWidth : 600}px`,
             width: "100%",
             marginBottom: `${GUTTER}px`,
             transition: `transform ${
@@ -107,9 +106,13 @@ const Trash = memo(
       setDialogInfoRef,
       clientID,
       isExpanded,
+      breakpoint,
     } = useAppContext();
     const userID = user?.id;
-    const COLUMN_WIDTH = layout === "grid" ? 240 : 600;
+    const gridNoteWidth = breakpoint === 1 ? 240 : breakpoint === 2 ? 180 : 240;
+    const COLUMN_WIDTH = layout === "grid" ? gridNoteWidth : 600;
+    const GUTTER = breakpoint === 1 ? 15 : 8;
+
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
 
@@ -183,7 +186,7 @@ const Trash = memo(
         const totalHeight = positionItems(Array.from(items));
         container.style.height = `${totalHeight}px`;
       });
-    }, [isGrid]);
+    }, [isGrid, COLUMN_WIDTH, GUTTER]);
 
     const debouncedCalculateLayout = useCallback(() => {
       if (resizeTimeoutRef.current) {
@@ -307,6 +310,8 @@ const Trash = memo(
                     handleSelectNote={handleSelectNote}
                     handleNoteClick={handleNoteClick}
                     fadingNotes={fadingNotes}
+                    gridNoteWidth={gridNoteWidth}
+                    GUTTER={GUTTER}
                   />
                 );
             })}

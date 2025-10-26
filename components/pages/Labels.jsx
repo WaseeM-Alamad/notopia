@@ -13,8 +13,6 @@ import { v4 as uuid } from "uuid";
 import { motion } from "framer-motion";
 import { useSearch } from "@/context/SearchContext";
 
-const GUTTER = 15;
-
 const Labels = memo(
   ({
     notes,
@@ -36,6 +34,7 @@ const Labels = memo(
       layout,
       calculateLayoutRef,
       isExpanded,
+      breakpoint,
     } = useAppContext();
     const { labelSearchTerm } = useSearch();
     const [reRender, triggerReRender] = useState(false);
@@ -44,7 +43,9 @@ const Labels = memo(
     const layoutFrameRef = useRef(null);
     const isFirstRenderRef = useRef(true);
 
-    const COLUMN_WIDTH = layout === "grid" ? 240 : 450;
+    const gridNoteWidth = breakpoint === 1 ? 240 : breakpoint === 2 ? 180 : 240;
+    const COLUMN_WIDTH = layout === "grid" ? gridNoteWidth : 600;
+    const GUTTER = breakpoint === 1 ? 15 : 8;
 
     const noMatchingLabels =
       labelsReady &&
@@ -114,7 +115,7 @@ const Labels = memo(
         const totalHeight = positionItems(Array.from(items));
         container.style.height = `${totalHeight}px`;
       });
-    }, [isGrid]);
+    }, [isGrid, COLUMN_WIDTH, GUTTER]);
 
     const debouncedCalculateLayout = useCallback(() => {
       if (resizeTimeoutRef.current) {
@@ -230,6 +231,8 @@ const Labels = memo(
                     handleDeleteLabel={handleDeleteLabel}
                     key={uuid}
                     isGrid={isGrid}
+                    gridNoteWidth={gridNoteWidth}
+                    GUTTER={GUTTER}
                     dispatchNotes={dispatchNotes}
                     setFadingNotes={setFadingNotes}
                     fadingNotes={fadingNotes}

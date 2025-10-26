@@ -4,10 +4,10 @@ import Note from "../others/Note";
 import { motion } from "framer-motion";
 import { useAppContext } from "@/context/AppContext";
 
-const GUTTER = 15;
-
 const NoteWrapper = memo(
   ({
+    gridNoteWidth,
+    GUTTER,
     isGrid,
     note,
     ref,
@@ -47,8 +47,7 @@ const NoteWrapper = memo(
             }
           }}
           style={{
-            maxWidth: `${isGrid ? 240 : 600}px`,
-            minWidth: !isGrid && "15rem",
+            maxWidth: `${isGrid ? gridNoteWidth : 600}px`,
             width: "100%",
             marginBottom: `${GUTTER}px`,
             transition: `transform ${
@@ -95,9 +94,11 @@ const Archive = memo(
     containerRef,
     isGrid,
   }) => {
-    const { layout, calculateLayoutRef, focusedIndex, isExpanded } =
+    const { layout, calculateLayoutRef, focusedIndex, isExpanded, breakpoint } =
       useAppContext();
-    const COLUMN_WIDTH = layout === "grid" ? 240 : 600;
+    const gridNoteWidth = breakpoint === 1 ? 240 : breakpoint === 2 ? 180 : 240;
+    const COLUMN_WIDTH = layout === "grid" ? gridNoteWidth : 600;
+    const GUTTER = breakpoint === 1 ? 15 : 8;
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
     const [addPadding, setAddPadding] = useState(false);
@@ -170,7 +171,7 @@ const Archive = memo(
         const totalHeight = positionItems(Array.from(items));
         container.style.height = `${totalHeight}px`;
       });
-    }, [isGrid]);
+    }, [isGrid, COLUMN_WIDTH, GUTTER]);
 
     const debouncedCalculateLayout = useCallback(() => {
       if (resizeTimeoutRef.current) {
@@ -264,6 +265,8 @@ const Archive = memo(
                     setFadingNotes={setFadingNotes}
                     noteActions={noteActions}
                     setSelectedNotesIDs={setSelectedNotesIDs}
+                    gridNoteWidth={gridNoteWidth}
+                    GUTTER={GUTTER}
                   />
                 );
             })}

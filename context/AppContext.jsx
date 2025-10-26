@@ -29,8 +29,9 @@ export function AppProvider({ children, initialUser }) {
   const [layout, setLayout] = useState(null);
   const [isOnline, setIsOnline] = useState(true);
   const [isExpanded, setIsExpanded] = useState({ open: null, threshold: null });
+  const [breakpoint, setBreakpoint] = useState(1);
+  const isExpandedRef = useRef(null);
   const focusedIndex = useRef(null);
-
   const clientID = useRef(uuid());
   const openSnackRef = useRef(() => {});
   const setTooltipRef = useRef(null);
@@ -76,21 +77,35 @@ export function AppProvider({ children, initialUser }) {
   }, [isExpanded.open]);
 
   useEffect(() => {
-    const handler = (e) => {
+    isExpandedRef.current = isExpanded;
+  }, [isExpanded]);
+
+  useEffect(() => {
+    const handler = () => {
       const width = window.innerWidth;
 
       if (width < 605) {
-        if (isExpanded.threshold === "before") return;
-        setIsExpanded({ open: false, threshold: "before" });
-      } else {
-        if (isExpanded.threshold === "after") return;
+        if (isExpandedRef.current.threshold !== "before") {
+          setIsExpanded({ open: false, threshold: "before" });
+        }
+      } else if (isExpandedRef.current.threshold !== "after") {
         setIsExpanded({ open: false, threshold: "after" });
+      }
+
+      if (width <= 384) {
+        setLayout("list");
+      } else {
+        const savedLayout = localStorage.getItem("layout");
+        setLayout(savedLayout);
+        setBreakpoint(width > 527 ? 1 : 2);
       }
     };
 
+    handler();
+
     window.addEventListener("resize", handler);
     return () => window.removeEventListener("resize", handler);
-  }, [isExpanded]);
+  }, []);
 
   useEffect(() => {
     const width = window.innerWidth;
@@ -100,6 +115,29 @@ export function AppProvider({ children, initialUser }) {
       isExpanded.open ? "true" : "false"
     );
   }, [isExpanded.open]);
+
+  useEffect(() => {
+    if (isExpanded.threshold !== "before") return;
+
+    const body = document.body;
+    const nav = document.querySelector("nav");
+    const topMenu = document.querySelector("#top-menu");
+    const floatingBtn = floatingBtnRef?.current;
+    const elements = [nav, topMenu, floatingBtn, body];
+
+    if (isExpanded.open) {
+      const scrollbarWidth =
+        window.innerWidth - document.documentElement.clientWidth;
+      elements.forEach(
+        (el) => el && (el.style.paddingRight = `${scrollbarWidth}px`)
+      );
+      body.style.overflow = "hidden";
+    } else {
+      elements.forEach((el) => el && el.style.removeProperty("padding-right"));
+      body.style.removeProperty("overflow");
+      document.body.removeAttribute("data-scroll-locked");
+    }
+  }, [isExpanded]);
 
   useEffect(() => {
     focusedIndex.current = null;
@@ -122,7 +160,7 @@ export function AppProvider({ children, initialUser }) {
       setLayout("grid");
       return;
     }
-    setLayout(savedLayout);
+    setLayout(window.innerWidth <= 384 ? "list" : savedLayout);
   }, []);
 
   const updateLocalLabels = useMemo(
@@ -433,6 +471,7 @@ export function AppProvider({ children, initialUser }) {
         loadNextBatchRef,
         notesIndexMapRef,
         floatingBtnRef,
+        breakpoint,
         clientID: clientID.current,
       }}
     >

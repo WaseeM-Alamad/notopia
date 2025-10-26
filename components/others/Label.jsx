@@ -13,6 +13,8 @@ import { validateImageFile } from "@/utils/validateImage";
 const Label = ({
   labelData,
   isGrid,
+  gridNoteWidth,
+  GUTTER,
   triggerReRender,
   fadingNotes,
   setVisibleItems,
@@ -412,7 +414,6 @@ const Label = ({
           damping: 50,
           mass: 1,
         }}
-        className={`label-container ${isGrid ? "grid-label" : "list-label"}`}
         onContextMenu={(e) => {
           e.preventDefault();
           closeToolTip();
@@ -434,6 +435,8 @@ const Label = ({
         onClick={handleLabelClick}
         ref={labelRef}
         style={{
+          maxWidth: `${isGrid ? gridNoteWidth : 450}px`,
+          width: "100%",
           transition: `transform ${
             mounted ? "0.22s" : "0s"
           } cubic-bezier(0.2, 0, 0, 1), opacity 0.23s ease`,

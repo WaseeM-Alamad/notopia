@@ -22,6 +22,7 @@ export function useBatchLoading({
     currentSection,
     loadNextBatchRef,
     notesIndexMapRef,
+    breakpoint,
   } = useAppContext();
 
   const {
@@ -362,9 +363,11 @@ export function useBatchLoading({
         return;
       }
 
-      const GUTTER = 15;
       const isGrid = layout === "grid";
-      const COLUMN_WIDTH = isGrid ? 240 : 600;
+      const gridNoteWidth =
+        breakpoint === 1 ? 240 : breakpoint === 2 ? 180 : 240;
+      const COLUMN_WIDTH = isGrid ? gridNoteWidth : 600;
+      const GUTTER = breakpoint === 1 ? 15 : 8;
 
       const parent = container.parentElement;
       const parentWidth = parent.clientWidth;
@@ -433,7 +436,7 @@ export function useBatchLoading({
 
     window.addEventListener("focus", handler);
     return () => window.removeEventListener("focus", handler);
-  }, [currentSection, layout]);
+  }, [currentSection, layout, breakpoint]);
 
   if (!currentSection) return;
 }

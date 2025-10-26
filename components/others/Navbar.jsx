@@ -436,17 +436,10 @@ const Navbar = () => {
     }
 
     if (width < 605) {
-      !modalOpenRef.current
-        ? setLayout("list")
-        : localStorage.setItem("layout", layout);
       setThreshold2(true);
       setShowLayoutBtn(false);
     } else {
       setThreshold2(false);
-      const savedLayout = localStorage.getItem("layout");
-      !modalOpenRef.current
-        ? setLayout(savedLayout)
-        : localStorage.setItem("layout", layout);
       if (currentSection?.toLowerCase() === "search") {
         if (isFiltered) {
           setShowLayoutBtn(true);
@@ -538,12 +531,8 @@ const Navbar = () => {
                 display: !showInput && "none",
                 position: threshold1 && "absolute",
                 top: threshold1 && 0,
-                right: threshold1 ? (showLayoutBtn ? "146px" : "100px") : null,
-                width: threshold1
-                  ? showLayoutBtn
-                    ? "calc(100% - 156px)"
-                    : "calc(100% - 110px)"
-                  : null,
+                right: threshold1 ? "146px" : null,
+                width: threshold1 ? "calc(100% - 156px)" : null,
               }}
               className="search-wrapper"
               onBlur={(e) => {
@@ -704,7 +693,7 @@ const Navbar = () => {
               onClick={toggleLayout}
               className="nav-btn"
               style={{
-                display: !showLayoutBtn && "none",
+                // display: !showLayoutBtn && "none",
               }}
             >
               {layout === "grid" ? <ListIcon /> : <GridIcon />}

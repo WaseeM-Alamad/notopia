@@ -3083,17 +3083,6 @@ img {
   transform: translateY(-100000px);
 }
 
-.list-label {
-  max-width: 450px;
-  min-width: 15rem;
-  width: 100%;
-}
-
-.grid-label {
-  max-width: 240px;
-  width: 100%;
-}
-
 .label {
   box-sizing: border-box;
   overflow: hidden;
@@ -5499,7 +5488,7 @@ aside svg {
     width: 280px;
     transition:
       width 0.15s cubic-bezier(0.4, 0, 0.2, 1),
-      transform 0.44s cubic-bezier(0.4, 0, 0.2, 1);
+      transform 0.44s cubic-bezier(0.1, 0, 0.6, 1);
   }
 
   .side-mobile-open aside {
@@ -5520,11 +5509,7 @@ aside svg {
   }
 
   .note-bottom-padding {
-    padding-bottom: 0 !important;
-  }
-
-  .note-labels-container {
-    padding-bottom: 0.8rem;
+    padding-bottom: 0.7rem !important;
   }
 
   .del-collab {

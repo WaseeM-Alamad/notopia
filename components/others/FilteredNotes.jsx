@@ -5,11 +5,12 @@ import { useSearch } from "@/context/SearchContext";
 import { useAppContext } from "@/context/AppContext";
 import Note from "./Note";
 
-const GUTTER = 15;
 const GAP_BETWEEN_SECTIONS = 88;
 
 const NoteWrapper = memo(
   ({
+    gridNoteWidth,
+    GUTTER,
     note,
     noteActions,
     ref,
@@ -49,8 +50,7 @@ const NoteWrapper = memo(
             }
           }}
           style={{
-            maxWidth: `${isGrid ? 240 : 600}px`,
-            minWidth: !isGrid && "15rem",
+            maxWidth: `${isGrid ? gridNoteWidth : 600}px`,
             width: "100%",
             marginBottom: `${GUTTER}px`,
             transition: `transform ${
@@ -96,7 +96,7 @@ const FilteredNotes = memo(
     isGrid,
   }) => {
     const { searchTerm } = useSearch();
-    const { layout, calculateLayoutRef } = useAppContext();
+    const { layout, calculateLayoutRef, breakpoint } = useAppContext();
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
     const [layoutReady, setLayoutReady] = useState(false); // New state to track layout completion
@@ -104,7 +104,9 @@ const FilteredNotes = memo(
     const [pinnedHeight, setPinnedHeight] = useState(null);
     const [sectionsHeight, setSectionsHeight] = useState(null);
 
-    const COLUMN_WIDTH = layout === "grid" ? 240 : 600;
+    const gridNoteWidth = breakpoint === 1 ? 240 : breakpoint === 2 ? 180 : 240;
+    const COLUMN_WIDTH = layout === "grid" ? gridNoteWidth : 600;
+    const GUTTER = breakpoint === 1 ? 15 : 8;
 
     const hasPinned = [...visibleItems].some((uuid) => {
       const note = notes.get(uuid);
@@ -256,7 +258,7 @@ const FilteredNotes = memo(
         container.style.height = `${archivedHeight}px`;
         setLayoutReady(true);
       });
-    }, [isGrid]);
+    }, [isGrid, COLUMN_WIDTH, GUTTER]);
 
     const debouncedCalculateLayout = useCallback(() => {
       if (resizeTimeoutRef.current) {
@@ -374,6 +376,8 @@ const FilteredNotes = memo(
                 handleNoteClick={handleNoteClick}
                 handleSelectNote={handleSelectNote}
                 fadingNotes={fadingNotes}
+                GUTTER={GUTTER}
+                gridNoteWidth={gridNoteWidth}
               />
             );
           })}
