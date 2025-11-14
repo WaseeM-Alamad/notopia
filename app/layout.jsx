@@ -6,6 +6,7 @@ import { SearchProvider } from "@/context/SearchContext";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/utils/authOptions";
 import FatalErrorBoundary from "@/utils/ErrorBoundry";
+import PolyfillClient from "@/utils/PolyfillClient";
 
 export const metadata = {
   title: "Notopia",
@@ -27,6 +28,7 @@ const MainLayout = async ({ children }) => {
       </head>
       <body suppressHydrationWarning>
         <FatalErrorBoundary>
+          <PolyfillClient />
           <AuthProvider>
             <SearchProvider>
               <AppProvider initialUser={initialUser}>
