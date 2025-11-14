@@ -8,7 +8,8 @@ import DeleteAccSettings from "./DeleteAccSettings";
 import { useAppContext } from "@/context/AppContext";
 
 const AccountDialog = ({ settingsRef, setIsOpen, user, setUser }) => {
-  const { showTooltip, hideTooltip, closeToolTip } = useAppContext();
+  const { showTooltip, hideTooltip, closeToolTip, isExpanded } =
+    useAppContext();
   const [isMounted, setIsMounted] = useState(false);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   const containerRef = useRef(null);
@@ -134,36 +135,48 @@ const AccountDialog = ({ settingsRef, setIsOpen, user, setUser }) => {
         <div className="settings-left-panel">
           <div className="account-left-section-header">Settings</div>
           <div className="settings-section-container">
-            <motion.div
-              animate={{
-                transform: `translateY(${(isSmallScreen ? 45 : 40) * selectedSection}px)`,
-              }}
-              transition={{
-                type: "spring",
-                stiffness: 800,
-                damping: 40,
-                mass: 0.5,
-              }}
-              className="settings-section-selector"
-            />
-            {sectionsBtns.map(({ icon, title }, index) => {
-              const selected = selectedSection === index;
-              return (
-                <div
-                  key={title}
-                  onClick={() => setSelectedSection(index)}
-                  style={{ color: selected ? "#6b8ffc" : "" }}
-                  className="settings-section-btn"
-                >
+            {isExpanded.threshold === "before" && (
+              <div
+                className={`select-menu option-styling ${sectionsBtns[selectedSection].icon}`}
+              >
+                <span>{sectionsBtns[selectedSection].title}</span>
+              </div>
+            )}
+            {isExpanded.threshold === "after" ? (
+              <motion.div
+                animate={{
+                  transform: `translateY(${(isSmallScreen ? 45 : 40) * selectedSection}px)`,
+                }}
+                transition={{
+                  type: "spring",
+                  stiffness: 800,
+                  damping: 40,
+                  mass: 0.5,
+                }}
+                className="settings-section-selector"
+              />
+            ) : (
+              <div></div>
+            )}
+            {isExpanded.threshold === "after" &&
+              sectionsBtns.map(({ icon, title }, index) => {
+                const selected = selectedSection === index;
+                return (
                   <div
-                    className={`settings-section-icon ${
-                      icon + (selected ? "-selected" : "")
-                    }`}
-                  />
-                  <span className="account-section-title">{title}</span>
-                </div>
-              );
-            })}
+                    key={title}
+                    onClick={() => setSelectedSection(index)}
+                    style={{ color: selected ? "#6b8ffc" : "" }}
+                    className="settings-section-btn"
+                  >
+                    <div
+                      className={`settings-section-icon ${
+                        icon + (selected ? "-selected" : "")
+                      }`}
+                    />
+                    <span className="account-section-title">{title}</span>
+                  </div>
+                );
+              })}
           </div>
         </div>
         <div

@@ -5471,6 +5471,33 @@ aside svg {
 }
 
 @media (max-width: 605px) {
+  .acc-settings-container {
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 0;
+  }
+
+  .settings-section-container {
+    display: flex;
+    width: 100%;
+  }
+
+  .settings-left-panel {
+    border: none;
+    border-bottom: 1px solid #e5e7eb;
+    height: fit-content;
+    width: 100%;
+    max-width: 100%;
+    padding: 1rem 1.5rem;
+  }
+
+  .settings-section-btn {
+    width: fit-content;
+  }
+
   .starting-div {
     padding: 0 !important;
   }
@@ -5894,4 +5921,17 @@ aside svg {
 }
 .gallery-slide:not(.is-snapped) {
   opacity: 0.16;
+}
+
+.select-menu {
+  border: 1px solid #e0e0e0;
+  border-radius: 0.4rem;
+  padding: 0.5rem 2.6rem;
+  background-color: #fff;
+}
+
+.option-styling {
+  padding-left: 2.5rem;
+  background-repeat: no-repeat;
+  background-position: .7rem center;
 }
