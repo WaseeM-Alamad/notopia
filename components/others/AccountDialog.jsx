@@ -1,11 +1,12 @@
 import React, { memo, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import PhotoSettings from "./PhotoSettings";
 import AccountSettings from "./AccountSettings";
 import SecuritySettings from "./SecuritySettings";
 import DeleteAccSettings from "./DeleteAccSettings";
 import { useAppContext } from "@/context/AppContext";
+import MoreMenu from "./MoreMenu";
 
 const AccountDialog = ({ settingsRef, setIsOpen, user, setUser }) => {
   const { showTooltip, hideTooltip, closeToolTip, isExpanded } =
@@ -15,6 +16,8 @@ const AccountDialog = ({ settingsRef, setIsOpen, user, setUser }) => {
   const containerRef = useRef(null);
 
   const [selectedSection, setSelectedSection] = useState(0);
+  const [selectMenuOpen, setSelectMenuOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
 
   useEffect(() => {
     const handler = () => {
@@ -36,6 +39,19 @@ const AccountDialog = ({ settingsRef, setIsOpen, user, setUser }) => {
     { icon: "settings-email-icon", title: "Account Info" },
     { icon: "settings-security-icon", title: "Security" },
     { icon: "settings-warning-icon", title: "Delete Account" },
+  ];
+
+  const menuItems = [
+    {
+      title: "Unpin label",
+      function: ()=> {},
+      icon: "unpin-menu-icon",
+    },
+    {
+      title: "Navigate",
+      function: ()=> {},
+      icon: "nav-menu-icon",
+    },
   ];
 
   const sections = [
@@ -137,6 +153,10 @@ const AccountDialog = ({ settingsRef, setIsOpen, user, setUser }) => {
           <div className="settings-section-container">
             {isExpanded.threshold === "before" && (
               <div
+                onClick={(e) => {
+                  setAnchorEl(e.currentTarget);
+                  setSelectMenuOpen((prev) => !prev);
+                }}
                 className={`select-menu option-styling ${sectionsBtns[selectedSection].icon}`}
               >
                 <span>{sectionsBtns[selectedSection].title}</span>
@@ -203,6 +223,18 @@ const AccountDialog = ({ settingsRef, setIsOpen, user, setUser }) => {
           </div>
         </div>
       </motion.div>
+      <AnimatePresence>
+        {isExpanded.threshold === "before" && selectMenuOpen && (
+          <MoreMenu
+            setIsOpen={setSelectMenuOpen}
+            anchorEl={anchorEl}
+            isOpen={selectMenuOpen}
+            menuItems={sectionsBtns}
+            transformOrigin="top"
+            className='option-styling'
+          />
+        )}
+      </AnimatePresence>
     </>,
     document.getElementById("modal-portal")
   );

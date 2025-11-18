@@ -54,6 +54,41 @@ const GalleryCarousel = ({
       exit={{ opacity: 0 }}
       className="gallery-carousel"
     >
+      {images.length > 1 && (
+        <>
+          <div
+            onClick={() => {
+              if (selectedIndex === 0) return;
+              emblaApi.scrollPrev();
+            }}
+            className="gallery-side-container"
+            style={{ cursor: selectedIndex > 0 ? "pointer" : "default" }}
+          >
+            <div
+              className="gallery-side-btn gallery-nav-icon"
+              style={{
+                rotate: "180deg",
+                opacity: selectedIndex > 0 ? "1" : "0",
+              }}
+            />
+          </div>
+          <div
+            onClick={() => {
+              emblaApi.scrollNext();
+            }}
+            className="gallery-side-container"
+            style={{
+              right: "0",
+              cursor: selectedIndex + 1 < images.length ? "pointer" : "default",
+            }}
+          >
+            <div
+              className="gallery-side-btn gallery-nav-icon"
+              style={{ opacity: selectedIndex + 1 < images.length ? "1" : "0" }}
+            />
+          </div>
+        </>
+      )}
       <div className="gallery-top">
         <Button
           onClick={() => setIsOpen(false)}
@@ -99,7 +134,14 @@ const GalleryCarousel = ({
           })}
         </div>
       </motion.div>
-      <div style={{ height: "16rem", width: "100%", backgroundColor: "red", bottom: "0" }} />
+      <div
+        style={{
+          height: "16rem",
+          width: "100%",
+          backgroundColor: "red",
+          bottom: "0",
+        }}
+      />
     </motion.div>,
 
     document.getElementById("modal-portal")

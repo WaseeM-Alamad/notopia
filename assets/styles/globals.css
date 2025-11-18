@@ -2277,10 +2277,13 @@ img {
 }
 
 .menu-btn {
+  background-position: 0.7rem center;
+  background-repeat: no-repeat;
   display: flex;
   align-items: center;
   color: rgb(99, 99, 99);
-  width: 100%;
+  width: 100% !important;
+  height: auto !important;
   padding: 0.8rem;
   padding-left: 1.4rem;
   white-space: nowrap;
@@ -5923,6 +5926,39 @@ aside svg {
   opacity: 0.16;
 }
 
+.gallery-side-container {
+  display: flex;
+  padding: 0 1rem;
+  position: absolute;
+  height: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  z-index: 2;
+}
+
+.gallery-side-btn {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  margin: auto;
+  background-color: rgba(255, 255, 255, 0.05);
+  transition:
+    background-color 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.gallery-side-container:hover .gallery-side-btn,
+.gallery-side-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.gallery-nav-icon {
+  background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M8.30941 3.38357C8.80133 3.87608 13.6058 9.04986 13.6058 9.04986C13.7305 9.17301 13.8296 9.32069 13.8974 9.48406C13.9651 9.64744 14 9.82315 14 10.0007C14 10.1782 13.9651 10.3539 13.8974 10.5173C13.8296 10.6807 13.7305 10.8283 13.6058 10.9515C13.6058 10.9515 8.80133 16.1275 8.30941 16.6178C8.05101 16.8635 7.71169 17 7.35937 17C7.00704 17 6.66772 16.8635 6.40933 16.6178C5.88432 16.0943 5.84318 15.3611 6.40933 14.7184L10.8174 10.0013L6.40933 5.2848C5.84318 4.64134 5.88432 3.90749 6.40933 3.3825C6.66763 3.13663 7.00699 3 7.35937 3C7.71174 3 8.0511 3.13663 8.30941 3.3825V3.38357Z' fill='white'/%3E%3C/svg%3E%0A");
+  background-position: 0.7rem center;
+  background-repeat: no-repeat;
+}
+
 .select-menu {
   border: 1px solid #e0e0e0;
   border-radius: 0.4rem;
@@ -5931,7 +5967,11 @@ aside svg {
 }
 
 .option-styling {
-  padding-left: 2.5rem;
-  background-repeat: no-repeat;
-  background-position: .7rem center;
+  padding-left: 2.5rem !important;
+  padding-right: 2.6rem !important;
+  background-repeat: no-repeat !important;
+  background-position: 0.9rem center !important;
+  font-size: 1rem !important;
+  box-sizing: border-box !important;
+  max-width: 178px !important;
 }

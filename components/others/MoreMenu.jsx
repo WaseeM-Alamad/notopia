@@ -11,6 +11,7 @@ const MoreMenu = ({
   anchorEl,
   menuItems,
   transformOrigin = "top left",
+  className = "",
 }) => {
   const [isClient, setIsClient] = useState();
   const navTitle = anchorEl?.navTitle ?? null;
@@ -47,9 +48,9 @@ const MoreMenu = ({
       }
     };
 
-    const handleRightClick = ()=> {
+    const handleRightClick = () => {
       setIsOpen(false);
-    }
+    };
 
     document.addEventListener("mousedown", handleClickOutside);
     document.addEventListener("contextmenu", handleRightClick);
@@ -90,7 +91,11 @@ const MoreMenu = ({
             onClick={containerClick}
             initial={{ opacity: 0, transform: "scale(0.97)" }}
             animate={{ opacity: 1, transform: "scale(1)" }}
-            exit={{ opacity: 0, transform: "scale(0.97)", pointerEvents: "none" }}
+            exit={{
+              opacity: 0,
+              transform: "scale(0.97)",
+              pointerEvents: "none",
+            }}
             transition={{
               transform: {
                 type: "spring",
@@ -130,7 +135,7 @@ const MoreMenu = ({
                     }}
                     className={`${
                       item.icon || ""
-                    } menu-btn n-menu-btn not-draggable`}
+                    } menu-btn n-menu-btn not-draggable ${className}`}
                     onClick={item.function}
                   >
                     {item.title}
