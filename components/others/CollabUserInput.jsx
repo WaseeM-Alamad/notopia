@@ -5,6 +5,7 @@ import { useAppContext } from "@/context/AppContext";
 import { submitCollabUserAction } from "@/utils/actions";
 import { isEmail as isValidateEmail } from "validator";
 import { CircularProgress } from "@mui/material";
+import CustomThreeLineSpinner from "../Tools/CustomSpinner";
 
 const CollabUserInput = ({
   collaborators,
@@ -176,18 +177,25 @@ const CollabUserInput = ({
           className="collab-input"
         />
         {isLoading ? (
-          <CircularProgress
-            sx={{
-              color: document.documentElement.classList.contains("dark-mode")
-                ? "#dfdfdf"
-                : "#6d6d6d",
-              display: "block",
-              flexShrink: 0,
-              marginRight: "1.1rem",
+          <span
+            style={{
+              marginRight: ".8rem",
+              marginTop: "0rem",
+              display: "flex",
+              opacity: "0.7",
+              padding: "5px",
             }}
-            size={14}
-            thickness={5}
-          />
+          >
+            <CustomThreeLineSpinner
+              size={16}
+              strokeWidth={2.3}
+              color={
+                document.documentElement.classList.contains("dark-mode")
+                  ? "#dfdfdf"
+                  : "#292929"
+              }
+            />
+          </span>
         ) : (
           input.trim() && (
             <Button

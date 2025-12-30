@@ -9,10 +9,9 @@ import React, {
 import "@/assets/styles/LinearLoader.css";
 import NoteTools from "./NoteTools";
 import PinIcon from "../icons/PinIcon";
-import { NoteUpdateAction, removeLabelAction } from "@/utils/actions";
+import { NoteUpdateAction } from "@/utils/actions";
 import Button from "../Tools/Button";
 import NoteImagesLayout from "../Tools/NoteImagesLayout";
-import { useSession } from "next-auth/react";
 import CheckMark from "../icons/CheckMark";
 import { useAppContext } from "@/context/AppContext";
 import ImageDropZone from "../Tools/ImageDropZone";
@@ -23,7 +22,6 @@ import localDbReducer from "@/utils/localDbReducer";
 import { useSearch } from "@/context/SearchContext";
 import NoteLabels from "./NoteLabels";
 import NoteCollabs from "./NoteCollabs";
-import { getNoteFormattedDate } from "@/utils/noteDateFormatter";
 import NoteOverlay from "./NoteOverlay";
 
 const Note = memo(

@@ -7,6 +7,7 @@ import isEmail from "validator/lib/isEmail";
 import Modal from "../Tools/Modal";
 import { sendResetPassAction } from "@/utils/actions";
 import HorizontalLoader2 from "../Tools/HorizontalLoader2";
+import CustomThreeLineSpinner from "../Tools/CustomSpinner";
 
 const LeftPanel = ({
   isLogin,
@@ -243,16 +244,14 @@ const LeftPanel = ({
                   Sign in with Google
                 </>
               ) : (
-                <CircularProgress
-                  sx={{
-                    color: document.documentElement.classList.contains(
-                      "dark-mode"
-                    )
-                      ? "#dfdfdf"
-                      : "rgb(110, 110, 110)",
-                  }}
+                <CustomThreeLineSpinner
                   size={20}
-                  thickness={5}
+                  strokeWidth={3}
+                  color={
+                    document.documentElement.classList.contains("dark-mode")
+                      ? "#dfdfdf"
+                      : "#292929"
+                  }
                 />
               )}
             </div>

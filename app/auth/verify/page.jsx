@@ -1,12 +1,10 @@
 "use client";
 
+import CustomThreeLineSpinner from "@/components/Tools/CustomSpinner";
 import HorizontalLoader from "@/components/Tools/HorizontalLoader";
 import Modal from "@/components/Tools/Modal";
 import { useAppContext } from "@/context/AppContext";
 import { verifyTokenAction } from "@/utils/actions";
-import { CircularProgress } from "@mui/material";
-import { motion } from "framer-motion";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
@@ -106,16 +104,14 @@ const Page = () => {
               {!loginIsLoading ? (
                 "Sign In"
               ) : (
-                <CircularProgress
-                  sx={{
-                    color: document.documentElement.classList.contains(
-                      "dark-mode"
-                    )
-                      ? " #292929"
-                      : "#dfdfdf",
-                  }}
+                <CustomThreeLineSpinner
                   size={20}
-                  thickness={5}
+                  strokeWidth={2.3}
+                  color={
+                    document.documentElement.classList.contains("dark-mode")
+                      ? " #292929"
+                      : "#dfdfdf"
+                  }
                 />
               )}
             </div>

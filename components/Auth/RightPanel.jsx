@@ -1,11 +1,11 @@
 "use client";
 import { signUpAction } from "@/utils/actions";
-import { CircularProgress } from "@mui/material";
 import { motion } from "framer-motion";
 import { signIn } from "next-auth/react";
 import React, { useEffect, useRef, useState } from "react";
 import isEmail from "validator/lib/isEmail";
 import HorizontalLoader2 from "../Tools/HorizontalLoader2";
+import CustomThreeLineSpinner from "../Tools/CustomSpinner";
 
 const RightPanel = ({
   isLogin,
@@ -320,16 +320,14 @@ const RightPanel = ({
                 Sign up with Google
               </>
             ) : (
-              <CircularProgress
-                sx={{
-                  color: document.documentElement.classList.contains(
-                    "dark-mode"
-                  )
-                    ? "#dfdfdf"
-                    : "rgb(110, 110, 110)",
-                }}
+              <CustomThreeLineSpinner
                 size={20}
-                thickness={5}
+                strokeWidth={3}
+                color={
+                  document.documentElement.classList.contains("dark-mode")
+                    ? "#dfdfdf"
+                    : "#292929"
+                }
               />
             )}
           </div>

@@ -5,13 +5,12 @@ import {
   updateDisplayNameAction,
   updateUsernameAction,
 } from "@/utils/actions";
-import { CircularProgress } from "@mui/material";
 import React, { memo, useEffect, useRef, useState } from "react";
-import HorizontalLoader from "../Tools/HorizontalLoader";
 import Modal from "../Tools/Modal";
 import HorizontalLoader2 from "../Tools/HorizontalLoader2";
 import isEmail from "validator/lib/isEmail";
 import { useAppContext } from "@/context/AppContext";
+import CustomThreeLineSpinner from "../Tools/CustomSpinner";
 
 const AccountSettings = ({ rightHeader, selected, user, setUser }) => {
   const { openSnackRef } = useAppContext();
@@ -41,6 +40,9 @@ const AccountSettings = ({ rightHeader, selected, user, setUser }) => {
 
   const newUsername = nameRef.current?.value?.trim();
   const oldUsername = user.username?.trim();
+  const spinnerColor = document.documentElement.classList.contains("dark-mode")
+    ? "#dfdfdf"
+    : "#6d6d6d";
 
   useEffect(() => {
     setIsNameDisabled(true);
@@ -306,23 +308,16 @@ const AccountSettings = ({ rightHeader, selected, user, setUser }) => {
                   <div
                     style={{
                       position: "absolute",
-                      right: "2rem",
+                      right: "2.05rem",
                       top: "50%",
-                      transform: "translateY(-50%)",
+                      transform: "translateY(-44%)",
                       boxSizing: "border-box",
                     }}
                   >
-                    <CircularProgress
-                      sx={{
-                        color: document.documentElement.classList.contains(
-                          "dark-mode"
-                        )
-                          ? "#dfdfdf"
-                          : "#6d6d6d",
-                        display: "block",
-                      }}
+                    <CustomThreeLineSpinner
+                      color={spinnerColor}
                       size={20}
-                      thickness={5}
+                      strokeWidth={3}
                     />
                   </div>
                 )}
@@ -412,23 +407,16 @@ const AccountSettings = ({ rightHeader, selected, user, setUser }) => {
                   <div
                     style={{
                       position: "absolute",
-                      right: "2rem",
+                      right: "2.05rem",
                       top: "50%",
-                      transform: "translateY(-50%)",
+                      transform: "translateY(-44%)",
                       boxSizing: "border-box",
                     }}
                   >
-                    <CircularProgress
-                      sx={{
-                        color: document.documentElement.classList.contains(
-                          "dark-mode"
-                        )
-                          ? "#dfdfdf"
-                          : "#6d6d6d",
-                        display: "block",
-                      }}
+                    <CustomThreeLineSpinner
+                      color={spinnerColor}
                       size={20}
-                      thickness={5}
+                      strokeWidth={3}
                     />
                   </div>
                 )}

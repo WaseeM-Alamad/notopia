@@ -11,7 +11,6 @@ import "@/assets/styles/navbar.css";
 import RefreshIcon from "../icons/RefreshIcon";
 import SettingsIcon from "../icons/SettingsIcon";
 import GridIcon from "../icons/GridIcon";
-import { CircularProgress } from "@mui/material";
 import CloudIcon from "../icons/CloudIcon";
 import { AnimatePresence, motion } from "framer-motion";
 import Button from "../Tools/Button";
@@ -27,6 +26,7 @@ import InputSearchIcon from "../icons/InputSearchIcon";
 import LeftArrow from "../icons/LeftArrow";
 import KeybindsTable from "./KeybindsTable";
 import LocalSaveIcon from "../icons/LocalSaveIcon";
+import CustomThreeLineSpinner from "../Tools/CustomSpinner";
 
 const Navbar = () => {
   const {
@@ -733,16 +733,14 @@ const Navbar = () => {
                     transition={{ duration: 0.15 }}
                     style={{ position: "absolute", display: "flex" }}
                   >
-                    <CircularProgress
-                      sx={{
-                        color: document.documentElement.classList.contains(
-                          "dark-mode"
-                        )
-                          ? "#dfdfdf"
-                          : "#292929",
-                      }}
+                    <CustomThreeLineSpinner
                       size={20}
-                      thickness={5}
+                      strokeWidth={3}
+                      color={
+                        document.documentElement.classList.contains("dark-mode")
+                          ? "#dfdfdf"
+                          : "#292929"
+                      }
                     />
                   </motion.div>
                 )}

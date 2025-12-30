@@ -1,5 +1,6 @@
 "use client";
 
+import CustomThreeLineSpinner from "@/components/Tools/CustomSpinner";
 import HorizontalLoader from "@/components/Tools/HorizontalLoader";
 import Modal from "@/components/Tools/Modal";
 import { resetPasswordAction, verifyResetTokenAction } from "@/utils/actions";
@@ -266,16 +267,14 @@ const Page = () => {
                   {!isResetLoading ? (
                     "Reset Password"
                   ) : (
-                    <CircularProgress
-                      sx={{
-                        color: document.documentElement.classList.contains(
-                          "dark-mode"
-                        )
-                          ? " #292929"
-                          : "#dfdfdf",
-                      }}
+                    <CustomThreeLineSpinner
                       size={20}
-                      thickness={5}
+                      strokeWidth={2.3}
+                      color={
+                        document.documentElement.classList.contains("dark-mode")
+                          ? " #292929"
+                          : "#dfdfdf"
+                      }
                     />
                   )}
                 </button>
@@ -283,16 +282,14 @@ const Page = () => {
                   {!isCancelLoading ? (
                     "Cancel"
                   ) : (
-                    <CircularProgress
-                      sx={{
-                        color: document.documentElement.classList.contains(
-                          "dark-mode"
-                        )
-                          ? "#dfdfdf"
-                          : "rgb(110, 110, 110)",
-                      }}
+                    <CustomThreeLineSpinner
                       size={20}
-                      thickness={5}
+                      strokeWidth={2.3}
+                      color={
+                        document.documentElement.classList.contains("dark-mode")
+                          ? " #292929"
+                          : "#dfdfdf"
+                      }
                     />
                   )}
                 </button>
@@ -372,16 +369,16 @@ const Page = () => {
                     {!isCancelLoading ? (
                       "Sign in"
                     ) : (
-                      <CircularProgress
-                        sx={{
-                          color: document.documentElement.classList.contains(
+                      <CustomThreeLineSpinner
+                        size={20}
+                        strokeWidth={2.3}
+                        color={
+                          document.documentElement.classList.contains(
                             "dark-mode"
                           )
                             ? " #292929"
-                            : "#dfdfdf",
-                        }}
-                        size={20}
-                        thickness={5}
+                            : "#dfdfdf"
+                        }
                       />
                     )}
                   </div>
@@ -399,16 +396,14 @@ const Page = () => {
                   {!isCancelLoading ? (
                     "Back"
                   ) : (
-                    <CircularProgress
-                      sx={{
-                        color: document.documentElement.classList.contains(
-                          "dark-mode"
-                        )
-                          ? " #292929"
-                          : "#dfdfdf",
-                      }}
+                    <CustomThreeLineSpinner
                       size={20}
-                      thickness={5}
+                      strokeWidth={2.3}
+                      color={
+                        document.documentElement.classList.contains("dark-mode")
+                          ? " #292929"
+                          : "#dfdfdf"
+                      }
                     />
                   )}
                 </div>
