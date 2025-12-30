@@ -1641,6 +1641,7 @@ export const copyNoteAction = async (data) => {
 
 export const batchCopyNoteAction = async (data) => {
   const session = await getServerSession(authOptions);
+  const user = session?.user;
   const userID = session?.user?.id;
   if (!session) {
     throw new Error("Something went wrong");
@@ -1728,7 +1729,17 @@ export const batchCopyNoteAction = async (data) => {
 
     const finalNotes = finalNotesData.map((note, index) => {
       const settings = finalSettings[index];
-      return { ...note, ...settings, _id: note._id };
+      return {
+        ...note,
+        ...settings,
+        _id: note._id,
+        creator: {
+          _id: userID,
+          username: user.username,
+          image: user.image,
+          displayName: user.displayName,
+        },
+      };
     });
 
     return {

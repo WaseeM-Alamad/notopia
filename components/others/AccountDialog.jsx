@@ -6,7 +6,7 @@ import AccountSettings from "./AccountSettings";
 import SecuritySettings from "./SecuritySettings";
 import DeleteAccSettings from "./DeleteAccSettings";
 import { useAppContext } from "@/context/AppContext";
-import MoreMenu from "./MoreMenu";
+import Menu from "./Menu";
 
 const AccountDialog = ({ settingsRef, setIsOpen, user, setUser }) => {
   const { showTooltip, hideTooltip, closeToolTip, isExpanded } =
@@ -35,21 +35,37 @@ const AccountDialog = ({ settingsRef, setIsOpen, user, setUser }) => {
   }, []);
 
   const sectionsBtns = [
-    { icon: "settings-profile-icon", title: "Profile Photo" },
-    { icon: "settings-email-icon", title: "Account Info" },
-    { icon: "settings-security-icon", title: "Security" },
-    { icon: "settings-warning-icon", title: "Delete Account" },
+    {
+      icon: "settings-profile-icon",
+      title: "Profile Photo",
+      function: () => setSelectedSection(0),
+    },
+    {
+      icon: "settings-email-icon",
+      title: "Account Info",
+      function: () => setSelectedSection(1),
+    },
+    {
+      icon: "settings-security-icon",
+      title: "Security",
+      function: () => setSelectedSection(2),
+    },
+    {
+      icon: "settings-warning-icon",
+      title: "Delete Account",
+      function: () => setSelectedSection(3),
+    },
   ];
 
   const menuItems = [
     {
       title: "Unpin label",
-      function: ()=> {},
+      function: () => {},
       icon: "unpin-menu-icon",
     },
     {
       title: "Navigate",
-      function: ()=> {},
+      function: () => {},
       icon: "nav-menu-icon",
     },
   ];
@@ -160,6 +176,16 @@ const AccountDialog = ({ settingsRef, setIsOpen, user, setUser }) => {
                 className={`select-menu option-styling ${sectionsBtns[selectedSection].icon}`}
               >
                 <span>{sectionsBtns[selectedSection].title}</span>
+                <motion.div
+                  animate={{
+                    transform: `translateY(-50%) rotateX(${selectMenuOpen ? "180deg" : "0"})`,
+                  }}
+                  transition={{
+                    type: "tween",
+                    duration: 0.2,
+                  }}
+                  className="down-arrow-icon"
+                />
               </div>
             )}
             {isExpanded.threshold === "after" ? (
@@ -185,8 +211,7 @@ const AccountDialog = ({ settingsRef, setIsOpen, user, setUser }) => {
                   <div
                     key={title}
                     onClick={() => setSelectedSection(index)}
-                    style={{ color: selected ? "#6b8ffc" : "" }}
-                    className="settings-section-btn"
+                    className={`settings-section-btn ${selected ? "selected-settings-btn" : ""}`}
                   >
                     <div
                       className={`settings-section-icon ${
@@ -225,13 +250,15 @@ const AccountDialog = ({ settingsRef, setIsOpen, user, setUser }) => {
       </motion.div>
       <AnimatePresence>
         {isExpanded.threshold === "before" && selectMenuOpen && (
-          <MoreMenu
+          <Menu
             setIsOpen={setSelectMenuOpen}
             anchorEl={anchorEl}
             isOpen={selectMenuOpen}
             menuItems={sectionsBtns}
             transformOrigin="top"
-            className='option-styling'
+            className={`option-styling `}
+            // ${selected ? "selected-settings-btn" : ""}
+            isSelectMenu={true}
           />
         )}
       </AnimatePresence>

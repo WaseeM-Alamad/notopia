@@ -3,7 +3,7 @@ import { NoteUpdateAction, removeSelfAction } from "@/utils/actions";
 import ColorSelectMenu from "./ColorSelectMenu";
 import Button from "../Tools/Button";
 import { v4 as uuid } from "uuid";
-import MoreMenu from "./MoreMenu";
+import Menu from "./Menu";
 import { AnimatePresence } from "framer-motion";
 import { useAppContext } from "@/context/AppContext";
 import ManageLabelsMenu from "./ManageLabelsMenu";
@@ -781,7 +781,7 @@ const NoteTools = ({
       </div>
       <AnimatePresence>
         {moreMenuOpen && !labelsOpen && (
-          <MoreMenu
+          <Menu
             setIsOpen={setMoreMenuOpen}
             anchorEl={anchorEl}
             isOpen={moreMenuOpen}

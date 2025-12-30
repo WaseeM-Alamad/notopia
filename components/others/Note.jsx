@@ -628,7 +628,7 @@ const Note = memo(
                 )}
                 {(note?.labels?.length > 0 ||
                   note?.collaborators?.length > 0) && (
-                  <div className="note-labels-container">
+                  <div className="note-misc-container n-misc">
                     {note?.labels.length !== 0 && (
                       <NoteLabels note={note} noteActions={noteActions} />
                     )}

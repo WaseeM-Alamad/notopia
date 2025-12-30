@@ -9,7 +9,6 @@ import {
   NoteUpdateAction,
   undoAction,
 } from "@/utils/actions";
-import MoreMenu from "../MoreMenu";
 import { useAppContext } from "@/context/AppContext";
 import { v4 as uuid } from "uuid";
 import ManageTopLabelsMenu from "../ManageTopLabelsMenu";
@@ -17,6 +16,7 @@ import { useSearch } from "@/context/SearchContext";
 import handleServerCall from "@/utils/handleServerCall";
 import localDbReducer from "@/utils/localDbReducer";
 import ColorDrawer from "../ColorDrawer";
+import Menu from "../Menu";
 
 const TopMenuHome = ({
   notes,
@@ -43,6 +43,7 @@ const TopMenuHome = ({
     notesStateRef,
   } = useAppContext();
   const { filters } = useSearch();
+  const { setLoadingImages } = useAppContext();
   const userID = user?.id;
   const [selectedNumber, setSelectedNumber] = useState(false);
   const [colorAnchorEl, setColorAnchorEl] = useState(null);
@@ -735,6 +736,7 @@ const TopMenuHome = ({
     const newUUIDs = [];
     const imagesMap = new Map();
     const imagesToDel = [];
+    const newImagesUUIDs = [];
     const length = selectedNotesIDs.length;
 
     const selectedNotes = selectedNotesIDs.sort((a, b) => b.index - a.index);
@@ -750,6 +752,7 @@ const TopMenuHome = ({
         note?.images.forEach((image) => {
           const newImageUUID = uuid();
           const newImage = { uuid: newImageUUID, url: image.url };
+          newImagesUUIDs.push(newImageUUID);
           imagesMap.set(newImageUUID, `${note?.uuid}/${image.uuid}`);
           imagesToDel.push(`${userID}/${newNoteUUID}/`);
           newImages.push(newImage);
@@ -782,6 +785,7 @@ const TopMenuHome = ({
       const newNote = {
         _id: newNoteUUID,
         uuid: newNoteUUID,
+        creator: note.creator,
         title: note?.title,
         content: note?.content,
         color: note?.color,
@@ -819,6 +823,7 @@ const TopMenuHome = ({
       });
 
       setVisibleItems((prev) => new Set([...prev, ...newNotesUUIDs]));
+      setLoadingImages((prev) => new Set([...prev, ...newImagesUUIDs]));
 
       const result = await handleServerCall(
         [
@@ -831,6 +836,12 @@ const TopMenuHome = ({
         ],
         openSnackRef.current
       );
+      setLoadingImages((prev) => {
+        const newSet = new Set(prev);
+        newImagesUUIDs.forEach((id) => newSet.delete(id));
+        return newSet;
+      });
+
       localDbReducer({
         notes: notesStateRef.current.notes,
         order: notesStateRef.current.order,
@@ -838,6 +849,7 @@ const TopMenuHome = ({
         type: "SET_NOTES",
         notes: result.newNotes,
       });
+      console.log(result.newNotes);
       dispatchNotes({ type: "SET_NOTES", notes: result.newNotes });
     };
 
@@ -1019,7 +1031,7 @@ const TopMenuHome = ({
       </AnimatePresence>
       <AnimatePresence>
         {moreMenuOpen && !labelsOpen && (
-          <MoreMenu
+          <Menu
             setIsOpen={setMoreMenuOpen}
             anchorEl={anchorEl}
             isOpen={moreMenuOpen}

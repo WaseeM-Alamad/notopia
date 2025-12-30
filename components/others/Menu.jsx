@@ -5,13 +5,14 @@ import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import { v4 as generateUUID } from "uuid";
 import ManageLabelsMenu from "./ManageLabelsMenu";
 
-const MoreMenu = ({
+const Menu = ({
   isOpen,
   setIsOpen,
   anchorEl,
   menuItems,
   transformOrigin = "top left",
   className = "",
+  isSelectMenu = false,
 }) => {
   const [isClient, setIsClient] = useState();
   const navTitle = anchorEl?.navTitle ?? null;
@@ -89,11 +90,18 @@ const MoreMenu = ({
         {isOpen && (
           <motion.div
             onClick={containerClick}
-            initial={{ opacity: 0, transform: "scale(0.97)" }}
-            animate={{ opacity: 1, transform: "scale(1)" }}
+            initial={{
+              opacity: 0,
+              transform: "scale(.97)",
+              willChange: "none",
+            }}
+            animate={{
+              opacity: 1,
+              transform: "scale(1)",
+            }}
             exit={{
               opacity: 0,
-              transform: "scale(0.97)",
+              transform: "scale(.97)",
               pointerEvents: "none",
             }}
             transition={{
@@ -113,6 +121,7 @@ const MoreMenu = ({
               borderRadius: "0.6rem",
               position: "relative",
               paddingTop: navTitle?.trim() && "0",
+              boxShadow: isSelectMenu && "none",
               // pointerEvents: !isOpen && "none",
             }}
             ref={menuRef}
@@ -136,7 +145,10 @@ const MoreMenu = ({
                     className={`${
                       item.icon || ""
                     } menu-btn n-menu-btn not-draggable ${className}`}
-                    onClick={item.function}
+                    onClick={() => {
+                      setIsOpen(false);
+                      item.function();
+                    }}
                   >
                     {item.title}
                   </div>
@@ -150,4 +162,4 @@ const MoreMenu = ({
   );
 };
 
-export default memo(MoreMenu);
+export default memo(Menu);

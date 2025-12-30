@@ -463,6 +463,7 @@ export function useNoteActions({
 
         const newNote = {
           uuid: newUUID,
+          creator: note?.creator,
           title: note?.title,
           content: note?.content,
           color: note?.color,
@@ -513,7 +514,7 @@ export function useNoteActions({
             ],
             openSnackRef.current
           );
-          const receivedNote = received.note;
+          const receivedNote = { ...received.note, creator: note.creator };
 
           setLoadingImages((prev) => {
             const newSet = new Set(prev);
@@ -583,7 +584,8 @@ export function useNoteActions({
         const fadeNote =
           filters.label === data.labelUUID || labelObj?.uuid === data.labelUUID;
 
-        fadeNote && setFadingNotes((prev) => new Set(prev).add(data.note?.uuid));
+        fadeNote &&
+          setFadingNotes((prev) => new Set(prev).add(data.note?.uuid));
         localDbReducer({
           notes: notesStateRef.current.notes,
           order: notesStateRef.current.order,
@@ -635,7 +637,8 @@ export function useNoteActions({
 
         if (!isUseEffectCall && fadeNote) return;
 
-        fadeNote && setFadingNotes((prev) => new Set(prev).add(data.note?.uuid));
+        fadeNote &&
+          setFadingNotes((prev) => new Set(prev).add(data.note?.uuid));
 
         localDbReducer({
           notes: notesStateRef.current.notes,

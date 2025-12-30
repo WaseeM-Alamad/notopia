@@ -7,7 +7,7 @@ import { v4 as uuid } from "uuid";
 import { AnimatePresence } from "framer-motion";
 import ManageModalLabels from "./ManageModalLabels";
 import { useAppContext } from "@/context/AppContext";
-import MoreMenu from "./MoreMenu";
+import Menu from "./Menu";
 import { validateImageFile } from "@/utils/validateImage";
 import handleServerCall from "@/utils/handleServerCall";
 import localDbReducer from "@/utils/localDbReducer";
@@ -662,7 +662,7 @@ const ModalTools = ({
       </div>
       <AnimatePresence>
         {moreMenuOpen && !labelsOpen && (
-          <MoreMenu
+          <Menu
             setIsOpen={setMoreMenuOpen}
             anchorEl={anchorEl}
             isOpen={moreMenuOpen}

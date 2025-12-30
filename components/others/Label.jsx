@@ -5,7 +5,7 @@ import { getNoteFormattedDate } from "@/utils/noteDateFormatter";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAppContext } from "@/context/AppContext";
 import ColorSelectMenu from "./ColorSelectMenu";
-import MoreMenu from "./MoreMenu";
+import Menu from "./Menu";
 import { useSearch } from "@/context/SearchContext";
 import ImageDropZone from "../Tools/ImageDropZone";
 import { validateImageFile } from "@/utils/validateImage";
@@ -673,7 +673,7 @@ const Label = ({
       />
       <AnimatePresence>
         {isOpen && (
-          <MoreMenu
+          <Menu
             setIsOpen={setIsOpen}
             anchorEl={anchorEl}
             isOpen={isOpen}

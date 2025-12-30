@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import React, { memo, useEffect, useRef, useState } from "react";
-import MoreMenu from "./MoreMenu";
+import Menu from "./Menu";
 import { useAppContext } from "@/context/AppContext";
 import SideTooltip from "../Tools/SideTooltip";
 
@@ -257,7 +257,7 @@ const SideBtn = ({
       </AnimatePresence>
       <AnimatePresence>
         {moreMenuOpen && (
-          <MoreMenu
+          <Menu
             setIsOpen={setMoreMenuOpen}
             anchorEl={anchorEl}
             isOpen={moreMenuOpen}

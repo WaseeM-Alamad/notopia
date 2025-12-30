@@ -688,7 +688,7 @@ const NoteEditor = ({
 
         {(localNote?.labels?.length > 0 ||
           localNote?.collaborators?.length > 0) && (
-          <div className="note-labels-container">
+          <div className="note-misc-container">
             {localNote?.labels.length !== 0 && (
               <NoteLabels
                 note={localNote}

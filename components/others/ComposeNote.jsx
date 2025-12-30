@@ -9,7 +9,7 @@ import ComposeTools from "./ComposeTools";
 import { debounce, result } from "lodash";
 import { useAppContext } from "@/context/AppContext";
 import { AnimatePresence } from "framer-motion";
-import MoreMenu from "./MoreMenu";
+import Menu from "./Menu";
 import ManageLabelsCompose from "./ManageLabelsCompose";
 import ImageDropZone from "../Tools/ImageDropZone";
 import handleServerCall from "@/utils/handleServerCall";
@@ -728,7 +728,7 @@ const ComposeNote = ({
           {note?.labels?.length > 0 && (
             <div
               style={{ paddingBottom: "0.8rem" }}
-              className="note-labels-container"
+              className="note-misc-container"
             >
               {note?.labels
                 .sort((a, b) => {
@@ -787,7 +787,7 @@ const ComposeNote = ({
       </div>
       <AnimatePresence>
         {moreMenuOpen && !labelsOpen && (
-          <MoreMenu
+          <Menu
             setIsOpen={setMoreMenuOpen}
             anchorEl={anchorEl}
             isOpen={moreMenuOpen}

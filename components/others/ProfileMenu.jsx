@@ -58,13 +58,12 @@ const ProfileMenu = forwardRef(
               ref={ref}
               className="menu menu-border"
             >
-              <div style={{}} className="menu-upper-section">
-                <div style={{ width: "100%", display: "flex" }}>
-                  <div
-                    onClick={() => {
+              <div onClick={() => {
                       setSettingsOpen(true);
                       setIsOpen(false);
-                    }}
+                    }} className="menu-upper-section">
+                <div style={{ width: "100%", display: "flex" }}>
+                  <div
                     className="profile-image-wrapper"
                     style={{
                       position: "relative",
