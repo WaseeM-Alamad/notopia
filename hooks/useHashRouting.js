@@ -47,7 +47,7 @@ export function useHashRouting({
 
   const handleHashChange = useCallback(() => {
     setSelectedNotesIDs([]);
-    setTooltipAnchor(null);
+    setTooltipAnchor(new Map());
     openSnackRef.current({ close: true });
     undoFunction.current = null;
     allowUndoRef.current = true;

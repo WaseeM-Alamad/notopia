@@ -1,42 +1,12 @@
 import { Popper } from "@mui/material";
 import { motion } from "framer-motion";
-import React, { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import React from "react";
 
-const Tooltip = ({ anchorEl }) => {
-  const [isMounted, setIsMounted] = useState(false);
-  const [display, setDisplay] = useState(false);
-  const timeoutRef = useRef(null);
-  const isTooltipVisible = useRef(false); // Track tooltip visibility
-
-  useEffect(() => {
-    if (anchorEl?.display) {
-      if (isTooltipVisible.current) {
-        setDisplay(true);
-      } else {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = setTimeout(() => {
-          setDisplay(true);
-          isTooltipVisible.current = true;
-        }, 200);
-      }
-    } else {
-      clearTimeout(timeoutRef.current);
-      setDisplay(false);
-      isTooltipVisible.current = false;
-    }
-  }, [anchorEl]);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  if (!isMounted) return null;
-
-  return createPortal(
+const Tooltip = ({ anchorEl, text }) => {
+  return (
     <Popper
       open={true}
-      anchorEl={anchorEl?.anchor}
+      anchorEl={anchorEl}
       style={{ zIndex: "3000" }}
       placement="bottom"
       modifiers={[
@@ -49,17 +19,20 @@ const Tooltip = ({ anchorEl }) => {
       ]}
     >
       <motion.div
-        animate={{ opacity: display ? 1 : 0 }}
-        transition={{ type: "tween", duration: 0.08, ease: "linear" }}
-        className="tooltip"
-        style={{
-          display: !display && "none",
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.96 }}
+        transition={{
+          type: "spring",
+          stiffness: 800,
+          damping: 40,
+          mass: 1.05,
         }}
+        className="tooltip"
       >
-        <div dir="auto">{anchorEl?.text}</div>
+        <div dir="auto">{text}</div>
       </motion.div>
-    </Popper>,
-    document.getElementById("tooltipPortal")
+    </Popper>
   );
 };
 

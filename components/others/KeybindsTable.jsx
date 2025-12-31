@@ -139,11 +139,11 @@ const KeybindsTable = ({ keybindsRef, setIsOpen }) => {
 
   return createPortal(
     <motion.div
-      initial={{ backgroundColor: "rgba(0,0,0,0.0)", pointerEvents: "auto" }}
-      animate={{ backgroundColor: "rgba(0,0,0,0.5)", pointerEvents: "auto" }}
-      exit={{ backgroundColor: "rgba(0,0,0,0.0)" }}
+      initial={{ opacity: "0", pointerEvents: "auto" }}
+      animate={{ opacity: "1", pointerEvents: "auto" }}
+      exit={{ opacity: "0" }}
       transition={{
-        backgroundColor: {
+        opacity: {
           type: "tween",
           duration: 0.03,
           ease: "linear",

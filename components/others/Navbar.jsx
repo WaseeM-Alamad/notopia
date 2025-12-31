@@ -493,16 +493,7 @@ const Navbar = () => {
             className="side-expand-btn"
           />
           {/* <Logo style={{ margin: "auto 0", flexShrink: "0" }} /> */}
-          <span
-            style={{
-              marginLeft: ".8rem",
-              fontWeight: "700",
-              fontSize: "1.3rem",
-              color: "#474b4f",
-            }}
-          >
-            Notopia
-          </span>
+          <span className="notopia">Notopia</span>
         </div>
 
         <div
@@ -735,7 +726,7 @@ const Navbar = () => {
                   >
                     <CustomThreeLineSpinner
                       size={20}
-                      strokeWidth={3}
+                      strokeWidth={2.8}
                       color={
                         document.documentElement.classList.contains("dark-mode")
                           ? "#dfdfdf"

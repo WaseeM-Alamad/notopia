@@ -32,6 +32,48 @@ const ProfileMenu = forwardRef(
     if (!isClient) {
       return null;
     }
+
+    const topMenuItems = [
+      {
+        title: "Account",
+        classes: "profile-menu-icon",
+        func: () => {
+          setSettingsOpen(true);
+          setIsOpen(false);
+        },
+      },
+      {
+        title: `${!isDarkModeRef.current ? "Dark theme" : "Light theme"}`,
+        classes: "theme-menu-icon",
+        func: () => {
+          toggleDarkMode();
+        },
+      },
+      {
+        title: "keyboard shortcuts",
+        classes: "keyboard-menu-icon",
+        func: () => {
+          setBindsOpen(true);
+          setIsOpen(false);
+        },
+      },
+    ];
+
+    const bottomMenuItems = [
+      {
+        title: "Send feedback",
+        classes: "feedback-menu-icon",
+        func: () => {},
+      },
+      {
+        title: "Sign out",
+        classes: "signout-menu-icon",
+        func: () => {
+          signOut();
+        },
+      },
+    ];
+
     return createPortal(
       <>
         <AnimatePresence>
@@ -50,18 +92,22 @@ const ProfileMenu = forwardRef(
                 opacity: { duration: 0.2 },
               }}
               style={{
+                zIndex: "110",
                 position: "fixed",
                 top: `${menuPosition.top + 50}px`,
-                left: `${menuPosition.left - 165}px`,
+                left: `${menuPosition.left - 175}px`,
                 pointerEvents: !isOpen && "none",
               }}
+              className="profile-menu menu-border"
               ref={ref}
-              className="menu menu-border"
             >
-              <div onClick={() => {
-                      setSettingsOpen(true);
-                      setIsOpen(false);
-                    }} className="menu-upper-section">
+              <div
+                onClick={() => {
+                  setSettingsOpen(true);
+                  setIsOpen(false);
+                }}
+                className="menu-upper-section"
+              >
                 <div style={{ width: "100%", display: "flex" }}>
                   <div
                     className="profile-image-wrapper"
@@ -83,38 +129,27 @@ const ProfileMenu = forwardRef(
                   </span>
                 </div>
               </div>
-              <div className="menu-buttons">
-                <div
-                  onClick={() => {
-                    setSettingsOpen(true);
-                    setIsOpen(false);
-                  }}
-                  className="menu-btn"
-                >
-                  <div className="profile-icon" />
-                  Account Settings
-                </div>
-                <div onClick={toggleDarkMode} className="menu-btn">
-                  <div className="theme-icon" />
-                  {`${!isDarkModeRef.current ? "Dark theme" : "Light theme"}`}
-                </div>
-                <div
-                  onClick={() => {
-                    setBindsOpen(true);
-                    setIsOpen(false);
-                  }}
-                  className="menu-btn"
-                >
-                  <div className="keyboard-icon" /> Keyboard shortcuts
-                </div>
-                <div
-                  onClick={() => signOut()}
-                  className="menu-btn warning-color"
-                >
-                  <div className="signout-icon" />
-                  Sign out
-                </div>
+              <div className="">
+                {topMenuItems.map(({ title, classes, func }) => (
+                  <button
+                    key={classes}
+                    className={`profile-menu-btn ${classes}`}
+                    onClick={func}
+                  >
+                    {title}
+                  </button>
+                ))}
               </div>
+              <div className="menu-divider" />
+              {bottomMenuItems.map(({ title, classes, func }) => (
+                <button
+                  key={classes}
+                  className={`profile-menu-btn ${classes}`}
+                  onClick={func}
+                >
+                  {title}
+                </button>
+              ))}
             </motion.div>
           )}
         </AnimatePresence>

@@ -43,7 +43,6 @@ const page = () => {
   const { searchTerm, filters } = useSearch();
   const {
     removeLabel,
-    labelsReady,
     layout,
     currentSection,
     setCurrentSection,
@@ -58,7 +57,7 @@ const page = () => {
     rootContainerRef,
     clientID,
   } = useAppContext();
-  const [tooltipAnchor, setTooltipAnchor] = useState(null);
+  const [tooltipAnchor, setTooltipAnchor] = useState(new Map());
   const [notesState, dispatchNotes] = useReducer(notesReducer, initialStates);
   const [visibleItems, setVisibleItems] = useState(new Set());
   const [modalStyle, setModalStyle] = useState(null);
@@ -331,10 +330,7 @@ const page = () => {
     }
     data?.e?.stopPropagation();
 
-    setTooltipAnchor((prev) => ({
-      anchor: null,
-      text: prev?.text,
-    }));
+    setTooltipAnchor(new Map());
     data.setSelected((prev) => !prev);
 
     if (data.selected) {
@@ -538,7 +534,15 @@ const page = () => {
         labelObj={labelObj}
         skipSetLabelObjRef={skipSetLabelObjRef}
       />
-      {tooltipAnchor?.display && <Tooltip anchorEl={tooltipAnchor} />}
+      <AnimatePresence>
+        {[...tooltipAnchor].map(([anchor, text], index) => (
+          <Tooltip
+            key={text}
+            anchorEl={anchor}
+            text={text}
+          />
+        ))}
+      </AnimatePresence>
       <Snackbar
         snackbarState={snackbarState}
         setSnackbarState={setSnackbarState}

@@ -143,9 +143,9 @@ const ColorSelectMenu = ({
 
                   setHoveredItem(color);
                 }}
-                onMouseLeave={() => {
+                onMouseLeave={(e) => {
                   setHoveredItem(null);
-                  hideTooltip();
+                  hideTooltip(e);
                 }}
                 disabled={!isOpen}
                 key={index}
@@ -211,9 +211,9 @@ const ColorSelectMenu = ({
 
                     setHoveredItem(name);
                   }}
-                  onMouseLeave={() => {
+                  onMouseLeave={(e) => {
                     setHoveredItem(null);
-                    hideTooltip();
+                    hideTooltip(e);
                   }}
                   className={`menu-bg-btn menu-bg-${name} ${itemClass}`}
                   key={name}

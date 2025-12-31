@@ -116,9 +116,8 @@ const Menu = ({
             style={{
               transformOrigin: transformOrigin,
               width: "fit-content",
-              maxWidth: "14.0625rem",
+              maxWidth: navTitle?.trim() ? '9.1806875rem' : "14.0625rem",
               maxHeight: "26.96125rem",
-              borderRadius: "0.6rem",
               position: "relative",
               paddingTop: navTitle?.trim() && "0",
               boxShadow: isSelectMenu && "none",
@@ -138,10 +137,6 @@ const Menu = ({
                 return (
                   <div
                     key={index}
-                    style={{
-                      padding: "0.5rem 1.5rem 0.5rem 2.6rem",
-                      fontSize: "14px",
-                    }}
                     className={`${
                       item.icon || ""
                     } menu-btn n-menu-btn not-draggable ${className}`}

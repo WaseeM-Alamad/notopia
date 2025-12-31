@@ -403,21 +403,25 @@ export function AppProvider({ children, initialUser }) {
 
   const showTooltip = useCallback((e, text) => {
     const target = e.currentTarget;
-    setTooltipRef.current({ anchor: target, text: text, display: true });
+    setTooltipRef.current((prev) => {
+      const newMap = new Map(prev);
+      newMap.delete(target);
+      newMap.set(target, text);
+      return newMap;
+    });
   }, []);
 
-  const hideTooltip = useCallback(() => {
-    setTooltipRef.current((prev) => ({
-      ...prev,
-      display: false,
-    }));
+  const hideTooltip = useCallback((e) => {
+    const target = e.currentTarget;
+      setTooltipRef.current((prev) => {
+        const newMap = new Map(prev);
+        newMap.delete(target);
+        return newMap;
+      });
   }, []);
 
   const closeToolTip = useCallback(() => {
-    setTooltipRef.current((prev) => ({
-      anchor: null,
-      text: prev?.text,
-    }));
+    setTooltipRef.current(new Map());
   }, []);
 
   return (
