@@ -175,19 +175,13 @@ export const authOptions = {
     async session({ session, token }) {
       await connectDB();
 
-      // ALWAYS ensure session.user exists
-      session.user = session.user || {};
+      const userId = session.user.id || token.id;
+      let user = null;
 
-      const userId = token?.id;
-
-      if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-        return session; // 👈 SAFE EXIT
-      }
-
-      const user = await User.findById(userId);
-
-      if (!user) {
-        return session; // 👈 NEVER return null
+      if (mongoose.Types.ObjectId.isValid(userId)) {
+        user = await User.findById(userId);
+      } else {
+        user = await User.findOne({ email: token.email });
       }
 
       function getInitials(username) {
@@ -197,15 +191,25 @@ export const authOptions = {
       }
 
       const userImage =
-        user.image ||
-        `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><rect width='100' height='100' fill='%23607fde'/><text x='50' y='50' font-size='40' text-anchor='middle' dominant-baseline='central' fill='white'>${getInitials(user.username)}</text></svg>`;
+        user?.image ||
+        `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><rect width='100' height='100' fill='%23607fde'/><text x='48' y='50' font-size='40' text-anchor='middle' dominant-baseline='central' fill='white' font-family='Arial'>${getInitials(user?.username)}</text></svg>`;
 
-      session.user.id = user._id.toString();
-      session.user.email = user.email;
-      session.user.username = user.username;
-      session.user.displayName = user.displayName || "";
-      session.user.image = userImage;
-      session.user.tempEmail = user.tempEmail;
+      if (user) {
+        session.user.id = user._id.toString();
+        session.user.displayName = user.displayName || "";
+        session.user.username = user.username;
+        session.user.email = user.email;
+        session.user.image = userImage;
+        session.user.tempEmail = user.tempEmail;
+      } else {
+        // fallback from token if user not found
+        session.user.id = token.id;
+        session.user.displayName = token.displayName || "";
+        session.user.username = token.username;
+        session.user.email = token.email;
+        session.user.image = token.picture || userImage;
+        session.user.tempEmail = token.tempEmail;
+      }
 
       return session;
     },
