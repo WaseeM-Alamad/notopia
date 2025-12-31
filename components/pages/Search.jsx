@@ -106,8 +106,8 @@ const Search = ({
     const types = new Set();
     order.forEach((order) => {
       const note = notes.get(order);
-      if (note?.isTrash) return;
-      colors.add(note?.color);
+      if (!note || note?.isTrash) return;
+      note?.color && colors.add(note?.color);
       note?.labels.forEach((labelUUID) => labels.add(labelUUID));
       note?.images.length > 0 && types.add("Images");
     });

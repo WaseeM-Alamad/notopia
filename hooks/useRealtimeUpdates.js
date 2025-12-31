@@ -3,7 +3,11 @@ import { saveOrderArray } from "@/utils/localDb";
 import localDbReducer from "@/utils/localDbReducer";
 import { useEffect, useRef } from "react";
 
-export function useRealtimeUpdates({ dispatchNotes, updateModalRef }) {
+export function useRealtimeUpdates({
+  dispatchNotes,
+  updateModalRef,
+  setVisibleItems,
+}) {
   const { user, clientID, labelsRef, notesStateRef, isOnline } =
     useAppContext();
 
@@ -146,6 +150,12 @@ export function useRealtimeUpdates({ dispatchNotes, updateModalRef }) {
             userID: userID,
             type: "ADD_NOTES",
             newNotes,
+          });
+          setVisibleItems(
+            (prev) => new Set([...prev, ...newNotes.map((note) => note.uuid)])
+          );
+          requestAnimationFrame(() => {
+            window.dispatchEvent(new Event("removeOffScreenNotes"));
           });
         }
 

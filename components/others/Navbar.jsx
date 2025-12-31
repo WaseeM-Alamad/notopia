@@ -793,15 +793,19 @@ const Navbar = () => {
           </div>
         </div>
       </nav>
-      <ProfileMenu
-        user={user}
-        ref={menuRef}
-        menuPosition={menuPosition}
-        isOpen={isMenuOpen}
-        setIsOpen={setIsMenuOpen}
-        setSettingsOpen={setSettingsOpen}
-        setBindsOpen={setBindsOpen}
-      />
+      <AnimatePresence>
+        {isMenuOpen && (
+          <ProfileMenu
+            user={user}
+            ref={menuRef}
+            menuPosition={menuPosition}
+            isOpen={isMenuOpen}
+            setIsOpen={setIsMenuOpen}
+            setSettingsOpen={setSettingsOpen}
+            setBindsOpen={setBindsOpen}
+          />
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {settingsOpen && (

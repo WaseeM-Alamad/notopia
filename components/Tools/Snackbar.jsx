@@ -103,9 +103,8 @@ const Snackbar = ({
 
               onClose.current();
             }}
-          >
-            <XIcon color="white" />
-          </Button>
+            className="snack-clear-icon"
+          />
         </div>
       </motion.div>
     </>,

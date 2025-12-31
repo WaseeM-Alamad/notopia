@@ -394,7 +394,7 @@ const page = () => {
   };
 
   const updateModalRef = useRef(false);
-  useRealtimeUpdates({ dispatchNotes, updateModalRef, notesState });
+  useRealtimeUpdates({ dispatchNotes, updateModalRef, setVisibleItems });
 
   useDataManager({ notesState, dispatchNotes, notesReady, setNotesReady });
 

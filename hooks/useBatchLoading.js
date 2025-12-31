@@ -435,7 +435,11 @@ export function useBatchLoading({
     };
 
     window.addEventListener("focus", handler);
-    return () => window.removeEventListener("focus", handler);
+    window.addEventListener("removeOffScreenNotes", handler);
+    return () => {
+      window.removeEventListener("focus", handler);
+      window.removeEventListener("removeOffScreenNotes", handler);
+    };
   }, [currentSection, layout, breakpoint]);
 
   if (!currentSection) return;

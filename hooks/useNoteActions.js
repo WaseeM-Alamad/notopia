@@ -463,7 +463,12 @@ export function useNoteActions({
 
         const newNote = {
           uuid: newUUID,
-          creator: note?.creator,
+          creator: {
+            _id: userID,
+            displayName: user.displayName,
+            username: user.username,
+            image: user.image,
+          },
           title: note?.title,
           content: note?.content,
           color: note?.color,
@@ -514,7 +519,15 @@ export function useNoteActions({
             ],
             openSnackRef.current
           );
-          const receivedNote = { ...received.note, creator: note.creator };
+          const receivedNote = {
+            ...received.note,
+            creator: {
+              _id: userID,
+              displayName: user.displayName,
+              username: user.username,
+              image: user.image,
+            },
+          };
 
           setLoadingImages((prev) => {
             const newSet = new Set(prev);

@@ -785,7 +785,12 @@ const TopMenuHome = ({
       const newNote = {
         _id: newNoteUUID,
         uuid: newNoteUUID,
-        creator: note.creator,
+        creator: {
+          _id: userID,
+          displayName: user.displayName,
+          username: user.username,
+          image: user.image,
+        },
         title: note?.title,
         content: note?.content,
         color: note?.color,
@@ -849,7 +854,6 @@ const TopMenuHome = ({
         type: "SET_NOTES",
         notes: result.newNotes,
       });
-      console.log(result.newNotes);
       dispatchNotes({ type: "SET_NOTES", notes: result.newNotes });
     };
 

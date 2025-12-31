@@ -1,8 +1,7 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { signOut } from "next-auth/react";
 import React, { forwardRef, memo, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Edit } from "../icons/EditIcon";
 import { useAppContext } from "@/context/AppContext";
 
 const ProfileMenu = forwardRef(
@@ -50,7 +49,7 @@ const ProfileMenu = forwardRef(
         },
       },
       {
-        title: "keyboard shortcuts",
+        title: "Keyboard shortcuts",
         classes: "keyboard-menu-icon",
         func: () => {
           setBindsOpen(true);
@@ -76,83 +75,72 @@ const ProfileMenu = forwardRef(
 
     return createPortal(
       <>
-        <AnimatePresence>
-          {isOpen && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.985 }}
-              animate={{ opacity: isOpen ? 1 : 0, scale: isOpen ? 1 : 0.985 }}
-              exit={{ opacity: 0, scale: 0.985 }}
-              transition={{
-                scale: {
-                  type: "spring",
-                  stiffness: 700,
-                  damping: 50,
-                  mass: 1,
-                },
-                opacity: { duration: 0.2 },
-              }}
-              style={{
-                zIndex: "110",
-                position: "fixed",
-                top: `${menuPosition.top + 50}px`,
-                left: `${menuPosition.left - 175}px`,
-                pointerEvents: !isOpen && "none",
-              }}
-              className="profile-menu menu-border"
-              ref={ref}
-            >
+        <motion.div
+          initial={{ opacity: 0, scale: 1, y: -5 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 1, y: -3 }}
+          transition={{
+            type: "spring",
+            stiffness: 500,
+            damping: 30,
+            mass: 0.6,
+          }}
+          style={{
+            zIndex: "110",
+            position: "fixed",
+            top: `${menuPosition.top + 50}px`,
+            left: `${menuPosition.left - 175}px`,
+            pointerEvents: !isOpen && "none",
+          }}
+          className="profile-menu menu-border"
+          ref={ref}
+        >
+          <div
+            onClick={() => {
+              setSettingsOpen(true);
+              setIsOpen(false);
+            }}
+            className="menu-upper-section"
+          >
+            <div style={{ width: "100%", display: "flex" }}>
               <div
-                onClick={() => {
-                  setSettingsOpen(true);
-                  setIsOpen(false);
+                className="profile-image-wrapper"
+                style={{
+                  position: "relative",
+                  width: "fit-content",
+                  marginRight: "0.6rem",
                 }}
-                className="menu-upper-section"
               >
-                <div style={{ width: "100%", display: "flex" }}>
-                  <div
-                    className="profile-image-wrapper"
-                    style={{
-                      position: "relative",
-                      width: "fit-content",
-                      marginRight: "0.6rem",
-                    }}
-                  >
-                    <img
-                      className="profile-image"
-                      src={user?.image}
-                      alt="pfp"
-                    />
-                    <div className="img-edit-icon" />
-                  </div>
-                  <span dir="auto" className="username">
-                    {user.displayName}
-                  </span>
-                </div>
+                <img className="profile-image" src={user?.image} alt="pfp" />
+                <div className="img-edit-icon" />
               </div>
-              <div className="">
-                {topMenuItems.map(({ title, classes, func }) => (
-                  <button
-                    key={classes}
-                    className={`profile-menu-btn ${classes}`}
-                    onClick={func}
-                  >
-                    {title}
-                  </button>
-                ))}
-              </div>
-              <div className="menu-divider" />
-              {bottomMenuItems.map(({ title, classes, func }) => (
-                <button
-                  key={classes}
-                  className={`profile-menu-btn ${classes}`}
-                  onClick={func}
-                >
-                  {title}
-                </button>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
+              <span dir="auto" className="username">
+                {user.displayName}
+              </span>
+            </div>
+          </div>
+          <div className="">
+            {topMenuItems.map(({ title, classes, func }) => (
+              <button
+                key={classes}
+                className={`profile-menu-btn ${classes}`}
+                onClick={func}
+              >
+                {title}
+              </button>
+            ))}
+          </div>
+          <div className="menu-divider" />
+          {bottomMenuItems.map(({ title, classes, func }) => (
+            <button
+              key={classes}
+              className={`profile-menu-btn ${classes}`}
+              onClick={func}
+            >
+              {title}
+            </button>
+          ))}
+        </motion.div>
       </>,
       document.getElementById("menu")
     );
