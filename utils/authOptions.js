@@ -175,11 +175,20 @@ export const authOptions = {
     async session({ session, token }) {
       await connectDB();
 
-      const userId = token.id;
-      if (!userId || !mongoose.Types.ObjectId.isValid(userId)) return null;
+      // ALWAYS ensure session.user exists
+      session.user = session.user || {};
+
+      const userId = token?.id;
+
+      if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+        return session; // 👈 SAFE EXIT
+      }
 
       const user = await User.findById(userId);
-      if (!user) return null;
+
+      if (!user) {
+        return session; // 👈 NEVER return null
+      }
 
       function getInitials(username) {
         if (!username) return "";
@@ -191,14 +200,12 @@ export const authOptions = {
         user.image ||
         `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><rect width='100' height='100' fill='%23607fde'/><text x='50' y='50' font-size='40' text-anchor='middle' dominant-baseline='central' fill='white'>${getInitials(user.username)}</text></svg>`;
 
-      session.user = {
-        id: user._id.toString(),
-        email: user.email,
-        username: user.username,
-        displayName: user.displayName || "",
-        image: userImage,
-        tempEmail: user.tempEmail,
-      };
+      session.user.id = user._id.toString();
+      session.user.email = user.email;
+      session.user.username = user.username;
+      session.user.displayName = user.displayName || "";
+      session.user.image = userImage;
+      session.user.tempEmail = user.tempEmail;
 
       return session;
     },
