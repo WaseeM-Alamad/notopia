@@ -45,7 +45,7 @@ const Navbar = () => {
     setLayout,
     isFiltered,
     currentSection,
-    modalOpenRef,
+    initialLoading,
     user,
     setUser,
     showTooltip,
@@ -55,6 +55,8 @@ const Navbar = () => {
     isOnline,
     setIsExpanded,
     floatingBtnRef,
+    session,
+    status,
   } = useAppContext();
   const [isLoading, setIsLoading] = useState(0);
   const [UpToDatetrigger, setUpToDateTrigger] = useState(true);
@@ -455,7 +457,15 @@ const Navbar = () => {
     return () => window.removeEventListener("resize", handleResizeLayout);
   }, [handleResizeLayout]);
 
-  if (!isClient || !currentSection) return;
+  if (
+    !isClient ||
+    !currentSection ||
+    (!session?.user && status === "authenticated") ||
+    status === "loading"||
+    initialLoading
+  ) {
+    return;
+  }
 
   return (
     <>

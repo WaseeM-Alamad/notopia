@@ -428,9 +428,21 @@ export function AppProvider({ children, initialUser }) {
     setTooltipRef.current(new Map());
   }, []);
 
+  const [initialLoading, setInitialLoading] = useState(false);
+  const timerr = useRef(null);
+
+  useEffect(() => {
+    if (status === "loading") {
+      setInitialLoading(true);
+      !timerr.current &&
+        (timerr.current = setTimeout(() => setInitialLoading(false), 600));
+    }
+  }, [status]);
+
   return (
     <AppContext.Provider
       value={{
+        initialLoading,
         labelsReady,
         setLabelsReady,
         createLabel,

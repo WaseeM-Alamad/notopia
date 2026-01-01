@@ -36,8 +36,10 @@ import { useSnackbar } from "@/hooks/useSnackbar";
 import handleServerCall from "@/utils/handleServerCall";
 import localDbReducer from "@/utils/localDbReducer";
 import { useRealtimeUpdates } from "@/hooks/useRealtimeUpdates";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import ActionModal from "@/components/others/ActionModal";
+import CustomThreeLineSpinner from "@/components/Tools/CustomSpinner";
+import SplashScreen from "@/components/others/SplashScreen";
 
 const page = () => {
   const { searchTerm, filters } = useSearch();
@@ -56,6 +58,8 @@ const page = () => {
     user,
     rootContainerRef,
     clientID,
+    session,
+    status,
   } = useAppContext();
   const [tooltipAnchor, setTooltipAnchor] = useState(new Map());
   const [notesState, dispatchNotes] = useReducer(notesReducer, initialStates);
@@ -488,25 +492,15 @@ const page = () => {
     DynamicLabel,
   };
 
-  if (!currentSection) return;
+  if (!currentSection || (!session?.user && status === "authenticated")) {
+    return null;
+  }
 
   const Page = components[currentSection];
 
   return (
     <>
-      {/* <button
-        style={{
-          left: "12rem",
-          top: "1rem",
-          position: "fixed",
-          zIndex: "1000000",
-        }}
-        onClick={() => {
-          console.log(notesState);
-        }}
-      >
-        ggg
-      </button> */}
+    <SplashScreen />
       <div
         id="n-overlay"
         onClick={() => {
@@ -536,11 +530,7 @@ const page = () => {
       />
       <AnimatePresence>
         {[...tooltipAnchor].map(([anchor, text], index) => (
-          <Tooltip
-            key={text}
-            anchorEl={anchor}
-            text={text}
-          />
+          <Tooltip key={text} anchorEl={anchor} text={text} />
         ))}
       </AnimatePresence>
       <Snackbar
@@ -569,18 +559,6 @@ const page = () => {
         currentSection={currentSection}
       />
 
-      {/* <button
-        style={{
-          left: "1rem",
-          top: "1rem",
-          position: "fixed",
-          zIndex: "100000",
-        }}
-        onClick={()=> console.log(containerRef.current.offsetHeight)}
-      >
-        {" "}
-        gg
-      </button> */}
       <Page
         dispatchNotes={dispatchNotes}
         visibleItems={visibleItems}

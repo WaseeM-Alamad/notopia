@@ -29,6 +29,9 @@ const Sidebar = memo(() => {
     addButtonRef,
     setIsExpanded,
     isExpanded,
+    status,
+    session,
+    initialLoading
   } = useAppContext();
   const containerRef = useRef(null);
   const [currentHash, setCurrentHash] = useState(null);
@@ -297,9 +300,15 @@ const Sidebar = memo(() => {
     setTooltipOpen(false);
   };
 
-  if (!currentSection) return;
-
-  if (currentHash === null) return;
+  if (
+    currentHash === null ||
+    !currentSection ||
+    (!session?.user && status === "authenticated") ||
+    status === "loading" ||
+    initialLoading
+  ) {
+    return;
+  }
 
   return (
     <>
@@ -311,7 +320,7 @@ const Sidebar = memo(() => {
       >
         <aside
           className={`${isDragging ? "side-dragging" : ""} ${isExpanded.threshold === "before" && isExpanded.open ? "sidebar-shadow" : ""}`}
-          onClick={(e)=> e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
         >
           <AnimatePresence>
             {triggerFloatingBtn && (

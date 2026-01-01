@@ -78,7 +78,7 @@ const ProfileMenu = forwardRef(
         <motion.div
           initial={{ opacity: 0, scale: 1, y: -5 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 1, y: -3 }}
+          exit={{ opacity: 0, scale: 1, y: -3, pointerEvents: "none" }}
           transition={{
             type: "spring",
             stiffness: 500,
