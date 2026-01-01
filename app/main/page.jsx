@@ -60,7 +60,7 @@ const page = () => {
     clientID,
     session,
     status,
-    initialLoading
+    initialLoading,
   } = useAppContext();
   const [tooltipAnchor, setTooltipAnchor] = useState(new Map());
   const [notesState, dispatchNotes] = useReducer(notesReducer, initialStates);
@@ -502,104 +502,106 @@ const page = () => {
   return (
     <>
       <SplashScreen />
-    { !initialLoading && <>
-      <div
-        id="n-overlay"
-        onClick={() => {
-          setIsModalOpen(false);
-        }}
-        className="note-modal-overlay"
-      />
-
-      <NoteModal
-        localNote={selectedNote}
-        setLocalNote={setSelectedNote}
-        setVisibleItems={setVisibleItems}
-        setFadingNotes={setFadingNotes}
-        noteActions={noteActions}
-        dispatchNotes={dispatchNotes}
-        initialStyle={modalStyle}
-        setInitialStyle={setModalStyle}
-        onClose={() => setSelectedNote(null)}
-        closeRef={closeRef}
-        currentSection={currentSection}
-        isOpen={isModalOpen}
-        setIsOpen={setIsModalOpen}
-        rootContainerRef={rootContainerRef}
-        setModalStyle={setModalStyle}
-        labelObj={labelObj}
-        skipSetLabelObjRef={skipSetLabelObjRef}
-      />
-      <AnimatePresence>
-        {[...tooltipAnchor].map(([anchor, text], index) => (
-          <Tooltip key={text} anchorEl={anchor} text={text} />
-        ))}
-      </AnimatePresence>
-      <Snackbar
-        snackbarState={snackbarState}
-        setSnackbarState={setSnackbarState}
-        undo={undoFunction}
-        unloadWarn={unloadWarn}
-        setUnloadWarn={setUnloadWarn}
-        noActionUndone={noActionUndone}
-        setNoActionUndone={setNoActionUndone}
-        onClose={onCloseFunction}
-      />
-      <div className="starting-div-header" />
-
-      <TopMenu
-        notes={notesState.notes}
-        visibleItems={visibleItems}
-        setVisibleItems={setVisibleItems}
-        functionRefs={{ batchArchiveRef, batchPinRef, batchDeleteRef }}
-        dispatchNotes={dispatchNotes}
-        setFadingNotes={setFadingNotes}
-        selectedNotesIDs={selectedNotesIDs}
-        setSelectedNotesIDs={setSelectedNotesIDs}
-        isDraggingRef={isDraggingRef}
-        rootContainerRef={rootContainerRef}
-        currentSection={currentSection}
-      />
-
-      <Page
-        dispatchNotes={dispatchNotes}
-        visibleItems={visibleItems}
-        setVisibleItems={setVisibleItems}
-        selectedNotesRef={selectedNotesRef}
-        notes={notesState.notes}
-        notesStateRef={notesStateRef}
-        order={notesState.order}
-        handleNoteClick={handleNoteClick}
-        handleSelectNote={handleSelectNote}
-        handleDeleteLabel={handleDeleteLabel}
-        selectedNotesIDs={selectedNotesIDs}
-        fadingNotes={fadingNotes}
-        setFadingNotes={setFadingNotes}
-        setSelectedNotesIDs={setSelectedNotesIDs}
-        noteActions={noteActions}
-        notesReady={notesReady}
-        isGrid={isGrid}
-        containerRef={containerRef}
-        rootContainerRef={rootContainerRef}
-        labelObj={labelObj}
-      />
-
-      <SelectionBox ref={selectionBoxRef} />
-      <AnimatePresence>
-        {dialogInfo && (
-          <ActionModal
-            setDialogInfo={setDialogInfo}
-            func={dialogInfo?.func || (() => {})}
-            cancelFunc={dialogInfo?.cancelFunc || (() => {})}
-            title={dialogInfo?.title || ""}
-            message={dialogInfo?.message || ""}
-            btnMsg={dialogInfo?.btnMsg || "okay"}
-            cancelBtnMsg={dialogInfo?.cancelBtnMsg || "Cancel"}
-            showCloseBtn={dialogInfo?.showCloseBtn || false}
+      {!initialLoading && (
+        <>
+          <div
+            id="n-overlay"
+            onClick={() => {
+              setIsModalOpen(false);
+            }}
+            className="note-modal-overlay"
           />
-        )}
-      </AnimatePresence>
-      </>}
+
+          <NoteModal
+            localNote={selectedNote}
+            setLocalNote={setSelectedNote}
+            setVisibleItems={setVisibleItems}
+            setFadingNotes={setFadingNotes}
+            noteActions={noteActions}
+            dispatchNotes={dispatchNotes}
+            initialStyle={modalStyle}
+            setInitialStyle={setModalStyle}
+            onClose={() => setSelectedNote(null)}
+            closeRef={closeRef}
+            currentSection={currentSection}
+            isOpen={isModalOpen}
+            setIsOpen={setIsModalOpen}
+            rootContainerRef={rootContainerRef}
+            setModalStyle={setModalStyle}
+            labelObj={labelObj}
+            skipSetLabelObjRef={skipSetLabelObjRef}
+          />
+          <AnimatePresence>
+            {[...tooltipAnchor].map(([anchor, text], index) => (
+              <Tooltip key={text} anchorEl={anchor} text={text} />
+            ))}
+          </AnimatePresence>
+          <Snackbar
+            snackbarState={snackbarState}
+            setSnackbarState={setSnackbarState}
+            undo={undoFunction}
+            unloadWarn={unloadWarn}
+            setUnloadWarn={setUnloadWarn}
+            noActionUndone={noActionUndone}
+            setNoActionUndone={setNoActionUndone}
+            onClose={onCloseFunction}
+          />
+          <div className="starting-div-header" />
+
+          <TopMenu
+            notes={notesState.notes}
+            visibleItems={visibleItems}
+            setVisibleItems={setVisibleItems}
+            functionRefs={{ batchArchiveRef, batchPinRef, batchDeleteRef }}
+            dispatchNotes={dispatchNotes}
+            setFadingNotes={setFadingNotes}
+            selectedNotesIDs={selectedNotesIDs}
+            setSelectedNotesIDs={setSelectedNotesIDs}
+            isDraggingRef={isDraggingRef}
+            rootContainerRef={rootContainerRef}
+            currentSection={currentSection}
+          />
+
+          <Page
+            dispatchNotes={dispatchNotes}
+            visibleItems={visibleItems}
+            setVisibleItems={setVisibleItems}
+            selectedNotesRef={selectedNotesRef}
+            notes={notesState.notes}
+            notesStateRef={notesStateRef}
+            order={notesState.order}
+            handleNoteClick={handleNoteClick}
+            handleSelectNote={handleSelectNote}
+            handleDeleteLabel={handleDeleteLabel}
+            selectedNotesIDs={selectedNotesIDs}
+            fadingNotes={fadingNotes}
+            setFadingNotes={setFadingNotes}
+            setSelectedNotesIDs={setSelectedNotesIDs}
+            noteActions={noteActions}
+            notesReady={notesReady}
+            isGrid={isGrid}
+            containerRef={containerRef}
+            rootContainerRef={rootContainerRef}
+            labelObj={labelObj}
+          />
+
+          <SelectionBox ref={selectionBoxRef} />
+          <AnimatePresence>
+            {dialogInfo && (
+              <ActionModal
+                setDialogInfo={setDialogInfo}
+                func={dialogInfo?.func || (() => {})}
+                cancelFunc={dialogInfo?.cancelFunc || (() => {})}
+                title={dialogInfo?.title || ""}
+                message={dialogInfo?.message || ""}
+                btnMsg={dialogInfo?.btnMsg || "okay"}
+                cancelBtnMsg={dialogInfo?.cancelBtnMsg || "Cancel"}
+                showCloseBtn={dialogInfo?.showCloseBtn || false}
+              />
+            )}
+          </AnimatePresence>
+        </>
+      )}
     </>
   );
 };

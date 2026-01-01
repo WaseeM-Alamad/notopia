@@ -34,21 +34,20 @@ const SplashScreen = () => {
           }}
           key="splash"
         >
-          <span
-            style={{
-              fontSize: "350%",
-              letterSpacing: "0.3rem",
-              color: "var(--notopia)",
-              fontWeight: "bold",
-            }}
-          >
-            Notopia
-          </span>
-          <HorizontalLoader
-            style={{ opacity: "0.9" }}
-            color="var(--notopia)"
-            size={0.8}
-          />
+          <div className="splash-wrapper">
+            <span
+              style={{
+                fontSize: "3.3rem",
+                letterSpacing: "0.3rem",
+                color: "var(--notopia)",
+                fontWeight: "bold",
+              }}
+            >
+              Notopia
+            </span>
+
+            <HorizontalLoader color="var(--notopia)" size={0.8} />
+          </div>
         </motion.div>
       )}
     </AnimatePresence>

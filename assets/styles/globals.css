@@ -6,6 +6,7 @@
 
 :root {
   --notopia: #474b4f;
+  --s: clamp(0.7, 1vw, 0.5);
   --bw: #ffffff;
   --bg: #ffffff;
   --bg2: #ffffff;
@@ -6034,5 +6035,24 @@ aside svg {
 @keyframes shine {
   to {
     background-position: 200% center;
+  }
+}
+
+.splash-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: scale(1);
+}
+
+@media (max-width: 1000px) {
+  .splash-wrapper {
+    transform: scale(0.8);
+  }
+}
+
+@media (max-width: 500px) {
+  .splash-wrapper {
+    transform: scale(0.6);
   }
 }
