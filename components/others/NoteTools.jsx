@@ -212,6 +212,7 @@ const NoteTools = ({
       formData.append("files", file);
       formData.append("imageUUIDs", imageUUID);
       formData.append("clientID", clientID);
+      formData.append("creatorID", note?.creator?._id);
 
       const imageURL = URL.createObjectURL(file);
 

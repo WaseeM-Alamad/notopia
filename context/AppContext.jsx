@@ -405,18 +405,23 @@ export function AppProvider({ children, initialUser }) {
     }
   };
 
+  const tooltipTimeoutRef = useRef(null);
+
   const showTooltip = useCallback((e, text) => {
     const target = e.currentTarget;
-    setTooltipRef.current((prev) => {
-      const newMap = new Map(prev);
-      newMap.delete(target);
-      newMap.set(target, text);
-      return newMap;
-    });
+
+    tooltipTimeoutRef.current = setTimeout(() => {
+      setTooltipRef.current((prev) => {
+        const newMap = new Map(prev);
+        newMap.set(target, text);
+        return newMap;
+      });
+    }, 200);
   }, []);
 
   const hideTooltip = useCallback((e) => {
     const target = e.currentTarget;
+    clearTimeout(tooltipTimeoutRef.current);
     setTooltipRef.current((prev) => {
       const newMap = new Map(prev);
       newMap.delete(target);
@@ -429,7 +434,6 @@ export function AppProvider({ children, initialUser }) {
   }, []);
 
   const [initialLoading, setInitialLoading] = useState(true);
-  const timerr = useRef(null);
 
   useEffect(() => {
     if (status !== "loading") {

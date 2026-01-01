@@ -325,7 +325,7 @@ export function useNoteActions({
         }, 250);
 
         handleServerCall(
-          [() => DeleteNoteAction(data.note?.uuid, clientID)],
+          [() => DeleteNoteAction(data.note?.uuid, data.note?.creator?._id)],
           openSnackRef.current
         );
       } else if (data.type === "PIN_ARCHIVED_NOTE") {
@@ -511,6 +511,7 @@ export function useNoteActions({
               () =>
                 copyNoteAction({
                   originalNoteUUID: note?.uuid,
+                  creatorID: note?.creator?._id,
                   newNoteUUID: newUUID,
                   newImages: newImages,
                   note: { ...newNote, images: data.note?.images },

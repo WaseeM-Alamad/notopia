@@ -211,12 +211,17 @@ const Trash = memo(
     }, [visibleItems]);
 
     const handleEmptyTrash = async () => {
-      let deletedNotesUUIDs = [];
+      const deletedNotesUUIDs = [];
+      const deletedNotesData = [];
 
       order.map((uuid) => {
         const note = notes.get(uuid);
         if (note?.isTrash) {
           deletedNotesUUIDs.push(uuid);
+          deletedNotesData.push({
+            noteUUID: uuid,
+            creatorID: note?.creator?._id,
+          });
         }
       });
 
@@ -233,7 +238,7 @@ const Trash = memo(
       }, 250);
 
       handleServerCall(
-        [() => batchDeleteNotes(deletedNotesUUIDs, clientID)],
+        [() => batchDeleteNotes(deletedNotesData, clientID)],
         openSnackRef.current
       );
     };

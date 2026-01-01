@@ -23,6 +23,7 @@ export function useBatchLoading({
     loadNextBatchRef,
     notesIndexMapRef,
     breakpoint,
+    initialLoading,
   } = useAppContext();
 
   const {
@@ -40,6 +41,14 @@ export function useBatchLoading({
   const visibleItemsRef = useRef(null);
 
   const BUFFER = 700;
+
+  useEffect(() => {
+    if (!initialLoading) {
+      requestAnimationFrame(() => {
+        loadNextBatch();
+      });
+    }
+  }, [initialLoading]);
 
   useEffect(() => {
     visibleItemsRef.current = visibleItems;

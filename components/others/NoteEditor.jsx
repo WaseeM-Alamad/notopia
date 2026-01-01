@@ -55,8 +55,10 @@ const NoteEditor = ({
   openCollab,
 }) => {
   const { filters } = useSearch();
-  const { userID, clientID, showTooltip, hideTooltip, closeToolTip } =
+  const { user, clientID, showTooltip, hideTooltip, closeToolTip } =
     useAppContext();
+
+  const userID = user?.id;
 
   const [isDragOver, setIsDragOver] = useState(false);
   const [labelAnchor, setLabelAnchor] = useState(null);
@@ -302,7 +304,9 @@ const NoteEditor = ({
       };
 
       const onClose = async () => {
-        const filePath = `${userID}/${note?.uuid}/${imageUUID}`;
+        const creatorID = note?.creator?._id;
+        if (!creatorID || !note?.uuid || !imageUUID) return;
+        const filePath = `${creatorID}/${note?.uuid}/${imageUUID}`;
         handleServerCall(
           [
             () =>

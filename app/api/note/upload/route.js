@@ -1,8 +1,6 @@
 import cloudinary from "@/config/cloudinary";
 import connectDB from "@/config/database";
 import { NoteUpdateAction } from "@/utils/actions";
-import { authOptions } from "@/utils/authOptions";
-import { getServerSession } from "next-auth";
 import sharp from "sharp";
 
 const acceptedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
@@ -12,16 +10,14 @@ const maxMegapixels = 25;
 export async function POST(req) {
   const formData = await req.formData();
   const noteUUID = formData.get("noteUUID");
+  const creatorID = formData.get("creatorID");
   const files = formData.getAll("files");
   const imageUUIDs = formData.getAll("imageUUIDs");
   const clientID = formData.get("clientID");
 
-  const session = await getServerSession(authOptions);
-  const userID = session?.user?.id;
-
-  if (!userID || !noteUUID) {
+  if (!creatorID || !noteUUID) {
     return Response.json(
-      { error: "Missing userID or noteUUID" },
+      { error: "Missing creatorID or noteUUID" },
       { status: 400 }
     );
   }
@@ -61,7 +57,7 @@ export async function POST(req) {
       return fileError;
     }
 
-    const publicId = `${userID}/${noteUUID}/${imageUUID}`;
+    const publicId = `${creatorID}/${noteUUID}/${imageUUID}`;
 
     try {
       await connectDB();
@@ -96,7 +92,7 @@ export async function POST(req) {
       };
     } catch (error) {
       console.error("Error uploading image:", error);
-      return null; // or handle errors as you want
+      return null;
     }
   });
 

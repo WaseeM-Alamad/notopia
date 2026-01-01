@@ -5911,6 +5911,7 @@ aside svg {
 
 .notopia {
   /* margin-left: 0.8rem; */
+  cursor: pointer;
   font-weight: 700;
   font-size: 1.3rem;
   color: var(--notopia);

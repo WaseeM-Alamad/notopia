@@ -1240,7 +1240,6 @@ export const NoteImageDeleteAction = async (
   clientID
 ) => {
   const session = await getServerSession(authOptions);
-  const userID = session?.user?.id;
   if (!session) {
     throw new Error("Something went wrong");
   }
@@ -1261,7 +1260,7 @@ export const NoteImageDeleteAction = async (
   }
 };
 
-export const DeleteNoteAction = async (noteUUID, clientID) => {
+export const DeleteNoteAction = async (noteUUID, creatorID) => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
   if (!session) {
@@ -1280,7 +1279,7 @@ export const DeleteNoteAction = async (noteUUID, clientID) => {
     });
 
     if (note.images.length !== 0) {
-      const folderPath = `${userID}/${note.uuid}/`;
+      const folderPath = `${creatorID}/${note.uuid}/`;
       await cloudinary.api.delete_resources_by_prefix(folderPath);
     }
 
@@ -1291,9 +1290,8 @@ export const DeleteNoteAction = async (noteUUID, clientID) => {
   }
 };
 
-export const batchDeleteNotes = async (deletedUUIDs, clientID) => {
+export const batchDeleteNotes = async (deletedNotesData, clientID) => {
   const session = await getServerSession(authOptions);
-  const userID = session?.user?.id;
   if (!session) {
     throw new Error("Something went wrong");
   }
@@ -1301,10 +1299,12 @@ export const batchDeleteNotes = async (deletedUUIDs, clientID) => {
     await connectDB();
 
     const deletedImages = [];
+    const deletedUUIDs = [];
 
-    deletedUUIDs.map((uuid) => {
-      const filePath = `${userID}/${uuid}/`;
+    deletedNotesData.map(({ noteUUID, creatorID }) => {
+      const filePath = `${creatorID}/${noteUUID}/`;
       deletedImages.push(filePath);
+      deletedUUIDs.push(noteUUID);
     });
 
     const session = await startSession();
@@ -1542,6 +1542,7 @@ export const undoAction = async (data) => {
 
 export const copyNoteAction = async (data) => {
   const session = await getServerSession(authOptions);
+  const user = session?.user;
   const userID = session?.user?.id;
   if (!session) {
     throw new Error("Something went wrong");
@@ -1549,13 +1550,14 @@ export const copyNoteAction = async (data) => {
   try {
     await connectDB();
     const copiedNote = data.note;
+    const creatorID = data?.creatorID;
     let copiedImages = [];
 
     if (copiedNote.images.length !== 0) {
       const copyPromises = copiedNote.images.map(async (img, i) => {
         const originalImageUUID = img.uuid;
         const originalUrl = cloudinary.url(
-          `${userID}/${data.originalNoteUUID}/${originalImageUUID}`
+          `${creatorID}/${data.originalNoteUUID}/${originalImageUUID}`
         );
 
         const newImageUUID = data.newImages[i].uuid;
@@ -1625,7 +1627,16 @@ export const copyNoteAction = async (data) => {
     const p2 = JSON.parse(JSON.stringify(savedSettings));
     const { _id, _v, ...finalSettings } = p2;
 
-    const finalNote = { ...finalData, ...finalSettings };
+    const finalNote = {
+      ...finalData,
+      ...finalSettings,
+      creator: {
+        _id: userID,
+        username: user?.username,
+        displayName: user?.displayName,
+        image: user?.image,
+      },
+    };
 
     return {
       success: true,
@@ -1664,7 +1675,7 @@ export const batchCopyNoteAction = async (data) => {
           await Promise.all(
             n.images.map(async (image) => {
               const sourceDes = data.imagesMap.get(image.uuid);
-              const originalPublicId = `${userID}/${sourceDes}`;
+              const originalPublicId = sourceDes;
               const originalUrl = cloudinary.url(originalPublicId);
               const destinationPublicId = `${destinationFolder}/${image.uuid}`;
               const newUrl = cloudinary.url(destinationPublicId);

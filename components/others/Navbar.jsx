@@ -461,7 +461,7 @@ const Navbar = () => {
     !isClient ||
     !currentSection ||
     (!session?.user && status === "authenticated") ||
-    status === "loading"||
+    status === "loading" ||
     initialLoading
   ) {
     return;
@@ -503,7 +503,12 @@ const Navbar = () => {
             className="side-expand-btn"
           />
           {/* <Logo style={{ margin: "auto 0", flexShrink: "0" }} /> */}
-          <span className="notopia">Notopia</span>
+          <span
+            onClick={() => (window.location.hash = "home")}
+            className="notopia"
+          >
+            Notopia
+          </span>
         </div>
 
         <div

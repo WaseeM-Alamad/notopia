@@ -697,11 +697,13 @@ const TopMenuHome = ({
   };
 
   const handleDeleteNotes = async () => {
-    let selectedUUIDs = [];
+    const selectedUUIDs = [];
+    const deletedNotesData = [];
 
     selectedNotesIDs.forEach(({ uuid }) => {
-      selectedUUIDs.push(uuid);
       const note = notes.get(uuid);
+      deletedNotesData.push({ noteUUID: uuid, creatorID: note?.creator?._id });
+      selectedUUIDs.push(uuid);
     });
 
     setFadingNotes(new Set(selectedUUIDs));
@@ -724,7 +726,7 @@ const TopMenuHome = ({
     handleClose();
 
     handleServerCall(
-      [() => batchDeleteNotes(selectedUUIDs, clientID)],
+      [() => batchDeleteNotes(deletedNotesData, clientID)],
       openSnackRef.current
     );
   };
@@ -753,7 +755,10 @@ const TopMenuHome = ({
           const newImageUUID = uuid();
           const newImage = { uuid: newImageUUID, url: image.url };
           newImagesUUIDs.push(newImageUUID);
-          imagesMap.set(newImageUUID, `${note?.uuid}/${image.uuid}`);
+          imagesMap.set(
+            newImageUUID,
+            `${note?.creator?._id}/${note?.uuid}/${image.uuid}`
+          );
           imagesToDel.push(`${userID}/${newNoteUUID}/`);
           newImages.push(newImage);
         });

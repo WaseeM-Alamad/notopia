@@ -246,7 +246,13 @@ const Note = memo(
 
     const noteClassName = useMemo(() => {
       return `note ${note?.color} n-bg-${note?.background} ${isDragOver ? "transparent-border" : ""} ${!ImagesWithNoBottomContent ? "note-bottom-padding" : ""}`;
-    }, [note?.color, note?.background, selected, isDragOver, ImagesWithNoBottomContent]);
+    }, [
+      note?.color,
+      note?.background,
+      selected,
+      isDragOver,
+      ImagesWithNoBottomContent,
+    ]);
 
     const handleDragOver = (e) => {
       e.preventDefault();
@@ -316,7 +322,15 @@ const Note = memo(
 
     return (
       <>
-        {/* <button onClick={()=> console.log(note)}>ggg</button> */}
+        {/* <button
+          onClick={(e) => {
+            e.stopPropagation();
+            console.log("userID", userID);
+            console.log("creatorID", note?.creator?._id);
+          }}
+        >
+          ggg
+        </button> */}
         <div
           tabIndex="0"
           onClick={(e) =>

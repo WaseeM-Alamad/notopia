@@ -311,7 +311,7 @@ const ModalTools = ({
     }, 220);
 
     handleServerCall(
-      [() => DeleteNoteAction(localNote.uuid, clientID)],
+      [() => DeleteNoteAction(localNote.uuid, note?.creator?._id)],
       openSnackRef.current
     );
   };
