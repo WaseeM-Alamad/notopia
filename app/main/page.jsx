@@ -60,6 +60,7 @@ const page = () => {
     clientID,
     session,
     status,
+    initialLoading
   } = useAppContext();
   const [tooltipAnchor, setTooltipAnchor] = useState(new Map());
   const [notesState, dispatchNotes] = useReducer(notesReducer, initialStates);
@@ -500,7 +501,8 @@ const page = () => {
 
   return (
     <>
-    <SplashScreen />
+      <SplashScreen />
+    { !initialLoading && <>
       <div
         id="n-overlay"
         onClick={() => {
@@ -597,6 +599,7 @@ const page = () => {
           />
         )}
       </AnimatePresence>
+      </>}
     </>
   );
 };

@@ -428,14 +428,14 @@ export function AppProvider({ children, initialUser }) {
     setTooltipRef.current(new Map());
   }, []);
 
-  const [initialLoading, setInitialLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const timerr = useRef(null);
 
   useEffect(() => {
-    if (status === "loading") {
-      setInitialLoading(true);
-      !timerr.current &&
-        (timerr.current = setTimeout(() => setInitialLoading(false), 600));
+    if (status !== "loading") {
+      setTimeout(() => {
+        setInitialLoading(false);
+      }, 500);
     }
   }, [status]);
 
