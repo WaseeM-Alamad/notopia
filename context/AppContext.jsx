@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import React, {
   createContext,
   useCallback,
@@ -150,7 +150,11 @@ export function AppProvider({ children, initialUser }) {
   }, [currentSection]);
 
   useEffect(() => {
-    session && setUser(session?.user);
+    const sessionUser = session?.user;
+    if (!sessionUser && status === "authenticated") {
+      signOut();
+    }
+    session && setUser(sessionUser);
   }, [session, status]);
 
   useEffect(() => {
@@ -413,11 +417,11 @@ export function AppProvider({ children, initialUser }) {
 
   const hideTooltip = useCallback((e) => {
     const target = e.currentTarget;
-      setTooltipRef.current((prev) => {
-        const newMap = new Map(prev);
-        newMap.delete(target);
-        return newMap;
-      });
+    setTooltipRef.current((prev) => {
+      const newMap = new Map(prev);
+      newMap.delete(target);
+      return newMap;
+    });
   }, []);
 
   const closeToolTip = useCallback(() => {
