@@ -326,12 +326,37 @@ const NoteEditor = ({
     [note?.uuid]
   );
 
-  const handlePaste = (e) => {
+  const handlePaste = (e, max) => {
     e.preventDefault();
+    if (!max) return;
+    const prevText = e.target.innerText === "\n" ? "" : e.target.innerText;
+
     // Get plain text from clipboard
-    const text = e.clipboardData.getData("text/plain");
+    const pasteText = e.clipboardData.getData("text/plain");
+    const pasteLength = pasteText.length;
+    const prevLength = prevText.length;
     // Insert only the text at cursor position
-    document.execCommand("insertText", false, text);
+
+    const isOverflow = prevLength + pasteLength >= max;
+
+    let validPaste = pasteText;
+
+    if (isOverflow) {
+      const sub = max - prevLength;
+      if (sub <= 0) return;
+      validPaste = pasteText.slice(0, sub);
+    }
+
+    document.execCommand("insertText", false, validPaste);
+  };
+
+  const handleBeforeInput = (e, max) => {
+    if (!max) return;
+    const text = e.target.innerText;
+    const t = text === "\n" ? "" : text;
+    if (t.length + 1 > max) {
+      e.preventDefault();
+    }
   };
 
   const updateTextDebounced = useCallback(
@@ -490,6 +515,7 @@ const NoteEditor = ({
   const handleTitleInput = useCallback(
     (e) => {
       if (localNote?.isTrash) return;
+
       const text = e.target.innerText;
       const t = text === "\n" ? "" : text;
       titleDebouncedSetUndo({ title: t, content: localNote?.content });
@@ -645,7 +671,8 @@ const NoteEditor = ({
           dir="auto"
           suppressContentEditableWarning
           onInput={handleTitleInput}
-          onPaste={handlePaste}
+          onBeforeInput={(e) => handleBeforeInput(e, 999)}
+          onPaste={(e) => handlePaste(e, 999)}
           ref={titleRef}
           className="
                modal-title-input modal-editable-title"
@@ -671,7 +698,8 @@ const NoteEditor = ({
           dir="auto"
           suppressContentEditableWarning
           onInput={handleContentInput}
-          onPaste={handlePaste}
+          onBeforeInput={(e) => handleBeforeInput(e, 19999)}
+          onPaste={(e) => handlePaste(e, 19999)}
           ref={contentRef}
           className={`${"modal-content-input"} modal-editable-content`}
           role="textbox"

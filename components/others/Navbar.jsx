@@ -765,9 +765,9 @@ const Navbar = () => {
                 )}
               </AnimatePresence>
             </Button>
-            <Button disabled={true} className="nav-btn">
+            {/* <Button disabled={true} className="nav-btn">
               <SettingsIcon />
-            </Button>
+            </Button> */}
           </div>
         </div>
 

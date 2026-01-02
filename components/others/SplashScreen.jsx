@@ -19,6 +19,7 @@ const SplashScreen = () => {
           }}
           style={{
             position: "fixed",
+            pointerEvents: "none",
             top: "0",
             left: "0",
             width: "100%",

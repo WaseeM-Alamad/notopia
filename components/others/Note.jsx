@@ -359,7 +359,6 @@ const Note = memo(
               });
             }
           }}
-          onMouseDown={(e) => e.preventDefault()}
           onFocus={handleOnFocus}
           onDragOver={handleDragOver}
           onDragEnter={handleDragEnter}
@@ -385,28 +384,28 @@ const Note = memo(
             setAnchorEl(virtualAnchor);
             setMoreMenuOpen((prev) => !prev);
           }}
-          onTouchStart={(e) => {
-            touchTimerRef.current = setTimeout(() => {
-              touchActiveRef.current = true;
-              handleSelectNote({
-                source: "checkmark",
-                e: e,
-                selected: selected,
-                setSelected: setSelected,
-                uuid: note?.uuid,
-                index: notesIndexMapRef.current.get(note.uuid),
-                isPinned: note?.isPinned,
-                isArchived: note.isArchived,
-              });
-            }, 300);
-          }}
-          onTouchEnd={() => {
-            clearTimeout(touchTimerRef.current);
-            touchTimerRef.current = null;
-            requestAnimationFrame(() => {
-              touchActiveRef.current = false;
-            });
-          }}
+          // onTouchStart={(e) => {
+          //   touchTimerRef.current = setTimeout(() => {
+          //     touchActiveRef.current = true;
+          //     handleSelectNote({
+          //       source: "checkmark",
+          //       e: e,
+          //       selected: selected,
+          //       setSelected: setSelected,
+          //       uuid: note?.uuid,
+          //       index: notesIndexMapRef.current.get(note.uuid),
+          //       isPinned: note?.isPinned,
+          //       isArchived: note.isArchived,
+          //     });
+          //   }, 300);
+          // }}
+          // onTouchEnd={() => {
+          //   clearTimeout(touchTimerRef.current);
+          //   touchTimerRef.current = null;
+          //   requestAnimationFrame(() => {
+          //     touchActiveRef.current = false;
+          //   });
+          // }}
           className="note-wrapper"
           ref={note?.ref}
         >

@@ -76,8 +76,8 @@ const ProfileMenu = forwardRef(
     return createPortal(
       <>
         <motion.div
-          initial={{ opacity: 0, scale: 1, y: -5 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
+          initial={{ opacity: 0, scale: 1, y: -5, pointerEvents: "auto" }}
+          animate={{ opacity: 1, scale: 1, y: 0, pointerEvents: "auto" }}
           exit={{ opacity: 0, scale: 1, y: -3, pointerEvents: "none" }}
           transition={{
             type: "spring",

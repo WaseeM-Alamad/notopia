@@ -431,6 +431,7 @@ export function AppProvider({ children, initialUser }) {
 
   const closeToolTip = useCallback(() => {
     setTooltipRef.current(new Map());
+    clearTimeout(tooltipTimeoutRef.current);
   }, []);
 
   const [initialLoading, setInitialLoading] = useState(true);
@@ -439,7 +440,7 @@ export function AppProvider({ children, initialUser }) {
     if (status !== "loading") {
       setTimeout(() => {
         setInitialLoading(false);
-      }, 500);
+      }, 200);
     }
   }, [status]);
 

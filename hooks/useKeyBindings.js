@@ -448,7 +448,7 @@ export function useKeyBindings({
           !event.altKey &&
           !event.shiftKey)
       ) {
-        setBindsOpenRef.current(true);
+        setBindsOpenRef.current((prev) => !prev);
       }
 
       if (event.key.toLowerCase() === "delete" || event.key === "#") {

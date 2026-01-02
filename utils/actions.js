@@ -1210,9 +1210,11 @@ export const batchUpdateAction = async (data) => {
 
 export const NoteTextUpdateAction = async (values, noteUUID, clientID) => {
   const session = await getServerSession(authOptions);
-  const userID = session?.user?.id;
   if (!session) {
     throw new Error("Something went wrong");
+  }
+  if (values.title.length > 999 || values.content.length > 19999) {
+    throw new Error("Title or note exceeded maximum length");
   }
   try {
     await connectDB();
