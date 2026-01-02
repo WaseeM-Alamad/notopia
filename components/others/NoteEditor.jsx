@@ -354,6 +354,15 @@ const NoteEditor = ({
     if (!max) return;
     const text = e.target.innerText;
     const t = text === "\n" ? "" : text;
+    // const charactersLeft = max - t.length;
+
+    // if (charactersLeft < 101) {
+    //   openSnackRef.current({
+    //     closeOnChange: false,
+    //     snackMessage: `${max - t.length} Characters left`,
+    //     showUndo: false,
+    //   });
+    // }
     if (t.length + 1 > max) {
       e.preventDefault();
     }
@@ -520,6 +529,16 @@ const NoteEditor = ({
       const t = text === "\n" ? "" : text;
       titleDebouncedSetUndo({ title: t, content: localNote?.content });
 
+      const charactersLeft = 999 - t.length;
+
+      if (charactersLeft < 101) {
+        openSnackRef.current({
+          closeOnChange: false,
+          snackMessage: `${999 - t.length} Characters left`,
+          showUndo: false,
+        });
+      }
+
       const container = e.currentTarget;
 
       handleLabelMenu(container, t);
@@ -546,6 +565,17 @@ const NoteEditor = ({
       const t = text === "\n" ? "" : text;
 
       contentDebouncedSetUndo({ title: localNote?.title, content: t });
+
+      const charactersLeft = 19999 - t.length;
+
+      if (charactersLeft === 0) {
+        openSnackRef.current({
+          closeOnChange: false,
+          snackMessage: `${19999 - t.length} Characters left`,
+          showUndo: false,
+        });
+      }
+
       setLocalNote((prev) => ({
         ...prev,
         content: t,

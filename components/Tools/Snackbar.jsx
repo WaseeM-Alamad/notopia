@@ -40,6 +40,19 @@ const Snackbar = ({
   }, [snackbarState.snackOpen]);
 
   useEffect(() => {
+    const closeOnChange = snackbarState.closeOnChange ?? true;
+    if (!closeOnChange) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => {
+        setSnackbarState((prev) => ({
+          ...prev,
+          snackOpen: false,
+        }));
+      }, 4000);
+    }
+  }, [snackbarState?.message]);
+
+  useEffect(() => {
     setIsMounted(true);
   }, []);
 
