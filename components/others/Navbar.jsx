@@ -470,7 +470,7 @@ const Navbar = () => {
   return (
     <>
       <nav
-        className={isScrolled ? "nav-shadow" : ""}
+        className={isScrolled && currentSection === "Home" ? "nav-shadow" : ""}
         style={{
           minWidth: threshold2 && "0",
         }}

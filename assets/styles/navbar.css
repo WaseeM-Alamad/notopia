@@ -11,11 +11,13 @@ nav {
   z-index: 100;
   min-width: min-content;
   border-bottom: 1px solid transparent;
-  transition: box-shadow 0.2s ease;
+  transition:
+    box-shadow 0.13s ease,
+    border 0.13s ease;
 }
 
 .dark-mode nav {
-  border-bottom: 1px solid var(--border);
+  /* border-bottom: 1px solid var(--border); */
 }
 
 .nav-shadow {
@@ -26,6 +28,7 @@ nav {
 
 .dark-mode .nav-shadow {
   box-shadow: none;
+  border-bottom: 1px solid var(--border);
 }
 
 .dark-mode .settings-icon {

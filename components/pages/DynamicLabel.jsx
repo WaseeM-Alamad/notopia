@@ -8,9 +8,12 @@ import React, {
   useState,
 } from "react";
 import Note from "../others/Note";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { getNoteFormattedDate } from "@/utils/noteDateFormatter";
 import ComposeNote from "../others/ComposeNote";
+import FolderIcon from "../icons/FolderIcon";
+import SectionHeader from "../others/SectionHeader";
+import SetLabelModal from "../others/SetLabelModal";
 
 const GAP_BETWEEN_SECTIONS = 88;
 
@@ -259,7 +262,7 @@ const DynamicLabel = ({
           : unpinnedHeight) +
         (pinnedItems.length > 0 || unpinnedItems.length > 0
           ? GAP_BETWEEN_SECTIONS + 2
-          : 32);
+          : 16);
 
       setSectionsHeight(sectionGap);
 
@@ -331,12 +334,20 @@ const DynamicLabel = ({
     getLastRef();
   }, [notes, order]);
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   return (
     <>
       <div
         ref={rootContainerRef}
         className={`starting-div ${addPadding ? "sidebar-expanded" : "sidebar-collapsed"}`}
       >
+        <SectionHeader
+          title={labelObj?.label}
+          iconClass="section-label-icon"
+          isLabel={true}
+          onClick={() => setIsModalOpen(true)}
+        />
         <div
           ref={containerRef}
           className="section-container"
@@ -437,6 +448,14 @@ const DynamicLabel = ({
         lastAddedNoteRef={lastAddedNoteRef}
         labelObj={labelObj}
       />
+      <AnimatePresence>
+        {isModalOpen && (
+          <SetLabelModal
+            setIsOpen={setIsModalOpen}
+            labelObj={labelObj}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 };

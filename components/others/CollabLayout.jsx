@@ -11,6 +11,7 @@ const CollabLayout = ({
   saveCollabFun,
   removeSelfRef,
   setIsOpen,
+  isOpenWithCollab,
 }) => {
   const { user } = useAppContext();
   const [collaborators, setCollaborators] = useState(note?.collaborators || []);
@@ -25,7 +26,10 @@ const CollabLayout = ({
   const handleSave = () => saveCollabFun(collabOpsMap, collaborators);
 
   return (
-    <div ref={collabRef} className="collab-box">
+    <div
+      ref={collabRef}
+      className={`collab-box ${isOpenWithCollab ? "open-with-collab" : ""}`}
+    >
       <div className="collab-container">
         <div className="collab-title">
           <Button onClick={handleCancel} className="clear-icon collab-close" />

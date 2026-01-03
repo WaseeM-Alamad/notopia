@@ -250,7 +250,7 @@ const FilteredNotes = memo(
             : unpinnedHeight) +
           (pinnedItems.length > 0 || unpinnedItems.length > 0
             ? GAP_BETWEEN_SECTIONS + 2
-            : 32);
+            : 16);
 
         setSectionsHeight(sectionGap);
 

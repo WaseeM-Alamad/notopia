@@ -1,6 +1,6 @@
 import React, { memo } from "react";
 
-const FolderIcon = ({ size = 30 }) => {
+const FolderIcon = () => {
   return (
     <svg
       width="24"

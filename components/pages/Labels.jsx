@@ -12,6 +12,7 @@ import Label from "../others/Label";
 import { v4 as uuid } from "uuid";
 import { motion } from "framer-motion";
 import { useSearch } from "@/context/SearchContext";
+import SectionHeader from "../others/SectionHeader";
 
 const Labels = memo(
   ({
@@ -217,6 +218,7 @@ const Labels = memo(
           ref={rootContainerRef}
           className={`starting-div ${addPadding ? "sidebar-expanded" : "sidebar-collapsed"}`}
         >
+          <SectionHeader title="Labels" iconClass="section-folders-icon" />
           <div ref={containerRef} className="section-container">
             {/* <NewLabel triggerReRender={triggerReRender} /> */}
             {[...labelsRef.current]
