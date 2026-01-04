@@ -250,11 +250,11 @@ const FilteredNotes = memo(
             : unpinnedHeight) +
           (pinnedItems.length > 0 || unpinnedItems.length > 0
             ? GAP_BETWEEN_SECTIONS + 2
-            : 16);
+            : 32);
 
-        setSectionsHeight(sectionGap);
+        setSectionsHeight(sectionGap - 16);
 
-        setPinnedHeight(pinnedHeight + GAP_BETWEEN_SECTIONS + 2);
+        setPinnedHeight(pinnedHeight + GAP_BETWEEN_SECTIONS + 2 - 16);
         container.style.height = `${archivedHeight}px`;
         setLayoutReady(true);
       });

@@ -96,7 +96,12 @@ const SetLabelModal = ({ showCloseBtn = false, setIsOpen, labelObj }) => {
           maxLength={50}
           placeholder="Enter label"
           className="form-input"
-          style={{ minHeight: "2.5rem" }}
+          style={{
+            minHeight: "2.5rem",
+            backgroundColor: "var(--btn-hover)",
+            border: "var(--border)",
+            color: "var(--text)",
+          }}
         />
         <div
           style={{

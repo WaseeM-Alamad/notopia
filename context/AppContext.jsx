@@ -434,10 +434,12 @@ export function AppProvider({ children, initialUser }) {
     clearTimeout(tooltipTimeoutRef.current);
   }, []);
 
-  const [initialLoading, setInitialLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(false);
 
   useEffect(() => {
-    if (status !== "loading") {
+    if (status === "loading" && !user) {
+      setInitialLoading(true);
+    } else {
       setTimeout(() => {
         setInitialLoading(false);
       }, 200);

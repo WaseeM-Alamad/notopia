@@ -23,13 +23,9 @@ const SectionHeader = ({
     };
   }, []);
 
-  useEffect(() => {
-    console.log(isScrolled);
-  }, [isScrolled]);
-
   return (
     <div
-      className={`section-header ${isScrolled ? "section-header-scrolled" : ""} ${isLabel ? "is-label-section" : ""}`}
+      className={`section-header ${isScrolled ? "nav-shadow" : ""} ${isLabel ? "is-label-section" : ""}`}
     >
       <div className={iconClass} />
       <div
@@ -55,7 +51,9 @@ const SectionHeader = ({
           height: "1px",
           marginLeft: "1rem",
           backgroundColor: "var(--border)",
+          transition: "opacity 0.13s ease",
         }}
+        className={isScrolled ? "section-header-divider-opacity" : ""}
       />
     </div>
   );

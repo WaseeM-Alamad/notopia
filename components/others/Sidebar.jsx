@@ -303,8 +303,7 @@ const Sidebar = memo(() => {
   if (
     currentHash === null ||
     !currentSection ||
-    (!session?.user && status === "authenticated") ||
-    status === "loading" ||
+    (!session?.user && status === "authenticated" && status === "loading") ||
     initialLoading
   ) {
     return;

@@ -243,7 +243,6 @@ const page = () => {
         (uuid) => uuid === noteUUID
       );
       if (note !== undefined) {
-        console.log("hi");
         setSelectedNote(note);
         setIsModalOpen(true);
         setModalStyle({

@@ -460,8 +460,7 @@ const Navbar = () => {
   if (
     !isClient ||
     !currentSection ||
-    (!session?.user && status === "authenticated") ||
-    status === "loading" ||
+    (!session?.user && status === "authenticated" && status === "loading") ||
     initialLoading
   ) {
     return;

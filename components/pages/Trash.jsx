@@ -6,6 +6,7 @@ import { useAppContext } from "@/context/AppContext";
 import handleServerCall from "@/utils/handleServerCall";
 import localDbReducer from "@/utils/localDbReducer";
 import { batchDeleteNotes } from "@/utils/actions";
+import SectionHeader from "../others/SectionHeader";
 
 const NoteWrapper = memo(
   ({
@@ -294,9 +295,10 @@ const Trash = memo(
           ref={rootContainerRef}
           className={`starting-div ${addPadding ? "sidebar-expanded" : "sidebar-collapsed"}`}
         >
-          <div className="trash-section-header">
+          {/* <div className="trash-section-header">
             Notes in Trash are deleted after 7 days.
-          </div>
+          </div> */}
+          <SectionHeader title="Trash" iconClass="section-trash-icon" />
           <div ref={containerRef} className="section-container">
             {order.map((uuid, index) => {
               const note = notes.get(uuid);

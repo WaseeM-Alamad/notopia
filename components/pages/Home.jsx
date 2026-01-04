@@ -283,7 +283,7 @@ const Home = memo(
           pinnedHeight + gapBetweenSections
         );
 
-        setPinnedHeight(pinnedHeight);
+        setPinnedHeight(pinnedHeight - 16);
         container.style.height = `${unpinnedHeight}px`;
         requestAnimationFrame(() => {
           setLayoutReady(true);
