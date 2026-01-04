@@ -158,8 +158,7 @@ const Search = ({
   const labelClick = (labelUUID) => {
     skipHashChangeRef.current = true;
     const label = labelsRef.current.get(labelUUID).label;
-    const encodedLabel =
-      "label" + doubleEncode("=") + tripleEncode(label.toLowerCase());
+    const encodedLabel = "label" + doubleEncode("=") + tripleEncode(label);
     window.location.hash = `search/${encodedLabel}`;
     setFilters((prev) => ({ ...prev, label: labelUUID }));
   };

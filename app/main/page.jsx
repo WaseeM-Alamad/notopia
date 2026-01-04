@@ -589,6 +589,7 @@ const page = () => {
           {dialogInfo && (
             <ActionModal
               setDialogInfo={setDialogInfo}
+              dialogInfo={dialogInfo}
               func={dialogInfo?.func || (() => {})}
               cancelFunc={dialogInfo?.cancelFunc || (() => {})}
               title={dialogInfo?.title || ""}

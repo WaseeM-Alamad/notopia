@@ -702,7 +702,7 @@ const Navbar = () => {
               onClick={toggleLayout}
               className="nav-btn"
               style={{
-                display: !showLayoutBtn && "none",
+                // display: !showLayoutBtn && "none",
               }}
             >
               {layout === "grid" ? <ListIcon /> : <GridIcon />}

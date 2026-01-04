@@ -451,6 +451,7 @@ const DynamicLabel = ({
       <AnimatePresence>
         {isModalOpen && (
           <SetLabelModal
+            isOpen={isModalOpen}
             setIsOpen={setIsModalOpen}
             labelObj={labelObj}
           />

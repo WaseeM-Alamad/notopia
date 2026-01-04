@@ -110,6 +110,7 @@ const Sidebar = memo(() => {
       });
 
       calculateVerticalLayout();
+      
     };
 
     handler();

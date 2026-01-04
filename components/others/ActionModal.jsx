@@ -5,6 +5,7 @@ import { useAppContext } from "@/context/AppContext";
 
 const ActionModal = ({
   setDialogInfo,
+  dialogInfo,
   func,
   cancelFunc = () => {},
   showCloseBtn = false,
@@ -13,13 +14,37 @@ const ActionModal = ({
   btnMsg,
   cancelBtnMsg = "Cancel",
 }) => {
-  const { closeToolTip, hideTooltip, showTooltip } = useAppContext();
+  const { closeToolTip, hideTooltip, showTooltip, floatingBtnRef } =
+    useAppContext();
   const [isMounted, setIsMounted] = useState(false);
   const containerRef = useRef(null);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  useEffect(() => {
+    const nav = document.querySelector("nav");
+    const floatingBtn = floatingBtnRef?.current;
+    const info = dialogInfo ?? "".trim();
+    if (info) {
+      const scrollbarWidth =
+        window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.overflow = "hidden";
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+      if (nav) nav.style.paddingRight = `${scrollbarWidth}px`;
+      if (floatingBtn) floatingBtn.style.paddingRight = `${scrollbarWidth}px`;
+    } else {
+      document.body.removeAttribute("style");
+      if (floatingBtn) floatingBtn.style.removeProperty("padding-right");
+      if (nav) nav.style.removeProperty("padding-right");
+    }
+    return () => {
+      document.body.removeAttribute("style");
+      if (floatingBtn) floatingBtn.style.removeProperty("padding-right");
+      if (nav) nav.style.removeProperty("padding-right");
+    };
+  }, [dialogInfo]);
 
   if (!isMounted) return;
 
@@ -76,7 +101,7 @@ const ActionModal = ({
         )}
         <div className="action-title">{title}</div>
         <div className="action-msg">{message}</div>
-        <div className="buttons-con">
+        <div className="action-btns-container">
           <button
             className="action-modal-bottom-btn action-cancel"
             onClick={() => {
@@ -87,7 +112,7 @@ const ActionModal = ({
             {cancelBtnMsg}
           </button>
           <button
-            className="action-modal-bottom-btn action-blue"
+            className="action-modal-bottom-btn"
             onClick={() => {
               func();
               setDialogInfo(null);

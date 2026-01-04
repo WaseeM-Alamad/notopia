@@ -25,6 +25,10 @@ function generateAvatar(username) {
 }
 
 export const authOptions = {
+  pages: {
+    signIn: "/auth/login",
+    error: "/auth/login",
+  },
   providers: [
     CredentialsProvider({
       name: "Credentials",

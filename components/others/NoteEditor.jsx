@@ -188,7 +188,7 @@ const NoteEditor = ({
   const handleLabelClick = (e, label) => {
     e.stopPropagation();
     const encodedLabel = encodeURIComponent(label);
-    window.location.hash = `label/${encodedLabel.toLowerCase()}`;
+    window.location.hash = `label/${encodedLabel}`;
   };
 
   const handlePinClick = async () => {

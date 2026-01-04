@@ -23,6 +23,8 @@ const SectionHeader = ({
     };
   }, []);
 
+  if (!title.trim()) return null;
+
   return (
     <div
       className={`section-header ${isScrolled ? "nav-shadow" : ""} ${isLabel ? "is-label-section" : ""}`}

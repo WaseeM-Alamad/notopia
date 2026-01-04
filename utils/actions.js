@@ -1945,10 +1945,18 @@ export const updateLabelAction = async (data) => {
     } else if (data.type === "title") {
       const user = await User.findById(userID);
 
+      if (!data.label.toLowerCase().trim()) {
+        return {
+          success: false,
+          message: "Label can't be empty.",
+          status: 409,
+        };
+      }
+
       const labelExists = user.labels.some(
         (labelData) =>
           labelData.label.toLowerCase().trim() ===
-          data.label.toLowerCase().trim()
+            data.label.toLowerCase().trim() && labelData.uuid !== data.uuid
       );
 
       if (labelExists) {

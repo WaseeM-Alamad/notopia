@@ -24,6 +24,7 @@ export function useBatchLoading({
     notesIndexMapRef,
     breakpoint,
     initialLoading,
+    skipLabelObjRefresh,
   } = useAppContext();
 
   const {
@@ -290,6 +291,10 @@ export function useBatchLoading({
   }, [filters]);
 
   useEffect(() => {
+    if (skipLabelObjRefresh.current) {
+      skipLabelObjRefresh.current = false;
+      return;
+    }
     if (isFirstRenderRef.current || !labelObj || !notesReady || !labelsReady)
       return;
     requestAnimationFrame(() => {

@@ -36,7 +36,7 @@ const CollabLayout = ({
           <span>Collaborators</span>
           <button
             onClick={handleSave}
-            className="action-blue action-modal-bottom-btn collab-top-save"
+            className="action-modal-bottom-btn collab-top-save"
           >
             Save
           </button>

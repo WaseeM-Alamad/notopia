@@ -565,7 +565,7 @@ const ComposeNote = ({
     e.stopPropagation();
     setIsOpen(false);
     const encodedLabel = encodeURIComponent(label);
-    window.location.hash = `label/${encodedLabel.toLowerCase()}`;
+    window.location.hash = `label/${encodedLabel}`;
   };
 
   const handleLabels = () => {

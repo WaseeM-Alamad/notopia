@@ -64,7 +64,11 @@ const Label = ({
 
   const checkExistence = (labelToCheck) => {
     for (const labelData of labelsRef.current.values()) {
-      if (labelToCheck.toLowerCase() === labelData.label.toLowerCase()) {
+      if (
+        labelToCheck.toLowerCase().trim() ===
+          labelData.label.toLowerCase().trim() &&
+        labelData.uuid !== labelData.uuid
+      ) {
         return true;
       }
     }
@@ -264,7 +268,7 @@ const Label = ({
 
   const handleLabelClick = () => {
     const encodedLabel = encodeURIComponent(labelData.label);
-    window.location.hash = `label/${encodedLabel.toLowerCase()}`;
+    window.location.hash = `label/${encodedLabel}`;
   };
 
   const handleOnChange = async (event) => {

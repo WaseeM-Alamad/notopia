@@ -1,23 +1,61 @@
 import React, { memo, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useAppContext } from "@/context/AppContext";
 
-const SetLabelModal = ({ showCloseBtn = false, setIsOpen, labelObj }) => {
-  const { closeToolTip, hideTooltip, showTooltip } = useAppContext();
+const SetLabelModal = ({
+  showCloseBtn = false,
+  isOpen,
+  setIsOpen,
+  labelObj,
+}) => {
+  const {
+    closeToolTip,
+    hideTooltip,
+    showTooltip,
+    skipLabelObjRefresh,
+    floatingBtnRef,
+  } = useAppContext();
   const [isMounted, setIsMounted] = useState(false);
   const [label, setLabel] = useState(labelObj?.label);
+  const [error, setError] = useState("");
   const { updateLabel, labelsRef } = useAppContext();
   const containerRef = useRef(null);
   const initialLabel = labelObj?.label;
+  const noChange = initialLabel.trim() === label.trim();
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
+  useEffect(() => {
+    const nav = document.querySelector("nav");
+    const floatingBtn = floatingBtnRef?.current;
+    if (isOpen) {
+      const scrollbarWidth =
+        window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.overflow = "hidden";
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+      if (nav) nav.style.paddingRight = `${scrollbarWidth}px`;
+      if (floatingBtn) floatingBtn.style.paddingRight = `${scrollbarWidth}px`;
+    } else {
+      document.body.removeAttribute("style");
+      if (floatingBtn) floatingBtn.style.removeProperty("padding-right");
+      if (nav) nav.style.removeProperty("padding-right");
+    }
+    return () => {
+      document.body.removeAttribute("style");
+      if (floatingBtn) floatingBtn.style.removeProperty("padding-right");
+      if (nav) nav.style.removeProperty("padding-right");
+    };
+  }, [isOpen]);
+
   const checkExistence = () => {
     for (const labelData of labelsRef.current.values()) {
-      if (label.toLowerCase() === labelData.label.toLowerCase()) {
+      if (
+        label.toLowerCase().trim() === labelData.label.toLowerCase().trim() &&
+        labelData.uuid !== labelObj.uuid
+      ) {
         return true;
       }
     }
@@ -25,8 +63,10 @@ const SetLabelModal = ({ showCloseBtn = false, setIsOpen, labelObj }) => {
   };
 
   const updateHash = () => {
+    skipLabelObjRefresh.current = true;
     const encodedLabel = encodeURIComponent(label.trim());
-    window.location.hash = `label/${encodedLabel.toLowerCase()}`;
+    window.location.hash = `label/${encodedLabel}`;
+    window.dispatchEvent(new Event("refreshPinnedLabels"));
   };
 
   if (!isMounted) return;
@@ -48,7 +88,6 @@ const SetLabelModal = ({ showCloseBtn = false, setIsOpen, labelObj }) => {
       onClick={(e) => {
         if (e.target === containerRef.current) {
           setIsOpen(false);
-          console.log("yes");
         }
       }}
     >
@@ -72,6 +111,10 @@ const SetLabelModal = ({ showCloseBtn = false, setIsOpen, labelObj }) => {
           damping: 40,
           mass: 1.05,
         }}
+        style={{
+          padding: "1.3rem 1.3rem",
+          maxWidth: "400px",
+        }}
       >
         {showCloseBtn && (
           <div
@@ -86,59 +129,127 @@ const SetLabelModal = ({ showCloseBtn = false, setIsOpen, labelObj }) => {
         )}
         <div
           className="action-title"
-          style={{ marginBottom: "1.2rem", userSelect: "none" }}
-        >
-          Update label
-        </div>
-        <input
-          value={label}
-          onChange={(e) => setLabel(e.target.value)}
-          maxLength={50}
-          placeholder="Enter label"
-          className="form-input"
           style={{
-            minHeight: "2.5rem",
-            backgroundColor: "var(--btn-hover)",
-            border: "var(--border)",
-            color: "var(--text)",
-          }}
-        />
-        <div
-          style={{
-            fontSize: ".8rem",
-            color: "var(--text2)",
-            textAlign: "end",
-            marginRight: "0.4rem",
-            marginBottom: ".5rem",
+            marginBottom: ".7rem",
             userSelect: "none",
+            textAlign: "left",
           }}
         >
-          {50 - label.length} characters left
+          Edit label
         </div>
-        <div className="buttons-con">
-          <button
-            className="action-modal-bottom-btn action-cancel"
-            onClick={() => setIsOpen(false)}
-          >
-            Cancel
-          </button>
-          <button
-            className="action-modal-bottom-btn action-blue"
-            disabled={label.length === 0}
-            onClick={() => {
-              const noChange = initialLabel.trim() === label.trim();
-              const alreadyExists = checkExistence();
+        <div
+          className="action-msg"
+          style={{
+            textAlign: "left",
+            marginBottom: "1.5rem",
+            marginTop: ".9rem",
+          }}
+        >
+          Update your unique label. Changes will be applied to all notes with
+          this label
+        </div>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            const isEmptyLabel = !label.trim();
+            const alreadyExists = checkExistence();
 
-              if (!noChange && !alreadyExists) {
-                updateHash();
-                updateLabel(labelObj.uuid, label.trim());
-              }
+            if (!noChange && !alreadyExists && !isEmptyLabel) {
+              updateLabel(labelObj.uuid, label.trim());
+              updateHash();
               setIsOpen(false);
-            }}
+            }
+            if (alreadyExists) {
+              setError("Label already exists");
+            } else if (isEmptyLabel) {
+              setError("Label can't be empty");
+            }
+          }}
+        >
+          <div style={{ position: "relative", marginBottom: ".5rem" }}>
+            <input
+              value={label}
+              onChange={(e) => {
+                setLabel(e.target.value);
+                setError("");
+              }}
+              maxLength={50}
+              placeholder="Enter label"
+              className="form-input"
+              style={{
+                minHeight: "2.5rem",
+                backgroundColor: "var(--input-bg)",
+                border: "1px solid var(--border)",
+                marginBottom: "0",
+                color: "var(--text)",
+                paddingRight: "2.7rem",
+              }}
+            />
+
+            <div
+              style={{
+                position: "absolute",
+                top: "50%",
+                right: ".9rem",
+                transform: "translateY(-50%)",
+                fontSize: ".8rem",
+                color: "var(--text2)",
+                marginRight: "0.4rem",
+                marginLeft: ".4rem",
+                userSelect: "none",
+              }}
+            >
+              {50 - label.length}
+            </div>
+          </div>
+          <AnimatePresence>
+            {error.trim() && (
+              <motion.div
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{
+                  opacity: { duration: 0.16, ease: "easeInOut", type: "tween" },
+                  default: {
+                    type: "spring",
+                    stiffness: 800,
+                    damping: 40,
+                    mass: 1.05,
+                  },
+                }}
+                style={{
+                  right: ".9rem",
+                  fontSize: ".8rem",
+                  color: "var(--error)",
+                  marginRight: "0.4rem",
+                  marginLeft: ".4rem",
+                  userSelect: "none",
+                  width: "fit-content",
+                }}
+              >
+                {error}
+              </motion.div>
+            )}
+          </AnimatePresence>
+          <div
+            className="action-btns-container"
+            style={{ textAlign: "right", marginTop: "1.1rem" }}
           >
-            Update
-          </button>
-        </div>
+            <button
+              type="button"
+              className="action-modal-bottom-btn action-cancel"
+              onClick={() => setIsOpen(false)}
+            >
+              Cancel
+            </button>
+            <button
+              className="action-modal-bottom-btn"
+              disabled={label.length === 0 || noChange || error.trim()}
+              type="submit"
+            >
+              Update
+            </button>
+          </div>
+        </form>
       </motion.div>
     </motion.div>,
     document.getElementById("modal-portal")

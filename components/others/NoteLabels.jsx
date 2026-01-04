@@ -7,7 +7,7 @@ const NoteLabels = ({ note, modalRemoveLabel = null, noteActions }) => {
   const handleLabelClick = (e, label) => {
     e.stopPropagation();
     const encodedLabel = encodeURIComponent(label);
-    window.location.hash = `label/${encodedLabel.toLowerCase()}`;
+    window.location.hash = `label/${encodedLabel}`;
   };
 
   const removeLabel = async (labelUUID) => {
