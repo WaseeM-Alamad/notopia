@@ -63,11 +63,11 @@ const Label = ({
   const isFirstRender = useRef(true);
 
   const checkExistence = (labelToCheck) => {
-    for (const labelData of labelsRef.current.values()) {
+    for (const mapLabel of labelsRef.current.values()) {
       if (
         labelToCheck.toLowerCase().trim() ===
-          labelData.label.toLowerCase().trim() &&
-        labelData.uuid !== labelData.uuid
+          mapLabel.label.toLowerCase().trim() &&
+        mapLabel.uuid !== labelData.uuid
       ) {
         return true;
       }

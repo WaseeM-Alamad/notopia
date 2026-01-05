@@ -21,6 +21,7 @@
   --dim: rgba(0, 0, 0, 0.5);
   --shadow: rgba(143, 143, 143, 0.75);
   --btn-hover: rgba(0, 0, 0, 0.04);
+  --icon-btn-hover: rgba(0, 0, 0, 0.06);
 }
 
 html.dark-mode {
@@ -40,6 +41,7 @@ html.dark-mode {
   --dim: rgba(14, 17, 20, 0.6);
   --shadow: rgba(0, 0, 0, 0.75);
   --btn-hover: rgba(255, 255, 255, 0.03);
+  --icon-btn-hover: rgba(255, 255, 255, 0.06);
 }
 
 html {
@@ -1976,6 +1978,7 @@ svg {
 .right-tooltip {
   position: fixed;
   z-index: 1000000;
+  max-width: 11rem;
   opacity: 1;
   pointer-events: none;
   background-color: rgba(24, 27, 36, 0.9);
@@ -1986,8 +1989,6 @@ svg {
   line-height: 1.5rem;
   font-weight: 350;
   text-align: center;
-  width: fit-content;
-  text-overflow: ellipsis;
   white-space: nowrap;
   border-radius: 0.7rem;
   margin-left: 0.4rem;
@@ -2099,11 +2100,7 @@ svg {
 }
 
 .btn:hover {
-  background-color: rgba(85, 88, 92, 0.127);
-}
-
-.dark-mode .btn:hover {
-  background-color: rgba(154, 160, 166, 0.127);
+  background-color: var(--icon-btn-hover);
 }
 
 .btn-click:active {
@@ -3368,7 +3365,7 @@ img {
 .trash-section-header {
   display: flex;
   justify-content: center;
-  padding-top: 1.5rem;
+  padding: 1rem 0;
   user-select: none;
   font-style: italic;
 }
@@ -4855,6 +4852,7 @@ aside {
   width: 48px;
   height: 48px;
   margin-left: 14px;
+  padding-right: 10px;
   cursor: pointer;
   transition:
     all 0.15s cubic-bezier(0.4, 0, 0.2, 1),
@@ -6128,7 +6126,10 @@ aside svg {
 }
 
 .section-header-title-wrapper {
-  flex-shrink: 0;
+  /* flex-shrink: 0; */
+  min-width: 0;
+
+  /* width: fit-content; */
   display: flex;
   align-items: center;
   border-bottom: 0.15rem solid transparent;
@@ -6137,4 +6138,22 @@ aside svg {
 
 .is-label-section .section-header-title-wrapper:hover {
   border-bottom: 0.15rem solid var(--text);
+}
+
+.section-header-divider-wrapper {
+  container-type: inline-size;
+  flex: 1 1 auto;
+}
+
+.section-header-divider {
+  height: 1px;
+  margin-left: 1rem;
+  background-color: var(--border);
+  transition: opacity 0.13s ease;
+}
+
+@container (max-width: 420px) {
+  .section-header-divider {
+    opacity: 0 !important;
+  }
 }

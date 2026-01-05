@@ -87,6 +87,7 @@ nav {
   width: 2.5rem;
   height: 2.5rem;
   cursor: pointer;
+  border: 1px solid var(--border);
   border-radius: 50%;
 }
 

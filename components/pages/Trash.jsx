@@ -295,10 +295,10 @@ const Trash = memo(
           ref={rootContainerRef}
           className={`starting-div ${addPadding ? "sidebar-expanded" : "sidebar-collapsed"}`}
         >
-          {/* <div className="trash-section-header">
-            Notes in Trash are deleted after 7 days.
-          </div> */}
           <SectionHeader title="Trash" iconClass="section-trash-icon" />
+          <div className="trash-section-header">
+            Notes in Trash are deleted after 7 days.
+          </div>
           <div ref={containerRef} className="section-container">
             {order.map((uuid, index) => {
               const note = notes.get(uuid);

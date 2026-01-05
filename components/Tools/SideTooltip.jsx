@@ -39,7 +39,16 @@ const SideTooltip = ({ text, anchor, Xi = "16px", Xf = "19px" }) => {
         }}
         className="right-tooltip"
       >
-        {text}
+        <div
+          style={{
+            minWidth: 0,
+            overflow: "hidden",
+            whiteSpace: "nowrap",
+            textOverflow: "ellipsis",
+          }}
+        >
+          {text}
+        </div>
       </motion.div>
     </Popper>
   );

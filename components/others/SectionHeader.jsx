@@ -37,26 +37,23 @@ const SectionHeader = ({
       >
         <div
           style={{
+            whiteSpace: "nowrap",
+            textOverflow: "ellipsis",
+            overflow: "hidden",
             marginLeft: ".4rem",
             fontWeight: "600",
             fontSize: "1.3rem",
-            flexShrink: "0",
           }}
         >
-          {title + ""}
+          {title}
         </div>
         {isLabel && <div className="section-header-edit-icon" />}
       </div>
-      <div
-        style={{
-          width: "100%",
-          height: "1px",
-          marginLeft: "1rem",
-          backgroundColor: "var(--border)",
-          transition: "opacity 0.13s ease",
-        }}
-        className={isScrolled ? "section-header-divider-opacity" : ""}
-      />
+      <div className="section-header-divider-wrapper">
+        <div
+          className={`section-header-divider ${isScrolled ? "section-header-divider-opacity" : ""}`}
+        />
+      </div>
     </div>
   );
 };
