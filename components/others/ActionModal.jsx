@@ -14,8 +14,13 @@ const ActionModal = ({
   btnMsg,
   cancelBtnMsg = "Cancel",
 }) => {
-  const { closeToolTip, hideTooltip, showTooltip, floatingBtnRef } =
-    useAppContext();
+  const {
+    closeToolTip,
+    hideTooltip,
+    showTooltip,
+    floatingBtnRef,
+    isActionModalOpenRef,
+  } = useAppContext();
   const [isMounted, setIsMounted] = useState(false);
   const containerRef = useRef(null);
 
@@ -45,6 +50,22 @@ const ActionModal = ({
       if (nav) nav.style.removeProperty("padding-right");
     };
   }, [dialogInfo]);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === "Escape") {
+        setDialogInfo(null);
+      }
+    };
+
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, []);
+
+  useEffect(() => {
+    isActionModalOpenRef.current = true;
+    return () => (isActionModalOpenRef.current = false);
+  }, []);
 
   if (!isMounted) return;
 

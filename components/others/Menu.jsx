@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import { v4 as generateUUID } from "uuid";
 import ManageLabelsMenu from "./ManageLabelsMenu";
+import { useAppContext } from "@/context/AppContext";
 
 const Menu = ({
   isOpen,
@@ -14,6 +15,7 @@ const Menu = ({
   className = "",
   isSelectMenu = false,
 }) => {
+  const { isContextMenuOpenRef } = useAppContext();
   const [isClient, setIsClient] = useState();
   const navTitle = anchorEl?.navTitle ?? null;
 
@@ -21,6 +23,11 @@ const Menu = ({
 
   useEffect(() => {
     setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    isContextMenuOpenRef.current = true;
+    return () => (isContextMenuOpenRef.current = false);
   }, []);
 
   useEffect(() => {
@@ -116,7 +123,7 @@ const Menu = ({
             style={{
               transformOrigin: transformOrigin,
               width: "fit-content",
-              maxWidth: navTitle?.trim() ? '9.1806875rem' : "14.0625rem",
+              maxWidth: navTitle?.trim() ? "9.1806875rem" : "14.0625rem",
               maxHeight: "26.96125rem",
               position: "relative",
               paddingTop: navTitle?.trim() && "0",

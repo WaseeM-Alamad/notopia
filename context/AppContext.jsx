@@ -50,6 +50,8 @@ export function AppProvider({ children, initialUser }) {
   const notesIndexMapRef = useRef(null);
   const floatingBtnRef = useRef(null);
   const skipLabelObjRefresh = useRef(null);
+  const isActionModalOpenRef = useRef(null);
+  const isContextMenuOpenRef = useRef(null);
 
   const fadeNote =
     currentSection !== "DynamicLabel" && currentSection !== "Search";
@@ -501,6 +503,8 @@ export function AppProvider({ children, initialUser }) {
         floatingBtnRef,
         breakpoint,
         skipLabelObjRefresh,
+        isActionModalOpenRef,
+        isContextMenuOpenRef,
         clientID: clientID.current,
       }}
     >

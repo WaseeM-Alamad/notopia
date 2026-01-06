@@ -121,16 +121,19 @@ export function useMouseSelection({
         const pageX = e.pageX;
         const pageY = e.pageY;
         const start = dragStartRef.current;
+        const box = selectionBoxRef.current;
 
         // Minimum distance threshold before starting selection
-        if (Math.abs(pageX - start.x) < 15 && Math.abs(pageY - start.y) < 15) {
+        if (Math.abs(pageX - start.x) < 10 && Math.abs(pageY - start.y) < 10) {
+          if (box) {
+            box.style.removeProperty("display");
+          }
           return;
         }
 
         isDraggingRef.current = true;
         document.body.style.userSelect = "none";
 
-        const box = selectionBoxRef.current;
         if (!box) return;
 
         box.style.display = "block";

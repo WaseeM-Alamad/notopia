@@ -447,7 +447,7 @@ const Label = ({
         }}
       >
         <div
-          className={`label label-${labelData.color} ${
+          className={`label ${labelData.color} ${
             selected
               ? "element-selected"
               : labelData.color === "Default"

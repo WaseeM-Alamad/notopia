@@ -42,7 +42,8 @@ const ColorSelectMenu = ({
   setIsOpen,
   anchorEl,
 }) => {
-  const { showTooltip, hideTooltip, closeToolTip } = useAppContext();
+  const { showTooltip, hideTooltip, closeToolTip, isContextMenuOpenRef } =
+    useAppContext();
   const [hoveredItem, setHoveredItem] = useState(false);
   const menuRef = useRef(null);
 
@@ -81,6 +82,11 @@ const ColorSelectMenu = ({
       document.removeEventListener("keydown", handleKeyDown);
       document.addEventListener("contextmenu", closeMenu);
     };
+  }, []);
+
+  useEffect(() => {
+    isContextMenuOpenRef.current = true;
+    return () => (isContextMenuOpenRef.current = false);
   }, []);
 
   return (
@@ -151,7 +157,7 @@ const ColorSelectMenu = ({
                 key={index}
                 className={`${colorClass} not-draggable menu-color-btn ${
                   index === 0 && "default-color-icon"
-                } ${isLabel ? "label-" + color : color} `}
+                } ${color} `}
               >
                 <AnimatePresence>
                   {color === selectedColor && (

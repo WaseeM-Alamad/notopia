@@ -411,6 +411,7 @@ svg {
 
 .note-modal-wrapper {
   display: none;
+  border: 1px solid var(--border);
   flex-direction: column;
   position: fixed;
   overflow: hidden;
@@ -1268,16 +1269,19 @@ svg {
   transition: all 0.218s ease-in;
 }
 
+.note-wrapper {
+  transition: all 0.3s ease;
+}
+
 .note-wrapper:hover {
-  -webkit-box-shadow: 2px 3px 4px 0px rgba(0, 0, 0, 0.1);
-  -moz-box-shadow: 2px 3px 4px 0px rgba(0, 0, 0, 0.1);
-  box-shadow: 2px 3px 4px 0px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.07),
+    0 4px 12px rgba(0, 0, 0, 0.04);
 }
 
 .dark-mode .note-wrapper:hover {
-  -webkit-box-shadow: 2px 3px 4px 0px rgba(0, 0, 0, 0.5);
-  -moz-box-shadow: 2px 3px 4px 0px rgba(0, 0, 0, 0.5);
-  box-shadow: 2px 3px 4px 0px rgba(0, 0, 0, 0.5);
+  box-shadow: none;
 }
 
 .date {
@@ -1363,232 +1367,136 @@ svg {
   fill: #080b0f;
 }
 
-.label-Default {
-  background-color: rgba(255, 255, 255, 1);
-}
-
-.dark-mode .label-Default {
-  background-color: #080b0f;
-}
-
 .Coral {
-  background-color: rgba(247, 155, 146, 1);
-  border-color: rgba(247, 155, 146, 1);
-  fill: rgba(247, 155, 146, 1);
+  background-color: rgba(255, 171, 161, 1);
+  border-color: rgba(255, 171, 161, 1);
+  fill: rgba(255, 171, 161, 1);
 }
 
 .dark-mode .Coral {
-  background-color: rgba(116, 31, 41, 1);
-  border-color: rgba(116, 31, 41, 1);
-  fill: rgba(116, 31, 41, 1);
-}
-
-.label-Coral {
-  background-color: rgba(255, 171, 161, 1);
-}
-
-.dark-mode .label-Coral {
   background-color: rgba(128, 34, 45, 1);
+  border-color: rgba(128, 34, 45, 1);
+  fill: rgba(128, 34, 45, 1);
 }
 
 .Peach {
-  background-color: rgba(240, 146, 101, 1);
-  border-color: rgba(240, 146, 101, 1);
-  fill: rgba(240, 146, 101, 1);
+  background-color: rgba(255, 161, 111, 1);
+  border-color: rgba(255, 161, 111, 1);
+  fill: rgba(255, 161, 111, 1);
 }
 
 .dark-mode .Peach {
-  background-color: rgba(116, 42, 26, 1);
-  border-color: rgba(116, 42, 26, 1);
-  fill: rgba(116, 42, 26, 1);
-}
-
-.label-Peach {
-  background-color: rgba(255, 161, 111, 1);
-}
-
-.dark-mode .label-Peach {
   background-color: rgba(128, 46, 29, 1);
+  border-color: rgba(128, 46, 29, 1);
+  fill: rgba(128, 46, 29, 1);
 }
 
 .Sand {
-  background-color: rgba(252, 243, 162, 1);
-  border-color: rgba(252, 243, 162, 1);
-  fill: rgba(252, 243, 162, 1);
+  background-color: rgba(255, 255, 178, 1);
+  border-color: rgba(255, 255, 178, 1);
+  fill: rgba(255, 255, 178, 1);
 }
 
 .dark-mode .Sand {
   background-color: rgba(102, 81, 20, 1);
   border-color: rgba(102, 81, 20, 1);
-  fill: rgba(102, 81, 20, 1);
-}
-
-.label-Sand {
-  background-color: rgba(255, 255, 178, 1);
-}
-
-.dark-mode .label-Sand {
-  background-color: rgba(112, 89, 22, 1);
+  fill: rgba(112, 89, 22, 1);
 }
 
 .Mint {
-  background-color: rgba(208, 245, 181, 1);
-  border-color: rgba(208, 245, 181, 1);
-  fill: rgba(208, 245, 181, 1);
+  background-color: rgba(229, 255, 199, 1);
+  border-color: rgba(229, 255, 199, 1);
+  fill: rgba(229, 255, 199, 1);
 }
 
 .dark-mode .Mint {
-  background-color: rgba(58, 93, 40, 1);
-  border-color: rgba(58, 93, 40, 1);
-  fill: rgba(58, 93, 40, 1);
-}
-
-.label-Mint {
-  background-color: rgba(229, 255, 199, 1);
-}
-
-.dark-mode .label-Mint {
   background-color: rgba(64, 102, 44, 1);
+  border-color: rgba(64, 102, 44, 1);
+  fill: rgba(64, 102, 44, 1);
 }
 
 .Seafoam {
-  background-color: rgba(162, 224, 209, 1);
-  border-color: rgba(162, 224, 209, 1);
-  fill: rgba(162, 224, 209, 1);
+  background-color: rgba(178, 246, 230, 1);
+  border-color: rgba(178, 246, 230, 1);
+  fill: rgba(178, 246, 230, 1);
 }
 
 .dark-mode .Seafoam {
-  background-color: rgba(42, 92, 83, 1);
-  border-color: rgba(42, 92, 83, 1);
-  fill: rgba(42, 92, 83, 1);
-}
-
-.label-Seafoam {
-  background-color: rgba(178, 246, 230, 1);
-}
-
-.dark-mode .label-Seafoam {
   background-color: rgba(46, 101, 91, 1);
+  border-color: rgba(46, 101, 91, 1);
+  fill: rgba(46, 101, 91, 1);
 }
 
 .Fog {
-  background-color: rgba(185, 217, 235, 1);
-  border-color: rgba(185, 217, 235, 1);
-  fill: rgba(185, 217, 235, 1);
+  background-color: rgba(204, 239, 255, 1);
+  border-color: rgba(204, 239, 255, 1);
+  fill: rgba(204, 239, 255, 1);
 }
 
 .dark-mode .Fog {
-  background-color: rgba(44, 79, 112, 1);
-  border-color: rgba(44, 79, 112, 1);
-  fill: rgba(44, 79, 112, 1);
-}
-
-.label-Fog {
-  background-color: rgba(204, 239, 255, 1);
-}
-
-.dark-mode .label-Fog {
   background-color: rgba(48, 87, 123, 1);
+  border-color: rgba(48, 87, 123, 1);
+  fill: rgba(48, 87, 123, 1);
 }
 
 .Storm {
-  background-color: rgba(151, 196, 219, 1);
-  border-color: rgba(151, 196, 219, 1);
-  fill: rgba(151, 196, 219, 1);
+  background-color: rgba(166, 216, 241, 1);
+  border-color: rgba(166, 216, 241, 1);
+  fill: rgba(166, 216, 241, 1);
 }
 
 .dark-mode .Storm {
-  background-color: rgba(43, 74, 97, 1);
-  border-color: rgba(43, 74, 97, 1);
-  fill: rgba(43, 74, 97, 1);
-}
-
-.label-Storm {
-  background-color: rgba(166, 216, 241, 1);
-}
-
-.dark-mode .label-Storm {
   background-color: rgba(47, 81, 107, 1);
+  border-color: rgba(47, 81, 107, 1);
+  fill: rgba(47, 81, 107, 1);
 }
 
 .Lavender {
-  background-color: rgba(205, 169, 219, 1);
-  border-color: rgba(205, 169, 219, 1);
-  fill: rgba(205, 169, 219, 1);
+  background-color: rgba(226, 186, 241, 1);
+  border-color: rgba(226, 186, 241, 1);
+  fill: rgba(226, 186, 241, 1);
 }
 
 .dark-mode .Lavender {
-  background-color: rgba(78, 30, 76, 1);
-  border-color: rgba(78, 30, 76, 1);
-  fill: rgba(78, 30, 76, 1);
-}
-
-.label-Lavender {
-  background-color: rgba(226, 186, 241, 1);
-}
-
-.dark-mode .label-Lavender {
   background-color: rgba(86, 33, 84, 1);
+  border-color: rgba(86, 33, 84, 1);
+  fill: rgba(86, 33, 84, 1);
 }
 
 .Blossom {
-  background-color: rgba(255, 206, 194, 1);
-  border-color: rgba(255, 206, 194, 1);
-  fill: rgba(255, 206, 194, 1);
+  background-color: rgba(255, 227, 213, 1);
+  border-color: rgba(255, 227, 213, 1);
+  fill: rgba(255, 227, 213, 1);
 }
 
 .dark-mode .Blossom {
-  background-color: rgba(140, 58, 57, 1);
-  border-color: rgba(140, 58, 57, 1);
-  fill: rgba(140, 58, 57, 1);
-}
-
-.label-Blossom {
-  background-color: rgba(255, 227, 213, 1);
-}
-
-.dark-mode .label-Blossom {
   background-color: rgba(154, 64, 63, 1);
+  border-color: rgba(154, 64, 63, 1);
+  fill: rgba(154, 64, 63, 1);
 }
 
 .Clay {
-  background-color: rgba(230, 216, 184, 1);
-  border-color: rgba(230, 216, 184, 1);
-  fill: rgba(230, 216, 184, 1);
+  background-color: rgba(253, 238, 202, 1);
+  border-color: rgba(253, 238, 202, 1);
+  fill: rgba(253, 238, 202, 1);
 }
 
 .dark-mode .Clay {
-  background-color: rgba(108, 78, 26, 1);
-  border-color: rgba(108, 78, 26, 1);
-  fill: rgba(108, 78, 26, 1);
-}
-
-.label-Clay {
-  background-color: rgba(253, 238, 202, 1);
-}
-
-.dark-mode .label-Clay {
   background-color: rgba(119, 86, 29, 1);
+  border-color: rgba(119, 86, 29, 1);
+  fill: rgba(119, 86, 29, 1);
 }
 
 .Wisteria {
-  background-color: rgba(223, 223, 240, 1);
-  border-color: rgba(223, 223, 240, 1);
-  fill: rgba(223, 223, 240, 1);
+  background-color: rgba(245, 245, 255, 1);
+  border-color: rgba(245, 245, 255, 1);
+  fill: rgba(245, 245, 255, 1);
 }
 
 .dark-mode .Wisteria {
-  background-color: rgba(58, 63, 100, 1);
-  border-color: rgba(58, 63, 100, 1);
-  fill: rgba(58, 63, 100, 1);
-}
-
-.label-Wisteria {
-  background-color: rgba(245, 245, 255, 1);
-}
-
-.dark-mode .label-Wisteria {
   background-color: rgba(64, 69, 110, 1);
+  border-color: rgba(64, 69, 110, 1);
+  fill: rgba(64, 69, 110, 1);
 }
 
 .menu-bg-DefaultBG {
@@ -3057,7 +2965,8 @@ img {
   transition:
     background-color 0.3s ease-in-out,
     border-color 0.3s ease-in-out,
-    box-shadow 0.2s ease;
+    box-shadow 0.3s ease,
+    all 0.3s ease;
 }
 
 .dark-mode .label {
@@ -3065,15 +2974,14 @@ img {
 }
 
 .label:hover {
-  -webkit-box-shadow: 2px 3px 4px 0px rgba(0, 0, 0, 0.1);
-  -moz-box-shadow: 2px 3px 4px 0px rgba(0, 0, 0, 0.1);
-  box-shadow: 2px 3px 4px 0px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.07),
+    0 4px 12px rgba(0, 0, 0, 0.04);
 }
 
 .dark-mode .label:hover {
-  -webkit-box-shadow: 2px 3px 4px 0px rgba(0, 0, 0, 0.5);
-  -moz-box-shadow: 2px 3px 4px 0px rgba(0, 0, 0, 0.5);
-  box-shadow: 2px 3px 4px 0px rgba(0, 0, 0, 0.5);
+  box-shadow: none;
 }
 
 .label-more-icon {

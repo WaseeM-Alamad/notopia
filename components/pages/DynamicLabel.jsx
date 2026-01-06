@@ -109,6 +109,7 @@ const DynamicLabel = ({
   const [sectionsHeight, setSectionsHeight] = useState(null);
   const [layoutReady, setLayoutReady] = useState(false);
   const [addPadding, setAddPadding] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const resizeTimeoutRef = useRef(null);
   const layoutFrameRef = useRef(null);
   const lastAddedNoteRef = useRef(null);
@@ -334,7 +335,9 @@ const DynamicLabel = ({
     getLastRef();
   }, [notes, order]);
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  useEffect(() => {
+    setIsModalOpen(false);
+  }, [labelObj?.uuid]);
 
   return (
     <>

@@ -39,6 +39,8 @@ export function useKeyBindings({
     labelObjRef,
     setBindsOpenRef,
     openSnackRef,
+    isActionModalOpenRef,
+    isContextMenuOpenRef,
   } = useAppContext();
   const userID = user?.id;
   const { filters, searchRef } = useSearch();
@@ -81,6 +83,9 @@ export function useKeyBindings({
   useEffect(() => {
     const handleKeyDown = async (event) => {
       if (event.key === "Escape") {
+        if (isActionModalOpenRef.current || isContextMenuOpenRef.current) {
+          return;
+        }
         setIsModalOpen(false);
         if (selectedNotesRef.current.size > 0) {
           setSelectedNotesIDs([]);
