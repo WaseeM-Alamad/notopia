@@ -277,9 +277,9 @@ const Trash = memo(
         if (trashNotes) {
           setDialogInfoRef.current({
             func: handleEmptyTrash,
-            title: "Empty trash",
+            title: "Empty Trash",
             message: "All notes in Trash will be permanently deleted.",
-            btnMsg: "Empty trash",
+            btnMsg: "Empty Trash",
           });
         }
       };

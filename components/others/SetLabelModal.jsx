@@ -15,6 +15,7 @@ const SetLabelModal = ({
     showTooltip,
     skipLabelObjRefresh,
     floatingBtnRef,
+    isActionModalOpenRef,
   } = useAppContext();
   const [isMounted, setIsMounted] = useState(false);
   const [label, setLabel] = useState(labelObj?.label);
@@ -68,6 +69,22 @@ const SetLabelModal = ({
     window.location.hash = `label/${encodedLabel}`;
     window.dispatchEvent(new Event("refreshPinnedLabels"));
   };
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === "Escape") {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, []);
+
+  useEffect(() => {
+    isActionModalOpenRef.current = true;
+    return () => (isActionModalOpenRef.current = false);
+  }, []);
 
   if (!isMounted) return;
 

@@ -235,7 +235,7 @@ const Sidebar = memo(() => {
     } else if (section === "labels") {
       setActionTitle("New label");
     } else if (section === "trash") {
-      setActionTitle("Empty trash");
+      setActionTitle("Empty Trash");
     } else {
       setActionTitle("New note");
     }

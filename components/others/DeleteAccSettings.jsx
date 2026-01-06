@@ -11,7 +11,7 @@ const DeleteAccSettings = ({ rightHeader, selected }) => {
           <div className="delete-acc-info">
             <div
               style={{
-                color: "rgb(127 29 29)",
+                color: "var(--warning-text2)",
                 marginBottom: ".8rem",
                 fontWeight: "500",
               }}
@@ -20,7 +20,7 @@ const DeleteAccSettings = ({ rightHeader, selected }) => {
             </div>
             <div
               style={{
-                color: "rgb(185, 28, 28)",
+                color: "var(--warning-text)",
                 marginBottom: ".8rem",
                 fontSize: "0.875rem",
               }}
@@ -32,7 +32,7 @@ const DeleteAccSettings = ({ rightHeader, selected }) => {
 
             <ul
               style={{
-                color: "rgb(185, 28, 28)",
+                color: "var(--warning-text)",
                 marginBottom: "1.3rem",
                 fontSize: "0.875rem",
                 listStyle: "none",

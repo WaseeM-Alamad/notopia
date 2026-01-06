@@ -53,7 +53,7 @@ const ColorDrawer = ({
   };
 
   useEffect(() => {
-    isContextMenuOpenRef.current = true;
+    !isOpen && (isContextMenuOpenRef.current = true);
     return () => (isContextMenuOpenRef.current = false);
   }, []);
 
