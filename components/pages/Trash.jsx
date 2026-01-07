@@ -296,7 +296,7 @@ const Trash = memo(
           className={`starting-div ${addPadding ? "sidebar-expanded" : "sidebar-collapsed"}`}
         >
           <SectionHeader title="Trash" iconClass="section-trash-icon" />
-          <div className="trash-section-header">
+          <div id="trash-header" className="trash-section-header">
             Notes in Trash are deleted after 7 days.
           </div>
           <div ref={containerRef} className="section-container">

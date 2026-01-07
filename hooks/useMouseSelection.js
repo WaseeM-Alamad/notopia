@@ -177,11 +177,13 @@ export function useMouseSelection({
       const menu = document.getElementById("menu");
       const modal = document.getElementById("modal-portal");
       const tooltip = document.querySelector("[role='tooltip']");
+      const trashHeader = document.querySelector("#trash-header");
 
       const skip =
         (parent?.contains(target) &&
           target !== parent &&
-          target !== container) ||
+          target !== container &&
+          target !== trashHeader) ||
         nav?.contains(target) ||
         aside?.contains(target) ||
         menu?.contains(target) ||

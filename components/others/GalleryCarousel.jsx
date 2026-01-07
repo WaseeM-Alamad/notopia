@@ -6,9 +6,10 @@ import Button from "../Tools/Button";
 import { motion } from "framer-motion";
 
 const GalleryCarousel = ({
+  isNote = false,
   images,
   setIsOpen,
-  startIndex,
+  startIndex = 0,
   handleImageDeletion,
 }) => {
   const [emblaRef, emblaApi] = useEmblaCarousel(
@@ -103,14 +104,16 @@ const GalleryCarousel = ({
         >
           {selectedIndex + 1} of {images.length}
         </div>
-        <Button
-          onClick={() => {
-            const image = images[selectedIndex];
-            setIsOpen(false);
-            handleImageDeletion(image.uuid, image.url);
-          }}
-          className="gallery-del-icon"
-        />
+        {isNote && (
+          <Button
+            onClick={() => {
+              const image = images[selectedIndex];
+              setIsOpen(false);
+              handleImageDeletion(image.uuid, image.url);
+            }}
+            className="gallery-del-icon"
+          />
+        )}
       </div>
       <motion.div
         initial={{ y: -window.innerHeight / 3 }}
@@ -120,11 +123,12 @@ const GalleryCarousel = ({
         className="gallery-viewport"
         ref={emblaRef}
       >
-        <div className="gallery-container">
+        <div onClick={() => setIsOpen(false)} className="gallery-container">
           {images.map((image, index) => {
             return (
               <div className="gallery-slide" key={index}>
                 <img
+                  onClick={(e) => e.stopPropagation()}
                   className="gallery-slide-img"
                   src={image.url}
                   alt="Your alt text"

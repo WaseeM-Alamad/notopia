@@ -90,6 +90,7 @@ const NoteWrapper = memo(
         transition={{ duration: 0.2, type: "tween" }}
       >
         <div
+          tabIndex={0}
           ref={noteRef}
           onMouseDown={handleMouseDown}
           onMouseEnter={handleMouseEnter}
@@ -426,6 +427,7 @@ const Home = memo(
               document
                 .querySelector(".starting-div")
                 ?.classList.remove("dragging");
+              draggedElement.focus();
               const rect = draggedElement.getBoundingClientRect();
               ghostElement.classList.remove("ghost-note");
               ghostElement.classList.add("restore-ghost-note");

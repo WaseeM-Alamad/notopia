@@ -447,7 +447,7 @@ const Label = ({
         }}
       >
         <div
-          className={`label ${labelData.color} ${
+          className={`label ${isOpen || colorMenuOpen ? "element-active" : ""} ${labelData.color} ${
             selected
               ? "element-selected"
               : labelData.color === "Default"
@@ -486,7 +486,7 @@ const Label = ({
                   opacity: !loadingImages.has(labelData.uuid) ? "1" : "0.5",
                   transition: "opacity 0.2s ease",
                 }}
-                src={labelData.image}
+                src={`${labelData.image}?v=${Date.now()}`}
               />
               <AnimatePresence>
                 {loadingImages.has(labelData.uuid) && (
@@ -648,11 +648,7 @@ const Label = ({
                   </motion.div>
                 )}
               </AnimatePresence>
-              <div
-                ref={dateRef}
-                className="label-date"
-                style={{ opacity: (isOpen || colorMenuOpen) && "1" }}
-              >
+              <div ref={dateRef} className="label-date">
                 {labelDate}
                 {noteCount > 0 && (
                   <>

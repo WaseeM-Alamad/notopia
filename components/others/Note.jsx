@@ -384,36 +384,11 @@ const Note = memo(
             setAnchorEl(virtualAnchor);
             setMoreMenuOpen((prev) => !prev);
           }}
-          // onTouchStart={(e) => {
-          //   touchTimerRef.current = setTimeout(() => {
-          //     touchActiveRef.current = true;
-          //     handleSelectNote({
-          //       source: "checkmark",
-          //       e: e,
-          //       selected: selected,
-          //       setSelected: setSelected,
-          //       uuid: note?.uuid,
-          //       index: notesIndexMapRef.current.get(note.uuid),
-          //       isPinned: note?.isPinned,
-          //       isArchived: note.isArchived,
-          //     });
-          //   }, 300);
-          // }}
-          // onTouchEnd={() => {
-          //   clearTimeout(touchTimerRef.current);
-          //   touchTimerRef.current = null;
-          //   requestAnimationFrame(() => {
-          //     touchActiveRef.current = false;
-          //   });
-          // }}
-          className="note-wrapper"
+          className={`note-wrapper ${selected || colorMenuOpen || moreMenuOpen ? "element-active" : ""}`}
           ref={note?.ref}
         >
           {/* <button onClick={()=> console.log(note?.images)}>click</button> */}
           <span
-            style={{
-              opacity: (selected || colorMenuOpen || moreMenuOpen) && "1",
-            }}
             ref={checkRef}
             className="checkmark"
             onClick={(e) =>
@@ -466,14 +441,7 @@ const Note = memo(
                   }}
                   className="corner"
                 />
-                <div
-                  style={{
-                    opacity: colorMenuOpen ? "1" : undefined,
-                    opacity: (colorMenuOpen || moreMenuOpen) && "1",
-                  }}
-                  className="pin pc-btn"
-                  tabIndex="0"
-                >
+                <div className="pin pc-btn" tabIndex="0">
                   {!note?.isTrash && (
                     <Button
                       onMouseEnter={(e) =>

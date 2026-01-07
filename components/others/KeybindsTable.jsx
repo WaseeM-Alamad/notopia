@@ -114,7 +114,7 @@ const KeybindsTable = ({ keybindsRef, setIsOpen }) => {
     {
       type: "item",
       title: "Redo action",
-      keybind: "ctrl + y",
+      keybind: "Ctrl + y",
     },
     {
       type: "item",

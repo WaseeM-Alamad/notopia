@@ -5,8 +5,10 @@
 }
 
 :root {
-  --primary: #687aec;
+  --primary: #6375f1;
   --primary-hover: #5b6fe6;
+  --linear-loader: #008cff;
+  --linear-loader-bg: rgba(176, 214, 255, 0.75);
   --form-label: #333333;
   --form-input-placeholder: #bdbdbd;
   --error: #ff5b5b;
@@ -38,6 +40,9 @@
 html.dark-mode {
   --primary: #4756ca;
   --primary-hover: #5261d1;
+  --linear-loader: #65adff; /* brighter blue */
+  --linear-loader-bg: rgba(20, 36, 82, 0.45);
+
   --form-label: #d6d6d6;
   --form-input-placeholder: #868686;
   --error: #e55353;
@@ -468,9 +473,7 @@ svg {
 }
 
 .dark-mode .modal-shadow {
-  box-shadow:
-    0 1px 3px 0 rgba(0, 0, 0, 0.6),
-    0 4px 8px 3px rgba(0, 0, 0, 0.3);
+  box-shadow: none;
 }
 
 .modal-editable-title:empty:before {
@@ -1161,7 +1164,7 @@ svg {
   /* width: 100%; */
   height: fit-content;
   min-height: 6.95rem;
-  border-radius: 0.7rem;
+  border-radius: 0.9rem;
   box-sizing: border-box;
   font-size: 1rem;
   border: solid 1px transparent;
@@ -1210,14 +1213,17 @@ svg {
   pointer-events: none;
 }
 
-.starting-div.selected-notes .note-wrapper:hover .note-bottom {
-  opacity: 0;
+.starting-div.selected-notes .note-bottom {
+  opacity: 0 !important;
   pointer-events: none;
 }
 
-.note-wrapper:focus-within .note-bottom,
-.note-wrapper:focus-within .pin,
-.note-wrapper:focus-within .checkmark {
+.note-wrapper:focus-within,
+.element-active .note-bottom,
+.note-wrapper:focus-within,
+.element-active .pin,
+.note-wrapper:focus-within,
+.element-active .checkmark {
   opacity: 1;
 }
 
@@ -1228,6 +1234,10 @@ svg {
 
 .starting-div.dragging .note-wrapper:hover .checkmark {
   opacity: 0;
+  pointer-events: none;
+}
+
+.starting-div.dragging .note-wrapper {
   pointer-events: none;
 }
 
@@ -1265,7 +1275,7 @@ svg {
 }
 
 .note-wrapper {
-  border-radius: 0.7rem;
+  border-radius: 0.9rem;
   background-color: transparent;
   position: relative;
   outline: none;
@@ -1274,6 +1284,7 @@ svg {
 
 .note-wrapper:hover .note-bottom,
 .note-wrapper:focus .note-bottom,
+.note-wrapper:focus .pin,
 .note-wrapper:hover .checkmark,
 .note-wrapper:focus .checkmark {
   opacity: 1;
@@ -1896,7 +1907,7 @@ svg {
   opacity: 1;
   pointer-events: none;
   background-color: var(--tooltip);
-  border: solid 0.5px var(--border);
+  border: solid 0.5px rgba(255, 255, 255, 0.15);
   color: white;
   font-size: 12px;
   letter-spacing: 0.3px;
@@ -1908,6 +1919,10 @@ svg {
   padding: 0.3rem 0.5rem;
 }
 
+.dark-mode .tooltip {
+  border-color: var(--border);
+}
+
 .right-tooltip {
   position: fixed;
   z-index: 1000000;
@@ -1915,7 +1930,7 @@ svg {
   opacity: 1;
   pointer-events: none;
   background-color: var(--tooltip);
-  border: solid 0.5px var(--border);
+  border: solid 0.5px rgba(255, 255, 255, 0.15);
   color: #ffffff;
   font-size: 0.85rem;
   letter-spacing: 0.3px;
@@ -1926,6 +1941,10 @@ svg {
   border-radius: 0.7rem;
   margin-left: 0.4rem;
   padding: 0.35rem 0.55rem;
+}
+
+.dark-mode .right-tooltip {
+  border: solid 0.5px var(--border);
 }
 
 .right-tooltip::before {
@@ -2974,7 +2993,7 @@ img {
   overflow: hidden;
   position: relative;
   width: 100%;
-  border-radius: 0.7rem;
+  border-radius: 0.9rem;
   word-break: break-all;
   cursor: pointer;
   border: solid 1px transparent;
@@ -2998,6 +3017,22 @@ img {
 
 .dark-mode .label:hover {
   box-shadow: none;
+}
+
+.element-active {
+  transform: translateY(-1px);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.07),
+    0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.dark-mode .element-active {
+  box-shadow: none;
+}
+
+.element-active .label-date,
+.element-active .label-more-icon {
+  opacity: 1 !important;
 }
 
 .label-more-icon {
@@ -4308,6 +4343,11 @@ img {
   padding: 0.5rem 0.95rem;
   white-space: nowrap;
   cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.settings-image-btn:hover {
+  background-color: var(--btn-hover);
 }
 
 .warning-color {
@@ -5657,6 +5697,7 @@ aside svg {
   user-select: none;
   font-size: 1.1rem;
   background-color: transparent;
+  user-select: none;
 }
 
 .clear-icon-white {
@@ -5724,6 +5765,7 @@ aside svg {
   transform: translateY(-50%);
   cursor: pointer;
   z-index: 2;
+  user-select: none;
 }
 
 .gallery-side-btn {
@@ -5982,7 +6024,6 @@ aside svg {
 
 .section-header {
   position: sticky;
-  pointer-events: none;
   top: 64px;
   z-index: 98;
   background: var(--bg);
@@ -6048,4 +6089,16 @@ aside svg {
   .section-header-divider {
     opacity: 0 !important;
   }
+}
+
+.img-wrapper img {
+  transition: opacity 0.2s ease;
+}
+
+.image-loading img {
+  opacity: 0.6;
+}
+
+.dark-mode .image-loading img {
+  opacity: 0.4;
 }

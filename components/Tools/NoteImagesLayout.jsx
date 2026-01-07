@@ -178,10 +178,7 @@ const NoteImagesLayout = ({
           <div key={rowIndex} style={rowStyle}>
             {row.map((item) => (
               <div
-                style={{
-                  opacity: loadingImages.has(item.id) ? "0.6" : "1",
-                }}
-                className="img-wrapper"
+                className={`img-wrapper ${loadingImages.has(item.id) ? "image-loading" : ""}`}
                 onClick={() => {
                   if (!modalOpen) return;
                   requestIdleCallback(() => {
@@ -194,6 +191,17 @@ const NoteImagesLayout = ({
                 }}
                 key={item.src}
               >
+                <div
+                  style={{
+                    top: "0",
+                    left: "0",
+                    position: "absolute",
+                    zIndex: "-1",
+                    width: "100%",
+                    height: "100%",
+                    backgroundColor: "var(--bw)",
+                  }}
+                />
                 <img
                   loading="lazy"
                   src={item.src}
@@ -229,6 +237,7 @@ const NoteImagesLayout = ({
       <AnimatePresence>
         {carouselOpen && (
           <GalleryCarousel
+            isNote={true}
             images={images}
             setIsOpen={setCarouselOpen}
             startIndex={startIndexRef.current}
