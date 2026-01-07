@@ -684,7 +684,7 @@ svg {
   width: 100%;
   max-width: 360px;
   box-sizing: border-box;
-  line-height: 1.1rem;
+  /* line-height: 1.1rem; */
   overflow: hidden;
   position: fixed;
   padding: 1.2rem 1rem;
@@ -730,7 +730,7 @@ svg {
   text-align: center;
   font-weight: 600;
   color: var(--text);
-  margin-bottom: 1rem;
+  margin-bottom: .7rem;
   margin-top: 0.3rem;
   font-size: 1.4rem;
 }
@@ -751,6 +751,24 @@ svg {
 
 .action-cancel:hover {
   background-color: var(--btn-hover);
+}
+
+.show-close-btn .action-modal {
+  padding: 1.2rem 1.6rem;
+}
+
+.show-close-btn .action-title {
+  font-size: 1rem;
+  text-align: left;
+  padding-top: 0.3rem;
+}
+
+.show-close-btn .action-msg {
+  text-align: left;
+}
+
+.show-close-btn .action-btns-container {
+  text-align: right;
 }
 
 .modal-bottom-btn {
@@ -6101,4 +6119,14 @@ aside svg {
 
 .dark-mode .image-loading img {
   opacity: 0.4;
+}
+
+.avatar-crop-wrapper {
+  position: relative;
+  width: 100%;
+  height: 80%;
+
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg);
 }

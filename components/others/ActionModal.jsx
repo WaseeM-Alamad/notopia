@@ -72,7 +72,7 @@ const ActionModal = ({
   return createPortal(
     <motion.div
       ref={containerRef}
-      className="modal-container"
+      className={`modal-container ${showCloseBtn ? "show-close-btn" : ""}`}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}

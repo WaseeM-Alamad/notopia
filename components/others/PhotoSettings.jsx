@@ -1,9 +1,11 @@
 import React, { memo, useState } from "react";
 import GalleryCarousel from "./GalleryCarousel";
 import { AnimatePresence } from "framer-motion";
+import SetAvatarModal from "./SetAvatarModal";
 
 const PhotoSettings = ({ rightHeader, selected, user }) => {
   const [isImageOpen, setIsImageOpen] = useState(false);
+  const [isCropOpen, setIsCropOpen] = useState(false);
   return (
     <>
       <div style={{ display: !selected && "none" }} className="setting-wrapper">
@@ -36,7 +38,12 @@ const PhotoSettings = ({ rightHeader, selected, user }) => {
                 flexWrap: "wrap",
               }}
             >
-              <div className="settings-image-btn">Upload New Photo</div>
+              <div
+                className="settings-image-btn"
+                // onClick={() => setIsCropOpen(true)}
+              >
+                Upload New Photo
+              </div>
               <div className="settings-image-btn warning-color">
                 Remove Image
               </div>
@@ -46,7 +53,15 @@ const PhotoSettings = ({ rightHeader, selected, user }) => {
       </div>
       <AnimatePresence>
         {isImageOpen && (
-          <GalleryCarousel images={[{url: user.image}]} setIsOpen={setIsImageOpen} />
+          <GalleryCarousel
+            images={[{ url: user.image }]}
+            setIsOpen={setIsImageOpen}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {isCropOpen && (
+          <SetAvatarModal isOpen={isCropOpen} setIsOpen={setIsCropOpen} />
         )}
       </AnimatePresence>
     </>

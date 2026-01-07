@@ -171,9 +171,9 @@ const page = () => {
         title: "This note has been shared with you",
         message: (
           <span>
-            The owner of this note is <br />{" "}
+            The owner of this note is
             <span style={{ fontWeight: "bold" }}>
-              {note?.creator?.username || "Owner"}
+              {" " + note?.creator?.username || "Owner"}
             </span>
             . You should only open notes from someone you trust. How would you
             like to proceed?
