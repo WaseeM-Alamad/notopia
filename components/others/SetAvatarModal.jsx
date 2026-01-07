@@ -88,7 +88,7 @@ const setAvatarModal = ({ setIsOpen, imgUrlRef }) => {
           display: "flex",
           flexDirection: "column",
           padding: "1.1rem 0",
-          maxWidth: "32rem",
+          maxWidth: "28rem",
           maxHeight: "40rem",
           width: isLoading ? "300px" : "90%",
           height: isLoading ? "230px" : "50%",
