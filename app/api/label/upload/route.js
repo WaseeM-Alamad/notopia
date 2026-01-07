@@ -60,7 +60,6 @@ export async function POST(req) {
             public_id: publicId,
             resource_type: "image",
             overwrite: true,
-            invalidate: true,
           },
           (err, result) => {
             if (err) reject(err);
@@ -70,7 +69,7 @@ export async function POST(req) {
         .end(buffer);
     });
 
-    const newUrl = cloudinary.url(publicId);
+    const newUrl = cloudinary.url(publicId, { version: result.version });
 
     await updateLabelAction({
       type: "image",

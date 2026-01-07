@@ -58,7 +58,6 @@ const Label = ({
   const originalTitleRef = useRef(null);
   const moreRef = useRef(null);
   const dateRef = useRef(null);
-  const imageRef = useRef(null);
   const inputRef = useRef(null);
   const isFirstRender = useRef(true);
 
@@ -289,9 +288,6 @@ const Label = ({
     }
 
     updateLabelImage(labelData.uuid, imageFile).then(() => {});
-    if (imageRef.current) {
-      imageRef.current.src = labelData.image + `?v=${new Date().getTime()}`;
-    }
     triggerReRender((prev) => !prev);
     setIsOpen(false);
   };
@@ -479,14 +475,13 @@ const Label = ({
             <div style={{ position: "relative" }}>
               <img
                 draggable="false"
-                ref={imageRef}
                 style={{
                   width: "100%",
                   display: "block",
                   opacity: !loadingImages.has(labelData.uuid) ? "1" : "0.5",
                   transition: "opacity 0.2s ease",
                 }}
-                src={`${labelData.image}?v=${Date.now()}`}
+                src={labelData.image}
               />
               <AnimatePresence>
                 {loadingImages.has(labelData.uuid) && (
