@@ -28,6 +28,7 @@
     "nanoid": "^5.1.5",
     "next": "^15.0.3",
     "next-auth": "^4.24.11",
+    "rc-slider": "^11.1.9",
     "react": "^18.2.0",
     "react-dom": "18.2.0",
     "react-easy-crop": "^5.5.6",

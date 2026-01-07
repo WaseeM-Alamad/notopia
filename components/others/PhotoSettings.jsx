@@ -1,11 +1,17 @@
-import React, { memo, useState } from "react";
+import React, { memo, useRef, useState } from "react";
 import GalleryCarousel from "./GalleryCarousel";
 import { AnimatePresence } from "framer-motion";
 import SetAvatarModal from "./SetAvatarModal";
+import { validateImageFile } from "@/utils/validateImage";
+import { useAppContext } from "@/context/AppContext";
 
 const PhotoSettings = ({ rightHeader, selected, user }) => {
+  const { openSnackRef } = useAppContext();
   const [isImageOpen, setIsImageOpen] = useState(false);
   const [isCropOpen, setIsCropOpen] = useState(false);
+  const localImgUrlRef = useRef(null);
+  const inputRef = useRef(null);
+
   return (
     <>
       <div style={{ display: !selected && "none" }} className="setting-wrapper">
@@ -40,7 +46,9 @@ const PhotoSettings = ({ rightHeader, selected, user }) => {
             >
               <div
                 className="settings-image-btn"
-                // onClick={() => setIsCropOpen(true)}
+                onClick={() => {
+                  inputRef.current.click();
+                }}
               >
                 Upload New Photo
               </div>
@@ -61,9 +69,38 @@ const PhotoSettings = ({ rightHeader, selected, user }) => {
       </AnimatePresence>
       <AnimatePresence>
         {isCropOpen && (
-          <SetAvatarModal isOpen={isCropOpen} setIsOpen={setIsCropOpen} />
+          <SetAvatarModal
+            isOpen={isCropOpen}
+            setIsOpen={setIsCropOpen}
+            imgUrlRef={localImgUrlRef}
+          />
         )}
       </AnimatePresence>
+      <input
+        type="file"
+        ref={inputRef}
+        style={{ display: "none" }}
+        onChange={async (e) => {
+          e.stopPropagation();
+          const imageFile = e.target?.files[0];
+          inputRef.current.value = "";
+
+          const { valid } = await validateImageFile(imageFile);
+
+          if (!valid) {
+            openSnackRef.current({
+              snackMessage:
+                "Can’t upload this image. Please choose a GIF, JPEG, JPG, or PNG under 5MB and at least 400×400 pixels.",
+              showUndo: false,
+            });
+            return;
+          }
+
+          const localImageURL = URL.createObjectURL(imageFile);
+          localImgUrlRef.current = localImageURL;
+          setIsCropOpen(true);
+        }}
+      />
     </>
   );
 };

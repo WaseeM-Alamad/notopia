@@ -15,6 +15,7 @@ import { useSearch } from "./SearchContext";
 import { debounce } from "lodash";
 import { saveLabelsMap } from "@/utils/localDb";
 import { v4 as uuid } from "uuid";
+import { getCroppedAvatar } from "@/utils/getCroppedAvatar";
 
 const AppContext = createContext();
 
@@ -449,6 +450,46 @@ export function AppProvider({ children, initialUser }) {
     }
   }, [status]);
 
+  const saveNewAvatar = async ({
+    croppedAreaPixels,
+    imgUrlRef,
+    setIsLoading,
+    setIsOpen,
+  }) => {
+    const avatarBlob = await getCroppedAvatar(
+      imgUrlRef.current,
+      croppedAreaPixels,
+      400
+    );
+
+    const avatarFile = new File([avatarBlob], "avatar.jpg", {
+      type: "image/jpeg",
+    });
+
+    const formData = new FormData();
+    formData.append("file", avatarFile);
+
+    setIsLoading(true);
+
+    const res = await fetch("/api/avatar/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await res.json();
+
+    if (!data.error) {
+      setUser((prev) => ({ ...prev, image: data.url }));
+      setIsOpen(false);
+    } else {
+      setIsLoading(false);
+    }
+
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 800);
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -505,6 +546,7 @@ export function AppProvider({ children, initialUser }) {
         skipLabelObjRefresh,
         isActionModalOpenRef,
         isContextMenuOpenRef,
+        saveNewAvatar,
         clientID: clientID.current,
       }}
     >

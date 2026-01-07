@@ -531,6 +531,7 @@ const Note = memo(
                               width: "100%",
                               paddingLeft: "0.5rem",
                               fontSize: ".875rem",
+                              wordBreak: "break-word"
                             }}
                             className={
                               checkbox.isCompleted ? "checked-content" : ""

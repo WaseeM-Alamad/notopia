@@ -386,6 +386,26 @@ export const updateDisplayNameAction = async (newDisplayName) => {
   }
 };
 
+export const updateUserImageAction = async (newUrl) => {
+  const session = await getServerSession(authOptions);
+  const userID = session?.user?.id;
+  try {
+    if (!userID)
+      return {
+        success: false,
+        message: "An error has occurred",
+      };
+
+    await connectDB();
+    await User.updateOne({ _id: userID }, { $set: { image: newUrl } });
+
+    return { success: true, message: "User image updated successfully" };
+  } catch (error) {
+    console.log("Error updating display name", error);
+    return { success: false, message: "Error updating display name" };
+  }
+};
+
 export const updateUsernameAction = async (input) => {
   const session = await getServerSession(authOptions);
   const userID = session?.user?.id;
