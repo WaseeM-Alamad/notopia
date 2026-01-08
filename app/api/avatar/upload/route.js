@@ -20,7 +20,7 @@ export async function POST(req) {
     return new Response("Missing userID", { status: 400 });
   }
   const fileError =
-    "Can’t upload this image. Please choose a GIF, JPEG, JPG, or PNG under 5MB and at least 400×400 pixels.";
+    "Can’t upload this image. Please choose a GIF, JPEG, JPG, or PNG under 5MB and at least 100×100 pixels.";
 
   if (!acceptedTypes.includes(file.type)) {
     return new Response(fileError, { status: 400 });

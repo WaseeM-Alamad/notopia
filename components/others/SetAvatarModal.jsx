@@ -7,6 +7,7 @@ import Slider from "rc-slider";
 import "rc-slider/assets/index.css";
 import { getCroppedAvatar } from "@/utils/getCroppedAvatar";
 import HorizontalLoader from "../Tools/HorizontalLoader";
+import CustomThreeLineSpinner from "../Tools/CustomSpinner";
 
 const setAvatarModal = ({ setIsOpen, initialFileRef, isGif }) => {
   const { closeToolTip, hideTooltip, showTooltip, saveNewAvatar } =
@@ -20,7 +21,9 @@ const setAvatarModal = ({ setIsOpen, initialFileRef, isGif }) => {
   const [finalBlob, setFinalBlob] = useState(
     URL.createObjectURL(initialFileRef.current)
   );
+
   const previewUrlRef = useRef(URL.createObjectURL(initialFileRef.current));
+
   const modalRef = useRef(null);
 
   useEffect(() => {
@@ -96,8 +99,8 @@ const setAvatarModal = ({ setIsOpen, initialFileRef, isGif }) => {
           padding: "1.1rem 0",
           paddingBottom: "0.5rem",
           maxWidth: "28rem",
-          width: isLoading ? "300px" : "90%",
-          height: isLoading ? "230px" : isPreview ? "370px" : "28.5rem",
+          width: isLoading ? "270px" : "90%",
+          height: isLoading ? "200px" : isPreview ? "370px" : "28.5rem",
           borderRadius: isLoading && "2rem",
           pointerEvents: isLoading ? "none" : "auto",
           zIndex: "201",
@@ -146,7 +149,19 @@ const setAvatarModal = ({ setIsOpen, initialFileRef, isGif }) => {
               <div style={{ fontWeight: "600", fontSize: "1.3rem" }}>
                 Uploading photo
               </div>
-              <HorizontalLoader color="var(--text)" size={0.8} />
+
+              <div style={{ marginTop: "2rem", marginBottom: ".5rem" }}>
+                <CustomThreeLineSpinner
+                  color={
+                    document.documentElement.classList.contains("dark-mode")
+                      ? "rgb(232, 234, 237)"
+                      : "#212121"
+                  }
+                  strokeWidth={4}
+                  size={33}
+                />
+                {/* <HorizontalLoader color="var(--text)" size={0.6} /> */}
+              </div>
             </div>
           )}
         </div>
