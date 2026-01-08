@@ -3,7 +3,7 @@
 const acceptedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
 
 const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
-const MIN_DIMENSION = 400; // must be at least 400x400
+const MIN_DIMENSION = 100;
 
 export function validateAvatarImageFile(file) {
   return new Promise((resolve) => {

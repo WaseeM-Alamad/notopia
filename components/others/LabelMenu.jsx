@@ -187,6 +187,7 @@ const LabelMenu = ({
                 ref={inputRef}
                 style={{ display: "none" }}
                 type="file"
+                accept="image/*"
                 onChange={handleOnChange}
               />
             </div>

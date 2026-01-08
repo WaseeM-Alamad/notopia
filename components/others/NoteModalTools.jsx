@@ -228,13 +228,23 @@ const ModalTools = ({
       }
     }
 
-    window.dispatchEvent(new Event("loadingEnd"));
-
     setLoadingImages((prev) => {
       const newSet = new Set(prev);
       imageUUIDs.forEach((id) => newSet.delete(id));
       return newSet;
     });
+
+    window.dispatchEvent(new Event("loadingEnd"));
+
+    if (failedImages.length > 0) {
+      openSnackRef.current({
+        snackMessage:
+          successImages.length > 0
+            ? "Some images were not uploaded successfully"
+            : "Error uploading images",
+        showUndo: false,
+      });
+    }
   };
 
   const restoreNote = async () => {
@@ -731,6 +741,7 @@ const ModalTools = ({
         ref={inputRef}
         style={{ display: "none" }}
         type="file"
+        accept="image/*"
         onChange={handleOnChange}
       />
     </>

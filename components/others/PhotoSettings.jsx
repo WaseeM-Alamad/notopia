@@ -4,13 +4,36 @@ import { AnimatePresence } from "framer-motion";
 import SetAvatarModal from "./SetAvatarModal";
 import { validateImageFile } from "@/utils/validateImage";
 import { useAppContext } from "@/context/AppContext";
+import { validateAvatarImageFile } from "@/utils/validateAvatar";
 
 const PhotoSettings = ({ rightHeader, selected, user }) => {
   const { openSnackRef } = useAppContext();
   const [isImageOpen, setIsImageOpen] = useState(false);
   const [isCropOpen, setIsCropOpen] = useState(false);
-  const localImgUrlRef = useRef(null);
+  const [isGif, setIsGif] = useState(false);
+  const localFileRef = useRef(null);
   const inputRef = useRef(null);
+
+  const handleOnChange = async (e) => {
+    e.stopPropagation();
+    const imageFile = e.target?.files[0];
+    setIsGif(imageFile?.type === "image/gif");
+    inputRef.current.value = "";
+
+    const { valid } = await validateAvatarImageFile(imageFile);
+
+    if (!valid) {
+      openSnackRef.current({
+        snackMessage:
+          "Can’t upload this image. Please choose a GIF, JPEG, JPG, or PNG under 5MB and at least 400×400 pixels.",
+        showUndo: false,
+      });
+      return;
+    }
+
+    localFileRef.current = imageFile;
+    setIsCropOpen(true);
+  };
 
   return (
     <>
@@ -73,34 +96,17 @@ const PhotoSettings = ({ rightHeader, selected, user }) => {
           <SetAvatarModal
             isOpen={isCropOpen}
             setIsOpen={setIsCropOpen}
-            imgUrlRef={localImgUrlRef}
+            initialFileRef={localFileRef}
+            isGif={isGif}
           />
         )}
       </AnimatePresence>
       <input
         type="file"
+        accept="image/*"
         ref={inputRef}
         style={{ display: "none" }}
-        onChange={async (e) => {
-          e.stopPropagation();
-          const imageFile = e.target?.files[0];
-          inputRef.current.value = "";
-
-          const { valid } = await validateImageFile(imageFile);
-
-          if (!valid) {
-            openSnackRef.current({
-              snackMessage:
-                "Can’t upload this image. Please choose a GIF, JPEG, JPG, or PNG under 5MB and at least 400×400 pixels.",
-              showUndo: false,
-            });
-            return;
-          }
-
-          const localImageURL = URL.createObjectURL(imageFile);
-          localImgUrlRef.current = localImageURL;
-          setIsCropOpen(true);
-        }}
+        onChange={handleOnChange}
       />
     </>
   );

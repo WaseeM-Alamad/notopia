@@ -721,6 +721,7 @@ const NoteTools = ({
                     ref={inputRef}
                     style={{ display: "none" }}
                     type="file"
+                    accept="image/*"
                     multiple
                     onChange={handleOnChange}
                   />

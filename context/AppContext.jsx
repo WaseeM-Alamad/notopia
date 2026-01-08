@@ -458,10 +458,21 @@ export function AppProvider({ children, initialUser }) {
     }
   }, [status]);
 
-  const saveNewAvatar = async ({ avatarBlob, setIsLoading, setIsOpen }) => {
-    const avatarFile = new File([avatarBlob], "avatar.jpg", {
-      type: "image/jpeg",
-    });
+  const saveNewAvatar = async ({
+    avatarBlob,
+    setIsLoading,
+    setIsOpen,
+    gifFile,
+  }) => {
+    let avatarFile = null;
+
+    if (!gifFile) {
+      avatarFile = new File([avatarBlob], "avatar.jpg", {
+        type: "image/jpeg",
+      });
+    } else {
+      avatarFile = new File([gifFile], "avatar.gif", { type: "image/gif" });
+    }
 
     const formData = new FormData();
     formData.append("file", avatarFile);

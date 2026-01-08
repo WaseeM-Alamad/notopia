@@ -8,7 +8,7 @@ import "rc-slider/assets/index.css";
 import { getCroppedAvatar } from "@/utils/getCroppedAvatar";
 import HorizontalLoader from "../Tools/HorizontalLoader";
 
-const setAvatarModal = ({ setIsOpen, imgUrlRef }) => {
+const setAvatarModal = ({ setIsOpen, initialFileRef, isGif }) => {
   const { closeToolTip, hideTooltip, showTooltip, saveNewAvatar } =
     useAppContext();
   const [isMounted, setIsMounted] = useState(false);
@@ -16,14 +16,16 @@ const setAvatarModal = ({ setIsOpen, imgUrlRef }) => {
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isPreview, setIsPreview] = useState(false);
-  const [finalBlob, setFinalBlob] = useState(null);
-  const containerRef = useRef(null);
+  const [isPreview, setIsPreview] = useState(isGif);
+  const [finalBlob, setFinalBlob] = useState(
+    URL.createObjectURL(initialFileRef.current)
+  );
+  const previewUrlRef = useRef(URL.createObjectURL(initialFileRef.current));
   const modalRef = useRef(null);
 
   useEffect(() => {
     setIsMounted(true);
-    return () => (imgUrlRef.current = null);
+    return () => (initialFileRef.current = null);
   }, []);
 
   useEffect(() => {
@@ -158,12 +160,12 @@ const setAvatarModal = ({ setIsOpen, imgUrlRef }) => {
             top: "0",
             width: "100%",
             height: "100%",
-            pointerEvents: isPreview ? "auto" : "none",
-            opacity: isPreview ? "1" : "0",
+            pointerEvents: isPreview && !isLoading ? "auto" : "none",
+            opacity: isPreview && !isLoading ? "1" : "0",
             transition: "opacity 0.2s ease",
           }}
         >
-          {isPreview && (
+          {isPreview && !isLoading && (
             <div
               style={{
                 display: "flex",
@@ -203,7 +205,7 @@ const setAvatarModal = ({ setIsOpen, imgUrlRef }) => {
                   }}
                   width={124}
                   height={124}
-                  src={URL.createObjectURL(finalBlob)}
+                  src={previewUrlRef.current}
                 />
               </div>
               <div
@@ -220,19 +222,24 @@ const setAvatarModal = ({ setIsOpen, imgUrlRef }) => {
                 <button
                   className="action-modal-bottom-btn action-cancel"
                   onClick={() => {
-                    setIsPreview(false);
+                    if (isGif) {
+                      setIsOpen(false);
+                    } else {
+                      setIsPreview(false);
+                    }
                   }}
                 >
-                  Back
+                  {isGif ? "Cancel" : "Back"}
                 </button>
                 <button
                   className="action-modal-bottom-btn"
                   onClick={() => {
-                    setIsPreview(false);
+                    // setIsPreview(false);
                     saveNewAvatar({
                       avatarBlob: finalBlob,
                       setIsLoading,
                       setIsOpen,
+                      gifFile: isGif ? initialFileRef.current : null,
                     });
                   }}
                 >
@@ -276,7 +283,7 @@ const setAvatarModal = ({ setIsOpen, imgUrlRef }) => {
           >
             <div className="avatar-crop-wrapper">
               <Cropper
-                image={imgUrlRef.current}
+                image={URL.createObjectURL(initialFileRef.current)}
                 aspect={1}
                 cropShape="round"
                 showGrid={true}
@@ -358,11 +365,11 @@ const setAvatarModal = ({ setIsOpen, imgUrlRef }) => {
                 className="action-modal-bottom-btn"
                 onClick={async () => {
                   const avatarBlob = await getCroppedAvatar(
-                    imgUrlRef.current,
+                    URL.createObjectURL(initialFileRef.current),
                     croppedAreaPixels,
                     400
                   );
-
+                  previewUrlRef.current = URL.createObjectURL(avatarBlob);
                   setFinalBlob(avatarBlob);
                   setIsPreview(true);
                 }}

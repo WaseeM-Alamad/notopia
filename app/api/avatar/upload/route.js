@@ -7,7 +7,7 @@ import sharp from "sharp";
 
 const acceptedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
 const maxAvatarSizeBytes = 5 * 1024 * 1024; // 5MB
-const minAvatarSize = 400;
+const minAvatarSize = 100;
 
 export async function POST(req) {
   const formData = await req.formData();
@@ -21,7 +21,6 @@ export async function POST(req) {
   }
   const fileError =
     "Can’t upload this image. Please choose a GIF, JPEG, JPG, or PNG under 5MB and at least 400×400 pixels.";
-    
 
   if (!acceptedTypes.includes(file.type)) {
     return new Response(fileError, { status: 400 });
