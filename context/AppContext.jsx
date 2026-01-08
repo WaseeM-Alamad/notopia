@@ -458,48 +458,46 @@ export function AppProvider({ children, initialUser }) {
     }
   }, [status]);
 
-  const saveNewAvatar = async ({
-    avatarBlob,
-    setIsLoading,
-    setIsOpen,
-    gifFile,
-  }) => {
-    let avatarFile = null;
+  const saveNewAvatar = useCallback(
+    async ({ avatarBlob, setIsLoading, setIsOpen, gifFile }) => {
+      let avatarFile = null;
 
-    if (!gifFile) {
-      avatarFile = new File([avatarBlob], "avatar.jpg", {
-        type: "image/jpeg",
+      if (!gifFile) {
+        avatarFile = new File([avatarBlob], "avatar.jpg", {
+          type: "image/jpeg",
+        });
+      } else {
+        avatarFile = new File([gifFile], "avatar.gif", { type: "image/gif" });
+      }
+
+      const formData = new FormData();
+      formData.append("file", avatarFile);
+
+      setIsLoading(true);
+
+      const res = await fetch("/api/avatar/upload", {
+        method: "POST",
+        body: formData,
       });
-    } else {
-      avatarFile = new File([gifFile], "avatar.gif", { type: "image/gif" });
-    }
 
-    const formData = new FormData();
-    formData.append("file", avatarFile);
+      if (res.ok) {
+        const data = await res.json();
+        setUser((prev) => ({ ...prev, image: data.url }));
+        setIsOpen(false);
+      } else {
+        const error = await res.text();
+        openSnackRef.current({
+          snackMessage: error,
+          showUndo: false,
+        });
+      }
 
-    setIsLoading(true);
-
-    const res = await fetch("/api/avatar/upload", {
-      method: "POST",
-      body: formData,
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      setUser((prev) => ({ ...prev, image: data.url }));
-      setIsOpen(false);
-    } else {
-      const error = await res.text();
-      openSnackRef.current({
-        snackMessage: error,
-        showUndo: false,
-      });
-    }
-
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 300);
-  };
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 300);
+    },
+    []
+  );
 
   return (
     <AppContext.Provider

@@ -32,7 +32,6 @@ export function useRealtimeUpdates({
       try {
         const data = JSON.parse(event.data);
         updateModalRef.current = true;
-        console.log(data);
         const updatedNotes = new Map();
         const deletedNotesIDs = new Set();
         const newNotes = [];

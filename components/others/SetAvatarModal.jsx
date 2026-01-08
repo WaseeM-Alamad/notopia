@@ -9,7 +9,7 @@ import { getCroppedAvatar } from "@/utils/getCroppedAvatar";
 import HorizontalLoader from "../Tools/HorizontalLoader";
 import CustomThreeLineSpinner from "../Tools/CustomSpinner";
 
-const setAvatarModal = ({ setIsOpen, initialFileRef, isGif }) => {
+const SetAvatarModal = ({ setIsOpen, initialFileRef, isGif }) => {
   const { closeToolTip, hideTooltip, showTooltip, saveNewAvatar } =
     useAppContext();
   const [isMounted, setIsMounted] = useState(false);
@@ -21,6 +21,8 @@ const setAvatarModal = ({ setIsOpen, initialFileRef, isGif }) => {
   const [finalBlob, setFinalBlob] = useState(
     URL.createObjectURL(initialFileRef.current)
   );
+
+  const cropperImageRef = useRef(URL.createObjectURL(initialFileRef.current));
 
   const previewUrlRef = useRef(URL.createObjectURL(initialFileRef.current));
 
@@ -98,9 +100,9 @@ const setAvatarModal = ({ setIsOpen, initialFileRef, isGif }) => {
           flexDirection: "column",
           padding: "1.1rem 0",
           paddingBottom: "0.5rem",
-          maxWidth: "28rem",
+          maxWidth: "30rem",
           width: isLoading ? "270px" : "90%",
-          height: isLoading ? "200px" : isPreview ? "370px" : "28.5rem",
+          height: isLoading ? "200px" : isPreview ? "370px" : "38.5rem",
           borderRadius: isLoading && "2rem",
           pointerEvents: isLoading ? "none" : "auto",
           zIndex: "201",
@@ -298,14 +300,12 @@ const setAvatarModal = ({ setIsOpen, initialFileRef, isGif }) => {
           >
             <div className="avatar-crop-wrapper">
               <Cropper
-                image={URL.createObjectURL(initialFileRef.current)}
+                image={cropperImageRef.current}
                 aspect={1}
                 cropShape="round"
-                showGrid={true}
+                showGrid={false}
                 crop={crop}
                 zoom={zoom}
-                // minZoom={1}
-                // maxZoom={4}
                 restrictPosition={true}
                 onCropChange={setCrop}
                 onZoomChange={setZoom}
@@ -401,4 +401,4 @@ const setAvatarModal = ({ setIsOpen, initialFileRef, isGif }) => {
   );
 };
 
-export default memo(setAvatarModal);
+export default memo(SetAvatarModal);
