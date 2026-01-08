@@ -252,18 +252,21 @@ const NoteTools = ({
 
     const data = await res.json();
 
-    window.dispatchEvent(new Event("loadingEnd"));
+    const failedImages = data.errors;
+    const successImages = data.uploads;
 
-    setLoadingImages((prev) => {
-      const newSet = new Set(prev);
-      imageUUIDs.forEach((id) => newSet.delete(id));
-      return newSet;
-    });
+    if (failedImages.length > 0) {
+      const imagesSet = new Set(failedImages.map((img) => img.uuid));
+      dispatchNotes({
+        type: "DELETE_IMAGES",
+        note: note,
+        imagesSet: imagesSet,
+      });
+    }
 
-    if (!data.error) {
-      const updatedImages = data;
+    if (successImages.length > 0) {
       const imagesMap = new Map();
-      updatedImages.forEach((imageData) => {
+      successImages.forEach((imageData) => {
         imagesMap.set(imageData.uuid, imageData);
       });
       dispatchNotes({
@@ -279,9 +282,21 @@ const NoteTools = ({
         note: note,
         imagesMap: imagesMap,
       });
-    } else {
+    }
+
+    setLoadingImages((prev) => {
+      const newSet = new Set(prev);
+      imageUUIDs.forEach((id) => newSet.delete(id));
+      return newSet;
+    });
+    window.dispatchEvent(new Event("loadingEnd"));
+
+    if (failedImages.length > 0) {
       openSnackRef.current({
-        snackMessage: "Error uploading images",
+        snackMessage:
+          successImages.length > 0
+            ? "Some images were not uploaded successfully"
+            : "Error uploading images",
         showUndo: false,
       });
     }

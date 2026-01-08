@@ -2,7 +2,6 @@
 
 const acceptedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
 
-// Avatar-specific limits
 const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
 const MIN_DIMENSION = 400; // must be at least 400x400
 

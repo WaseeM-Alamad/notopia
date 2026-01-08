@@ -1,3 +1,4 @@
+import { NextResponse } from "next/server";
 import cloudinary from "@/config/cloudinary";
 import connectDB from "@/config/database";
 import { NoteUpdateAction } from "@/utils/actions";
@@ -16,14 +17,14 @@ export async function POST(req) {
   const clientID = formData.get("clientID");
 
   if (!creatorID || !noteUUID) {
-    return Response.json(
+    return NextResponse.json(
       { error: "Missing creatorID or noteUUID" },
       { status: 400 }
     );
   }
 
   if (files.length !== imageUUIDs.length) {
-    return Response.json(
+    return NextResponse.json(
       { error: "Mismatch between files and UUIDs" },
       { status: 400 }
     );
@@ -33,8 +34,7 @@ export async function POST(req) {
     const imageUUID = imageUUIDs[i];
 
     const fileError = {
-      error:
-        "Can’t upload this file. We accept GIF, JPEG, JPG, PNG files less than 10MB and 25 megapixels.",
+      error: true,
       uuid: imageUUID,
     };
 
@@ -92,11 +92,17 @@ export async function POST(req) {
       };
     } catch (error) {
       console.error("Error uploading image:", error);
-      return null;
+      return {
+        error: "Error uploading image",
+        uuid: imageUUID,
+      };
     }
   });
 
   const uploads = await Promise.all(uploadPromises);
 
-  return Response.json(uploads);
+  return NextResponse.json({
+    uploads: uploads.filter((u) => !u.error),
+    errors: uploads.filter((u) => u.error),
+  });
 }

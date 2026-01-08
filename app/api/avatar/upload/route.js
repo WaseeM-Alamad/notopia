@@ -17,19 +17,18 @@ export async function POST(req) {
   const userID = session?.user?.id;
 
   if (!userID) {
-    return Response.json({ error: "Missing userID" }, { status: 400 });
+    return new Response("Missing userID", { status: 400 });
   }
-  const fileError = {
-    error:
-      "Can’t upload this image. Please choose a GIF, JPEG, JPG, or PNG under 5MB and at least 400×400 pixels.",
-  };
+  const fileError =
+    "Can’t upload this image. Please choose a GIF, JPEG, JPG, or PNG under 5MB and at least 400×400 pixels.";
+    
 
   if (!acceptedTypes.includes(file.type)) {
-    return fileError;
+    return new Response(fileError, { status: 400 });
   }
 
   if (file.size > maxAvatarSizeBytes) {
-    return fileError;
+    return new Response(fileError, { status: 400 });
   }
 
   const arrayBuffer = await file.arrayBuffer();
@@ -40,7 +39,7 @@ export async function POST(req) {
   const height = metadata.height || 0;
 
   if (width < minAvatarSize || height < minAvatarSize) {
-    return fileError;
+    return new Response(fileError, { status: 400 });
   }
 
   const publicId = `avatars/${userID}`;
@@ -73,5 +72,6 @@ export async function POST(req) {
     });
   } catch (error) {
     console.error("Error uploading image:", error);
+    return new Response("Error uploading image", { status: 400 });
   }
 }

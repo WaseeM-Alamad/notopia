@@ -16,6 +16,8 @@ const setAvatarModal = ({ setIsOpen, imgUrlRef }) => {
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPreview, setIsPreview] = useState(false);
+  const [finalBlob, setFinalBlob] = useState(null);
   const containerRef = useRef(null);
   const modalRef = useRef(null);
 
@@ -42,26 +44,29 @@ const setAvatarModal = ({ setIsOpen, imgUrlRef }) => {
   if (!isMounted) return;
 
   return createPortal(
-    <motion.div
-      ref={containerRef}
-      className="modal-container"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{
-        opacity: {
-          type: "tween",
-          duration: 0.15,
-          ease: "linear",
-        },
-      }}
-      style={{ backdropFilter: "blur(3px)" }}
-      onClick={(e) => {
-        if (e.target === containerRef.current) {
-          !isLoading && setIsOpen(false);
-        }
-      }}
-    >
+    <>
+      <motion.div
+        className="overlay"
+        initial={{
+          opacity: 0,
+        }}
+        animate={{
+          opacity: 1,
+        }}
+        exit={{
+          opacity: 0,
+          pointerEvents: "none",
+          display: "none",
+        }}
+        transition={{
+          type: "spring",
+          stiffness: 500,
+          damping: 50,
+          mass: 1,
+        }}
+        style={{ backdropFilter: "blur(3px)", zIndex: "200" }}
+        onClick={() => !isLoading && setIsOpen(false)}
+      />
       <motion.div
         ref={modalRef}
         className="action-modal"
@@ -84,16 +89,18 @@ const setAvatarModal = ({ setIsOpen, imgUrlRef }) => {
           mass: 1.05,
         }}
         style={{
-          position: "relative",
           display: "flex",
           flexDirection: "column",
           padding: "1.1rem 0",
+          paddingBottom: "0.5rem",
           maxWidth: "28rem",
           width: isLoading ? "300px" : "90%",
-          height: isLoading ? "230px" : "28.5rem",
+          height: isLoading ? "230px" : isPreview ? "370px" : "28.5rem",
           borderRadius: isLoading && "2rem",
           pointerEvents: isLoading ? "none" : "auto",
-          transition: "all 0.3s ease-in-out",
+          zIndex: "201",
+          userSelect: "none",
+          transition: "all 0.2s ease",
         }}
       >
         <div
@@ -110,12 +117,17 @@ const setAvatarModal = ({ setIsOpen, imgUrlRef }) => {
           onMouseLeave={hideTooltip}
           className="clear-icon btn small-btn"
         />
+
+        {/* loading */}
         <div
           style={{
             position: "absolute",
+            top: "0",
             width: "100%",
             height: "100%",
             pointerEvents: isLoading ? "auto" : "none",
+            opacity: isLoading ? "1" : "0",
+            transition: "opacity 0.2s ease",
           }}
         >
           {isLoading && (
@@ -127,7 +139,6 @@ const setAvatarModal = ({ setIsOpen, imgUrlRef }) => {
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
-                paddingBottom: "1rem",
               }}
             >
               <div style={{ fontWeight: "600", fontSize: "1.3rem" }}>
@@ -137,6 +148,103 @@ const setAvatarModal = ({ setIsOpen, imgUrlRef }) => {
             </div>
           )}
         </div>
+        {/* loading end */}
+
+        {/* preview */}
+        <div
+          style={{
+            boxSizing: "border-box",
+            position: "absolute",
+            top: "0",
+            width: "100%",
+            height: "100%",
+            pointerEvents: isPreview ? "auto" : "none",
+            opacity: isPreview ? "1" : "0",
+            transition: "opacity 0.2s ease",
+          }}
+        >
+          {isPreview && (
+            <div
+              style={{
+                display: "flex",
+                boxSizing: "border-box",
+                height: "100%",
+                flexDirection: "column",
+                alignItems: "center",
+                // justifyContent: "center",
+                paddingTop: "3.5rem",
+                // paddingBottom: "1rem",
+              }}
+            >
+              <div
+                style={{
+                  fontWeight: "600",
+                  fontSize: "1.1rem",
+                  marginBottom: "0.3rem",
+                }}
+              >
+                Your new profile photo
+              </div>
+              <div
+                style={{
+                  color: "var(--text3)",
+                  fontSize: "0.9rem",
+                  marginBottom: "2rem",
+                }}
+              >
+                This is how your profile photo will look!
+              </div>
+              <div>
+                <img
+                  style={{
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                    border: "1px solid var(--border)",
+                  }}
+                  width={124}
+                  height={124}
+                  src={URL.createObjectURL(finalBlob)}
+                />
+              </div>
+              <div
+                style={{
+                  marginTop: "auto",
+                  textAlign: "right",
+                  width: "100%",
+                  paddingRight: "1.3rem",
+                  boxSizing: "border-box",
+                  paddingTop: "1rem",
+                  paddingBottom: "1.1rem",
+                }}
+              >
+                <button
+                  className="action-modal-bottom-btn action-cancel"
+                  onClick={() => {
+                    setIsPreview(false);
+                  }}
+                >
+                  Back
+                </button>
+                <button
+                  className="action-modal-bottom-btn"
+                  onClick={() => {
+                    setIsPreview(false);
+                    saveNewAvatar({
+                      avatarBlob: finalBlob,
+                      setIsLoading,
+                      setIsOpen,
+                    });
+                  }}
+                >
+                  Upload
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+        {/* prewview end */}
+
+        {/* crop image */}
         <div style={{ height: "100%" }}>
           <div
             style={{
@@ -160,8 +268,8 @@ const setAvatarModal = ({ setIsOpen, imgUrlRef }) => {
               display: "flex",
               flexDirection: "column",
               height: "calc(100% - 42px)",
-              overflowY: isLoading ? "none" : "auto",
-              opacity: isLoading ? "0" : "1",
+              opacity: isLoading || isPreview ? "0" : "1",
+              pointerEvents: isLoading || isPreview ? "none" : "auto",
               padding: "0 1.3rem",
               transition: "all 0.2s ease",
             }}
@@ -174,8 +282,8 @@ const setAvatarModal = ({ setIsOpen, imgUrlRef }) => {
                 showGrid={true}
                 crop={crop}
                 zoom={zoom}
-                minZoom={1}
-                maxZoom={4}
+                // minZoom={1}
+                // maxZoom={4}
                 restrictPosition={true}
                 onCropChange={setCrop}
                 onZoomChange={setZoom}
@@ -248,22 +356,25 @@ const setAvatarModal = ({ setIsOpen, imgUrlRef }) => {
               </button>
               <button
                 className="action-modal-bottom-btn"
-                onClick={() =>
-                  saveNewAvatar({
+                onClick={async () => {
+                  const avatarBlob = await getCroppedAvatar(
+                    imgUrlRef.current,
                     croppedAreaPixels,
-                    imgUrlRef,
-                    setIsLoading,
-                    setIsOpen,
-                  })
-                }
+                    400
+                  );
+
+                  setFinalBlob(avatarBlob);
+                  setIsPreview(true);
+                }}
               >
-                Upload
+                Next
               </button>
             </div>
           </div>
         </div>
+        {/* crop image end */}
       </motion.div>
-    </motion.div>,
+    </>,
     document.getElementById("modal-portal")
   );
 };

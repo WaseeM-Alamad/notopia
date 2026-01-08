@@ -19,22 +19,17 @@ export async function POST(req) {
   const userID = session?.user?.id;
 
   if (!userID || !labelUUID) {
-    return Response.json(
-      { error: "Missing userID or labelUUID" },
-      { status: 400 }
-    );
+    return new Response("Missing userID or labelUUID", { status: 400 });
   }
-  const fileError = {
-    error:
-      "Can’t upload this file. We accept GIF, JPEG, JPG, PNG files less than 10MB and 25 megapixels.",
-  };
+  const fileError =
+    "Can’t upload this file. We accept GIF, JPEG, JPG, PNG files less than 10MB and 25 megapixels.";
 
   if (!acceptedTypes.includes(file.type)) {
-    return fileError;
+    return new Response(fileError, { status: 400 });
   }
 
   if (file.size > maxSizeBytes) {
-    return fileError;
+    return new Response(fileError, { status: 400 });
   }
 
   const arrayBuffer = await file.arrayBuffer();
@@ -45,7 +40,7 @@ export async function POST(req) {
     ((metadata.width || 0) * (metadata.height || 0)) / 1_000_000;
 
   if (megapixels > maxMegapixels) {
-    return fileError;
+    return new Response(fileError, { status: 400 });
   }
 
   const publicId = `${userID}/labels/${labelUUID}`;
@@ -83,5 +78,6 @@ export async function POST(req) {
     });
   } catch (error) {
     console.error("Error uploading image:", error);
+    return new Response("Error uploading image", { status: 400 });
   }
 }

@@ -13,7 +13,6 @@ const AccountDialog = ({ settingsRef, setIsOpen, user, setUser }) => {
     useAppContext();
   const [isMounted, setIsMounted] = useState(false);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
-  const containerRef = useRef(null);
 
   const [selectedSection, setSelectedSection] = useState(0);
   const [selectMenuOpen, setSelectMenuOpen] = useState(false);
@@ -110,7 +109,6 @@ const AccountDialog = ({ settingsRef, setIsOpen, user, setUser }) => {
   return createPortal(
     <>
       <motion.div
-        ref={containerRef}
         className="overlay"
         initial={{
           opacity: 0,
@@ -129,8 +127,9 @@ const AccountDialog = ({ settingsRef, setIsOpen, user, setUser }) => {
           damping: 50,
           mass: 1,
         }}
+        style={{ backdropFilter: "blur(3px)" }}
         onClick={(e) => {
-          if (e.target === containerRef.current) setIsOpen(false);
+          setIsOpen(false);
         }}
       />
       <motion.div

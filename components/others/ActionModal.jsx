@@ -70,23 +70,28 @@ const ActionModal = ({
   if (!isMounted) return;
 
   return createPortal(
-    <motion.div
-      ref={containerRef}
-      className={`modal-container ${showCloseBtn ? "show-close-btn" : ""}`}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{
-        opacity: {
-          type: "tween",
-          duration: 0.15,
-          ease: "linear",
-        },
-      }}
-      onClick={(e) => {
-        if (e.target === containerRef.current) setDialogInfo(null);
-      }}
-    >
+    <>
+      <motion.div
+        className={`overlay ${showCloseBtn ? "show-close-btn" : ""}`}
+        initial={{
+          opacity: 0,
+        }}
+        animate={{
+          opacity: 1,
+        }}
+        exit={{
+          opacity: 0,
+          pointerEvents: "none",
+          display: "none",
+        }}
+        transition={{
+          type: "spring",
+          stiffness: 500,
+          damping: 50,
+          mass: 1,
+        }}
+        onClick={() => setDialogInfo(null)}
+      />
       <motion.div
         className="action-modal"
         initial={{
@@ -144,7 +149,7 @@ const ActionModal = ({
           </button>
         </div>
       </motion.div>
-    </motion.div>,
+    </>,
     document.getElementById("modal-portal")
   );
 };

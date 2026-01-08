@@ -512,6 +512,21 @@ export function notesReducer(state, action) {
       };
     }
 
+    case "DELETE_IMAGES": {
+      const note = state.notes.get(action.note?.uuid);
+      const imagesSet = action.imagesSet;
+      const newNote = {
+        ...note,
+        updatedAt: new Date(),
+        images: note?.images.filter((img) => !imagesSet.has(img.uuid)),
+      };
+      const updatedNotes = new Map(state.notes).set(action.note?.uuid, newNote);
+      return {
+        ...state,
+        notes: updatedNotes,
+      };
+    }
+
     case "UNDO_COPY": {
       const updatedNotes = new Map(state.notes);
       updatedNotes.delete(action.noteUUID);

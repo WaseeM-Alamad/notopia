@@ -238,6 +238,7 @@ export function AppProvider({ children, initialUser }) {
   };
 
   const updateLabelImage = async (uuid, imageFile) => {
+    const oldImage = labelsRef.current.get(uuid).image;
     const localImageURL = URL.createObjectURL(imageFile);
     const newLabel = { ...labelsRef.current.get(uuid), image: localImageURL };
     const labels = new Map(labelsRef.current).set(uuid, newLabel);
@@ -261,13 +262,20 @@ export function AppProvider({ children, initialUser }) {
       body: formData,
     });
 
-    const data = await res.json();
-
-    if (!data.error) {
+    if (res.ok) {
+      const data = await res.json();
       const newLabel = { ...labelsRef.current.get(uuid), image: data.url };
       labelsRef.current.set(uuid, newLabel);
       updateLocalLabels();
     } else {
+      const error = await res.text();
+      openSnackRef.current({
+        snackMessage: error,
+        showUndo: false,
+      });
+      const newLabel = { ...labelsRef.current.get(uuid), image: oldImage };
+      labelsRef.current.set(uuid, newLabel);
+      updateLocalLabels();
     }
 
     setLoadingImages((prev) => {
@@ -450,18 +458,7 @@ export function AppProvider({ children, initialUser }) {
     }
   }, [status]);
 
-  const saveNewAvatar = async ({
-    croppedAreaPixels,
-    imgUrlRef,
-    setIsLoading,
-    setIsOpen,
-  }) => {
-    const avatarBlob = await getCroppedAvatar(
-      imgUrlRef.current,
-      croppedAreaPixels,
-      400
-    );
-
+  const saveNewAvatar = async ({ avatarBlob, setIsLoading, setIsOpen }) => {
     const avatarFile = new File([avatarBlob], "avatar.jpg", {
       type: "image/jpeg",
     });
@@ -476,18 +473,21 @@ export function AppProvider({ children, initialUser }) {
       body: formData,
     });
 
-    const data = await res.json();
-
-    if (!data.error) {
+    if (res.ok) {
+      const data = await res.json();
       setUser((prev) => ({ ...prev, image: data.url }));
       setIsOpen(false);
     } else {
-      setIsLoading(false);
+      const error = await res.text();
+      openSnackRef.current({
+        snackMessage: error,
+        showUndo: false,
+      });
     }
 
     setTimeout(() => {
       setIsLoading(false);
-    }, 800);
+    }, 300);
   };
 
   return (

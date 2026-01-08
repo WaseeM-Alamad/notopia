@@ -678,6 +678,13 @@ export const fetchNotes = async () => {
       data: JSON.parse(JSON.stringify(notes ?? [])),
       order: order,
       labels: labels,
+      user: {
+        id: JSON.parse(JSON.stringify(user._id)),
+        displayName: user.displayName,
+        email: user.email,
+        image: user.image,
+        username: user.username,
+      },
     };
   } catch (error) {
     console.log("Error fetching notes:", error);

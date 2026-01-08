@@ -62,6 +62,7 @@ const PhotoSettings = ({ rightHeader, selected, user }) => {
       <AnimatePresence>
         {isImageOpen && (
           <GalleryCarousel
+            isAvatar={true}
             images={[{ url: user.image }]}
             setIsOpen={setIsImageOpen}
           />

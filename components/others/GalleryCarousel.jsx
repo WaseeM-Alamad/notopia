@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 
 const GalleryCarousel = ({
   isNote = false,
+  isAvatar = false,
   images,
   setIsOpen,
   startIndex = 0,
@@ -130,6 +131,7 @@ const GalleryCarousel = ({
                 <img
                   onClick={(e) => e.stopPropagation()}
                   className="gallery-slide-img"
+                  style={{borderRadius: isAvatar && "50%"}}
                   src={image.url}
                   alt="Your alt text"
                 />

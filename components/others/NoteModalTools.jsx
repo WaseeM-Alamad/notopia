@@ -132,6 +132,7 @@ const ModalTools = ({
       formData.append("files", file);
       formData.append("imageUUIDs", imageUUID);
       formData.append("clientID", clientID);
+      formData.append("creatorID", note?.creator?._id);
 
       const imageURL = URL.createObjectURL(file);
 
@@ -150,9 +151,11 @@ const ModalTools = ({
       return;
     }
 
+    const newLocalImages = [...localNote.images, ...newImages];
+
     setLocalNote((prev) => ({
       ...prev,
-      images: [...prev.images, ...newImages],
+      images: newLocalImages,
     }));
 
     setLoadingImages((prev) => {
@@ -170,24 +173,29 @@ const ModalTools = ({
 
     const data = await res.json();
 
-    window.dispatchEvent(new Event("loadingEnd"));
+    const failedImages = data.errors;
+    const successImages = data.uploads;
 
-    setLoadingImages((prev) => {
-      const newSet = new Set(prev);
-      imageUUIDs.forEach((id) => newSet.delete(id));
-      return newSet;
-    });
-
-    if (data.error) {
-      openSnackRef.current({
-        snackMessage: "Error uploading images",
-        showUndo: false,
+    if (failedImages.length > 0) {
+      const imagesSet = new Set(failedImages.map((img) => img.uuid));
+      const filteredImages = newLocalImages.filter(
+        (img) => !imagesSet.has(img.uuid)
+      );
+      setLocalNote((prev) => ({
+        ...prev,
+        images: filteredImages,
+      }));
+      dispatchNotes({
+        type: "DELETE_IMAGES",
+        note: note,
+        imagesSet: imagesSet,
       });
-    } else {
-      const updatedImages = data;
+    }
+
+    if (successImages.length > 0) {
       const imagesMap = new Map();
 
-      updatedImages.forEach((imageData) => {
+      successImages.forEach((imageData) => {
         imagesMap.set(imageData.uuid, imageData);
       });
 
@@ -206,7 +214,7 @@ const ModalTools = ({
           imagesMap: imagesMap,
         });
       } else {
-        const modalUpdatedImages = [...note?.images, ...newImages].map(
+        const modalUpdatedImages = [...note?.images, ...successImages].map(
           (img) => {
             if (imagesMap.has(img.uuid)) return imagesMap.get(img.uuid);
             return img;
@@ -219,6 +227,14 @@ const ModalTools = ({
         }));
       }
     }
+
+    window.dispatchEvent(new Event("loadingEnd"));
+
+    setLoadingImages((prev) => {
+      const newSet = new Set(prev);
+      imageUUIDs.forEach((id) => newSet.delete(id));
+      return newSet;
+    });
   };
 
   const restoreNote = async () => {
@@ -451,13 +467,13 @@ const ModalTools = ({
       icon: "trash-menu-icon",
     },
     {
-      title: localNote?.labels.length === 0 ? "Add label" : "Change labels",
+      title: localNote?.labels?.length === 0 ? "Add label" : "Change labels",
       function: handleLabels,
       icon: "label-menu-icon",
     },
     {
       title: !localNote?.isTrash
-        ? localNote?.checkboxes.some((checkbox) => checkbox.isCompleted)
+        ? localNote?.checkboxes?.some((checkbox) => checkbox.isCompleted)
           ? "Uncheck all items"
           : ""
         : "",
@@ -466,7 +482,7 @@ const ModalTools = ({
     },
     {
       title: !localNote?.isTrash
-        ? localNote?.checkboxes.some((checkbox) => checkbox.isCompleted)
+        ? localNote?.checkboxes?.some((checkbox) => checkbox.isCompleted)
           ? "Delete checked items"
           : ""
         : "",
@@ -475,7 +491,7 @@ const ModalTools = ({
     },
     {
       title: !localNote?.isTrash
-        ? localNote?.checkboxes.length > 0
+        ? localNote?.checkboxes?.length > 0
           ? localNote?.showCheckboxes
             ? "Hide checkboxes"
             : "Show checkboxes"
@@ -483,7 +499,7 @@ const ModalTools = ({
         : "",
       function: handleCheckboxVis,
       icon:
-        localNote?.checkboxes.length > 0
+        localNote?.checkboxes?.length > 0
           ? localNote?.showCheckboxes
             ? "hide-checkbox-menu-icon"
             : "add-checkbox-menu-icon"
@@ -491,7 +507,7 @@ const ModalTools = ({
     },
     {
       title: !localNote?.isTrash
-        ? localNote?.checkboxes.length === 0
+        ? localNote?.checkboxes?.length === 0
           ? "Add checkboxes"
           : ""
         : "",

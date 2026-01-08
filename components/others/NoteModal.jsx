@@ -69,12 +69,12 @@ const NoteModal = ({
   const timeoutRef = useRef(null);
 
   const includesTitle = localNote?.title
-    .toLowerCase()
-    .includes(searchTerm.toLowerCase().trim());
+    ?.toLowerCase()
+    ?.includes(searchTerm.toLowerCase().trim());
 
   const includesContent = localNote?.content
-    .toLowerCase()
-    .includes(searchTerm.toLowerCase().trim());
+    ?.toLowerCase()
+    ?.includes(searchTerm.toLowerCase().trim());
 
   const noTextMatch = searchTerm.trim() && !includesTitle && !includesContent;
   const noImageMatch = filters.image && localNote?.images?.length === 0;

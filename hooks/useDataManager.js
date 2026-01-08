@@ -27,6 +27,7 @@ export function useDataManager({ notesState, dispatchNotes, setNotesReady }) {
     notesIndexMapRef,
     notesStateRef,
     openSnackRef,
+    setUser,
   } = useAppContext();
 
   useEffect(() => {
@@ -66,6 +67,7 @@ export function useDataManager({ notesState, dispatchNotes, setNotesReady }) {
       await saveOrderArray(fetchedNotes.order, user?.id);
       await saveLabelsArray(fetchedNotes.labels, user?.id);
       setLabels(fetchedNotes.labels);
+      setUser(fetchedNotes.user);
       const notesMap = new Map(
         fetchedNotes.data.map((note) => [
           note?.uuid,

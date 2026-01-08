@@ -318,7 +318,6 @@ svg {
   height: 100%;
   z-index: 149;
   background-color: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(3px);
 }
 
 .add-modal {
@@ -699,6 +698,7 @@ svg {
   border: solid 1px var(--border);
   left: 50%;
   top: 40%;
+  z-index: 150;
 }
 
 .action-btns-container {
@@ -2646,13 +2646,9 @@ img {
 
 .checkboxes-divider {
   margin-top: 0.6rem;
-  border-top: solid 1px #000000;
+  border-top: solid 1px var(--r-bw);
   width: 90%;
   opacity: 0.2;
-}
-
-.dark-mode .checkboxes-divider {
-  border-top: solid 1px #ffffff;
 }
 
 .drag-db-area {
