@@ -82,6 +82,9 @@ export function useKeyBindings({
 
   useEffect(() => {
     const handleKeyDown = async (event) => {
+      if (ignoreKeysRef.current) {
+        return;
+      }
       if (event.key === "Escape") {
         if (isActionModalOpenRef.current || isContextMenuOpenRef.current) {
           return;
@@ -116,10 +119,6 @@ export function useKeyBindings({
         !event.altKey &&
         !event.shiftKey
       ) {
-        if (ignoreKeysRef.current) {
-          return;
-        }
-
         if (currentSection.toLowerCase() === "labels") {
           event.preventDefault();
           return;
@@ -409,9 +408,6 @@ export function useKeyBindings({
         !event.altKey &&
         !event.shiftKey
       ) {
-        if (ignoreKeysRef.current) {
-          return;
-        }
         const section = currentSection.toLowerCase();
         if (selectedNotesRef.current.size > 0) {
           section !== "trash" && batchArchiveRef.current();
@@ -457,9 +453,6 @@ export function useKeyBindings({
       }
 
       if (event.key.toLowerCase() === "delete" || event.key === "#") {
-        if (ignoreKeysRef.current) {
-          return;
-        }
         const section = currentSection.toLowerCase();
         if (selectedNotesRef.current.size > 0) {
           section !== "trash" && batchDeleteRef.current();
@@ -499,7 +492,7 @@ export function useKeyBindings({
         !event.altKey &&
         !event.shiftKey
       ) {
-        if (ignoreKeysRef.current || actionThrottle.current) {
+        if (actionThrottle.current) {
           return;
         }
         setTimeout(() => {
@@ -569,9 +562,6 @@ export function useKeyBindings({
         !event.altKey &&
         !event.shiftKey
       ) {
-        if (ignoreKeysRef.current) {
-          return;
-        }
         if (focusedIndex.current === null || focusedIndex.current === undefined)
           return;
         const index = focusedIndex.current;
@@ -597,9 +587,6 @@ export function useKeyBindings({
         !event.metaKey &&
         !event.altKey
       ) {
-        if (ignoreKeysRef.current) {
-          return;
-        }
         if (focusedIndex.current === null || focusedIndex.current === undefined)
           return;
         const index = focusedIndex.current;
@@ -661,12 +648,7 @@ export function useKeyBindings({
         !event.metaKey &&
         !event.altKey
       ) {
-        if (
-          ignoreKeysRef.current ||
-          !allowUndoRef.current ||
-          !undoFunction.current
-        )
-          return;
+        if (!allowUndoRef.current || !undoFunction.current) return;
         event.preventDefault();
         requestAnimationFrame(() => {
           undoFunction.current();
@@ -696,12 +678,7 @@ export function useKeyBindings({
           !event.altKey &&
           !event.shiftKey)
       ) {
-        if (
-          ignoreKeysRef.current ||
-          !allowRedoRef.current ||
-          !redoFunction.current
-        )
-          return;
+        if (!allowRedoRef.current || !redoFunction.current) return;
 
         event.preventDefault();
         requestAnimationFrame(() => {

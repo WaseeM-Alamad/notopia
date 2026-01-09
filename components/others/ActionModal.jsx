@@ -18,37 +18,20 @@ const ActionModal = ({
     closeToolTip,
     hideTooltip,
     showTooltip,
-    floatingBtnRef,
     isActionModalOpenRef,
+    lockScroll,
   } = useAppContext();
   const [isMounted, setIsMounted] = useState(false);
-  const containerRef = useRef(null);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
   useEffect(() => {
-    const nav = document.querySelector("nav");
-    const floatingBtn = floatingBtnRef?.current;
-    const info = dialogInfo ?? "".trim();
-    if (info) {
-      const scrollbarWidth =
-        window.innerWidth - document.documentElement.clientWidth;
-      document.body.style.overflow = "hidden";
-      document.body.style.paddingRight = `${scrollbarWidth}px`;
-      if (nav) nav.style.paddingRight = `${scrollbarWidth}px`;
-      if (floatingBtn) floatingBtn.style.paddingRight = `${scrollbarWidth}px`;
-    } else {
-      document.body.removeAttribute("style");
-      if (floatingBtn) floatingBtn.style.removeProperty("padding-right");
-      if (nav) nav.style.removeProperty("padding-right");
-    }
-    return () => {
-      document.body.removeAttribute("style");
-      if (floatingBtn) floatingBtn.style.removeProperty("padding-right");
-      if (nav) nav.style.removeProperty("padding-right");
-    };
+    const isOpen = (dialogInfo ?? "".trim()) !== "";
+    lockScroll(isOpen);
+
+    return () => lockScroll(false);
   }, [dialogInfo]);
 
   useEffect(() => {

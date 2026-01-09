@@ -1,7 +1,5 @@
 import React, { memo, useCallback, useEffect, useState } from "react";
 import { Drawer } from "vaul";
-import DrawerCarousel from "./DrawerCarousel";
-import { useAppContext } from "@/context/AppContext";
 import { getNoteFormattedDate } from "@/utils/noteDateFormatter";
 
 const MoreMenuDrawer = ({
@@ -12,7 +10,6 @@ const MoreMenuDrawer = ({
   menuItems,
   updatedAt,
 }) => {
-  const { floatingBtnRef } = useAppContext();
   const [isDragging, setIsDragging] = useState(false);
   const [isOpen, setIsOpen] = useState(open);
   const formattedEditedDate = isOpen ? getNoteFormattedDate(updatedAt) : null;
@@ -39,29 +36,6 @@ const MoreMenuDrawer = ({
   }, [open]);
 
   useEffect(() => {
-    if (isOpen) {
-      const nav = document.querySelector("nav");
-      const topMenu = document.querySelector("#top-menu");
-      const floatingBtn = floatingBtnRef?.current;
-      const scrollbarWidth =
-        window.innerWidth - document.documentElement.clientWidth;
-      if (topMenu) topMenu.style.paddingRight = `${scrollbarWidth}px`;
-      if (nav) nav.style.paddingRight = `${scrollbarWidth}px`;
-      if (floatingBtn) floatingBtn.style.paddingRight = `${scrollbarWidth}px`;
-    }
-  }, [isOpen]);
-
-  const onClose = () => {
-    const nav = document.querySelector("nav");
-    const floatingBtn = floatingBtnRef?.current;
-    const topMenu = document.querySelector("#top-menu");
-    document.body.removeAttribute("data-scroll-locked");
-    if (topMenu) topMenu.style.removeProperty("padding-right");
-    if (floatingBtn) floatingBtn.style.removeProperty("padding-right");
-    if (nav) nav.style.removeProperty("padding-right");
-  };
-
-  useEffect(() => {
     requestAnimationFrame(() => {
       !isOpen && setIsOpen(open);
     });
@@ -75,7 +49,6 @@ const MoreMenuDrawer = ({
         if (!isDragging) setIsDragging(true);
       }}
       onRelease={() => setIsDragging(false)}
-      onClose={onClose}
       open={open}
       onAnimationEnd={() => setIsOpen(false)}
       onOpenChange={(val) => setOpen(val)}

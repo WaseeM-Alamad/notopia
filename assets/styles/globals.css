@@ -80,8 +80,34 @@ html {
 }
 
 body {
-  height: 100dvh;
+  height: 100%;
   overflow-x: hidden !important;
+}
+
+body[data-scroll-locked-sidebar="1"] {
+  overflow: hidden;
+  margin-right: var(--removed-body-scroll-bar-size, 0px);
+}
+
+body[data-scroll-locked-sidebar="1"] .top-menu {
+  padding-right: var(--removed-body-scroll-bar-size, 0px);
+}
+
+body[data-scroll-locked-sidebar="1"] .floating-btn {
+  margin-right: var(--removed-body-scroll-bar-size, 0px);
+}
+
+body[data-scroll-locked] {
+  overflow: hidden;
+  margin-right: var(--removed-body-scroll-bar-size, 0px);
+}
+
+body[data-scroll-locked] .top-menu {
+  padding-right: var(--removed-body-scroll-bar-size, 0px);
+}
+
+body[data-scroll-locked] .floating-btn {
+  margin-right: var(--removed-body-scroll-bar-size, 0px);
 }
 
 button:disabled {
@@ -1886,10 +1912,6 @@ svg {
   border-color: var(--border) !important;
 }
 
-.starting-div-header {
-  height: 4rem;
-}
-
 .starting-div {
   position: relative;
   height: calc(100% - 4rem);
@@ -3341,6 +3363,7 @@ img {
 
 .trash-section-header {
   display: flex;
+  pointer-events: none;
   justify-content: center;
   padding: 1rem 0;
   user-select: none;
@@ -4580,7 +4603,22 @@ img {
   border-color: transparent !important;
 }
 
+.aside-wrapper {
+  position: fixed;
+  width: 100%;
+  height: 100dvh;
+  background-color: rgba(0, 0, 0, 0);
+  z-index: 99;
+  top: 0;
+  pointer-events: none;
+  transition: opacity 0.26s cubic-bezier(0.5, 0.2, 0.3, 1);
+}
+
 @media (max-width: 500px) {
+  .aside-wrapper {
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+
   .color-section-menu {
     display: grid;
     grid-template-columns: repeat(6, 30px);
@@ -4751,15 +4789,6 @@ img {
 
 .side-expand-btn:hover {
   opacity: 1;
-}
-
-.aside-wrapper {
-  position: fixed;
-  width: 100%;
-  height: 100dvh;
-  background-color: rgba(0, 0, 0, 0);
-  z-index: 99;
-  pointer-events: none;
 }
 
 aside {
@@ -5363,7 +5392,6 @@ aside svg {
   .aside-wrapper {
     opacity: 0;
     z-index: 101;
-    transition: all 0.26s cubic-bezier(0.5, 0.2, 0.3, 1);
   }
 
   aside {
@@ -5397,7 +5425,6 @@ aside svg {
   .side-mobile-open {
     pointer-events: auto;
     opacity: 1;
-    background-color: rgba(0, 0, 0, 0.5);
   }
 
   .modal-inputs-container::-webkit-scrollbar {

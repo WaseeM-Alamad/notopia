@@ -96,12 +96,12 @@ export function AppProvider({ children, initialUser }) {
         setIsExpanded({ open: false, threshold: "after" });
       }
 
-      if (width <= 384) {
+      if (width < 341) {
         setLayout("list");
       } else {
         const savedLayout = localStorage.getItem("layout");
         setLayout(savedLayout);
-        setBreakpoint(width > 527 ? 1 : 2);
+        setBreakpoint(width > 527 ? 1 : width < 400 ? 3 : 2);
       }
     };
 
@@ -122,26 +122,13 @@ export function AppProvider({ children, initialUser }) {
 
   useEffect(() => {
     if (isExpanded.threshold !== "before") return;
-
-    const body = document.body;
-    const nav = document.querySelector("nav");
-    const topMenu = document.querySelector("#top-menu");
-    const floatingBtn = floatingBtnRef?.current;
-    const elements = [nav, topMenu, floatingBtn, body];
-
+    getScrollbarWidth();
     if (isExpanded.open) {
-      const scrollbarWidth =
-        window.innerWidth - document.documentElement.clientWidth;
-      elements.forEach(
-        (el) => el && (el.style.paddingRight = `${scrollbarWidth}px`)
-      );
-      body.style.overflow = "hidden";
+      document.body.setAttribute("data-scroll-locked-sidebar", "1");
     } else {
-      elements.forEach((el) => el && el.style.removeProperty("padding-right"));
-      body.style.removeProperty("overflow");
-      document.body.removeAttribute("data-scroll-locked");
+      document.body.removeAttribute("data-scroll-locked-sidebar");
     }
-  }, [isExpanded]);
+  }, [isExpanded.open]);
 
   useEffect(() => {
     focusedIndex.current = null;
@@ -499,6 +486,28 @@ export function AppProvider({ children, initialUser }) {
     []
   );
 
+  function getScrollbarWidth() {
+    const scrollbarWidth =
+      window.innerWidth - document.documentElement.clientWidth;
+    document.documentElement.style.setProperty(
+      "--removed-body-scroll-bar-size",
+      `${scrollbarWidth}px`
+    );
+  }
+
+  const lockScroll = useCallback((isOpen) => {
+    getScrollbarWidth();
+    requestAnimationFrame(() => {
+      if (isOpen) {
+        ignoreKeysRef.current = true;
+        document.body.setAttribute("data-scroll-locked", "1");
+      } else {
+        ignoreKeysRef.current = false;
+        document.body.removeAttribute("data-scroll-locked");
+      }
+    });
+  }, []);
+
   return (
     <AppContext.Provider
       value={{
@@ -556,6 +565,7 @@ export function AppProvider({ children, initialUser }) {
         isActionModalOpenRef,
         isContextMenuOpenRef,
         saveNewAvatar,
+        lockScroll,
         clientID: clientID.current,
       }}
     >

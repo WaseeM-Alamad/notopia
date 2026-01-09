@@ -38,7 +38,7 @@ const NoteModal = ({
     openSnackRef,
     setDialogInfoRef,
     notesStateRef,
-    floatingBtnRef,
+    lockScroll,
   } = useAppContext();
   const { skipHashChangeRef, searchTerm, filters } = useSearch();
   const [isMounted, setIsMounted] = useState(false);
@@ -535,25 +535,13 @@ const NoteModal = ({
   }, [isOpen]);
 
   useEffect(() => {
-    const nav = document.querySelector("nav");
-    const floatingBtn = floatingBtnRef?.current;
     if (isOpen) {
-      const scrollbarWidth =
-        window.innerWidth - document.documentElement.clientWidth;
-      document.body.style.overflow = "hidden";
-      document.body.style.paddingRight = `${scrollbarWidth}px`;
-      if (nav) nav.style.paddingRight = `${scrollbarWidth}px`;
-      if (floatingBtn) floatingBtn.style.paddingRight = `${scrollbarWidth}px`;
+      lockScroll(isOpen);
     } else {
-      document.body.removeAttribute("style");
-      if (floatingBtn) floatingBtn.style.removeProperty("padding-right");
-      if (nav) nav.style.removeProperty("padding-right");
+      setTimeout(() => {
+        lockScroll(isOpen);
+      }, 200);
     }
-    return () => {
-      document.body.removeAttribute("style");
-      if (floatingBtn) floatingBtn.style.removeProperty("padding-right");
-      if (nav) nav.style.removeProperty("padding-right");
-    };
   }, [isOpen]);
 
   useEffect(() => {

@@ -113,7 +113,7 @@ const DynamicLabel = ({
   const resizeTimeoutRef = useRef(null);
   const layoutFrameRef = useRef(null);
   const lastAddedNoteRef = useRef(null);
-  const gridNoteWidth = breakpoint === 1 ? 240 : breakpoint === 2 ? 180 : 240;
+  const gridNoteWidth = breakpoint === 1 ? 240 : breakpoint === 2 ? 180 : 150;
   const COLUMN_WIDTH = layout === "grid" ? gridNoteWidth : 600;
   const GUTTER = breakpoint === 1 ? 15 : 8;
 
@@ -167,7 +167,7 @@ const DynamicLabel = ({
         : columns * (COLUMN_WIDTH + GUTTER) - GUTTER;
 
       container.style.width = `${contentWidth}px`;
-      container.style.maxWidth = isGrid ? "100%" : "90%";
+      container.style.maxWidth = isGrid ? "100%" : "95%";
       container.style.position = "relative";
       container.style.left = "50%";
       container.style.transform = "translateX(-50%)";
@@ -453,7 +453,11 @@ const DynamicLabel = ({
       />
       <AnimatePresence>
         {isModalOpen && (
-          <SetLabelModal setIsOpen={setIsModalOpen} labelObj={labelObj} />
+          <SetLabelModal
+            setIsOpen={setIsModalOpen}
+            isOpen={isModalOpen}
+            labelObj={labelObj}
+          />
         )}
       </AnimatePresence>
     </>

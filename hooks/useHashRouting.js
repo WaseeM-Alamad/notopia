@@ -140,7 +140,7 @@ export function useHashRouting({
       });
       setSearchTerm("");
       requestAnimationFrame(() => {
-        searchRef.current.value = "";
+        if (searchRef.current) searchRef.current.value = "";
       });
     }
   }, [labelsReady, currentSection]);

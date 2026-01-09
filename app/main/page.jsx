@@ -545,8 +545,6 @@ const page = () => {
           setNoActionUndone={setNoActionUndone}
           onClose={onCloseFunction}
         />
-        <div className="starting-div-header" />
-
         <TopMenu
           notes={notesState.notes}
           visibleItems={visibleItems}

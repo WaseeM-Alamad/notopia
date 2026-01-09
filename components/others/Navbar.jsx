@@ -54,7 +54,7 @@ const Navbar = () => {
     setBindsOpenRef,
     isOnline,
     setIsExpanded,
-    floatingBtnRef,
+    lockScroll,
     session,
     status,
   } = useAppContext();
@@ -93,64 +93,6 @@ const Navbar = () => {
   useEffect(() => {
     setBindsOpenRef.current = setBindsOpen;
   }, []);
-
-  useEffect(() => {
-    ignoreKeysRef.current = settingsOpen;
-    const nav = document.querySelector("nav");
-    const floatingBtn = floatingBtnRef?.current;
-    const scrollbarWidth =
-      window.innerWidth - document.documentElement.clientWidth;
-
-    if (settingsOpen) {
-      document.body.style.overflow = "hidden";
-      document.body.style.paddingRight = `${scrollbarWidth}px`;
-      if (nav) nav.style.paddingRight = `${scrollbarWidth}px`;
-      if (floatingBtn) floatingBtn.style.paddingRight = `${scrollbarWidth}px`;
-    } else {
-      document.body.removeAttribute("style");
-      if (nav) nav.style.removeProperty("padding-right");
-      if (floatingBtn) floatingBtn.style.removeProperty("padding-right");
-
-      if (settingsRef.current) {
-        settingsRef.current.style.marginLeft = `${scrollbarWidth / 2}px`;
-      }
-    }
-
-    return () => {
-      document.body.removeAttribute("style");
-      if (floatingBtn) floatingBtn.style.removeProperty("padding-right");
-      if (nav) nav.style.removeProperty("padding-right");
-    };
-  }, [settingsOpen]);
-
-  useEffect(() => {
-    ignoreKeysRef.current = bindsOpen;
-    const nav = document.querySelector("nav");
-    const floatingBtn = floatingBtnRef?.current;
-    const scrollbarWidth =
-      window.innerWidth - document.documentElement.clientWidth;
-
-    if (bindsOpen) {
-      document.body.style.overflow = "hidden";
-      document.body.style.paddingRight = `${scrollbarWidth}px`;
-      if (nav) nav.style.paddingRight = `${scrollbarWidth}px`;
-      if (floatingBtn) floatingBtn.style.paddingRight = `${scrollbarWidth}px`;
-    } else {
-      document.body.removeAttribute("style");
-      if (floatingBtn) floatingBtn.style.removeProperty("padding-right");
-      if (nav) nav.style.removeProperty("padding-right");
-
-      if (keybindsRef.current) {
-        keybindsRef.current.style.marginLeft = `${scrollbarWidth / 2}px`;
-      }
-    }
-
-    return () => {
-      document.body.removeAttribute("style");
-      if (floatingBtn) floatingBtn.style.removeProperty("padding-right");
-      if (nav) nav.style.removeProperty("padding-right");
-    };
-  }, [bindsOpen]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -701,9 +643,11 @@ const Navbar = () => {
               onBlur={hideTooltip}
               onClick={toggleLayout}
               className="nav-btn"
-              style={{
-                // display: !showLayoutBtn && "none",
-              }}
+              style={
+                {
+                  // display: !showLayoutBtn && "none",
+                }
+              }
             >
               {layout === "grid" ? <ListIcon /> : <GridIcon />}
             </Button>
@@ -825,6 +769,7 @@ const Navbar = () => {
         {settingsOpen && (
           <AccountDialog
             settingsRef={settingsRef}
+            isOpen={settingsOpen}
             setIsOpen={setSettingsOpen}
             user={user}
             setUser={setUser}
@@ -834,7 +779,7 @@ const Navbar = () => {
 
       <AnimatePresence>
         {bindsOpen && (
-          <KeybindsTable keybindsRef={keybindsRef} setIsOpen={setBindsOpen} />
+          <KeybindsTable keybindsRef={keybindsRef} isOpen={bindsOpen} setIsOpen={setBindsOpen} />
         )}
       </AnimatePresence>
     </>

@@ -31,7 +31,7 @@ const Sidebar = memo(() => {
     isExpanded,
     status,
     session,
-    initialLoading
+    initialLoading,
   } = useAppContext();
   const containerRef = useRef(null);
   const [currentHash, setCurrentHash] = useState(null);
@@ -61,6 +61,21 @@ const Sidebar = memo(() => {
   const [navItems, setNavitems] = useState(items);
 
   const currentYear = useMemo(() => new Date().getFullYear(), []);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (
+        e.key === "Escape" &&
+        isExpanded.threshold === "before" &&
+        isExpanded.open
+      ) {
+        setIsExpanded((prev) => ({ ...prev, open: false }));
+      }
+    };
+
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [isExpanded]);
 
   useEffect(() => {
     const hash = window.location.hash.replace("#", "");
@@ -110,7 +125,6 @@ const Sidebar = memo(() => {
       });
 
       calculateVerticalLayout();
-      
     };
 
     handler();

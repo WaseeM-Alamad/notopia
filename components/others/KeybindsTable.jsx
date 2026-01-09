@@ -3,11 +3,20 @@ import { motion } from "framer-motion";
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-const KeybindsTable = ({ keybindsRef, setIsOpen }) => {
-  const { showTooltip, hideTooltip, closeToolTip } = useAppContext();
+const KeybindsTable = ({ keybindsRef, isOpen, setIsOpen }) => {
+  const { showTooltip, hideTooltip, closeToolTip, lockScroll } =
+    useAppContext();
   const [isScrolled, setIsScrolled] = useState(false);
 
   const tableRef = useRef(null);
+
+  useEffect(() => {
+    lockScroll(isOpen);
+
+    return () => {
+      lockScroll(false);
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     const table = tableRef.current;
