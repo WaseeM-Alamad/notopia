@@ -8,7 +8,7 @@ import DeleteAccSettings from "./DeleteAccSettings";
 import { useAppContext } from "@/context/AppContext";
 import Menu from "./Menu";
 
-const AccountDialog = ({ settingsRef, isOpen, setIsOpen, user, setUser }) => {
+const AccountDialog = ({ isOpen, setIsOpen }) => {
   const {
     showTooltip,
     hideTooltip,
@@ -16,6 +16,8 @@ const AccountDialog = ({ settingsRef, isOpen, setIsOpen, user, setUser }) => {
     isExpanded,
     ignoreKeysRef,
     lockScroll,
+    user,
+    setUser,
   } = useAppContext();
   const [isMounted, setIsMounted] = useState(false);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
@@ -149,7 +151,6 @@ const AccountDialog = ({ settingsRef, isOpen, setIsOpen, user, setUser }) => {
         }}
       />
       <motion.div
-        ref={settingsRef}
         initial={{
           transform: "translate(-50%, -45%) scale(0.97)",
           opacity: 0,

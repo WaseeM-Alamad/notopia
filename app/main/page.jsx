@@ -493,7 +493,7 @@ const page = () => {
     DynamicLabel,
   };
 
-  if (!currentSection || (!session?.user && status === "authenticated")) {
+  if (!currentSection) {
     return null;
   }
 

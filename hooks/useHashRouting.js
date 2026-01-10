@@ -128,7 +128,9 @@ export function useHashRouting({
       const text = dataObj.text ?? "";
       setSearchTerm(text);
       requestAnimationFrame(() => {
-        searchRef.current.value = text;
+        if (searchRef.current) {
+          searchRef.current.value = text;
+        }
       });
     }
     if (hash === "search") {

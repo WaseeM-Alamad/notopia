@@ -78,8 +78,6 @@ const Navbar = () => {
   const isFirstRunRef = useRef(true);
   const imageRef = useRef(null);
   const menuRef = useRef(null);
-  const settingsRef = useRef(null);
-  const keybindsRef = useRef(null);
 
   useEffect(() => {
     const width = window.innerWidth;
@@ -399,12 +397,7 @@ const Navbar = () => {
     return () => window.removeEventListener("resize", handleResizeLayout);
   }, [handleResizeLayout]);
 
-  if (
-    !isClient ||
-    !currentSection ||
-    (!session?.user && status === "authenticated" && status === "loading") ||
-    initialLoading
-  ) {
+  if (!isClient || !currentSection) {
     return;
   }
 
@@ -474,17 +467,17 @@ const Navbar = () => {
             }}
           >
             <div
-              style={{
-                display: !showInput && "none",
-                position: threshold1 && "absolute",
-                top: threshold1 && 0,
-                right: threshold1 ? (showLayoutBtn ? "146px" : "100px") : null,
-                width: threshold1
-                  ? showLayoutBtn
-                    ? "calc(100% - 156px)"
-                    : "calc(100% - 110px)"
-                  : null,
-              }}
+              // style={{
+              //   display: !showInput && "none",
+              //   position: threshold1 && "absolute",
+              //   top: threshold1 && 0,
+              //   right: threshold1 ? (showLayoutBtn ? "146px" : "100px") : null,
+              //   width: threshold1
+              //     ? showLayoutBtn
+              //       ? "calc(100% - 156px)"
+              //       : "calc(100% - 110px)"
+              //     : null,
+              // }}
               className="search-wrapper"
               onBlur={(e) => {
                 const width = window.innerWidth;
@@ -768,7 +761,6 @@ const Navbar = () => {
       <AnimatePresence>
         {settingsOpen && (
           <AccountDialog
-            settingsRef={settingsRef}
             isOpen={settingsOpen}
             setIsOpen={setSettingsOpen}
             user={user}
@@ -779,7 +771,11 @@ const Navbar = () => {
 
       <AnimatePresence>
         {bindsOpen && (
-          <KeybindsTable keybindsRef={keybindsRef} isOpen={bindsOpen} setIsOpen={setBindsOpen} />
+          <KeybindsTable
+            keybindsRef={keybindsRef}
+            isOpen={bindsOpen}
+            setIsOpen={setBindsOpen}
+          />
         )}
       </AnimatePresence>
     </>

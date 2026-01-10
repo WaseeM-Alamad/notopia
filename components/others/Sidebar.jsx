@@ -315,12 +315,7 @@ const Sidebar = memo(() => {
     setTooltipOpen(false);
   };
 
-  if (
-    currentHash === null ||
-    !currentSection ||
-    (!session?.user && status === "authenticated" && status === "loading") ||
-    initialLoading
-  ) {
+  if (currentHash === null || !currentSection) {
     return;
   }
 
