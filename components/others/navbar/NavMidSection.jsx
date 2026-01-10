@@ -6,7 +6,7 @@ import { debounce } from "lodash";
 import React, { useEffect, useMemo, useState } from "react";
 import NavButtons from "./NavButtons";
 import InputSearchIcon from "@/components/icons/InputSearchIcon";
-import InputLeftArrow from "@/components/icons/inputLeftArrow";
+import InputLeftArrow from "@/components/icons/InputLeftArrow";
 
 const NavMidSection = () => {
   const {

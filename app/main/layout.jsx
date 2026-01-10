@@ -1,5 +1,4 @@
-import Navbar from "@/components/others/Navbar";
-import Nn from "@/components/others/navbar/Nn";
+import Navbar from "@/components/others/navbar/Navbar";
 import Sidebar from "@/components/others/Sidebar";
 import { authOptions } from "@/utils/authOptions";
 import { getServerSession } from "next-auth";
@@ -11,8 +10,7 @@ const Layout = async ({ children }) => {
     <>
       {session && (
         <>
-          {/* <Navbar initialUser={session?.user} /> */}
-          <Nn />
+          <Navbar />
           <Sidebar />
           {children}
         </>

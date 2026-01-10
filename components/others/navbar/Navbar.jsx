@@ -2,13 +2,12 @@
 
 import { useAppContext } from "@/context/AppContext";
 import React, { useEffect, useState } from "react";
-import Button from "../../Tools/Button";
 import LogoSection from "./LogoSection";
 import NavMidSection from "./NavMidSection";
 import NavProfileSection from "./NavProfileSection";
-import { useSearch } from "@/context/SearchContext";
+import "@/assets/styles/navbar.css";
 
-const Nn = () => {
+const Navbar = () => {
   const { currentSection, isFiltered } = useAppContext();
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -34,4 +33,4 @@ const Nn = () => {
   );
 };
 
-export default Nn;
+export default Navbar;
