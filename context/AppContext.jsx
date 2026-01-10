@@ -121,7 +121,10 @@ export function AppProvider({ children, initialUser }) {
   }, [isExpanded.open]);
 
   useEffect(() => {
-    if (isExpanded.threshold !== "before") return;
+    if (isExpanded.threshold !== "before") {
+      document.body.removeAttribute("data-scroll-locked-sidebar");
+      return;
+    }
     getScrollbarWidth();
     if (isExpanded.open) {
       document.body.setAttribute("data-scroll-locked-sidebar", "1");

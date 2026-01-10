@@ -330,6 +330,7 @@ const Sidebar = memo(() => {
         <aside
           className={`${isDragging ? "side-dragging" : ""} ${isExpanded.threshold === "before" && isExpanded.open ? "sidebar-shadow" : ""}`}
           onClick={(e) => e.stopPropagation()}
+          style={{ paddingTop: isExpanded.threshold === "before" && "1.2rem" }}
         >
           <AnimatePresence>
             {triggerFloatingBtn && (
@@ -360,6 +361,19 @@ const Sidebar = memo(() => {
           )}
 
           <div ref={containerRef} className="btns-container">
+            {isExpanded.threshold === "before" && (
+              <span
+                onClick={() => (window.location.hash = "home")}
+                className="notopia"
+                style={{
+                  marginLeft: "1rem",
+                  cursor: "default",
+                  paddingBottom: "1.2rem",
+                }}
+              >
+                Notopia
+              </span>
+            )}
             <SideButtons
               navItems={navItems}
               currentHash={currentHash}

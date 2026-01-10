@@ -79,6 +79,7 @@ const NavProfileSection = () => {
         {isMenuOpen && (
           <ProfileMenu
             user={user}
+            imageRef={imageRef}
             menuPosition={menuPosition}
             isOpen={isMenuOpen}
             setIsOpen={setIsMenuOpen}

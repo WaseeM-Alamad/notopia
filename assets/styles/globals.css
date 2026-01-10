@@ -4615,10 +4615,6 @@ img {
 }
 
 @media (max-width: 500px) {
-  .aside-wrapper {
-    background-color: rgba(0, 0, 0, 0.5);
-  }
-
   .color-section-menu {
     display: grid;
     grid-template-columns: repeat(6, 30px);
@@ -5355,6 +5351,10 @@ aside svg {
 }
 
 @media (max-width: 605px) {
+  .aside-wrapper {
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+
   .n-misc {
     pointer-events: none;
   }

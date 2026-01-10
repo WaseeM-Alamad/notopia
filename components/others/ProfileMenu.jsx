@@ -6,6 +6,7 @@ import { useAppContext } from "@/context/AppContext";
 
 const ProfileMenu = ({
   user,
+  imageRef,
   menuPosition,
   isOpen,
   setIsOpen,
@@ -23,7 +24,10 @@ const ProfileMenu = ({
 
   useEffect(() => {
     const handler = (e) => {
-      if (e.target !== menuRef.current) {
+      if (
+        !menuRef.current.contains(e.target) &&
+        !imageRef.current.contains(e.target)
+      ) {
         setIsOpen(false);
       }
     };
