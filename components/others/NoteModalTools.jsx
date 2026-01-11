@@ -151,6 +151,8 @@ const ModalTools = ({
       return;
     }
 
+    const localImages = localNote?.images;
+
     const newLocalImages = [...localNote.images, ...newImages];
 
     setLocalNote((prev) => ({
@@ -214,7 +216,7 @@ const ModalTools = ({
           imagesMap: imagesMap,
         });
       } else {
-        const modalUpdatedImages = [...note?.images, ...successImages].map(
+        const modalUpdatedImages = [...localImages, ...successImages].map(
           (img) => {
             if (imagesMap.has(img.uuid)) return imagesMap.get(img.uuid);
             return img;

@@ -1250,7 +1250,7 @@ svg {
   width: 100%;
   pointer-events: none;
   height: calc(100%);
-  border-radius: 0.7rem;
+  border-radius: 0.9rem;
   position: absolute;
   z-index: 0;
   transition-property: box-shadow, opacity;
@@ -2404,7 +2404,7 @@ img {
   opacity: 0.97 !important;
   pointer-events: none !important;
   cursor: move !important;
-  border-radius: 0.8rem !important;
+  border-radius: 0.9rem !important;
   box-shadow: 2px 1px 25px -3px rgba(112, 112, 112, 0.8) !important;
   transform: none !important;
   transition: none !important;
