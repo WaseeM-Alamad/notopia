@@ -761,18 +761,18 @@ const NoteModal = ({
       const modalHeight = modal.offsetHeight;
       const width = window.innerWidth;
       if (width < 605) {
-        collabBox.style.padding = "70% 0 0 0";
+        collabBox.style.transform = "translateY(70%)";
       }
       modal.style.height = modalHeight + "px";
 
       requestAnimationFrame(() => {
         collabBox.style.transition =
-          "opacity .12s ease-in-out, padding 0.45s cubic-bezier(0.5, 0.2, 0.3, 1)";
+          "opacity .12s ease-in-out, transform 0.45s cubic-bezier(0.5, 0.2, 0.3, 1)";
         if (width >= 605) {
           const collabHeight = collabBox.offsetHeight;
           modal.style.height = collabHeight + "px";
         } else {
-          collabBox.style.removeProperty("padding");
+          collabBox.style.removeProperty("transform");
           // collabBox.style.padding = "0";
         }
         modal.style.backgroundColor = "#ffffff";
@@ -819,7 +819,7 @@ const NoteModal = ({
       skipCenterRef.current = true;
 
       if (width < 650) {
-        collabBox.style.padding = "70% 0 0 0";
+        collabBox.style.transform = "translateY(70%)";
       }
       editorBox.style.display = "flex";
       editorBox.style.position = "absolute";

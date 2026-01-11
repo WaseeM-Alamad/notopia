@@ -130,8 +130,7 @@ const GalleryCarousel = ({
               <div className="gallery-slide" key={index}>
                 <img
                   onClick={(e) => e.stopPropagation()}
-                  className="gallery-slide-img"
-                  style={{borderRadius: isAvatar && "50%"}}
+                  className={`gallery-slide-${isAvatar ? "avatar" : "img"}`}
                   src={image.url}
                   alt="Your alt text"
                 />

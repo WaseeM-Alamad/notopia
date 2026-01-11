@@ -273,8 +273,9 @@ const AccountDialog = ({ isOpen, setIsOpen }) => {
             menuItems={sectionsBtns}
             transformOrigin="top"
             className={`option-styling `}
-            // ${selected ? "selected-settings-btn" : ""}
+            selectedIndex={selectedSection}
             isSelectMenu={true}
+            selectedClass="selected-acc-section"
           />
         )}
       </AnimatePresence>

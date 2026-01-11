@@ -17,7 +17,7 @@ export function useMouseSelection({
   const notePositionsRef = useRef(new Map());
   const pendingChangesRef = useRef({ select: new Set(), deselect: new Set() });
   const lastUpdateTime = useRef(0);
-  const { initialLoading } = useAppContext();
+  const { initialLoading, currentSection, isExpanded } = useAppContext();
 
   // Cache note positions to avoid expensive getBoundingClientRect calls
   const cacheNotePositions = useCallback(() => {
@@ -164,7 +164,14 @@ export function useMouseSelection({
 
   const handleMouseDown = useCallback(
     (e) => {
-      if (e.button !== 0 || initialLoading) return; // Only handle left mouse button
+      if (e.button !== 0) return; // Only handle left mouse button
+
+      if (
+        currentSection?.toLowerCase() === "labels" ||
+        initialLoading ||
+        (isExpanded.open && isExpanded.threshold === "before")
+      )
+        return;
 
       const parent = rootContainerRef.current;
       const container =
@@ -209,7 +216,14 @@ export function useMouseSelection({
         box.style.height = "0px";
       }
     },
-    [cacheNotePositions, selectedNotesRef, rootContainerRef, initialLoading]
+    [
+      cacheNotePositions,
+      selectedNotesRef,
+      rootContainerRef,
+      initialLoading,
+      currentSection,
+      isExpanded,
+    ]
   );
 
   const handleMouseUp = useCallback(() => {

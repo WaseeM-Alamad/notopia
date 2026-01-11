@@ -63,7 +63,6 @@ const SetAvatarModal = ({ setIsOpen, initialFileRef, isGif }) => {
         exit={{
           opacity: 0,
           pointerEvents: "none",
-          display: "none",
         }}
         transition={{
           type: "spring",
@@ -71,7 +70,11 @@ const SetAvatarModal = ({ setIsOpen, initialFileRef, isGif }) => {
           damping: 50,
           mass: 1,
         }}
-        style={{ backdropFilter: "blur(3px)", zIndex: "200" }}
+        style={{
+          backdropFilter: "blur(3px)",
+          zIndex: "200",
+          willChange: "backdrop-filter, opacity",
+        }}
         onClick={() => !isLoading && setIsOpen(false)}
       />
       <motion.div
@@ -103,11 +106,13 @@ const SetAvatarModal = ({ setIsOpen, initialFileRef, isGif }) => {
           maxWidth: "30rem",
           width: isLoading ? "270px" : "90%",
           height: isLoading ? "200px" : isPreview ? "370px" : "38.5rem",
-          borderRadius: isLoading && "2rem",
+          // borderRadius: isLoading && "2rem",
           pointerEvents: isLoading ? "none" : "auto",
           zIndex: "201",
           userSelect: "none",
-          transition: "all 0.2s ease",
+          transitionProperty: "width, height, border-radius",
+          transitionDuration: "0.2s",
+          transitionTimingFunction: "ease",
         }}
       >
         <div

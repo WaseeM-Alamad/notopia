@@ -14,6 +14,8 @@ const Menu = ({
   transformOrigin = "top left",
   className = "",
   isSelectMenu = false,
+  selectedIndex,
+  selectedClass,
 }) => {
   const { isContextMenuOpenRef } = useAppContext();
   const [isClient, setIsClient] = useState();
@@ -138,15 +140,16 @@ const Menu = ({
             )}
             <div className="menu-buttons not-draggable">
               {menuItems.map((item, index) => {
+                const selectedItem = isSelectMenu && selectedIndex === index;
                 if (!item?.title?.trim()) {
                   return;
                 }
                 return (
                   <div
                     key={index}
-                    className={`${
+                    className={`${selectedItem ? selectedClass : ""} ${
                       item.icon || ""
-                    } menu-btn n-menu-btn not-draggable ${className}`}
+                    } menu-btn n-menu-btn not-draggable ${className} `}
                     onClick={() => {
                       setIsOpen(false);
                       item.function();

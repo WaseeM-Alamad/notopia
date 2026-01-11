@@ -158,6 +158,21 @@ const Label = ({
     }
   };
 
+  const handleOnFocus = () => {
+    labelTitleRef.current.style.pointerEvents = "auto";
+    setCursorAtEnd(labelTitleRef);
+    setIsOpen(false);
+    setCharCount(() => {
+      if (labelTitleRef.current.innerText.trim().length > 50) {
+        return 50;
+      }
+
+      return labelTitleRef.current.innerText.trim().length;
+    });
+    moreRef.current.classList.add("zero-opacity");
+    dateRef.current.classList.add("zero-opacity");
+  };
+
   const handleOnBlur = () => {
     setIsFocused(false);
     setLabelExists(false);
@@ -414,202 +429,94 @@ const Label = ({
           damping: 50,
           mass: 1,
         }}
-        onContextMenu={(e) => {
-          e.preventDefault();
-          closeToolTip();
-
-          const virtualAnchor = {
-            getBoundingClientRect: () =>
-              new DOMRect(
-                e.pageX - window.scrollX,
-                e.pageY - window.scrollY,
-                0,
-                0
-              ),
-            contextElement: document.body,
-          };
-
-          setAnchorEL(virtualAnchor);
-          setIsOpen((prev) => !prev);
-        }}
-        onClick={handleLabelClick}
-        ref={labelRef}
-        style={{
-          maxWidth: `${isGrid ? gridNoteWidth : 450}px`,
-          width: "100%",
-          transition: `transform ${
-            mounted ? "0.22s" : "0s"
-          } cubic-bezier(0.2, 0, 0, 1), opacity 0.23s ease`,
-        }}
+        style={{ maxWidth: `${isGrid ? gridNoteWidth : 450}px`, width: "100%" }}
       >
         <div
-          className={`label ${isOpen || colorMenuOpen ? "element-active" : ""} ${labelData.color} ${
-            selected
-              ? "element-selected"
-              : labelData.color === "Default"
-                ? "default-border"
-                : "transparent-border"
-          } ${fadingNotes.has(labelData.uuid) ? "fade-out" : ""} `}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            closeToolTip();
+
+            const virtualAnchor = {
+              getBoundingClientRect: () =>
+                new DOMRect(
+                  e.pageX - window.scrollX,
+                  e.pageY - window.scrollY,
+                  0,
+                  0
+                ),
+              contextElement: document.body,
+            };
+
+            setAnchorEL(virtualAnchor);
+            setIsOpen((prev) => !prev);
+          }}
+          onClick={handleLabelClick}
+          ref={labelRef}
+          style={{
+            transition: `transform ${
+              mounted ? "0.22s" : "0s"
+            } cubic-bezier(0.2, 0, 0, 1), opacity 0.23s ease`,
+          }}
         >
           <div
-            style={{ display: labelData.image && "none" }}
-            className="corner"
-          />
-          <div className="label-more-icon">
-            <Button
-              onClick={handleMoreClick}
-              onMouseEnter={(e) => showTooltip(e, "Options")}
-              onMouseLeave={hideTooltip}
-              ref={moreRef}
-              className="btn-hover"
-              style={{
-                zIndex: "20",
-                marginLeft: "auto",
-                opacity: (isOpen || colorMenuOpen) && "1",
-              }}
-            >
-              <MoreVert size="16" style={{ rotate: "90deg" }} />
-            </Button>
-          </div>
-          {labelData.image && (
-            <div style={{ position: "relative" }}>
-              <img
-                draggable="false"
-                style={{
-                  width: "100%",
-                  display: "block",
-                  opacity: !loadingImages.has(labelData.uuid) ? "1" : "0.5",
-                  transition: "opacity 0.2s ease",
-                }}
-                src={labelData.image}
-              />
-              <AnimatePresence>
-                {loadingImages.has(labelData.uuid) && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="linear-loader"
-                  />
-                )}
-              </AnimatePresence>
-            </div>
-          )}
-          <div style={{ padding: "0.8rem .7rem" }}>
-            <AnimatePresence>
-              {isFocused && (
-                <motion.div
-                  initial={{
-                    y: 3,
-                    opacity: 0,
-                  }}
-                  animate={{
-                    y: 0,
-                    opacity: 1,
-                  }}
-                  exit={{
-                    y: 5,
-                    opacity: 0,
-                  }}
-                  transition={{
-                    y: {
-                      type: "spring",
-                      stiffness: 1000,
-                      damping: 70,
-                      mass: 1,
-                    },
-                    opacity: { duration: 0.2 },
-                  }}
-                  className="edit-icon"
-                />
-              )}
-            </AnimatePresence>
+            className={`label ${isOpen || colorMenuOpen ? "element-active" : ""} ${isFocused ? "label-focused" : ""} ${labelData.color} ${
+              selected
+                ? "element-selected"
+                : labelData.color === "Default"
+                  ? "default-border"
+                  : "transparent-border"
+            } ${fadingNotes.has(labelData.uuid) ? "fade-out" : ""} `}
+          >
             <div
-              style={{
-                display: "flex",
-                position: "relative",
-              }}
-            ></div>
-            <div
-              style={{ display: !isFocused && "none" }}
-              contentEditable={isFocused}
-              data-index={index}
-              suppressContentEditableWarning
-              onInput={handleTitleInput}
-              onKeyDown={(e) => {
-                if (
-                  (e.ctrlKey && e.key === "z") ||
-                  (e.ctrlKey && e.shiftKey && e.key === "Z")
-                ) {
-                  return;
-                }
-
-                if (e.key === "Escape") {
-                  e.currentTarget.blur();
-                }
-
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  const oldLabel = originalTitleRef.current
-                    .toLowerCase()
-                    .trim();
-                  const newLabel = labelTitleRef.current.innerText
-                    .toLowerCase()
-                    .trim();
-                  if (checkExistence(newLabel) && newLabel !== oldLabel) {
-                    setLabelExists(true);
-                  } else {
-                    labelTitleRef.current.blur();
-                  }
-                }
-              }}
-              onPaste={handlePaste}
-              onFocus={() => {
-                labelTitleRef.current.style.pointerEvents = "auto";
-                setCursorAtEnd(labelTitleRef);
-                setIsOpen(false);
-                setCharCount(() => {
-                  if (labelTitleRef.current.innerText.trim().length > 50) {
-                    return 50;
-                  }
-
-                  return labelTitleRef.current.innerText.trim().length;
-                });
-                moreRef.current.classList.add("zero-opacity");
-                dateRef.current.classList.add("zero-opacity");
-              }}
-              onBlur={handleOnBlur}
-              onClick={(e) => {
-                if (!isFocused) return;
-                e.stopPropagation();
-              }}
-              ref={labelTitleRef}
-              dir="auto"
-              className="label-title-input"
-              role="textbox"
-              tabIndex="0"
-              aria-multiline="true"
-              spellCheck="false"
+              style={{ display: labelData.image && "none" }}
+              className="corner"
             />
-            <div
-              style={{ display: isFocused && "none" }}
-              className="label-title-input"
-              dir="auto"
-            >
-              {highlightMatch(labelData.label)}
+            <div className="label-more-icon">
+              <Button
+                onClick={handleMoreClick}
+                onMouseEnter={(e) => showTooltip(e, "Options")}
+                onMouseLeave={hideTooltip}
+                ref={moreRef}
+                className="btn-hover"
+                style={{
+                  zIndex: "20",
+                  marginLeft: "auto",
+                  opacity: (isOpen || colorMenuOpen) && "1",
+                }}
+              >
+                <MoreVert size="16" style={{ rotate: "90deg" }} />
+              </Button>
             </div>
-            <div
-              style={{
-                color: "#5E5E5E",
-                fontSize: "0.8rem",
-                position: "relative",
-              }}
-            >
+            {labelData.image && (
+              <div style={{ position: "relative" }}>
+                <img
+                  draggable="false"
+                  style={{
+                    width: "100%",
+                    display: "block",
+                    opacity: !loadingImages.has(labelData.uuid) ? "1" : "0.5",
+                    transition: "opacity 0.2s ease",
+                  }}
+                  src={labelData.image}
+                />
+                <AnimatePresence>
+                  {loadingImages.has(labelData.uuid) && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="linear-loader"
+                    />
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
+            <div style={{ padding: "0.8rem .7rem" }}>
               <AnimatePresence>
                 {isFocused && (
                   <motion.div
                     initial={{
-                      y: 0,
+                      y: 3,
                       opacity: 0,
                     }}
                     animate={{
@@ -617,7 +524,7 @@ const Label = ({
                       opacity: 1,
                     }}
                     exit={{
-                      y: 0,
+                      y: 5,
                       opacity: 0,
                     }}
                     transition={{
@@ -629,35 +536,132 @@ const Label = ({
                       },
                       opacity: { duration: 0.2 },
                     }}
-                    className="label-bottom-message"
-                    style={{
-                      position: "absolute",
-                      fontSize: "0.7rem",
-                    }}
-                  >
-                    {labelExists ? (
-                      <span> Label already exists </span>
-                    ) : (
-                      <span>{50 - charCount} Characters left</span>
-                    )}
-                  </motion.div>
+                    className="edit-icon"
+                  />
                 )}
               </AnimatePresence>
-              <div ref={dateRef} className="label-date">
-                {labelDate}
-                {noteCount > 0 && (
-                  <>
-                    ,
-                    <span style={{ paddingLeft: "0.4rem" }}>
-                      {noteCount + " notes"}
-                    </span>
-                  </>
-                )}
+              <div
+                style={{
+                  display: "flex",
+                  position: "relative",
+                }}
+              ></div>
+              <div
+                style={{ display: !isFocused && "none" }}
+                contentEditable={isFocused}
+                data-index={index}
+                suppressContentEditableWarning
+                onInput={handleTitleInput}
+                onKeyDown={(e) => {
+                  if (
+                    (e.ctrlKey && e.key === "z") ||
+                    (e.ctrlKey && e.shiftKey && e.key === "Z")
+                  ) {
+                    return;
+                  }
+
+                  if (e.key === "Escape") {
+                    e.currentTarget.blur();
+                  }
+
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    const oldLabel = originalTitleRef.current
+                      .toLowerCase()
+                      .trim();
+                    const newLabel = labelTitleRef.current.innerText
+                      .toLowerCase()
+                      .trim();
+                    if (checkExistence(newLabel) && newLabel !== oldLabel) {
+                      setLabelExists(true);
+                    } else {
+                      labelTitleRef.current.blur();
+                    }
+                  }
+                }}
+                onPaste={handlePaste}
+                onFocus={handleOnFocus}
+                onBlur={handleOnBlur}
+                onClick={(e) => {
+                  if (!isFocused) return;
+                  e.stopPropagation();
+                }}
+                ref={labelTitleRef}
+                dir="auto"
+                className="label-title-input"
+                role="textbox"
+                tabIndex="0"
+                aria-multiline="true"
+                spellCheck="false"
+              />
+              <div
+                style={{ display: isFocused && "none" }}
+                className="label-title-input"
+                dir="auto"
+              >
+                {highlightMatch(labelData.label)}
+              </div>
+              <div
+                style={{
+                  color: "#5E5E5E",
+                  fontSize: "0.8rem",
+                  position: "relative",
+                }}
+              >
+                <AnimatePresence>
+                  {isFocused && (
+                    <motion.div
+                      initial={{
+                        y: 0,
+                        opacity: 0,
+                      }}
+                      animate={{
+                        y: 0,
+                        opacity: 1,
+                      }}
+                      exit={{
+                        y: 0,
+                        opacity: 0,
+                      }}
+                      transition={{
+                        y: {
+                          type: "spring",
+                          stiffness: 1000,
+                          damping: 70,
+                          mass: 1,
+                        },
+                        opacity: { duration: 0.2 },
+                      }}
+                      className="label-bottom-message"
+                      style={{
+                        position: "absolute",
+                        fontSize: "0.7rem",
+                      }}
+                    >
+                      {labelExists ? (
+                        <span> Label already exists </span>
+                      ) : (
+                        <span>{50 - charCount} Characters left</span>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                <div ref={dateRef} className="label-date">
+                  {labelDate}
+                  {noteCount > 0 && (
+                    <>
+                      ,
+                      <span style={{ paddingLeft: "0.4rem" }}>
+                        {noteCount + " notes"}
+                      </span>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </div>
+          <AnimatePresence>{isDragOver && <ImageDropZone />}</AnimatePresence>
         </div>
-        <AnimatePresence>{isDragOver && <ImageDropZone />}</AnimatePresence>
       </motion.div>
       <input
         className="labelInput"
