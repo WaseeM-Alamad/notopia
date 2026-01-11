@@ -511,20 +511,20 @@ export function AppProvider({ children, initialUser }) {
     });
   }, []);
 
-  useEffect(() => {
-    function clear() {
-      if (document.activeElement && document.activeElement !== document.body) {
-        document.activeElement.blur();
-      }
-    }
-    document.addEventListener("pointerup", clear, true);
-    document.addEventListener("touchend", clear, true);
+  // useEffect(() => {
+  //   function clear() {
+  //     if (document.activeElement && document.activeElement !== document.body) {
+  //       document.activeElement.blur();
+  //     }
+  //   }
+  //   document.addEventListener("pointerup", clear, true);
+  //   document.addEventListener("touchend", clear, true);
 
-    return () => {
-      document.removeEventListener("pointerup", clear, true);
-      document.removeEventListener("touchend", clear, true);
-    };
-  }, []);
+  //   return () => {
+  //     document.removeEventListener("pointerup", clear, true);
+  //     document.removeEventListener("touchend", clear, true);
+  //   };
+  // }, []);
 
   return (
     <AppContext.Provider

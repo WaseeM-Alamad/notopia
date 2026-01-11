@@ -40,7 +40,7 @@ const MainLayout = async ({ children }) => {
               <AppProvider initialUser={initialUser}>
                 <div id="tooltipPortal" />
                 <div id="snackbarPortal" />
-                <div
+                {/* <div
                   id="offscreen"
                   tabIndex={-1}
                   style={{
@@ -53,7 +53,7 @@ const MainLayout = async ({ children }) => {
                     left: "0",
                     top: "0",
                   }}
-                />
+                /> */}
 
                 {children}
 
