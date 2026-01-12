@@ -140,7 +140,7 @@ const Sidebar = memo(() => {
 
   useEffect(() => {
     calculateVerticalLayout();
-  }, [navItems, currentHash]);
+  }, [navItems, currentHash, isExpanded?.threshold]);
 
   const encodeLabel = (label) => {
     return "label/" + encodeURIComponent(label.toLowerCase());
@@ -215,6 +215,7 @@ const Sidebar = memo(() => {
       const container = containerRef.current;
       if (!container) return;
 
+      const isSmallScreen = isExpanded?.threshold === "before";
       container.style.position = "relative";
 
       let y = 0;
@@ -226,9 +227,11 @@ const Sidebar = memo(() => {
         y += ref.offsetHeight + GUTTER;
       });
 
-      // container.style.height = `${0}px`;
+      container.style.height = !isSmallScreen
+        ? "calc(100% - 12.5rem)"
+        : `${y}px`;
     });
-  }, []);
+  }, [isExpanded?.threshold]);
 
   const [pageMounted, setPageMounted] = useState(false);
 
@@ -360,7 +363,7 @@ const Sidebar = memo(() => {
             </button>
           )}
 
-          <div ref={containerRef} className="btns-container">
+          <div ref={containerRef} className="side-btns-container">
             {isExpanded.threshold === "before" && (
               <span
                 onClick={() => (window.location.hash = "home")}

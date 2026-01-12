@@ -4809,9 +4809,9 @@ aside {
     0 13px 5px -1px rgba(0, 0, 0, 0.2);
 }
 
-.btns-container {
+.side-btns-container {
   display: flex;
-  height: calc(100% - 12.5rem);
+  /* height: calc(100% - 12.5rem); */
   width: 100%;
   /* overflow-x: visible ; */
   overflow-y: auto;
@@ -4887,6 +4887,7 @@ aside svg {
 }
 
 .menu-expanded .side-btn-wrapper {
+  box-sizing: border-box;
   width: 100%;
 }
 
@@ -4926,51 +4927,6 @@ aside svg {
   padding-left: 5rem;
 }
 
-.btns-container::-webkit-scrollbar {
-  width: 0px;
-  overflow-x: scroll;
-}
-
-.menu-expanded .btns-container:hover::-webkit-scrollbar {
-  width: 10px;
-  overflow-y: auto;
-}
-
-.btns-container::-webkit-scrollbar-track {
-  border-radius: 2px;
-  outline: none;
-}
-
-.dark-mode .btns-container::-webkit-scrollbar-track {
-  outline: none;
-}
-
-.btns-container::-webkit-scrollbar-thumb {
-  background: rgba(192, 192, 192, 0);
-
-  border-radius: 0.3em;
-}
-
-.dark-mode .btns-container::-webkit-scrollbar-thumb {
-  background: rgba(99, 100, 102, 0);
-}
-
-.btns-container:hover::-webkit-scrollbar-thumb {
-  background: rgba(192, 192, 192, 1);
-}
-
-.dark-mode .btns-container:hover::-webkit-scrollbar-thumb {
-  background: rgba(99, 100, 102, 1);
-}
-
-.btns-container::-webkit-scrollbar-thumb:hover {
-  background: #939393;
-}
-
-.dark-mode .btns-container::-webkit-scrollbar-thumb:hover {
-  background: #a1a1a2;
-}
-
 .side-dragging .side-icon {
   background-color: transparent;
 }
@@ -4995,7 +4951,7 @@ aside svg {
   background-color: rgba(255, 255, 255, 0.07) !important;
 }
 
-.side-dragging .btns-container::-webkit-scrollbar {
+.side-dragging .side-btns-container::-webkit-scrollbar {
   width: 0px !important;
 }
 
@@ -5345,6 +5301,20 @@ aside svg {
 }
 
 @media (min-width: 605px) {
+  .side-btns-container::-webkit-scrollbar {
+    width: 0px;
+    overflow-x: scroll;
+  }
+
+  .menu-expanded .side-btns-container:hover::-webkit-scrollbar {
+    width: 10px;
+    overflow-y: auto;
+  }
+
+  .menu-expanded .side-btns-container:hover .side-btn-wrapper {
+    padding-right: 6px;
+  }
+
   .modall {
     background-image: none;
   }
@@ -5354,6 +5324,10 @@ aside svg {
 }
 
 @media (max-width: 605px) {
+  .btns-container {
+    overflow-y: unset !important;
+  }
+
   .aside-wrapper {
     background-color: rgba(0, 0, 0, 0.5);
   }
@@ -5412,9 +5386,18 @@ aside svg {
     padding: 0 0.6rem;
     padding-top: 0.5rem;
     width: 280px;
+    overflow-y: auto;
     transition:
       width 0.15s cubic-bezier(0.4, 0, 0.2, 1),
       transform 0.44s cubic-bezier(0.1, 0, 0.6, 1);
+  }
+
+  aside::-webkit-scrollbar {
+    width: 0px;
+  }
+
+  aside:hover::-webkit-scrollbar {
+    width: 10px;
   }
 
   .side-mobile-open aside {
