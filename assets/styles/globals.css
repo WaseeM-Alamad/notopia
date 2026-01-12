@@ -4811,9 +4811,8 @@ aside {
 
 .side-btns-container {
   display: flex;
-  /* height: calc(100% - 12.5rem); */
   width: 100%;
-  /* overflow-x: visible ; */
+  overflow-x: hidden;
   overflow-y: auto;
   flex-direction: column;
 }
@@ -5303,16 +5302,15 @@ aside svg {
 @media (min-width: 605px) {
   .side-btns-container::-webkit-scrollbar {
     width: 0px;
-    overflow-x: scroll;
   }
 
-  .menu-expanded .side-btns-container:hover::-webkit-scrollbar {
-    width: 10px;
-    overflow-y: auto;
-  }
-
-  .menu-expanded .side-btns-container:hover .side-btn-wrapper {
-    padding-right: 6px;
+  @media (hover: hover) {
+    .menu-expanded .side-btns-container:hover::-webkit-scrollbar {
+      width: 10px;
+    }
+    .menu-expanded .side-btns-container:hover .side-btn-wrapper {
+      padding-right: 6px;
+    }
   }
 
   .modall {
@@ -5396,8 +5394,10 @@ aside svg {
     width: 0px;
   }
 
-  aside:hover::-webkit-scrollbar {
-    width: 10px;
+  @media (hover: hover) {
+    aside:hover::-webkit-scrollbar {
+      width: 10px;
+    }
   }
 
   .side-mobile-open aside {
