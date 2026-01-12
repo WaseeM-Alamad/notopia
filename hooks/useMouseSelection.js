@@ -69,9 +69,6 @@ export function useMouseSelection({
     (selectionRect) => {
       const { left: newX, top: newY, width, height } = selectionRect;
 
-      // Early exit for tiny selections
-      if (width < 5 || height < 5) return;
-
       const selectionRight = newX + width;
       const selectionBottom = newY + height;
 

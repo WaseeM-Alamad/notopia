@@ -129,6 +129,7 @@ const GalleryCarousel = ({
             return (
               <div className="gallery-slide" key={index}>
                 <img
+                  loading="lazy"
                   onClick={(e) => e.stopPropagation()}
                   className={`gallery-slide-${isAvatar ? "avatar" : "img"}`}
                   src={image.url}

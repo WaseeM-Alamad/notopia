@@ -78,6 +78,14 @@ const NoteEditor = ({
   const inputsContainerRef = useRef(null);
 
   useEffect(() => {
+    requestAnimationFrame(() => {
+      if (isOpen && modalRef.current) {
+        inputsContainerRef.current.scrollTop = 0;
+      }
+    });
+  }, [isOpen]);
+
+  useEffect(() => {
     const inputsContainer = inputsContainerRef.current;
     if (!inputsContainer || !isOpen) return;
 
