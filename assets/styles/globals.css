@@ -5322,6 +5322,10 @@ aside svg {
 }
 
 @media (max-width: 605px) {
+  .section-header {
+    top: 4.5rem !important;
+  }
+
   .btns-container {
     overflow-y: unset !important;
   }
@@ -6074,7 +6078,7 @@ aside svg {
 
 .section-header {
   position: sticky;
-  top: 64px;
+  top: 4rem;
   z-index: 98;
   background: var(--bg);
   display: flex;
