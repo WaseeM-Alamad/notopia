@@ -482,7 +482,7 @@ const Label = ({
           >
             <div
               style={{ display: labelData.image && "none" }}
-              className="corner"
+              className="label-corner"
             />
             <div className="label-more-icon">
               <Button

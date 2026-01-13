@@ -345,22 +345,44 @@ const Sidebar = memo(() => {
           </AnimatePresence>
 
           {!triggerFloatingBtn && (
-            <button
-              ref={addButtonRef}
-              onClick={handleAddNote}
-              id="add-btn"
-              className="add-btn add-btn-expand side-add-btn"
-              onMouseEnter={showSideTooltip}
-              onMouseLeave={hideSideTooltip}
-            >
-              <AnimatePresence>
-                {tooltipOpen && (
-                  <SideTooltip text={actionTitle} anchor={tooltipAnc} />
-                )}
-              </AnimatePresence>
-              <AddButton />
-              {/* <span className="side-btn-title">{actionTitle}</span> */}
-            </button>
+            <div onClick={handleAddNote} className="add-btn-wrapper">
+              <div
+                style={
+                  !isExpanded.open
+                    ? {
+                        position: "absolute",
+                        opacity: "0",
+                        display: "none",
+                        pointerEvents: "none",
+                      }
+                    : {
+                        paddingLeft: "48px",
+                        position: "absolute",
+                      }
+                }
+                className="side-btn-wrapper"
+              >
+                <div className="side-icon">
+                  <span className="side-btn-title">{actionTitle}</span>
+                </div>
+              </div>
+
+              <button
+                ref={addButtonRef}
+                id="add-btn"
+                className="add-btn add-btn-expand side-add-btn"
+                onMouseEnter={showSideTooltip}
+                onMouseLeave={hideSideTooltip}
+              >
+                <AnimatePresence>
+                  {tooltipOpen && (
+                    <SideTooltip text={actionTitle} anchor={tooltipAnc} />
+                  )}
+                </AnimatePresence>
+                <AddButton />
+                {/* <span className="side-btn-title">{actionTitle}</span> */}
+              </button>
+            </div>
           )}
 
           <div ref={containerRef} className="side-btns-container">

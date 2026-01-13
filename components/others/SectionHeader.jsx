@@ -29,7 +29,7 @@ const SectionHeader = ({
     <div
       className={`section-header ${isScrolled ? "nav-shadow" : ""} ${isLabel ? "is-label-section" : ""}`}
     >
-      <div className={iconClass} />
+      <div style={{marginRight: "0.4rem"}} className={iconClass} />
       <div
         onClick={onClick}
         className="section-header-title-wrapper"
@@ -40,7 +40,7 @@ const SectionHeader = ({
             whiteSpace: "nowrap",
             textOverflow: "ellipsis",
             overflow: "hidden",
-            marginLeft: ".4rem",
+            // marginLeft: ".4rem",
             fontWeight: "600",
             fontSize: "1.3rem",
           }}

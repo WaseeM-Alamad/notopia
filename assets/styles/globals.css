@@ -2073,6 +2073,12 @@ svg {
   height: 32px;
 }
 
+.label-corner {
+  float: right;
+  width: 42px;
+  height: 32px;
+}
+
 .btn {
   display: flex;
   align-items: center;
@@ -4847,6 +4853,15 @@ aside {
   background-color: var(--btn-hover);
 }
 
+.add-btn-wrapper {
+  position: relative;
+  margin-top: 2rem;
+}
+
+.add-btn-wrapper:hover .side-icon {
+  background-color: var(--btn-hover);
+}
+
 .selected.side-icon {
   background-color: #c2e8ff;
 }
@@ -4914,6 +4929,7 @@ aside svg {
   /* padding: 9px; */
   width: 48px;
   height: 48px;
+  z-index: 3;
   margin-bottom: 2rem;
   background-color: #303030;
   cursor: pointer;
@@ -5050,10 +5066,6 @@ aside svg {
   right: 2rem;
   z-index: 98 !important;
   margin: 0;
-}
-
-.side-add-btn {
-  margin-top: 2rem;
 }
 
 .add-btn-sm {
