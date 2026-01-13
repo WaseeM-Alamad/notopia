@@ -345,7 +345,7 @@ const Sidebar = memo(() => {
           </AnimatePresence>
 
           {!triggerFloatingBtn && (
-            <div onClick={handleAddNote} className="add-btn-wrapper">
+            <div className="add-btn-wrapper">
               <div
                 style={
                   !isExpanded.open
@@ -361,6 +361,7 @@ const Sidebar = memo(() => {
                       }
                 }
                 className="side-btn-wrapper"
+                onClick={handleAddNote}
               >
                 <div className="side-icon">
                   <span className="side-btn-title">{actionTitle}</span>
@@ -369,6 +370,7 @@ const Sidebar = memo(() => {
 
               <button
                 ref={addButtonRef}
+                onClick={handleAddNote}
                 id="add-btn"
                 className="add-btn add-btn-expand side-add-btn"
                 onMouseEnter={showSideTooltip}
