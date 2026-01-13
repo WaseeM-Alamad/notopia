@@ -6,7 +6,8 @@ import KeybindsTable from "../KeybindsTable";
 import AccountDialog from "../AccountDialog";
 
 const NavProfileSection = () => {
-  const { user, showTooltip, hideTooltip, closeToolTip } = useAppContext();
+  const { user, showTooltip, hideTooltip, closeToolTip, setBindsOpenRef } =
+    useAppContext();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [bindsOpen, setBindsOpen] = useState(false);
@@ -18,6 +19,10 @@ const NavProfileSection = () => {
   const imageRef = useRef(null);
 
   const image = user.image;
+
+  useEffect(() => {
+    setBindsOpenRef.current = setBindsOpen;
+  }, []);
 
   const handleProfileOpen = () => {
     closeToolTip();

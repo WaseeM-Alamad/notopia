@@ -14,7 +14,7 @@ const Label = ({
   labelData,
   isGrid,
   gridNoteWidth,
-  GUTTER,
+  reRender,
   triggerReRender,
   fadingNotes,
   setVisibleItems,
@@ -97,7 +97,7 @@ const Label = ({
 
       return labelTitleRef.current.innerText.trim().length;
     });
-  }, []);
+  }, [reRender]);
 
   const handleMoreClick = (e) => {
     e.stopPropagation();
@@ -173,7 +173,13 @@ const Label = ({
     dateRef.current.classList.add("zero-opacity");
   };
 
-  const handleOnBlur = () => {
+  const handleOnBlur = (e) => {
+    const clickedElement = e.relatedTarget;
+    const element = e.currentTarget;
+    if (clickedElement?.contains(element)) {
+      e.preventDefault();
+      return;
+    }
     setIsFocused(false);
     setLabelExists(false);
     labelTitleRef.current.blur();
@@ -281,6 +287,7 @@ const Label = ({
   };
 
   const handleLabelClick = () => {
+    if (isFocused) return;
     const encodedLabel = encodeURIComponent(labelData.label);
     window.location.hash = `label/${encodedLabel}`;
   };
@@ -421,6 +428,7 @@ const Label = ({
   return (
     <>
       <motion.div
+        tabIndex={-1}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{
@@ -429,7 +437,13 @@ const Label = ({
           damping: 50,
           mass: 1,
         }}
-        style={{ maxWidth: `${isGrid ? gridNoteWidth : 450}px`, width: "100%" }}
+        style={{
+          maxWidth: `${isGrid ? gridNoteWidth : 450}px`,
+          width: "100%",
+          transition: `transform ${
+            mounted ? "0.22s" : "0s"
+          } cubic-bezier(0.2, 0, 0, 1)`,
+        }}
       >
         <div
           onContextMenu={(e) => {
@@ -451,11 +465,10 @@ const Label = ({
             setIsOpen((prev) => !prev);
           }}
           onClick={handleLabelClick}
+          onPointerDown={(e) => e.preventDefault()}
           ref={labelRef}
           style={{
-            transition: `transform ${
-              mounted ? "0.22s" : "0s"
-            } cubic-bezier(0.2, 0, 0, 1), opacity 0.23s ease`,
+            transition: "opacity 0.23s ease",
           }}
         >
           <div
@@ -582,6 +595,7 @@ const Label = ({
                 onPaste={handlePaste}
                 onFocus={handleOnFocus}
                 onBlur={handleOnBlur}
+                onPointerDown={(e) => e.stopPropagation()}
                 onClick={(e) => {
                   if (!isFocused) return;
                   e.stopPropagation();
