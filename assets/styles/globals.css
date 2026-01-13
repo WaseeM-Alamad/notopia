@@ -5327,7 +5327,7 @@ aside svg {
 
   @media (hover: hover) {
     .menu-expanded .side-btns-container:hover::-webkit-scrollbar {
-      width: 10px;
+      width: 8px;
     }
     .menu-expanded .side-btns-container:hover .side-btn-wrapper {
       padding-right: 6px;

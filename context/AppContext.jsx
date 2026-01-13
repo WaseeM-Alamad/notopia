@@ -105,10 +105,20 @@ export function AppProvider({ children, initialUser }) {
       }
     };
 
-    handler();
-
     window.addEventListener("resize", handler);
     return () => window.removeEventListener("resize", handler);
+  }, []);
+
+  useEffect(() => {
+    const width = window.innerWidth;
+
+    if (width < 341) {
+      setLayout("list");
+    } else {
+      const savedLayout = localStorage.getItem("layout");
+      setLayout(savedLayout);
+      setBreakpoint(width > 527 ? 1 : width < 400 ? 3 : 2);
+    }
   }, []);
 
   useEffect(() => {
