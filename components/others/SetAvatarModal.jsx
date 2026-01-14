@@ -104,9 +104,9 @@ const SetAvatarModal = ({ setIsOpen, initialFileRef, isGif }) => {
           padding: "1.1rem 0",
           paddingBottom: "0.5rem",
           maxWidth: "30rem",
-          width: isLoading ? "270px" : "90%",
-          height: isLoading ? "200px" : isPreview ? "370px" : "38.5rem",
-          // borderRadius: isLoading && "2rem",
+          width: isLoading ? "270px" : isPreview ? "410px" : "478px",
+          height: isLoading ? "200px" : isPreview ? "340px" : "38.5rem",
+          borderRadius: isLoading && "2rem",
           pointerEvents: isLoading ? "none" : "auto",
           zIndex: "201",
           userSelect: "none",
@@ -196,7 +196,7 @@ const SetAvatarModal = ({ setIsOpen, initialFileRef, isGif }) => {
                 flexDirection: "column",
                 alignItems: "center",
                 // justifyContent: "center",
-                paddingTop: "3.5rem",
+                paddingTop: isPreview ? "2rem" : "3.5rem",
                 // paddingBottom: "1rem",
               }}
             >
@@ -287,7 +287,7 @@ const SetAvatarModal = ({ setIsOpen, initialFileRef, isGif }) => {
               whiteSpace: "nowrap",
               paddingRight: "4rem",
               height: "2.4rem",
-              opacity: isLoading ? "0" : "1",
+              opacity: isLoading || isPreview ? "0" : "1",
             }}
           >
             Profile Photo
@@ -300,7 +300,7 @@ const SetAvatarModal = ({ setIsOpen, initialFileRef, isGif }) => {
               opacity: isLoading || isPreview ? "0" : "1",
               pointerEvents: isLoading || isPreview ? "none" : "auto",
               padding: "0 1.3rem",
-              transition: "all 0.2s ease",
+              transition: "all 0.15s ease",
             }}
           >
             <div className="avatar-crop-wrapper">
@@ -358,10 +358,14 @@ const SetAvatarModal = ({ setIsOpen, initialFileRef, isGif }) => {
                     width: 17,
                     height: 17,
                     boxShadow: "0 2px 4px rgba(0,0,0,0)",
-                    marginLeft: ".3rem",
+                    // marginLeft: ".3rem",
                   },
                   track: { backgroundColor: "var(--primary)", height: 6 },
                 }}
+                onChangeComplete={() =>
+                  document.body.classList.remove("grabbing")
+                }
+                onBeforeChange={() => document.body.classList.add("grabbing")}
               />
             </div>
 

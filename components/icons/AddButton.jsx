@@ -4,6 +4,7 @@ import React, { memo } from "react";
 
 const AddButton = () => {
   const { currentSection } = useAppContext();
+  const isTrash = currentSection.toLowerCase() === "trash";
 
   return (
     <svg
@@ -17,14 +18,14 @@ const AddButton = () => {
       <motion.g
         style={{ transformOrigin: "50% 50%" }}
         initial={{
-          scale: currentSection.toLowerCase() === "trash" ? 0.6 : 1,
-          rotate: currentSection.toLowerCase() === "trash" ? 45 : 0,
-          strokeWidth: currentSection.toLowerCase() === "trash" ? "0.5" : "0",
+          scale: isTrash ? 0.6 : 1,
+          rotate: isTrash ? 45 : 0,
+          strokeWidth: isTrash ? "0.5" : "0",
         }}
         animate={{
-          scale: currentSection.toLowerCase() === "trash" ? 0.6 : 1,
-          rotate: currentSection.toLowerCase() === "trash" ? 45 : 0,
-          strokeWidth: currentSection.toLowerCase() === "trash" ? "0.5" : "0",
+          scale: isTrash ? 0.6 : 1,
+          rotate: isTrash ? 45 : 0,
+          strokeWidth: isTrash ? "0.5" : "0",
         }}
         transition={{
           type: "spring",
@@ -39,13 +40,13 @@ const AddButton = () => {
 
       <motion.path
         initial={{
-          scale: currentSection.toLowerCase() !== "trash" ? 0.9 : 1,
-          opacity: currentSection.toLowerCase() !== "trash" ? 0 : 1,
+          scale: !isTrash ? 0.9 : 1,
+          opacity: !isTrash ? 0 : 1,
         }}
         animate={{
-          scale: currentSection.toLowerCase() !== "trash" ? 0.9 : 1,
-          opacity: currentSection.toLowerCase() !== "trash" ? 0 : 1,
-          display: currentSection.toLowerCase() !== "trash" ? "none" : "",
+          scale: !isTrash ? 0.9 : 1,
+          opacity: !isTrash ? 0 : 1,
+          display: !isTrash ? "none" : "",
         }}
         transition={{
           type: "spring",

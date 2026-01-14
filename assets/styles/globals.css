@@ -606,7 +606,7 @@ svg {
 }
 
 .modal-inputs-container::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.2);
+  background-color: rgba(0, 0, 0, 0.15);
   border-radius: 2rem;
 }
 
@@ -2347,6 +2347,11 @@ img {
 
 .dragging * {
   cursor: move !important;
+  user-select: none !important;
+}
+
+.grabbing {
+  cursor: grabbing !important;
   user-select: none !important;
 }
 
@@ -5070,8 +5075,8 @@ aside svg {
 
 .add-btn-sm {
   margin: 0;
-  width: 55px;
-  height: 55px;
+  width: 54px;
+  height: 54px;
   box-shadow: -1px 4px 15px rgba(0, 0, 0, 0.3);
 }
 
@@ -5343,6 +5348,10 @@ aside svg {
 }
 
 @media (max-width: 605px) {
+  .top-menu {
+    height: 71px;
+  }
+
   .section-header {
     top: 4.5rem !important;
   }
@@ -5444,10 +5453,6 @@ aside svg {
   .side-mobile-open {
     pointer-events: auto;
     opacity: 1;
-  }
-
-  .modal-inputs-container::-webkit-scrollbar {
-    width: 4px;
   }
 
   .note-bottom-padding {
@@ -6229,4 +6234,23 @@ aside svg {
 
 .selected-acc-section {
   color: var(--st-left-selected-btn) !important;
+}
+
+.rc-slider-handle::before{
+  content: "";
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  transform: scale(.9);
+  opacity: 0;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--primary) 40%, transparent),
+    0 0 12px var(--linear-loader-bg) !important;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.rc-slider-handle:hover::before, .rc-slider-handle:active::before {
+  opacity: 1;
+  transform: scale(1.2);
 }

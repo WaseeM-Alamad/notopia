@@ -2,7 +2,7 @@ import { CircularProgress } from "@mui/material";
 import { motion } from "framer-motion";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useRef, useState } from "react";
+import React, { memo, useEffect, useRef, useState } from "react";
 import isEmail from "validator/lib/isEmail";
 import Modal from "../Tools/Modal";
 import { sendResetPassAction } from "@/utils/actions";
@@ -317,4 +317,4 @@ const LeftPanel = ({
   );
 };
 
-export default LeftPanel;
+export default memo(LeftPanel);
