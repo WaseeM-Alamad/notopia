@@ -53,6 +53,7 @@ const CollabLayout = ({
               displayName={note?.creator?.displayName}
               username={note?.creator?.username}
               image={note?.creator?.image}
+              createdAt={note?.creator?.createdAt}
               isOwner={true}
               setDialogUser={setDialogUser}
             />

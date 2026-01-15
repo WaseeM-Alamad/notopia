@@ -652,11 +652,11 @@ export const fetchNotes = async () => {
         populate: [
           {
             path: "collaborators.data",
-            select: "displayName username image",
+            select: "displayName username image createdAt",
           },
           {
             path: "creator",
-            select: "_id displayName username image",
+            select: "_id displayName username image createdAt",
           },
         ],
       })

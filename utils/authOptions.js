@@ -161,7 +161,9 @@ export const authOptions = {
         user = await User.create({
           email: profile.email,
           displayName: profile.name?.slice(0, 32),
-          username: profile.name?.slice(0, 20).replace(/\s+/g, "_") || "user",
+          username:
+            profile.name?.slice(0, 20).toLowerCase().replace(/\s+/g, "_") ||
+            "user",
           image: profile.picture,
           isVerified: true,
           googleId: profile.id,

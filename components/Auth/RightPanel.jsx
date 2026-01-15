@@ -317,7 +317,7 @@ const RightPanel = ({
             {!googleIsLoading ? (
               <>
                 <div className="google-icon" />
-                Sign up with Google
+                Continue with Google
               </>
             ) : (
               <CustomThreeLineSpinner

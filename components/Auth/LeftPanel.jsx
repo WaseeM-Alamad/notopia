@@ -241,7 +241,7 @@ const LeftPanel = ({
               {!googleIsLoading ? (
                 <>
                   <div className="google-icon" />
-                  Sign in with Google
+                  Continue with Google
                 </>
               ) : (
                 <CustomThreeLineSpinner
