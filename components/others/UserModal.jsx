@@ -100,7 +100,10 @@ const UserModal = ({ setUser, user }) => {
           onMouseLeave={hideTooltip}
           className="clear-icon btn small-btn"
         />
-        <div onClick={() => setIsImageOpen(true)} className="collab-dialog-img-wrapper">
+        <div
+          onClick={() => setIsImageOpen(true)}
+          className="collab-dialog-img-wrapper"
+        >
           <div className="acc-img-hv" />
           <img
             className="collab-dialog-img"
@@ -112,28 +115,27 @@ const UserModal = ({ setUser, user }) => {
         <div
           className="action-title"
           style={{
-            // margin: "0",
             marginBottom: "0.1rem",
             marginTop: ".7rem",
             fontSize: "1.2rem",
             userSelect: "none",
+            maxWidth: "100%",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
           }}
         >
-          {user.displayName}
-          {/* <span
-            style={{
-              fontStyle: "italic",
-              fontSize: "0.8rem",
-              fontWeight: "400",
-            }}
-          >
-            {" Owner"}
-          </span> */}
+          {user?.displayName}
         </div>
 
         <div
           className="action-msg"
-          style={{ marginBottom: ".6rem", fontSize: "14px" }}
+          style={{
+            marginBottom: ".6rem",
+            fontSize: "14px",
+            maxWidth: "100%",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
         >
           {user.username}
         </div>
@@ -141,6 +143,9 @@ const UserModal = ({ setUser, user }) => {
           className="action-msg"
           style={{
             marginBottom: "0",
+            maxWidth: "100%",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
           }}
         >
           <div className="date-icon" style={{ whiteSpace: "nowrap" }}>
