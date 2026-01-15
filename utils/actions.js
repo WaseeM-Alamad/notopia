@@ -48,7 +48,7 @@ const isUsernameValid = (val) => {
 
   return (
     u.length >= 2 &&
-    u.length <= 32 &&
+    u.length <= 20 &&
     /^[a-z0-9._]+$/.test(u) &&
     !u.includes("..") &&
     !/^[._]/.test(u) &&
@@ -2340,6 +2340,7 @@ export const submitCollabUserAction = async (input, noteUUID) => {
         image: user.image,
         displayName: user.displayName,
         username: user.username,
+        createdAt: user?.createdAt
       },
       id: user._id,
     };
@@ -2470,8 +2471,10 @@ export const updateCollabsAction = async (data) => {
     if (addIDsSet.size > 0) {
       const newUsers = await User.find(
         { _id: { $in: [...addIDsSet] } },
-        { _id: 1, displayName: 1, username: 1, image: 1 }
+        { _id: 1, displayName: 1, username: 1, image: 1, createdAt: 1 }
       );
+
+      console.log("createdAt", newUsers[0]);
 
       const collabsToAdd = newUsers.map((u) => {
         return {
@@ -2481,6 +2484,7 @@ export const updateCollabsAction = async (data) => {
             displayName: u.displayName,
             username: u.username,
             image: u.image,
+            createdAt: u?.createdAt ?? null,
           },
         };
       });

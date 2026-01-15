@@ -119,8 +119,8 @@ const RightPanel = ({
       return false;
     }
 
-    if (val.length > 32) {
-      setUserStatus("At most 32 characters");
+    if (val.length > 20) {
+      setUserStatus("At most 20 characters");
       return false;
     }
 

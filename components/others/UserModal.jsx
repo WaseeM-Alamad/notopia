@@ -3,12 +3,16 @@ import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAppContext } from "@/context/AppContext";
 import GalleryCarousel from "./GalleryCarousel";
+import { format } from "date-fns";
 
 const UserModal = ({ setUser, user }) => {
   const { closeToolTip, hideTooltip, showTooltip, isActionModalOpenRef } =
     useAppContext();
   const [isMounted, setIsMounted] = useState(false);
   const [isImageOpen, setIsImageOpen] = useState(false);
+  const createdAt = user?.createdAt
+    ? format(new Date(user?.createdAt), `MMMM yyyy`)
+    : null;
 
   const canDelete = user?.canDelete;
   const isOwnUser = user?.isOwnUser;
@@ -142,15 +146,21 @@ const UserModal = ({ setUser, user }) => {
         <div
           className="action-msg"
           style={{
+            display: "flex",
             marginBottom: "0",
             maxWidth: "100%",
             overflow: "hidden",
             textOverflow: "ellipsis",
           }}
         >
-          <div className="date-icon" style={{ whiteSpace: "nowrap" }}>
-            Member since January 2024
-          </div>
+          {createdAt && (
+            <div
+              className="date-icon"
+              style={{ whiteSpace: "nowrap", display: "inline-block" }}
+            >
+              Member since {createdAt}
+            </div>
+          )}
         </div>
 
         <div

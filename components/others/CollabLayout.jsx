@@ -64,6 +64,9 @@ const CollabLayout = ({
                 }
                 username={collab?.data?.username || collab?.snapshot?.username}
                 image={collab?.data?.image || collab?.snapshot?.image}
+                createdAt={
+                  collab?.data?.createdAt || collab?.snapshot?.createdAt
+                }
                 collabID={collab.id}
                 noteUUID={note?.uuid}
                 removeSelfRef={removeSelfRef}

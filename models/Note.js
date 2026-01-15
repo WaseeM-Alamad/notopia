@@ -54,6 +54,7 @@ const NoteSchema = new Schema(
           displayName: String,
           username: String,
           image: String,
+          createdAt: Date,
         },
       },
     ],

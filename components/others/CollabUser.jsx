@@ -9,6 +9,7 @@ const CollabUser = ({
   displayName,
   username,
   image,
+  createdAt,
   collabID,
   isOwner = false,
   noteUUID = null,
@@ -55,6 +56,7 @@ const CollabUser = ({
             isOwner: isOwner,
             isOwnUser: isOwnUser,
             handleRemoveCollab: handleRemoveCollab,
+            createdAt: createdAt,
           })
         }
         className="collab-user collab-user-hover"
