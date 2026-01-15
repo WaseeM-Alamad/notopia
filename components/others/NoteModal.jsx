@@ -361,7 +361,7 @@ const NoteModal = ({
       editorBox.style.display = "none";
       collabBox.style.display = "flex";
 
-      modal.style.backgroundColor = "#ffffff";
+      modal.style.backgroundColor = "var(--bg2)";
       editorBox.style.opacity = "0";
       collabBox.style.transition = "opacity 0.19s ease-in";
       requestAnimationFrame(() => {
@@ -775,7 +775,7 @@ const NoteModal = ({
           collabBox.style.removeProperty("transform");
           // collabBox.style.padding = "0";
         }
-        modal.style.backgroundColor = "#ffffff";
+        modal.style.backgroundColor = "var(--bg2)";
         editorBox.style.opacity = "0";
       });
       if (width < 605) {
@@ -918,6 +918,11 @@ const NoteModal = ({
         ]
           .filter(Boolean)
           .join(" ")}
+        style={{
+          borderColor: isCollabOpen
+            ? "var(--border) !important"
+            : "transparent",
+        }}
       >
         <NoteEditor
           noteEditorRef={noteEditorRef}

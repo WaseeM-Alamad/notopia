@@ -61,6 +61,7 @@ const page = () => {
     session,
     status,
     initialLoading,
+    isExpanded,
   } = useAppContext();
   const [tooltipAnchor, setTooltipAnchor] = useState(new Map());
   const [notesState, dispatchNotes] = useReducer(notesReducer, initialStates);
@@ -558,29 +559,41 @@ const page = () => {
           rootContainerRef={rootContainerRef}
           currentSection={currentSection}
         />
-
-        <Page
-          dispatchNotes={dispatchNotes}
-          visibleItems={visibleItems}
-          setVisibleItems={setVisibleItems}
-          selectedNotesRef={selectedNotesRef}
-          notes={notesState.notes}
-          notesStateRef={notesStateRef}
-          order={notesState.order}
-          handleNoteClick={handleNoteClick}
-          handleSelectNote={handleSelectNote}
-          handleDeleteLabel={handleDeleteLabel}
-          selectedNotesIDs={selectedNotesIDs}
-          fadingNotes={fadingNotes}
-          setFadingNotes={setFadingNotes}
-          setSelectedNotesIDs={setSelectedNotesIDs}
-          noteActions={noteActions}
-          notesReady={notesReady}
-          isGrid={isGrid}
-          containerRef={containerRef}
-          rootContainerRef={rootContainerRef}
-          labelObj={labelObj}
-        />
+        <div style={{ display: "flex" }}>
+          <div
+            style={{
+              width:
+                isExpanded.threshold === "after"
+                  ? !isExpanded.open
+                    ? "280px"
+                    : "80px"
+                  : "0",
+              flex: "0",
+            }}
+          />
+          <Page
+            dispatchNotes={dispatchNotes}
+            visibleItems={visibleItems}
+            setVisibleItems={setVisibleItems}
+            selectedNotesRef={selectedNotesRef}
+            notes={notesState.notes}
+            notesStateRef={notesStateRef}
+            order={notesState.order}
+            handleNoteClick={handleNoteClick}
+            handleSelectNote={handleSelectNote}
+            handleDeleteLabel={handleDeleteLabel}
+            selectedNotesIDs={selectedNotesIDs}
+            fadingNotes={fadingNotes}
+            setFadingNotes={setFadingNotes}
+            setSelectedNotesIDs={setSelectedNotesIDs}
+            noteActions={noteActions}
+            notesReady={notesReady}
+            isGrid={isGrid}
+            containerRef={containerRef}
+            rootContainerRef={rootContainerRef}
+            labelObj={labelObj}
+          />
+        </div>
 
         <SelectionBox ref={selectionBoxRef} />
         <AnimatePresence>

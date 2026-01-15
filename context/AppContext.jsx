@@ -73,11 +73,9 @@ export function AppProvider({ children, initialUser }) {
 
   useEffect(() => {
     if (!calculateLayoutRef.current) return;
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        calculateLayoutRef.current();
-      });
-    });
+    setTimeout(() => {
+      calculateLayoutRef.current();
+    }, 10);
   }, [isExpanded.open]);
 
   useEffect(() => {

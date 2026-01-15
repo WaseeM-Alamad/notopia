@@ -224,7 +224,7 @@ const Archive = memo(
       <>
         <div
           ref={rootContainerRef}
-          className={`starting-div ${addPadding ? "sidebar-expanded" : "sidebar-collapsed"}`}
+          className={`starting-div `}
         >
           <SectionHeader title="Archive" iconClass="section-archive-icon" />
           <div ref={containerRef} className="section-container">

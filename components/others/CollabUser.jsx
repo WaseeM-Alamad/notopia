@@ -1,7 +1,9 @@
-import React, { memo } from "react";
+import React, { memo, useState } from "react";
 import Button from "../Tools/Button";
 import { useAppContext } from "@/context/AppContext";
 import handleServerCall from "@/utils/handleServerCall";
+import UserModal from "./UserModal";
+import { AnimatePresence } from "framer-motion";
 
 const CollabUser = ({
   displayName,
@@ -15,14 +17,16 @@ const CollabUser = ({
   setCollabOpsMap,
   setCollaborators,
   isCreator,
+  setDialogUser,
 }) => {
   const { user } = useAppContext();
-  const ownUser = collabID === user.id;
+  const isOwnUser = collabID === user.id;
+  const canDelete = isOwnUser || (!isOwner && isCreator);
 
   const handleRemoveCollab = async () => {
     if (!collabID || !noteUUID) return;
 
-    if (ownUser) {
+    if (isOwnUser) {
       removeSelfRef.current = true;
     }
 
@@ -40,43 +44,58 @@ const CollabUser = ({
   };
 
   return (
-    <div className="collab-user">
+    <>
       <div
-        className="collab-user-img collab-layout-img"
-        style={image ? { backgroundImage: `url(${image})` } : undefined}
-      />
-      <div style={{ fontSize: "0.9rem", width: "100%" }}>
-        <div style={{ fontWeight: "600" }}>
-          {displayName}{" "}
-          {isOwner && (
-            <span
-              style={{
-                fontStyle: "italic",
-                fontSize: "0.8rem",
-                fontWeight: "400",
-              }}
-            >
-              (Owner)
-            </span>
-          )}
-        </div>
+        onClick={() =>
+          setDialogUser({
+            image: image,
+            displayName: displayName,
+            username: username,
+            canDelete: canDelete,
+            isOwner: isOwner,
+            isOwnUser: isOwnUser,
+            handleRemoveCollab: handleRemoveCollab,
+          })
+        }
+        className="collab-user collab-user-hover"
+      >
         <div
-          style={{
-            fontSize: "0.8rem",
-            letterSpacing: ".02rem",
-            color: "rgb(83, 83, 83)",
-          }}
-        >
-          {username}
+          className="collab-user-img collab-layout-img"
+          style={image ? { backgroundImage: `url(${image})` } : undefined}
+        />
+        <div style={{ fontSize: "0.9rem", width: "100%" }}>
+          <div style={{ fontWeight: "600" }}>
+            {displayName}
+            {(isOwner || isOwnUser) && (
+              <span
+                style={{
+                  fontStyle: "italic",
+                  fontSize: "0.8rem",
+                  fontWeight: "400",
+                }}
+              >
+                {isOwner ? " (Owner)" : " (You)"}
+              </span>
+            )}
+          </div>
+          <div
+            style={{
+              fontSize: "0.8rem",
+              letterSpacing: ".02rem",
+              color: "var(--text3)",
+            }}
+          >
+            {username}
+          </div>
         </div>
-      </div>
-      {(ownUser || (!isOwner && isCreator)) && (
+        {/* {canDelete && (
         <Button
           onClick={handleRemoveCollab}
           className="clear-icon btn small-btn del-collab"
         />
-      )}
-    </div>
+      )} */}
+      </div>
+    </>
   );
 };
 
