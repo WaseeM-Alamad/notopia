@@ -37,6 +37,7 @@ const ActionModal = ({
   useEffect(() => {
     const handler = (e) => {
       if (e.key === "Escape") {
+        cancelFunc();
         setDialogInfo(null);
       }
     };
@@ -53,9 +54,9 @@ const ActionModal = ({
   if (!isMounted) return;
 
   return createPortal(
-    <>
+    <div className={showCloseBtn ? "show-close-btn" : ""}>
       <motion.div
-        className={`overlay ${showCloseBtn ? "show-close-btn" : ""}`}
+        className="overlay"
         initial={{
           opacity: 0,
         }}
@@ -73,7 +74,10 @@ const ActionModal = ({
           damping: 50,
           mass: 1,
         }}
-        onClick={() => setDialogInfo(null)}
+        onClick={() => {
+          cancelFunc();
+          setDialogInfo(null);
+        }}
       />
       <motion.div
         className="action-modal"
@@ -101,6 +105,7 @@ const ActionModal = ({
             style={{ top: ".5rem", right: "0.7rem" }}
             onClick={() => {
               closeToolTip();
+              cancelFunc();
               setDialogInfo(null);
             }}
             onMouseEnter={(e) => showTooltip(e, "Close")}
@@ -132,7 +137,7 @@ const ActionModal = ({
           </button>
         </div>
       </motion.div>
-    </>,
+    </div>,
     document.getElementById("modal-portal")
   );
 };

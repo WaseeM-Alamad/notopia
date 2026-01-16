@@ -43,7 +43,6 @@ const Search = ({
   const [colorsSet, setColorsSet] = useState(new Set());
   const [labelsSet, setLabelsSet] = useState(new Set());
   const [typesSet, setTypesSet] = useState(new Set());
-  const [addPadding, setAddPadding] = useState(false);
 
   const firstRun = useRef(true);
 
@@ -121,11 +120,6 @@ const Search = ({
   }, [notesReady]);
 
   useEffect(() => {
-    const width = window.innerWidth;
-    setAddPadding(width >= 605 && isExpanded.open);
-  }, [isExpanded.open]);
-
-  useEffect(() => {
     if (firstRun.current) {
       firstRun.current = false;
       return;
@@ -183,7 +177,7 @@ const Search = ({
     <>
       <div
         ref={rootContainerRef}
-        className={`starting-div ${addPadding ? "sidebar-expanded" : "sidebar-collapsed"}`}
+        className="starting-div"
       >
         {noMatchingNotes || !filtersExist ? (
           <div

@@ -343,7 +343,7 @@ svg {
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 149;
+  z-index: 204;
   background-color: rgba(0, 0, 0, 0.5);
 }
 
@@ -750,7 +750,7 @@ svg {
   border: solid 1px var(--border);
   left: 50%;
   top: 40%;
-  z-index: 150;
+  z-index: 205;
 }
 
 .action-btns-container {
@@ -2986,6 +2986,7 @@ img {
 .label-wrapper {
   display: flex;
   background-color: var(--btn-hover);
+  border: 1px solid transparent;
   padding: 0.3rem;
   border-radius: 0.75rem;
   height: 15px;

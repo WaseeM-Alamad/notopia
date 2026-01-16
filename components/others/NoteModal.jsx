@@ -106,7 +106,6 @@ const NoteModal = ({
       const scaleX = rect.width / modal.offsetWidth;
       const scaleY = rect.height / modal.offsetHeight;
 
-      // Set starting scale + no translation (start at note)
       modal.style.transform = `translate(0px, 0px) scale(${scaleX}, ${scaleY})`;
     } else {
       if (modal) {
@@ -136,7 +135,6 @@ const NoteModal = ({
         const translateX = centerX - rect.left;
         const translateY = centerY - rect.top;
 
-        // Animate transform only (no left/top changes now)
         modal.style.transform = `translate(${translateX}px, ${translateY}px) scale(1, 1)`;
       }, 10);
     });
@@ -523,8 +521,10 @@ const NoteModal = ({
         }, 220);
       } else {
         modalRef.current.style.transition =
-          "all 0.22s cubic-bezier(0.35, 0.9, 0.25, 1), opacity 0.09s";
+          "all 0.22s cubic-bezier(0.35, 0.9, 0.25, 1), opacity 0.09s, margin 0.22s cubic-bezier(0.5, 0.2, 0.3, 1)";
         modalRef.current.style.opacity = 0;
+        modalRef.current.style.marginTop =
+          modalRef.current.offsetHeight / 5 + "px";
         setTimeout(() => {
           delayLabelDispatchRef.current = false;
           delayImageDispatchRef.current = false;

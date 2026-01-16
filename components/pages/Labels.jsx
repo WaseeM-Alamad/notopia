@@ -39,7 +39,6 @@ const Labels = memo(
     } = useAppContext();
     const { labelSearchTerm } = useSearch();
     const [reRender, triggerReRender] = useState(false);
-    const [addPadding, setAddPadding] = useState(false);
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
     const isFirstRenderRef = useRef(true);
@@ -128,11 +127,6 @@ const Labels = memo(
     }, [calculateLayout, reRender]);
 
     useEffect(() => {
-      const width = window.innerWidth;
-      setAddPadding(width >= 605 && isExpanded.open);
-    }, [isExpanded.open]);
-
-    useEffect(() => {
       calculateLayoutRef.current = calculateLayout;
     }, [calculateLayout, layout]);
 
@@ -216,7 +210,7 @@ const Labels = memo(
       <>
         <div
           ref={rootContainerRef}
-          className={`starting-div ${addPadding ? "sidebar-expanded" : "sidebar-collapsed"}`}
+          className="starting-div"
         >
           <SectionHeader title="Labels" iconClass="section-folders-icon" />
           <div ref={containerRef} className="section-container">

@@ -102,7 +102,6 @@ const Archive = memo(
     const GUTTER = breakpoint === 1 ? 15 : 8;
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
-    const [addPadding, setAddPadding] = useState(false);
 
     const notesExist = order.some((uuid, index) => {
       const note = notes.get(uuid);
@@ -182,11 +181,6 @@ const Archive = memo(
         calculateLayout();
       }, 100);
     }, [calculateLayout]);
-
-    useEffect(() => {
-      const width = window.innerWidth;
-      setAddPadding(width >= 605 && isExpanded.open);
-    }, [isExpanded.open]);
 
     useEffect(() => {
       calculateLayoutRef.current = calculateLayout;

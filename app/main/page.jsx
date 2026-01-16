@@ -251,6 +251,15 @@ const page = () => {
           element: null,
           initialNote: note,
         });
+      } else {
+        setDialogInfo({
+          func: () => window.location.replace("#home"),
+          title: "Note not found",
+          message:
+            "This note may have been deleted or you may not have permission to view it.",
+          btnMsg: "Okay",
+          cancelFunc: () => window.location.replace("#home"),
+        });
       }
     }
   }, [notesReady]);
@@ -564,11 +573,11 @@ const page = () => {
             style={{
               width:
                 isExpanded.threshold === "after"
-                  ? !isExpanded.open
+                  ? isExpanded.open
                     ? "280px"
                     : "80px"
                   : "0",
-              flex: "0",
+              flexShrink: "0",
             }}
           />
           <Page

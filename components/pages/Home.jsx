@@ -170,7 +170,6 @@ const Home = memo(
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
     const [layoutReady, setLayoutReady] = useState(false);
-    const [addPadding, setAddPadding] = useState(false);
     const gridNoteWidth = breakpoint === 1 ? 240 : breakpoint === 2 ? 180 : 150;
     const COLUMN_WIDTH = layout === "grid" ? gridNoteWidth : 600;
     const GUTTER = breakpoint === 1 ? 15 : 8;
@@ -291,11 +290,6 @@ const Home = memo(
         });
       });
     }, [isGrid, COLUMN_WIDTH, GUTTER]);
-
-    useEffect(() => {
-      const width = window.innerWidth;
-      setAddPadding(width >= 605 && isExpanded.open);
-    }, [isExpanded.open]);
 
     useEffect(() => {
       calculateLayoutRef.current = calculateLayout;
@@ -602,10 +596,7 @@ const Home = memo(
 
     return (
       <>
-        <div
-          ref={rootContainerRef}
-          className={`starting-div ${addPadding ? "sidebar-expanded" : "sidebar-collapsed"}`}
-        >
+        <div ref={rootContainerRef} className="starting-div">
           {/* <button
             style={{ position: "fixed" }}
             onClick={() => {
