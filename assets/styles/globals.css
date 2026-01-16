@@ -4201,7 +4201,7 @@ img {
   height: 95%;
   max-width: 900px;
   max-height: 550px;
-  z-index: 150;
+  z-index: 250;
   border: 1px solid var(--border);
   left: 50%;
   top: 45%;
@@ -5909,6 +5909,8 @@ aside svg {
 }
 
 .select-menu {
+  display: flex;
+  align-items: center;
   position: relative;
   text-align: left;
   border: 1px solid var(--border);
@@ -5918,6 +5920,7 @@ aside svg {
   background-color: var(--bg2);
   cursor: pointer;
   min-width: 209.6px !important;
+  min-height: 50px;
 }
 
 .down-arrow-icon {
