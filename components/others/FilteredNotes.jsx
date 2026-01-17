@@ -25,6 +25,7 @@ const NoteWrapper = memo(
     fadingNotes,
   }) => {
     const [mounted, setMounted] = useState(false);
+    const touchDownRef = useRef(null);
 
     useEffect(() => {
       setTimeout(() => {
@@ -43,10 +44,12 @@ const NoteWrapper = memo(
           className={`grid-item ${
             fadingNotes.has(note?.uuid) ? "fade-out" : ""
           }`}
-          onClick={(e) => handleNoteClick(e, note, index)}
+          onClick={(e) =>
+            !touchDownRef.current && handleNoteClick(e, note, index)
+          }
           onKeyDown={(e) => {
             if (e.key === "Enter") {
-              handleNoteClick(e, note, index);
+              !touchDownRef.current && handleNoteClick(e, note, index);
             }
           }}
           style={{

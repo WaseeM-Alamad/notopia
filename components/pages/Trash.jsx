@@ -26,6 +26,7 @@ const NoteWrapper = memo(
     fadingNotes,
   }) => {
     const [mounted, setMounted] = useState(false);
+    const touchDownRef = useRef(null);
 
     useEffect(() => {
       requestAnimationFrame(() => {
@@ -44,10 +45,12 @@ const NoteWrapper = memo(
           className={`grid-item ${
             fadingNotes.has(note?.uuid) ? "fade-out" : ""
           }`}
-          onClick={(e) => handleNoteClick(e, note, index)}
+          onClick={(e) =>
+            !touchDownRef.current && handleNoteClick(e, note, index)
+          }
           onKeyDown={(e) => {
             if (e.key === "Enter") {
-              handleNoteClick(e, note, index);
+              !touchDownRef.current && handleNoteClick(e, note, index);
             }
           }}
           style={{
@@ -68,7 +71,7 @@ const NoteWrapper = memo(
             dispatchNotes={dispatchNotes}
             handleSelectNote={handleSelectNote}
             handleNoteClick={handleNoteClick}
-            index={index}
+            touchDownRef={touchDownRef}
           />
           {/* <p>{index}</p> */}
         </div>
@@ -116,7 +119,6 @@ const Trash = memo(
 
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
-
 
     const notesExist = order.some((uuid, index) => {
       const note = notes.get(uuid);
@@ -285,10 +287,7 @@ const Trash = memo(
 
     return (
       <>
-        <div
-          ref={rootContainerRef}
-          className="starting-div"
-        >
+        <div ref={rootContainerRef} className="starting-div">
           <SectionHeader title="Trash" iconClass="section-trash-icon" />
           <div id="trash-header" className="trash-section-header">
             Notes in Trash are deleted after 7 days.

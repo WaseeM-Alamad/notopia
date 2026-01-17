@@ -34,6 +34,8 @@ const Note = memo(
     setFadingNotes,
     handleSelectNote,
     handleNoteClick,
+    touchDownRef,
+    startDragging,
   }) => {
     const {
       user,
@@ -333,7 +335,8 @@ const Note = memo(
         </button> */}
         <div
           tabIndex="0"
-          onClick={(e) =>
+          onClick={(e) => {
+            if (touchDownRef.current) return;
             handleSelectNote({
               source: "note",
               e: e,
@@ -343,10 +346,11 @@ const Note = memo(
               index: notesIndexMapRef.current.get(note.uuid),
               isPinned: note?.isPinned,
               isArchived: note.isArchived,
-            })
-          }
+            });
+          }}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
+              if (touchDownRef.current) return;
               handleSelectNote({
                 source: "note",
                 e: e,
@@ -364,9 +368,39 @@ const Note = memo(
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
           onDrop={handleOnDrop}
+          onTouchStart={(e) => {
+            touchTimerRef.current = setTimeout(() => {
+              touchDownRef.current = true;
+              handleSelectNote({
+                source: "touch",
+                e: e,
+                selected: selected,
+                setSelected: setSelected,
+                uuid: note?.uuid,
+                index: notesIndexMapRef.current.get(note.uuid),
+                isPinned: note?.isPinned,
+                isArchived: note.isArchived,
+              });
+              if (startDragging && !selected) startDragging();
+            }, 400);
+          }}
+          onTouchEnd={() => {
+            clearTimeout(touchTimerRef.current);
+            setTimeout(() => {
+              touchDownRef.current = false;
+            }, 200);
+          }}
+          onTouchMove={() => {
+            if (!selected) {
+              clearTimeout(touchTimerRef.current);
+              return;
+            }
+          }}
           onMouseLeave={handleNoteMouseLeave}
           onContextMenu={(e) => {
             e.preventDefault();
+            if (e.button !== 2) return;
+
             closeToolTip();
             if (touchActiveRef.current) return;
 
@@ -392,6 +426,7 @@ const Note = memo(
             ref={checkRef}
             className="checkmark"
             onClick={(e) =>
+              !touchDownRef.current &&
               handleSelectNote({
                 source: "checkmark",
                 e: e,

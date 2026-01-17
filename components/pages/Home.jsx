@@ -28,9 +28,12 @@ const NoteWrapper = memo(
     handleSelectNote,
     handleNoteClick,
     gridNoteWidth,
+    isDraggingRef,
+    touchOverElementRef,
   }) => {
     const [mounted, setMounted] = useState(false);
     const noteRef = useRef(null);
+    const touchDownRef = useRef(null);
 
     useEffect(() => {
       requestAnimationFrame(() => {
@@ -83,11 +86,71 @@ const NoteWrapper = memo(
       overIsPinnedRef.current = note?.isPinned;
     };
 
+    const topRef = useRef(null);
+
+    const startDragging = () => {
+      const targetElement = topRef.current;
+
+      const detectDrag = (event) => {
+        const t = event.touches[0];
+        if (!t) return;
+
+        document.body.classList.add("dragging");
+        requestAnimationFrame(() => {
+          handleDragStart(
+            {
+              clientX: t.clientX,
+              clientY: t.clientY,
+            },
+            targetElement,
+            notesIndexMapRef.current.get(note.uuid),
+            note?.isPinned,
+            true
+          );
+        });
+      };
+
+      const handleTouchEnd = () => {
+        document.removeEventListener("touchmove", detectDrag);
+        document.removeEventListener("touchend", handleTouchEnd);
+        document.removeEventListener("touchcancel", handleTouchEnd);
+      };
+
+      document.addEventListener("touchmove", detectDrag, { passive: false });
+      document.addEventListener("touchend", handleTouchEnd);
+      document.addEventListener("touchcancel", handleTouchEnd);
+    };
+
+    useEffect(() => {
+      const handler = (e) => {
+        if (
+          !isDraggingRef.current ||
+          touchOverElementRef.current === noteRef.current
+        ) {
+          return;
+        }
+        const t = e.touches[0];
+        const touchX = t.clientX;
+        const touchY = t.clientY;
+        const element = document.elementFromPoint(touchX, touchY);
+
+        if (noteRef.current.contains(element)) {
+          handleMouseEnter();
+          touchOverElementRef.current = noteRef.current;
+        }
+      };
+
+      document.addEventListener("touchmove", handler);
+      return () => document.removeEventListener("touchmove", handler);
+    }, []);
+
     return (
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.2, type: "tween" }}
+        className="top-note-wrapper"
+        ref={topRef}
       >
         <div
           tabIndex={0}
@@ -95,11 +158,17 @@ const NoteWrapper = memo(
           onMouseDown={handleMouseDown}
           onMouseEnter={handleMouseEnter}
           onClick={(e) =>
+            !touchDownRef.current &&
             handleNoteClick(e, note, notesIndexMapRef.current.get(note.uuid))
           }
           onKeyDown={(e) => {
             if (e.key === "Enter") {
-              handleNoteClick(e, note, notesIndexMapRef.current.get(note.uuid));
+              !touchDownRef.current &&
+                handleNoteClick(
+                  e,
+                  note,
+                  notesIndexMapRef.current.get(note.uuid)
+                );
             }
           }}
           className={`grid-item ${
@@ -123,6 +192,8 @@ const NoteWrapper = memo(
             setSelectedNotesIDs={setSelectedNotesIDs}
             handleSelectNote={handleSelectNote}
             handleNoteClick={handleNoteClick}
+            touchDownRef={touchDownRef}
+            startDragging={startDragging}
           />
           {/* <p style={{position: "absolute", bottom: "40px", color: "blue"}}>{notesIndexMapRef.current.get(note.uuid)}</p> */}
         </div>
@@ -173,6 +244,7 @@ const Home = memo(
     const gridNoteWidth = breakpoint === 1 ? 240 : breakpoint === 2 ? 180 : 150;
     const COLUMN_WIDTH = layout === "grid" ? gridNoteWidth : 600;
     const GUTTER = breakpoint === 1 ? 15 : 8;
+    const touchOverElementRef = useRef(null);
 
     const hasPinned = [...visibleItems].some((uuid) => {
       const note = notes.get(uuid);
@@ -335,7 +407,7 @@ const Home = memo(
     const overIndexRef = useRef(null);
     const overIsPinnedRef = useRef(null);
     const endIndexRef = useRef(null);
-    const isDragging = useRef(false);
+    const isDraggingRef = useRef(false);
     const lastSwapRef = useRef(0);
     const ghostElementRef = useRef(null);
 
@@ -355,12 +427,11 @@ const Home = memo(
     }, []);
 
     const handleDragStart = useCallback(
-      (e, targetElement, index, isPinned) => {
-        // e.preventDefault();
+      (e, targetElement, index, isPinned, isTouch = false) => {
         if (draggedNoteRef.current) {
           return;
         }
-        isDragging.current = true;
+        isDraggingRef.current = true;
         draggedNoteRef.current = targetElement;
         if (!document.body.classList.contains("dragging")) {
           document.body.classList.add("dragging");
@@ -386,8 +457,8 @@ const Home = memo(
 
         ghostElement.classList.add("ghost-note");
 
-        ghostElement.style.left = `${rect.left - 15}px`;
-        ghostElement.style.top = `${rect.top - 15}px`;
+        ghostElement.style.left = `${rect.left - (isTouch ? 0 : 15)}px`;
+        ghostElement.style.top = `${rect.top - (isTouch ? 0 : 15)}px`;
 
         const updateGhostPosition = (moveEvent) => {
           if (layout === "grid") {
@@ -396,10 +467,26 @@ const Home = memo(
           ghostElement.style.top = `${moveEvent.clientY - offsetY - 15}px`; // Update top with offset
         };
 
+        const updateGhostPositionTouch = (moveEvent) => {
+          moveEvent.preventDefault();
+          const touch = moveEvent.touches[0];
+          if (!touch) return;
+          if (layout === "grid") {
+            ghostElement.style.left = `${touch.clientX - offsetX}px`;
+          }
+          ghostElement.style.top = `${touch.clientY - offsetY}px`;
+        };
+
+        isTouch &&
+          document.addEventListener("touchmove", updateGhostPositionTouch, {
+            passive: false,
+          });
+
         document.addEventListener("mousemove", updateGhostPosition);
 
         const handleDragEnd = () => {
           if (ghostElement && document.body.contains(ghostElement)) {
+            touchOverElementRef.current = null;
             setTimeout(() => {
               if (
                 endIndexRef.current !== null &&
@@ -428,7 +515,7 @@ const Home = memo(
               ghostElement.style.top = `${rect.top}px`;
               ghostElement.style.left = `${rect.left}px`;
               pin.style.opacity = "0";
-              isDragging.current = false;
+              isDraggingRef.current = false;
               lastEl = null;
               setTimeout(() => {
                 if (document.body.contains(ghostElement)) {
@@ -448,19 +535,23 @@ const Home = memo(
               }, 250);
             }, 50);
           }
+          isTouch &&
+            document.removeEventListener("touchmove", updateGhostPositionTouch);
           document.removeEventListener("mousemove", updateGhostPosition);
           document.removeEventListener("mouseup", handleDragEnd);
+          document.removeEventListener("touchend", handleDragEnd);
 
           calculateLayout();
         };
 
         document.addEventListener("mouseup", handleDragEnd);
+        isTouch && document.addEventListener("touchend", handleDragEnd);
       },
       [calculateLayout, layout]
     );
 
     const handleDragOver = async (noteElement) => {
-      if (!isDragging.current) return;
+      if (!isDraggingRef.current) return;
       if (draggedIsPinnedRef.current !== overIsPinnedRef.current) {
         return;
       }
@@ -502,11 +593,11 @@ const Home = memo(
     let lastEl = null;
     useEffect(() => {
       let animationFrame;
-      let lastMouseX = 0;
-      let lastMouseY = 0;
+      let lastPointerX = 0;
+      let lastPointerY = 0;
 
       const checkCollisions = () => {
-        if (!isDragging.current) {
+        if (!isDraggingRef.current) {
           animationFrame = requestAnimationFrame(checkCollisions);
           return;
         }
@@ -519,14 +610,13 @@ const Home = memo(
 
           const rect = noteElement.parentElement.getBoundingClientRect();
           const height = Math.abs(rect.top - rect.bottom);
-
           if (lastEl) {
             const lastElRect = lastEl.getBoundingClientRect();
             if (
-              lastMouseX < lastElRect.left ||
-              lastMouseX > lastElRect.right ||
-              lastMouseY < lastElRect.top ||
-              lastMouseY > lastElRect.bottom
+              lastPointerX < lastElRect.left ||
+              lastPointerX > lastElRect.right ||
+              lastPointerY < lastElRect.top ||
+              lastPointerY > lastElRect.bottom
             ) {
               lastEl = null;
             }
@@ -536,22 +626,22 @@ const Home = memo(
             if (height < 250) continue;
             const halfHeight = height * 0.5;
             if (
-              lastMouseX >= rect.left &&
-              lastMouseX <= rect.right &&
-              lastMouseY >= rect.top + halfHeight - 20 &&
-              lastMouseY <= rect.bottom - halfHeight + 20
+              lastPointerX >= rect.left &&
+              lastPointerX <= rect.right &&
+              lastPointerY >= rect.top + halfHeight - 20 &&
+              lastPointerY <= rect.bottom - halfHeight + 20
             ) {
-              handleDragOver();
+              if (!draggedNoteRef.current.contains(noteElement)) handleDragOver()
               break;
             }
           } else {
             if (
-              lastMouseX >= rect.left &&
-              lastMouseX <= rect.right &&
-              lastMouseY >= rect.top &&
-              lastMouseY <= rect.bottom
+              lastPointerX >= rect.left &&
+              lastPointerX <= rect.right &&
+              lastPointerY >= rect.top &&
+              lastPointerY <= rect.bottom
             ) {
-              handleDragOver(noteElement);
+              if (!draggedNoteRef.current.contains(noteElement)) handleDragOver(noteElement);
               break;
             }
           }
@@ -561,15 +651,28 @@ const Home = memo(
       };
 
       const handleMouseMove = (e) => {
-        lastMouseX = e.clientX;
-        lastMouseY = e.clientY;
+        lastPointerX = e.clientX;
+        lastPointerY = e.clientY;
+      };
+
+      const handleTouchMove = (e) => {
+        const t = e.touches[0];
+        if (!t) return;
+        lastPointerX = t.clientX;
+        lastPointerY = t.clientY;
       };
 
       document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("touchmove", handleTouchMove, {
+        passive: false,
+      });
       animationFrame = requestAnimationFrame(checkCollisions);
 
       return () => {
         document.removeEventListener("mousemove", handleMouseMove);
+        document.removeEventListener("touchmove", handleTouchMove, {
+          passive: false,
+        });
         cancelAnimationFrame(animationFrame);
       };
     }, []);
@@ -660,6 +763,8 @@ const Home = memo(
                     handleSelectNote={handleSelectNote}
                     gridNoteWidth={gridNoteWidth}
                     GUTTER={GUTTER}
+                    isDraggingRef={isDraggingRef}
+                    touchOverElementRef={touchOverElementRef}
                   />
                 )
               );

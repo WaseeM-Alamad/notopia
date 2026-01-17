@@ -23,6 +23,7 @@ const NoteWrapper = memo(
     noteActions,
   }) => {
     const [mounted, setMounted] = useState(false);
+    const touchDownRef = useRef(null);
 
     useEffect(() => {
       requestAnimationFrame(() => {
@@ -41,10 +42,12 @@ const NoteWrapper = memo(
           className={`grid-item ${
             fadingNotes.has(note?.uuid) ? "fade-out" : ""
           }`}
-          onClick={(e) => handleNoteClick(e, note, index)}
+          onClick={(e) =>
+            !touchDownRef.current && handleNoteClick(e, note, index)
+          }
           onKeyDown={(e) => {
             if (e.key === "Enter") {
-              handleNoteClick(e, note, index);
+              !touchDownRef.current && handleNoteClick(e, note, index);
             }
           }}
           style={{
@@ -66,6 +69,7 @@ const NoteWrapper = memo(
             handleNoteClick={handleNoteClick}
             setSelectedNotesIDs={setSelectedNotesIDs}
             selectedNotes={selectedNotes}
+            touchDownRef={touchDownRef}
           />
           {/* <p>{index}</p> */}
         </div>
@@ -216,10 +220,7 @@ const Archive = memo(
 
     return (
       <>
-        <div
-          ref={rootContainerRef}
-          className={`starting-div `}
-        >
+        <div ref={rootContainerRef} className={`starting-div `}>
           <SectionHeader title="Archive" iconClass="section-archive-icon" />
           <div ref={containerRef} className="section-container">
             {order.map((uuid, index) => {

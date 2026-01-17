@@ -5378,6 +5378,10 @@ aside svg {
 }
 
 @media (max-width: 605px) {
+  .checkmark {
+    display: none !important;
+  }
+
   .top-menu {
     height: 71px;
   }
@@ -6329,4 +6333,8 @@ aside svg {
 
 .collab-dialog-img-wrapper:hover .acc-img-hv {
   opacity: 1;
+}
+
+.dragging .top-note-wrapper {
+  touch-action: none;
 }

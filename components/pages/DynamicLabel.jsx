@@ -34,6 +34,7 @@ const NoteWrapper = memo(
     handleNoteClick,
   }) => {
     const [mounted, setMounted] = useState(false);
+    const touchDownRef = useRef(null);
 
     useEffect(() => {
       requestAnimationFrame(() => {
@@ -48,10 +49,12 @@ const NoteWrapper = memo(
         transition={{ duration: 0.2, type: "tween" }}
       >
         <div
-          onClick={(e) => handleNoteClick(e, note, index)}
+          onClick={(e) =>
+            !touchDownRef.current && handleNoteClick(e, note, index)
+          }
           onKeyDown={(e) => {
             if (e.key === "Enter") {
-              handleNoteClick(e, note, index);
+              !touchDownRef.current && handleNoteClick(e, note, index);
             }
           }}
           className={`grid-item ${
@@ -75,7 +78,7 @@ const NoteWrapper = memo(
             setSelectedNotesIDs={setSelectedNotesIDs}
             handleSelectNote={handleSelectNote}
             handleNoteClick={handleNoteClick}
-            index={index}
+            touchDownRef={touchDownRef}
           />
         </div>
       </motion.div>
@@ -335,10 +338,7 @@ const DynamicLabel = ({
 
   return (
     <>
-      <div
-        ref={rootContainerRef}
-        className="starting-div"
-      >
+      <div ref={rootContainerRef} className="starting-div">
         <SectionHeader
           title={labelObj?.label}
           iconClass="section-label-icon"
