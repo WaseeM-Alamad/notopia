@@ -117,8 +117,10 @@ const NoteWrapper = memo(
       };
 
       document.addEventListener("touchmove", detectDrag, { passive: false });
-      document.addEventListener("touchend", handleTouchEnd);
-      document.addEventListener("touchcancel", handleTouchEnd);
+      document.addEventListener("touchend", handleTouchEnd, { passive: true });
+      document.addEventListener("touchcancel", handleTouchEnd, {
+        passive: true,
+      });
     };
 
     useEffect(() => {
@@ -460,21 +462,26 @@ const Home = memo(
         ghostElement.style.left = `${rect.left - (isTouch ? 0 : 15)}px`;
         ghostElement.style.top = `${rect.top - (isTouch ? 0 : 15)}px`;
 
+        const baseLeft = rect.left;
+        const baseTop = rect.top;
+
+        console.log("initial x", baseLeft);
+        console.log("initial y", baseTop);
+
         const updateGhostPosition = (moveEvent) => {
-          if (layout === "grid") {
-            ghostElement.style.left = `${moveEvent.clientX - offsetX - 15}px`; // Update left with offset
-          }
-          ghostElement.style.top = `${moveEvent.clientY - offsetY - 15}px`; // Update top with offset
+          const x = moveEvent.clientX - offsetX - baseLeft;
+          const y = moveEvent.clientY - offsetY - baseTop;
+          ghostElement.style.transform = `translate(${layout === "grid" ? x : 0}px, ${y}px)`;
         };
 
-        const updateGhostPositionTouch = (moveEvent) => {
-          moveEvent.preventDefault();
-          const touch = moveEvent.touches[0];
-          if (!touch) return;
-          if (layout === "grid") {
-            ghostElement.style.left = `${touch.clientX - offsetX}px`;
-          }
-          ghostElement.style.top = `${touch.clientY - offsetY}px`;
+        const updateGhostPositionTouch = (e) => {
+          const t = e.touches[0];
+          if (!t) return;
+
+          const x = t.clientX - offsetX - baseLeft;
+          const y = t.clientY - offsetY - baseTop;
+
+          ghostElement.style.transform = `translate(${layout === "grid" ? x : 0}px, ${y}px)`;
         };
 
         isTouch &&
@@ -512,6 +519,8 @@ const Home = memo(
               const rect = draggedElement.getBoundingClientRect();
               ghostElement.classList.remove("ghost-note");
               ghostElement.classList.add("restore-ghost-note");
+              console.log("end x", rect.left);
+              console.log("end y", rect.top);
               ghostElement.style.top = `${rect.top}px`;
               ghostElement.style.left = `${rect.left}px`;
               pin.style.opacity = "0";
@@ -631,7 +640,8 @@ const Home = memo(
               lastPointerY >= rect.top + halfHeight - 20 &&
               lastPointerY <= rect.bottom - halfHeight + 20
             ) {
-              if (!draggedNoteRef.current.contains(noteElement)) handleDragOver()
+              if (!draggedNoteRef.current.contains(noteElement))
+                handleDragOver();
               break;
             }
           } else {
@@ -641,7 +651,8 @@ const Home = memo(
               lastPointerY >= rect.top &&
               lastPointerY <= rect.bottom
             ) {
-              if (!draggedNoteRef.current.contains(noteElement)) handleDragOver(noteElement);
+              if (!draggedNoteRef.current.contains(noteElement))
+                handleDragOver(noteElement);
               break;
             }
           }
@@ -651,11 +662,13 @@ const Home = memo(
       };
 
       const handleMouseMove = (e) => {
+        if (!isDraggingRef.current) return;
         lastPointerX = e.clientX;
         lastPointerY = e.clientY;
       };
 
       const handleTouchMove = (e) => {
+        if (!isDraggingRef.current) return;
         const t = e.touches[0];
         if (!t) return;
         lastPointerX = t.clientX;
@@ -664,14 +677,14 @@ const Home = memo(
 
       document.addEventListener("mousemove", handleMouseMove);
       document.addEventListener("touchmove", handleTouchMove, {
-        passive: false,
+        passive: true,
       });
       animationFrame = requestAnimationFrame(checkCollisions);
 
       return () => {
         document.removeEventListener("mousemove", handleMouseMove);
         document.removeEventListener("touchmove", handleTouchMove, {
-          passive: false,
+          passive: true,
         });
         cancelAnimationFrame(animationFrame);
       };

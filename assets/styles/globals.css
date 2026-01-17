@@ -2449,7 +2449,7 @@ img {
   cursor: move !important;
   border-radius: 0.9rem !important;
   box-shadow: 2px 1px 25px -3px rgba(112, 112, 112, 0.8) !important;
-  transform: none !important;
+  /* transform: none !important; */
   transition: none !important;
 }
 
