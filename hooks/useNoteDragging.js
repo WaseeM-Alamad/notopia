@@ -298,7 +298,7 @@ export function useNoteDragging({
   let currentScrollSpeed = 0;
   const SCROLL_EDGE = 120;
   const MAX_SCROLL_SPEED = 55;
-  const SCROLL_ACCELERATION = 3.9;
+  const SCROLL_ACCELERATION = 1;
 
   function smoothScroll() {
     if (Math.abs(currentScrollSpeed) > 0.1) {
