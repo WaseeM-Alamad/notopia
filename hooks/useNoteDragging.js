@@ -296,9 +296,9 @@ export function useNoteDragging({
 
   let scrollAnimationFrame = null;
   let currentScrollSpeed = 0;
-  const SCROLL_EDGE = 120; // Increased for easier touch targeting
-  const MAX_SCROLL_SPEED = 15; // Reduced for smoother mobile control
-  const SCROLL_ACCELERATION = 0.3; // Smoother speed transitions
+  const SCROLL_EDGE = 120;
+  const MAX_SCROLL_SPEED = 55;
+  const SCROLL_ACCELERATION = 3.9;
 
   function smoothScroll() {
     if (Math.abs(currentScrollSpeed) > 0.1) {
@@ -317,7 +317,6 @@ export function useNoteDragging({
     const t = e.touches[0];
     if (!t) return;
 
-    // Calculate target scroll speed
     const y = t.clientY;
     const vh = window.innerHeight;
     let targetSpeed = 0;
@@ -328,16 +327,13 @@ export function useNoteDragging({
       targetSpeed = ((y - (vh - SCROLL_EDGE)) / SCROLL_EDGE) * MAX_SCROLL_SPEED;
     }
 
-    // Smooth acceleration/deceleration
     currentScrollSpeed +=
       (targetSpeed - currentScrollSpeed) * SCROLL_ACCELERATION;
 
-    // Start animation if not running
     if (!scrollAnimationFrame) {
       scrollAnimationFrame = requestAnimationFrame(smoothScroll);
     }
 
-    // Update position tracking
     if (
       Math.abs(t.clientY - lastPointerY) > 5 ||
       Math.abs(t.clientX - lastPointerX) > 5
@@ -354,7 +350,6 @@ export function useNoteDragging({
     }
   };
 
-  // Add this to your touchend/mouseup handler
   const stopAutoScroll = () => {
     currentScrollSpeed = 0;
     if (scrollAnimationFrame) {
