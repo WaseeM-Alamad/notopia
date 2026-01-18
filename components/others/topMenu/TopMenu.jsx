@@ -116,11 +116,19 @@ const TopMenuHome = ({
   }, [selectedNotesIDs]);
 
   useEffect(() => {
-    requestIdleCallback(() => {
-      requestAnimationFrame(() => {
-        setSelectedNumber(selectedNotesIDs.length);
+    const length = selectedNotesIDs.length;
+    if (length > 1) {
+      requestIdleCallback(() => {
+        requestAnimationFrame(() => {
+          setSelectedNumber(length);
+        });
       });
-    });
+    }
+    else {
+      requestAnimationFrame(() => {
+          setSelectedNumber(length);
+        });
+    }
     if (selectedNotesIDs.length > 0) {
       selectedNotesRef.current = selectedNotesIDs;
     } else {
