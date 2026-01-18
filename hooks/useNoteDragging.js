@@ -297,7 +297,7 @@ export function useNoteDragging({
   let scrollAnimationFrame = null;
   let currentScrollSpeed = 0;
   const SCROLL_EDGE = 80; // px from top/bottom
-  const MAX_SCROLL_SPEED = 20;
+  const MAX_SCROLL_SPEED = 50;
 
   function smoothScroll() {
     if (currentScrollSpeed !== 0) {
