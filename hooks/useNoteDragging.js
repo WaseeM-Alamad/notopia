@@ -296,40 +296,30 @@ export function useNoteDragging({
 
   let scrollAnimationFrame = null;
   let currentScrollSpeed = 0;
-  const SCROLL_EDGE = 80; // px from top/bottom
-  const MAX_SCROLL_SPEED = 50;
+  const SCROLL_EDGE = 120; // Increased for easier touch targeting
+  const MAX_SCROLL_SPEED = 15; // Reduced for smoother mobile control
+  const SCROLL_ACCELERATION = 0.3; // Smoother speed transitions
 
   function smoothScroll() {
-    if (currentScrollSpeed !== 0) {
+    if (Math.abs(currentScrollSpeed) > 0.1) {
       window.scrollBy(0, currentScrollSpeed);
       scrollAnimationFrame = requestAnimationFrame(smoothScroll);
+    } else {
+      currentScrollSpeed = 0;
+      cancelAnimationFrame(scrollAnimationFrame);
+      scrollAnimationFrame = null;
     }
   }
 
   const handleTouchMove = (e) => {
-    if (!e.cancelable) return;
     if (!isDraggingRef.current) return;
-    e.preventDefault();
 
     const t = e.touches[0];
     if (!t) return;
 
-    if (lastPointerX === t.clientX && lastPointerY === t.clientY) return;
-
-    const limit = 100;
-
-    const topLimit = limit;
-    const bottomLimit = window.innerHeight - limit;
-
-    if (t.clientY > topLimit && t.clientY < bottomLimit) {
-      lastPointerX = t.clientX;
-      lastPointerY = t.clientY;
-      pointerMovedRef.current = true;
-    }
-
+    // Calculate target scroll speed
     const y = t.clientY;
     const vh = window.innerHeight;
-
     let targetSpeed = 0;
 
     if (y < SCROLL_EDGE) {
@@ -338,13 +328,29 @@ export function useNoteDragging({
       targetSpeed = ((y - (vh - SCROLL_EDGE)) / SCROLL_EDGE) * MAX_SCROLL_SPEED;
     }
 
-    currentScrollSpeed = targetSpeed;
+    // Smooth acceleration/deceleration
+    currentScrollSpeed +=
+      (targetSpeed - currentScrollSpeed) * SCROLL_ACCELERATION;
 
-    if (targetSpeed !== 0 && !scrollAnimationFrame) {
+    // Start animation if not running
+    if (!scrollAnimationFrame) {
       scrollAnimationFrame = requestAnimationFrame(smoothScroll);
-    } else if (targetSpeed === 0 && scrollAnimationFrame) {
-      cancelAnimationFrame(scrollAnimationFrame);
-      scrollAnimationFrame = null;
+    }
+
+    // Update position tracking
+    if (
+      Math.abs(t.clientY - lastPointerY) > 5 ||
+      Math.abs(t.clientX - lastPointerX) > 5
+    ) {
+      const limit = 100;
+      const topLimit = limit;
+      const bottomLimit = window.innerHeight - limit;
+
+      if (t.clientY > topLimit && t.clientY < bottomLimit) {
+        lastPointerX = t.clientX;
+        lastPointerY = t.clientY;
+        pointerMovedRef.current = true;
+      }
     }
   };
 
