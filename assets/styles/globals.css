@@ -1395,15 +1395,17 @@ svg {
   transition: all 0.3s ease;
 }
 
-.note-wrapper:hover {
-  transform: translateY(-1px);
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.07),
-    0 4px 12px rgba(0, 0, 0, 0.04);
-}
+@media (hover: hover) {
+  .note-wrapper:hover {
+    transform: translateY(-1px);
+    box-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.07),
+      0 4px 12px rgba(0, 0, 0, 0.04);
+  }
 
-.dark-mode .note-wrapper:hover {
-  box-shadow: none;
+  .dark-mode .note-wrapper:hover {
+    box-shadow: none;
+  }
 }
 
 .date {

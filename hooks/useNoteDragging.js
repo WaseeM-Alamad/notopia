@@ -169,6 +169,7 @@ export function useNoteDragging({
         document.removeEventListener("touchmove", handleTouchMove, {
           passive: false,
         });
+        stopAutoScroll();
         cancelAnimationFrame(animationFrame);
 
         calculateLayout();
@@ -282,9 +283,6 @@ export function useNoteDragging({
     animationFrame = requestAnimationFrame(checkCollisions);
   };
 
-  const SCROLL_EDGE = 80; // px from top/bottom
-  const MAX_SCROLL_SPEED = 58;
-
   const handleMouseMove = (e) => {
     if (!isDraggingRef.current) return;
 
@@ -296,6 +294,18 @@ export function useNoteDragging({
     pointerMovedRef.current = true;
   };
 
+  let scrollAnimationFrame = null;
+  let currentScrollSpeed = 0;
+  const SCROLL_EDGE = 80; // px from top/bottom
+  const MAX_SCROLL_SPEED = 20;
+
+  function smoothScroll() {
+    if (currentScrollSpeed !== 0) {
+      window.scrollBy(0, currentScrollSpeed);
+      scrollAnimationFrame = requestAnimationFrame(smoothScroll);
+    }
+  }
+
   const handleTouchMove = (e) => {
     if (!e.cancelable) return;
     if (!isDraggingRef.current) return;
@@ -306,24 +316,44 @@ export function useNoteDragging({
 
     if (lastPointerX === t.clientX && lastPointerY === t.clientY) return;
 
-    lastPointerX = t.clientX;
-    lastPointerY = t.clientY;
+    const limit = 100;
 
-    pointerMovedRef.current = true;
+    const topLimit = limit;
+    const bottomLimit = window.innerHeight - limit;
 
-    const y = lastPointerY;
-    const vh = window.innerHeight;
-
-    let scrollDelta = 0;
-
-    if (y < SCROLL_EDGE) {
-      scrollDelta = -((SCROLL_EDGE - y) / SCROLL_EDGE) * MAX_SCROLL_SPEED;
-    } else if (y > vh - SCROLL_EDGE) {
-      scrollDelta = ((y - (vh - SCROLL_EDGE)) / SCROLL_EDGE) * MAX_SCROLL_SPEED;
+    if (t.clientY > topLimit && t.clientY < bottomLimit) {
+      lastPointerX = t.clientX;
+      lastPointerY = t.clientY;
+      pointerMovedRef.current = true;
     }
 
-    if (scrollDelta !== 0) {
-      window.scrollBy(0, scrollDelta);
+    const y = t.clientY;
+    const vh = window.innerHeight;
+
+    let targetSpeed = 0;
+
+    if (y < SCROLL_EDGE) {
+      targetSpeed = -((SCROLL_EDGE - y) / SCROLL_EDGE) * MAX_SCROLL_SPEED;
+    } else if (y > vh - SCROLL_EDGE) {
+      targetSpeed = ((y - (vh - SCROLL_EDGE)) / SCROLL_EDGE) * MAX_SCROLL_SPEED;
+    }
+
+    currentScrollSpeed = targetSpeed;
+
+    if (targetSpeed !== 0 && !scrollAnimationFrame) {
+      scrollAnimationFrame = requestAnimationFrame(smoothScroll);
+    } else if (targetSpeed === 0 && scrollAnimationFrame) {
+      cancelAnimationFrame(scrollAnimationFrame);
+      scrollAnimationFrame = null;
+    }
+  };
+
+  // Add this to your touchend/mouseup handler
+  const stopAutoScroll = () => {
+    currentScrollSpeed = 0;
+    if (scrollAnimationFrame) {
+      cancelAnimationFrame(scrollAnimationFrame);
+      scrollAnimationFrame = null;
     }
   };
 
