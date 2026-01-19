@@ -16,13 +16,13 @@ import {
 import { useAppContext } from "@/context/AppContext";
 import { fetchNotes, syncOfflineUpdatesAction } from "@/utils/actions";
 import handleServerCall from "@/utils/handleServerCall";
+import { useLabelsContext } from "@/context/LabelsContext";
 
 export function useDataManager({ notesState, dispatchNotes, setNotesReady }) {
   const {
     user,
     clientID,
     setIsOnline,
-    labelsRef,
     setLabelsReady,
     notesIndexMapRef,
     notesStateRef,
@@ -30,13 +30,15 @@ export function useDataManager({ notesState, dispatchNotes, setNotesReady }) {
     setUser,
   } = useAppContext();
 
+  const { labelsRef } = useLabelsContext();
+
   useEffect(() => {
     notesStateRef.current = notesState;
   }, [notesState]);
 
   useEffect(() => {
     const indexMap = new Map(
-      notesState.order.map((uuid, index) => [uuid, index])
+      notesState.order.map((uuid, index) => [uuid, index]),
     );
 
     notesIndexMapRef.current = indexMap;
@@ -46,7 +48,7 @@ export function useDataManager({ notesState, dispatchNotes, setNotesReady }) {
     labelsRef.current = new Map(
       fetchedLables.map((mapLabel) => {
         return [mapLabel.uuid, mapLabel];
-      })
+      }),
     );
     setLabelsReady(true);
   };
@@ -72,7 +74,7 @@ export function useDataManager({ notesState, dispatchNotes, setNotesReady }) {
         fetchedNotes.data.map((note) => [
           note?.uuid,
           { ...note, ref: createRef() },
-        ])
+        ]),
       );
       dispatchNotes({
         type: "SET_INITIAL_DATA",
@@ -151,7 +153,7 @@ export function useDataManager({ notesState, dispatchNotes, setNotesReady }) {
                 clientID,
               }),
           ],
-          openSnackRef.current
+          openSnackRef.current,
         );
       }
       await clearQueuedNotes(user?.id);

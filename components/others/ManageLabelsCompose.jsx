@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import { Popper } from "@mui/material";
 import { v4 as generateUUID } from "uuid";
 import { useSearch } from "@/context/SearchContext";
+import { useLabelsContext } from "@/context/LabelsContext";
 
 const ManageLabelsCompose = ({
   note,
@@ -14,18 +15,14 @@ const ManageLabelsCompose = ({
   setIsOpen,
   anchorEl,
 }) => {
-  const {
-    createLabel,
-    labelsRef,
-    currentSection,
-    labelObjRef,
-  } = useAppContext();
+  const { currentSection, labelObjRef } = useAppContext();
+  const { createLabel, labelsRef } = useLabelsContext();
   const [isClient, setIsClient] = useState();
   const [labelSearch, setLabelSearch] = useState("");
   const [noteLabels, setNoteLabels] = useState(new Set());
   const allLabelsMatchSearch = [...labelsRef.current].every(
     ([uuid, labelData]) =>
-      labelData.label.toLowerCase() !== labelSearch.toLowerCase()
+      labelData.label.toLowerCase() !== labelSearch.toLowerCase(),
   );
   const menuRef = useRef(null);
   const labelinputRef = useRef(null);
@@ -101,7 +98,6 @@ const ManageLabelsCompose = ({
         ...prev,
         labels: prev.labels.filter((labelUUID) => !labelUUID === uuid),
       }));
-
     } else {
       setNoteLabels((prev) => {
         const updated = new Set(prev);
@@ -244,7 +240,7 @@ const ManageLabelsCompose = ({
         </div>
       </motion.div>
     </Popper>,
-    document.getElementById("menu")
+    document.getElementById("menu"),
   );
 };
 

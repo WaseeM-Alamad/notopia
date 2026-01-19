@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useSearch } from "@/context/SearchContext";
 import { useAppContext } from "@/context/AppContext";
 import Note from "./Note";
+import { useGlobalContext } from "@/context/GlobalContext";
 
 const GAP_BETWEEN_SECTIONS = 88;
 
@@ -99,7 +100,8 @@ const FilteredNotes = memo(
     isGrid,
   }) => {
     const { searchTerm } = useSearch();
-    const { layout, calculateLayoutRef, breakpoint } = useAppContext();
+    const { layout, breakpoint } = useAppContext();
+    const { calculateLayoutRef } = useGlobalContext();
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
     const filteredNotesRef = useRef(null);

@@ -19,27 +19,19 @@ import SideButtons from "./SideButtons";
 import SideTooltip from "../Tools/SideTooltip";
 import { AnimatePresence } from "framer-motion";
 import FloatingButton from "./FloatingButton";
+import { useLabelsContext } from "@/context/LabelsContext";
+import { useGlobalContext } from "@/context/GlobalContext";
 
 const Sidebar = memo(() => {
-  const {
-    labelsRef,
-    labelsReady,
-    swapPinnedLabels,
-    currentSection,
-    addButtonRef,
-    setIsExpanded,
-    isExpanded,
-    status,
-    session,
-    initialLoading,
-  } = useAppContext();
+  const { labelsReady, currentSection, addButtonRef } = useAppContext();
+  const { swapPinnedLabels, labelsRef } = useLabelsContext();
   const containerRef = useRef(null);
   const [currentHash, setCurrentHash] = useState(null);
   const [tooltipAnc, setTooltipAnc] = useState(null);
   const [isDragging, setIsDragging] = useState(null);
   const [actionTitle, setActionTitle] = useState("");
   const [tooltipOpen, setTooltipOpen] = useState(false);
-  const [triggerFloatingBtn, setTriggerFloatingBtn] = useState(false);
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
 
   const layoutFrameRef = useRef(null);
   const tooltipTimeoutRef = useRef(null);
@@ -63,21 +55,6 @@ const Sidebar = memo(() => {
   const currentYear = useMemo(() => new Date().getFullYear(), []);
 
   useEffect(() => {
-    const handler = (e) => {
-      if (
-        e.key === "Escape" &&
-        isExpanded.threshold === "before" &&
-        isExpanded.open
-      ) {
-        setIsExpanded((prev) => ({ ...prev, open: false }));
-      }
-    };
-
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, [isExpanded]);
-
-  useEffect(() => {
     const hash = window.location.hash.replace("#", "");
     if (!hash.toLowerCase().startsWith("note/")) {
       setCurrentHash(hash);
@@ -89,7 +66,7 @@ const Sidebar = memo(() => {
   useEffect(() => {
     const handler = () => {
       const width = window.innerWidth;
-      setTriggerFloatingBtn(width < 605);
+      setIsSmallScreen(width < 605);
     };
 
     handler();
@@ -103,7 +80,7 @@ const Sidebar = memo(() => {
       const labelItems = [];
       const sortedLabels = [...labelsRef.current].sort(
         ([aUUID, a], [bUUID, b]) =>
-          new Date(b.pinDate).getTime() - new Date(a.pinDate).getTime()
+          new Date(b.pinDate).getTime() - new Date(a.pinDate).getTime(),
       );
       sortedLabels.forEach(([uuid, labelData]) => {
         if (labelData?.isPinned) {
@@ -140,7 +117,7 @@ const Sidebar = memo(() => {
 
   useEffect(() => {
     calculateVerticalLayout();
-  }, [navItems, currentHash, isExpanded?.threshold]);
+  }, [navItems, currentHash]);
 
   const encodeLabel = (label) => {
     return "label/" + encodeURIComponent(label.toLowerCase());
@@ -215,7 +192,6 @@ const Sidebar = memo(() => {
       const container = containerRef.current;
       if (!container) return;
 
-      const isSmallScreen = isExpanded?.threshold === "before";
       container.style.position = "relative";
 
       let y = 0;
@@ -231,7 +207,11 @@ const Sidebar = memo(() => {
         ? "calc(100% - 12.5rem)"
         : `${y}px`;
     });
-  }, [isExpanded?.threshold]);
+  }, [isSmallScreen]);
+
+  useEffect(() => {
+    calculateVerticalLayout();
+  }, [isSmallScreen]);
 
   const [pageMounted, setPageMounted] = useState(false);
 
@@ -287,11 +267,12 @@ const Sidebar = memo(() => {
 
       document.addEventListener("mouseup", handleDragEnd);
     },
-    [isDragging, overUUID]
+    [isDragging, overUUID],
   );
 
   const showSideTooltip = (e) => {
-    if (isExpanded.open) return;
+    const sidebarOpen = document.body.classList.contains("sidebar-open");
+    if (isSmallScreen || sidebarOpen) return;
     const scrollContainer = containerRef.current;
     const currentTarget = e.currentTarget;
     tooltipTimeoutRef.current = setTimeout(() => {
@@ -302,7 +283,7 @@ const Sidebar = memo(() => {
             targetRect.left,
             targetRect.top,
             targetRect.width,
-            targetRect.height
+            targetRect.height,
           );
         },
         contextElement: scrollContainer,
@@ -325,18 +306,18 @@ const Sidebar = memo(() => {
   return (
     <>
       <div
-        className={`aside-wrapper ${isExpanded.open && isExpanded.threshold === "after" ? "menu-expanded" : ""} ${isExpanded.threshold === "before" ? "menu-expanded" : ""} ${isExpanded.open && isExpanded.threshold === "before" ? "side-mobile-open" : ""}`}
+        className={`aside-wrapper 
+          `}
         onClick={() => {
-          setIsExpanded((prev) => ({ ...prev, open: false }));
+          window.dispatchEvent(new Event("close-sidebar"));
         }}
       >
         <aside
-          className={`${isDragging ? "side-dragging" : ""} ${isExpanded.threshold === "before" && isExpanded.open ? "sidebar-shadow" : ""}`}
+          className={`${isDragging ? "side-dragging" : ""}`}
           onClick={(e) => e.stopPropagation()}
-          style={{ paddingTop: isExpanded.threshold === "before" && "1.2rem" }}
         >
           <AnimatePresence>
-            {triggerFloatingBtn && (
+            {isSmallScreen && (
               <FloatingButton
                 addButtonRef={addButtonRef}
                 handleAddNote={handleAddNote}
@@ -344,23 +325,10 @@ const Sidebar = memo(() => {
             )}
           </AnimatePresence>
 
-          {!triggerFloatingBtn && (
+          {!isSmallScreen && (
             <div className="add-btn-wrapper">
               <div
-                style={
-                  !isExpanded.open
-                    ? {
-                        position: "absolute",
-                        opacity: "0",
-                        display: "none",
-                        pointerEvents: "none",
-                      }
-                    : {
-                        paddingLeft: "48px",
-                        position: "absolute",
-                      }
-                }
-                className="side-btn-wrapper"
+                className="side-btn-wrapper side-btn-wrapper-styling"
                 onClick={handleAddNote}
               >
                 <div className="side-icon">
@@ -387,20 +355,14 @@ const Sidebar = memo(() => {
             </div>
           )}
 
+          <span
+            onClick={() => (window.location.hash = "home")}
+            className="notopia top-logo"
+          >
+            Notopia
+          </span>
+
           <div ref={containerRef} className="side-btns-container">
-            {isExpanded.threshold === "before" && (
-              <span
-                onClick={() => (window.location.hash = "home")}
-                className="notopia"
-                style={{
-                  marginLeft: "1rem",
-                  cursor: "default",
-                  paddingBottom: "1.2rem",
-                }}
-              >
-                Notopia
-              </span>
-            )}
             <SideButtons
               navItems={navItems}
               currentHash={currentHash}
@@ -411,8 +373,6 @@ const Sidebar = memo(() => {
               setOverUUID={setOverUUID}
               overUUID={overUUID}
               isDragging={isDragging}
-              isExpanded={isExpanded}
-              setIsExpanded={setIsExpanded}
             />
           </div>
           <div style={{ height: "2rem", width: "2rem" }} />

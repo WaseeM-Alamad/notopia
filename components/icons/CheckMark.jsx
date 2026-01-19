@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 
 const CheckMark = ({ size = "15", style, color = "Default" }) => {
   return (
@@ -20,4 +20,4 @@ const CheckMark = ({ size = "15", style, color = "Default" }) => {
   );
 };
 
-export default CheckMark;
+export default memo(CheckMark);

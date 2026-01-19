@@ -2,6 +2,7 @@ import { Popper } from "@mui/material";
 import { motion } from "framer-motion";
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import { useAppContext } from "@/context/AppContext";
+import { useLabelsContext } from "@/context/LabelsContext";
 
 const LabelMenu = ({
   isOpen,
@@ -16,8 +17,8 @@ const LabelMenu = ({
   imageRef,
   setIsImageLoading,
 }) => {
-  const { handlePin, updateLabelImage, deleteLabelImage, openSnackRef } =
-    useAppContext();
+  const { openSnackRef } = useAppContext();
+  const { handlePin, updateLabelImage, deleteLabelImage } = useLabelsContext();
   const menuRef = useRef(null);
   const inputRef = useRef(null);
   const [isMounted, setIsMounted] = useState(false);

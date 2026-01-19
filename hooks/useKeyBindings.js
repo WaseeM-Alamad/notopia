@@ -1,6 +1,7 @@
 "use client";
 
 import { useAppContext } from "@/context/AppContext";
+import { useLabelsContext } from "@/context/LabelsContext";
 import { useSearch } from "@/context/SearchContext";
 import { NoteUpdateAction, updateOrderAction } from "@/utils/actions";
 import handleServerCall from "@/utils/handleServerCall";
@@ -29,7 +30,6 @@ export function useKeyBindings({
   const {
     user,
     clientID,
-    labelsRef,
     currentSection,
     ignoreKeysRef,
     layout,
@@ -45,6 +45,7 @@ export function useKeyBindings({
   } = useAppContext();
   const userID = user?.id;
   const { filters, searchRef } = useSearch();
+  const { labelsRef } = useLabelsContext();
   const actionThrottle = useRef(false);
   const dndThrottle = useRef(false);
 

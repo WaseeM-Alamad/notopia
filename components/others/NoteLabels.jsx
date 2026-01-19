@@ -1,8 +1,10 @@
 import { useAppContext } from "@/context/AppContext";
+import { useLabelsContext } from "@/context/LabelsContext";
 import React from "react";
 
 const NoteLabels = ({ note, modalRemoveLabel = null, noteActions }) => {
-  const { labelsRef, closeToolTip, showTooltip, hideTooltip } = useAppContext();
+  const { closeToolTip, showTooltip, hideTooltip } = useAppContext();
+  const { labelsRef } = useLabelsContext();
 
   const handleLabelClick = (e, label) => {
     e.stopPropagation();

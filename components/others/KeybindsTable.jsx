@@ -1,11 +1,13 @@
 import { useAppContext } from "@/context/AppContext";
+import { useGlobalContext } from "@/context/GlobalContext";
 import { motion } from "framer-motion";
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 const KeybindsTable = ({ keybindsRef, isOpen, setIsOpen }) => {
-  const { showTooltip, hideTooltip, closeToolTip, lockScroll } =
-    useAppContext();
+  const { showTooltip, hideTooltip, closeToolTip } = useAppContext();
+
+  const { lockScroll } = useGlobalContext();
   const [isScrolled, setIsScrolled] = useState(false);
 
   const tableRef = useRef(null);
@@ -220,7 +222,7 @@ const KeybindsTable = ({ keybindsRef, isOpen, setIsOpen }) => {
         </table>
       </motion.div>
     </motion.div>,
-    document.getElementById("modal-portal")
+    document.getElementById("modal-portal"),
   );
 };
 

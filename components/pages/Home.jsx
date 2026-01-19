@@ -8,6 +8,7 @@ import { useAppContext } from "@/context/AppContext";
 import handleServerCall from "@/utils/handleServerCall";
 import localDbReducer from "@/utils/localDbReducer";
 import { useNoteDragging } from "@/hooks/useNoteDragging";
+import { useGlobalContext } from "@/context/GlobalContext";
 
 const GAP_BETWEEN_SECTIONS = 88;
 
@@ -238,12 +239,12 @@ const Home = memo(
     const {
       user,
       layout,
-      calculateLayoutRef,
       focusedIndex,
       notesStateRef,
       notesIndexMapRef,
       breakpoint,
     } = useAppContext();
+    const {calculateLayoutRef} = useGlobalContext();
     const userID = user?.id;
     const [pinnedHeight, setPinnedHeight] = useState(null);
     const lastAddedNoteRef = useRef(null);

@@ -1,4 +1,5 @@
 import { useAppContext } from "@/context/AppContext";
+import { useGlobalContext } from "@/context/GlobalContext";
 import { useEffect, useRef, useCallback } from "react";
 
 export function useMouseSelection({
@@ -17,7 +18,8 @@ export function useMouseSelection({
   const notePositionsRef = useRef(new Map());
   const pendingChangesRef = useRef({ select: new Set(), deselect: new Set() });
   const lastUpdateTime = useRef(0);
-  const { initialLoading, currentSection, isExpanded } = useAppContext();
+  const { initialLoading, currentSection} = useAppContext();
+  const { isExpanded } = useGlobalContext();
 
   // Cache note positions to avoid expensive getBoundingClientRect calls
   const cacheNotePositions = useCallback(() => {

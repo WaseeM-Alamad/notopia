@@ -8,6 +8,7 @@ import { v4 as generateUUID } from "uuid";
 import { useSearch } from "@/context/SearchContext";
 import handleServerCall from "@/utils/handleServerCall";
 import localDbReducer from "@/utils/localDbReducer";
+import { useLabelsContext } from "@/context/LabelsContext";
 
 const ManageLabelsMenu = ({
   dispatchNotes,
@@ -17,15 +18,9 @@ const ManageLabelsMenu = ({
   anchorEl,
   removedFilteredLabelRef,
 }) => {
-  const {
-    createLabel,
-    labelsRef,
-    labelObjRef,
-    openSnackRef,
-    notesStateRef,
-    user,
-    clientID,
-  } = useAppContext();
+  const { labelObjRef, openSnackRef, notesStateRef, user, clientID } =
+    useAppContext();
+  const { createLabel, labelsRef } = useLabelsContext();
   const { filters } = useSearch();
   const userID = user?.id;
   const [isClient, setIsClient] = useState();
@@ -33,7 +28,7 @@ const ManageLabelsMenu = ({
   const [noteLabels, setNoteLabels] = useState(new Set());
   const allLabelsMatchSearch = [...labelsRef.current].every(
     ([uuid, labelData]) =>
-      labelData.label.toLowerCase() !== labelSearch.toLowerCase()
+      labelData.label.toLowerCase() !== labelSearch.toLowerCase(),
   );
   const menuRef = useRef(null);
   const isFirstRunRef = useRef(true);
@@ -134,7 +129,7 @@ const ManageLabelsMenu = ({
               clientID: clientID,
             }),
         ],
-        openSnackRef.current
+        openSnackRef.current,
       );
     } else {
       setNoteLabels((prev) => {
@@ -169,7 +164,7 @@ const ManageLabelsMenu = ({
               clientID: clientID,
             }),
         ],
-        openSnackRef.current
+        openSnackRef.current,
       );
     }
   };
@@ -306,7 +301,7 @@ const ManageLabelsMenu = ({
         </div>
       </motion.div>
     </Popper>,
-    document.getElementById("menu")
+    document.getElementById("menu"),
   );
 };
 

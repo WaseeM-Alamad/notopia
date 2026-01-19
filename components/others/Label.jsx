@@ -9,6 +9,8 @@ import Menu from "./Menu";
 import { useSearch } from "@/context/SearchContext";
 import ImageDropZone from "../Tools/ImageDropZone";
 import { validateImageFile } from "@/utils/validateImage";
+import { useLabelsContext } from "@/context/LabelsContext";
+import { useGlobalContext } from "@/context/GlobalContext";
 
 const Label = ({
   labelData,
@@ -20,26 +22,28 @@ const Label = ({
   setVisibleItems,
   setFadingNotes,
   index,
-  handleDeleteLabel,
   notes,
   order,
 }) => {
   const {
-    updateLabel,
-    updateLabelColor,
-    handlePin,
-    updateLabelImage,
-    deleteLabelImage,
     loadingImages,
     showTooltip,
     hideTooltip,
     closeToolTip,
     openSnackRef,
     setDialogInfoRef,
-    calculateLayoutRef,
-    labelsRef,
   } = useAppContext();
   const { labelSearchTerm } = useSearch();
+  const {calculateLayoutRef} = useGlobalContext();
+  const {
+    labelsRef,
+    handleDeleteLabel,
+    updateLabel,
+    updateLabelColor,
+    updateLabelImage,
+    deleteLabelImage,
+    handlePin,
+  } = useLabelsContext();
   const [mounted, setMounted] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [anchorEl, setAnchorEL] = useState(null);

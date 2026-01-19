@@ -2,6 +2,7 @@ import React, { memo, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import { useAppContext } from "@/context/AppContext";
+import { useGlobalContext } from "@/context/GlobalContext";
 
 const ActionModal = ({
   setDialogInfo,
@@ -14,13 +15,9 @@ const ActionModal = ({
   btnMsg,
   cancelBtnMsg = "Cancel",
 }) => {
-  const {
-    closeToolTip,
-    hideTooltip,
-    showTooltip,
-    isActionModalOpenRef,
-    lockScroll,
-  } = useAppContext();
+  const { closeToolTip, hideTooltip, showTooltip, isActionModalOpenRef } =
+    useAppContext();
+  const { lockScroll } = useGlobalContext();
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -138,7 +135,7 @@ const ActionModal = ({
         </div>
       </motion.div>
     </div>,
-    document.getElementById("modal-portal")
+    document.getElementById("modal-portal"),
   );
 };
 

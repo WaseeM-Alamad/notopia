@@ -1,4 +1,5 @@
 import { useAppContext } from "@/context/AppContext";
+import { useLabelsContext } from "@/context/LabelsContext";
 import { useSearch } from "@/context/SearchContext";
 import {
   batchManageLabelsAction,
@@ -22,23 +23,17 @@ const ManageTopLabelsMenu = ({
   setFadingNotes,
   setVisibleItems,
 }) => {
-  const {
-    labelsRef,
-    labelObjRef,
-    createLabelForNotes,
-    openSnackRef,
-    notesStateRef,
-    user,
-    clientID,
-  } = useAppContext();
+  const { labelObjRef, openSnackRef, notesStateRef, user, clientID } =
+    useAppContext();
   const { filters } = useSearch();
+  const { createLabelForNotes, labelsRef } = useLabelsContext();
   const userID = user?.id;
   const [isClient, setIsClient] = useState();
   const [labelSearch, setLabelSearch] = useState("");
   const [notesLabels, setNotesLabels] = useState(new Map());
   const allLabelsMatchSearch = [...labelsRef.current].every(
     ([uuid, labelData]) =>
-      labelData.label.toLowerCase() !== labelSearch.toLowerCase()
+      labelData.label.toLowerCase() !== labelSearch.toLowerCase(),
   );
 
   const menuRef = useRef(null);
@@ -128,7 +123,7 @@ const ManageTopLabelsMenu = ({
             clientID: clientID,
           }),
       ],
-      openSnackRef.current
+      openSnackRef.current,
     );
   };
 
@@ -181,7 +176,7 @@ const ManageTopLabelsMenu = ({
               });
             }
           },
-          delay ? 250 : 0
+          delay ? 250 : 0,
         );
 
         delay && setSelectedNotesIDs([]);
@@ -197,7 +192,7 @@ const ManageTopLabelsMenu = ({
                 clientID: clientID,
               }),
           ],
-          openSnackRef.current
+          openSnackRef.current,
         );
       } else {
         const notesUUIDs = [];
@@ -241,7 +236,7 @@ const ManageTopLabelsMenu = ({
                 clientID: clientID,
               }),
           ],
-          openSnackRef.current
+          openSnackRef.current,
         );
       }
     } else {
@@ -275,7 +270,7 @@ const ManageTopLabelsMenu = ({
               clientID: clientID,
             }),
         ],
-        openSnackRef.current
+        openSnackRef.current,
       );
     }
   };
@@ -406,7 +401,7 @@ const ManageTopLabelsMenu = ({
                   >
                     <div
                       className={`checkbox-unchecked ${getSelectionClass(
-                        uuid
+                        uuid,
                       )}`}
                     />
                     <div style={{ width: "100%", paddingLeft: "0.5rem" }}>

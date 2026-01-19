@@ -1,6 +1,7 @@
 "use client";
 
 import { useAppContext } from "@/context/AppContext";
+import { useLabelsContext } from "@/context/LabelsContext";
 import { useSearch } from "@/context/SearchContext";
 import { useCallback, useEffect, useRef } from "react";
 
@@ -21,7 +22,7 @@ export function useHashRouting({
   selectedNote,
   skipSetLabelObjRef,
 }) {
-  const { labelsReady, labelsRef, labelObjRef, openSnackRef } = useAppContext();
+  const { labelsReady, labelObjRef, openSnackRef } = useAppContext();
   const {
     setFilters,
     setSearchTerm,
@@ -29,6 +30,8 @@ export function useHashRouting({
     skipHashChangeRef,
     searchRef,
   } = useSearch();
+
+  const { labelsRef } = useLabelsContext();
 
   const firstRun = useRef(true);
   const emptySearchRef = useRef(false);
@@ -66,7 +69,7 @@ export function useHashRouting({
       const noteUUID = parts[1];
       const note = notesStateRef.current.notes.get(noteUUID);
       const index = notesStateRef.current.order.findIndex(
-        (uuid) => uuid === noteUUID
+        (uuid) => uuid === noteUUID,
       );
       if (note !== undefined && !modalOpenRef.current) {
         setSelectedNote(note);

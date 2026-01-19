@@ -3,6 +3,7 @@ import "@/assets/styles/LinearLoader.css";
 import { useAppContext } from "@/context/AppContext";
 import GalleryCarousel from "../others/GalleryCarousel";
 import { AnimatePresence } from "framer-motion";
+import { useGlobalContext } from "@/context/GlobalContext";
 
 const NoteImagesLayout = ({
   images = [],
@@ -12,14 +13,10 @@ const NoteImagesLayout = ({
   noteImageDelete,
   AddNoteImageDelete,
 }) => {
-  const {
-    loadingImages,
-    showTooltip,
-    hideTooltip,
-    closeToolTip,
-    calculateLayoutRef,
-  } = useAppContext();
-  const calculateMasonryLayout = calculateLayoutRef.current;
+  const { loadingImages, showTooltip, hideTooltip, closeToolTip } =
+    useAppContext();
+  // const { calculateLayoutRef } = useGlobalContext();
+  const calculateMasonryLayout = ()=> {};
   const containerRef = useRef(null);
   const [layout, setLayout] = useState([]);
   const [loadedImages, setLoadedImages] = useState([]);
@@ -89,12 +86,12 @@ const NoteImagesLayout = ({
     ) {
       const rowImages = loadedImages.slice(
         i * maxImagesPerRow,
-        (i + 1) * maxImagesPerRow
+        (i + 1) * maxImagesPerRow,
       );
 
       const rowAspectRatioSum = rowImages.reduce(
         (sum, img) => sum + img.width / img.height,
-        0
+        0,
       );
 
       let rowHeight =
@@ -183,7 +180,7 @@ const NoteImagesLayout = ({
                   if (!modalOpen) return;
                   requestIdleCallback(() => {
                     const index = images.findIndex(
-                      (image) => image.url === item.src
+                      (image) => image.url === item.src,
                     );
                     startIndexRef.current = index;
                     setCarouselOpen(true);

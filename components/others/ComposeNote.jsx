@@ -14,6 +14,8 @@ import ManageLabelsCompose from "./ManageLabelsCompose";
 import ImageDropZone from "../Tools/ImageDropZone";
 import handleServerCall from "@/utils/handleServerCall";
 import localDbReducer from "@/utils/localDbReducer";
+import { useLabelsContext } from "@/context/LabelsContext";
+import { useGlobalContext } from "@/context/GlobalContext";
 
 const ComposeNote = ({
   dispatchNotes,
@@ -24,7 +26,6 @@ const ComposeNote = ({
 }) => {
   const {
     user,
-    labelsRef,
     setLoadingImages,
     showTooltip,
     hideTooltip,
@@ -32,8 +33,9 @@ const ComposeNote = ({
     openSnackRef,
     notesStateRef,
     clientID,
-    lockScroll,
   } = useAppContext();
+  const { labelsRef } = useLabelsContext();
+  const { lockScroll } = useGlobalContext();
   const [isDragOver, setIsDragOver] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -231,7 +233,7 @@ const ComposeNote = ({
         () => UploadImagesAction(newNote?.uuid),
       ],
       openSnackRef.current,
-      true
+      true,
     );
     if (!result) return;
     const receivedNote = {
@@ -417,7 +419,7 @@ const ComposeNote = ({
           acc.push(imageFile);
           return acc;
         },
-        []
+        [],
       );
       return { ...restOfNote, imageFiles: filteredImageFiles };
     });
@@ -442,14 +444,14 @@ const ComposeNote = ({
     debounce((data) => {
       setUndoStack((prev) => [...prev, data]);
     }, 120),
-    []
+    [],
   );
 
   const contentDebouncedSetUndo = useCallback(
     debounce((data) => {
       setUndoStack((prev) => [...prev, data]);
     }, 100),
-    []
+    [],
   );
 
   const handleUndo = async () => {
@@ -544,7 +546,7 @@ const ComposeNote = ({
 
   const removeLabel = (labelUUID) => {
     const newLabels = note?.labels.filter(
-      (noteLabelUUID) => noteLabelUUID !== labelUUID
+      (noteLabelUUID) => noteLabelUUID !== labelUUID,
     );
     setNote((prev) => ({ ...prev, labels: newLabels }));
   };
@@ -795,7 +797,7 @@ const ComposeNote = ({
         )}
       </AnimatePresence>
     </>,
-    document.getElementById("modal-portal")
+    document.getElementById("modal-portal"),
   );
 };
 

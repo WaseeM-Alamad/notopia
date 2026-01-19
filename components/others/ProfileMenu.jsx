@@ -3,6 +3,7 @@ import { signOut } from "next-auth/react";
 import React, { forwardRef, memo, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useAppContext } from "@/context/AppContext";
+import { useGlobalContext } from "@/context/GlobalContext";
 
 const ProfileMenu = ({
   user,
@@ -13,7 +14,7 @@ const ProfileMenu = ({
   setSettingsOpen,
   setBindsOpen,
 }) => {
-  const { isDarkModeRef } = useAppContext();
+  const { isDarkModeRef } = useGlobalContext();
   const [isClient, setIsClient] = useState(false);
 
   const menuRef = useRef(null);

@@ -7,6 +7,7 @@ import handleServerCall from "@/utils/handleServerCall";
 import localDbReducer from "@/utils/localDbReducer";
 import { batchDeleteNotes } from "@/utils/actions";
 import SectionHeader from "../others/SectionHeader";
+import { useGlobalContext } from "@/context/GlobalContext";
 
 const NoteWrapper = memo(
   ({
@@ -103,15 +104,14 @@ const Trash = memo(
   }) => {
     const {
       layout,
-      calculateLayoutRef,
       focusedIndex,
       openSnackRef,
       user,
       setDialogInfoRef,
       clientID,
-      isExpanded,
       breakpoint,
     } = useAppContext();
+    const {calculateLayoutRef} = useGlobalContext();
     const userID = user?.id;
     const gridNoteWidth = breakpoint === 1 ? 240 : breakpoint === 2 ? 180 : 150;
     const COLUMN_WIDTH = layout === "grid" ? gridNoteWidth : 600;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useAppContext } from "@/context/AppContext";
+import { useLabelsContext } from "@/context/LabelsContext";
 import { useSearch } from "@/context/SearchContext";
 import { useEffect, useRef } from "react";
 
@@ -16,7 +17,6 @@ export function useBatchLoading({
   matchesFilters,
 }) {
   const {
-    labelsRef,
     layout,
     labelsReady,
     currentSection,
@@ -34,6 +34,9 @@ export function useBatchLoading({
     searchRef,
     searchTerm,
   } = useSearch();
+
+  const { labelsRef } = useLabelsContext();
+
   const isLoadingRef = useRef(false);
   const isFirstRenderRef = useRef(true);
   const layoutTimeoutRef = useRef(null);

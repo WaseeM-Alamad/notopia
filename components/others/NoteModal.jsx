@@ -12,6 +12,7 @@ import handleServerCall from "@/utils/handleServerCall";
 import localDbReducer from "@/utils/localDbReducer";
 import NoteEditor from "./NoteEditor";
 import CollabLayout from "./CollabLayout";
+import { useGlobalContext } from "@/context/GlobalContext";
 
 const NoteModal = ({
   localNote,
@@ -38,9 +39,9 @@ const NoteModal = ({
     openSnackRef,
     setDialogInfoRef,
     notesStateRef,
-    lockScroll,
   } = useAppContext();
   const { skipHashChangeRef, searchTerm, filters } = useSearch();
+  const { lockScroll } = useGlobalContext();
   const [isMounted, setIsMounted] = useState(false);
   const [localIsPinned, setLocalIsPinned] = useState(null);
   const note = initialStyle?.initialNote;
@@ -333,7 +334,7 @@ const NoteModal = ({
       if (content) {
         if (title === "label") {
           const matchingLabel = note?.labels.find(
-            (labelUUID) => labelUUID === content
+            (labelUUID) => labelUUID === content,
           );
           if (matchingLabel === content) {
             delayLabelDispatchRef.current = true;
@@ -579,7 +580,7 @@ const NoteModal = ({
             return newSet;
           });
         },
-        localIsPinned && localNote?.isArchived ? 250 : 0
+        localIsPinned && localNote?.isArchived ? 250 : 0,
       );
 
       handleServerCall(
@@ -595,7 +596,7 @@ const NoteModal = ({
               clientID: clientID,
             }),
         ],
-        openSnackRef.current
+        openSnackRef.current,
       );
     };
 
@@ -630,7 +631,7 @@ const NoteModal = ({
             return newSet;
           });
         },
-        fade ? 250 : 0
+        fade ? 250 : 0,
       );
 
       handleServerCall(
@@ -644,7 +645,7 @@ const NoteModal = ({
               clientID: clientID,
             }),
         ],
-        openSnackRef.current
+        openSnackRef.current,
       );
     };
 
@@ -704,7 +705,7 @@ const NoteModal = ({
               clientID: clientID,
             }),
         ],
-        openSnackRef.current
+        openSnackRef.current,
       );
     };
 
@@ -803,7 +804,7 @@ const NoteModal = ({
     setIsOpen(false);
     handleServerCall(
       [() => removeSelfAction(note?.uuid, clientID)],
-      openSnackRef.current
+      openSnackRef.current,
     );
   };
 
@@ -879,7 +880,7 @@ const NoteModal = ({
             clientID,
           }),
       ],
-      openSnackRef.current
+      openSnackRef.current,
     );
 
     const noEmailCollabs = collaborators.map((collab) => {
@@ -967,7 +968,7 @@ const NoteModal = ({
         )}
       </div>
     </>,
-    document.getElementById("modal-portal")
+    document.getElementById("modal-portal"),
   );
 };
 

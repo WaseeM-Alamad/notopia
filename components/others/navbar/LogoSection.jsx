@@ -1,10 +1,12 @@
 import Button from "@/components/Tools/Button";
 import { useAppContext } from "@/context/AppContext";
+import { useGlobalContext } from "@/context/GlobalContext";
 import React, { memo } from "react";
 
 const LogoSection = () => {
-  const { hideTooltip, showTooltip, closeToolTip, setIsExpanded } =
-    useAppContext();
+  const { hideTooltip, showTooltip, closeToolTip } = useAppContext();
+
+  const { setIsExpanded } = useGlobalContext();
 
   const handleMenuClick = () => {
     closeToolTip();

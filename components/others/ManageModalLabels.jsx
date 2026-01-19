@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import { Popper } from "@mui/material";
 import { v4 as generateUUID } from "uuid";
 import handleServerCall from "@/utils/handleServerCall";
+import { useLabelsContext } from "@/context/LabelsContext";
 
 const ManageModalLabels = ({
   note,
@@ -15,13 +16,14 @@ const ManageModalLabels = ({
   setLocalNote,
   anchorEl,
 }) => {
-  const { clientID, createLabel, labelsRef, openSnackRef } = useAppContext();
+  const { clientID, openSnackRef } = useAppContext();
+  const { createLabel, labelsRef } = useLabelsContext();
   const [isClient, setIsClient] = useState();
   const [labelSearch, setLabelSearch] = useState("");
   const [noteLabels, setNoteLabels] = useState(new Map());
   const allLabelsMatchSearch = [...labelsRef.current].every(
     ([uuid, labelData]) =>
-      labelData.label.toLowerCase() !== labelSearch.toLowerCase()
+      labelData.label.toLowerCase() !== labelSearch.toLowerCase(),
   );
   const menuRef = useRef(null);
   const isFirstRunRef = useRef(true);
@@ -54,7 +56,7 @@ const ManageModalLabels = ({
     if (!isOpen) return;
 
     const labelsMap = new Map(
-      localNote?.labels.map((noteLabel) => [noteLabel, true])
+      localNote?.labels.map((noteLabel) => [noteLabel, true]),
     );
     setNoteLabels(labelsMap);
   }, [isOpen, localNote?.labels, isClient]);
@@ -104,7 +106,7 @@ const ManageModalLabels = ({
               clientID: clientID,
             }),
         ],
-        openSnackRef.current
+        openSnackRef.current,
       );
     } else {
       setLocalNote((prev) => ({ ...prev, labels: [...prev.labels, uuid] }));
@@ -118,7 +120,7 @@ const ManageModalLabels = ({
               clientID: clientID,
             }),
         ],
-        openSnackRef.current
+        openSnackRef.current,
       );
     }
   };
@@ -253,7 +255,7 @@ const ManageModalLabels = ({
         </div>
       </motion.div>
     </Popper>,
-    document.getElementById("menu")
+    document.getElementById("menu"),
   );
 };
 

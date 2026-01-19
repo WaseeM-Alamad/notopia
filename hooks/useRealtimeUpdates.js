@@ -1,4 +1,5 @@
 import { useAppContext } from "@/context/AppContext";
+import { useLabelsContext } from "@/context/LabelsContext";
 import { saveOrderArray } from "@/utils/localDb";
 import localDbReducer from "@/utils/localDbReducer";
 import { useEffect, useRef } from "react";
@@ -8,8 +9,9 @@ export function useRealtimeUpdates({
   updateModalRef,
   setVisibleItems,
 }) {
-  const { user, clientID, labelsRef, notesStateRef, isOnline } =
-    useAppContext();
+  const { user, clientID, notesStateRef, isOnline } = useAppContext();
+
+  const { labelsRef } = useLabelsContext();
 
   const userID = user?.id;
 
@@ -25,7 +27,7 @@ export function useRealtimeUpdates({
     }
 
     eventSourceRef.current = new EventSource(
-      `/api/realtime?clientID=${clientID}`
+      `/api/realtime?clientID=${clientID}`,
     );
 
     eventSourceRef.current.onmessage = async (event) => {
@@ -96,7 +98,7 @@ export function useRealtimeUpdates({
             labelsRef.current = new Map(
               item.labels.map((mapLabel) => {
                 return [mapLabel.uuid, mapLabel];
-              })
+              }),
             );
             requestAnimationFrame(() => {
               window.dispatchEvent(new Event("refreshPinnedLabels"));
@@ -151,7 +153,7 @@ export function useRealtimeUpdates({
             newNotes,
           });
           setVisibleItems(
-            (prev) => new Set([...prev, ...newNotes.map((note) => note.uuid)])
+            (prev) => new Set([...prev, ...newNotes.map((note) => note.uuid)]),
           );
           requestAnimationFrame(() => {
             window.dispatchEvent(new Event("removeOffScreenNotes"));

@@ -4,6 +4,7 @@ import Note from "../others/Note";
 import { motion } from "framer-motion";
 import { useAppContext } from "@/context/AppContext";
 import SectionHeader from "../others/SectionHeader";
+import { useGlobalContext } from "@/context/GlobalContext";
 
 const NoteWrapper = memo(
   ({
@@ -75,7 +76,7 @@ const NoteWrapper = memo(
         </div>
       </motion.div>
     );
-  }
+  },
 );
 
 NoteWrapper.displayName = "NoteWrapper";
@@ -99,8 +100,8 @@ const Archive = memo(
     containerRef,
     isGrid,
   }) => {
-    const { layout, calculateLayoutRef, focusedIndex, isExpanded, breakpoint } =
-      useAppContext();
+    const { layout, focusedIndex, breakpoint } = useAppContext();
+    const {calculateLayoutRef} = useGlobalContext();
     const gridNoteWidth = breakpoint === 1 ? 240 : breakpoint === 2 ? 180 : 150;
     const COLUMN_WIDTH = layout === "grid" ? gridNoteWidth : 600;
     const GUTTER = breakpoint === 1 ? 15 : 8;
@@ -158,7 +159,7 @@ const Archive = memo(
             const wrapper = item.ref?.current?.parentElement;
             if (!wrapper) return;
             const minColumnIndex = columnHeights.indexOf(
-              Math.min(...columnHeights)
+              Math.min(...columnHeights),
             );
             const x = minColumnIndex * (COLUMN_WIDTH + GUTTER);
             const y = columnHeights[minColumnIndex];
@@ -284,7 +285,7 @@ const Archive = memo(
         </div>
       </>
     );
-  }
+  },
 );
 
 Archive.displayName = "Archive";

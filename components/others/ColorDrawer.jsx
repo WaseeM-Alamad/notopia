@@ -11,7 +11,7 @@ const ColorDrawer = ({
   handleColorClick,
   handleBackground,
 }) => {
-  const { isContextMenuOpenRef, lockScroll } = useAppContext();
+  const { isContextMenuOpenRef} = useAppContext();
   const [isDragging, setIsDragging] = useState(false);
   const [isOpen, setIsOpen] = useState(open);
   const colors = [

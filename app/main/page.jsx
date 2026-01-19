@@ -40,11 +40,11 @@ import { AnimatePresence, motion } from "framer-motion";
 import ActionModal from "@/components/others/ActionModal";
 import CustomThreeLineSpinner from "@/components/Tools/CustomSpinner";
 import SplashScreen from "@/components/others/SplashScreen";
+import { useLabelsContext } from "@/context/LabelsContext";
 
 const page = () => {
   const { searchTerm, filters } = useSearch();
   const {
-    removeLabel,
     layout,
     currentSection,
     setCurrentSection,
@@ -58,11 +58,9 @@ const page = () => {
     user,
     rootContainerRef,
     clientID,
-    session,
-    status,
     initialLoading,
-    isExpanded,
   } = useAppContext();
+  const { removeLabel } = useLabelsContext();
   const [tooltipAnchor, setTooltipAnchor] = useState(new Map());
   const [notesState, dispatchNotes] = useReducer(notesReducer, initialStates);
   const [visibleItems, setVisibleItems] = useState(new Set());
@@ -165,7 +163,7 @@ const page = () => {
           });
           handleServerCall(
             [() => openNoteAction(note?.uuid, clientID)],
-            openSnackRef.current
+            openSnackRef.current,
           );
           handleOpenNote();
         },
@@ -195,7 +193,7 @@ const page = () => {
           });
           handleServerCall(
             [() => removeSelfAction(note?.uuid, clientID)],
-            openSnackRef.current
+            openSnackRef.current,
           );
         },
         cancelBtnMsg: "Delete note",
@@ -241,7 +239,7 @@ const page = () => {
       const noteUUID = hash.slice(5);
       const note = notesState.notes.get(noteUUID);
       const index = notesStateRef.current.order.findIndex(
-        (uuid) => uuid === noteUUID
+        (uuid) => uuid === noteUUID,
       );
       if (note !== undefined) {
         setSelectedNote(note);
@@ -316,7 +314,7 @@ const page = () => {
             clientID: clientID,
           }),
       ],
-      openSnackRef.current
+      openSnackRef.current,
     );
     setTimeout(async () => {
       dispatchNotes({
@@ -351,7 +349,7 @@ const page = () => {
     if (data.selected) {
       data.setSelected(false);
       setSelectedNotesIDs((prev) =>
-        prev.filter((noteData) => noteData.uuid !== data.uuid)
+        prev.filter((noteData) => noteData.uuid !== data.uuid),
       );
       selectedNotesRef.current.delete(data.uuid);
     } else {
@@ -569,17 +567,7 @@ const page = () => {
           currentSection={currentSection}
         />
         <div style={{ display: "flex" }}>
-          <div
-            style={{
-              width:
-                isExpanded.threshold === "after"
-                  ? isExpanded.open
-                    ? "280px"
-                    : "80px"
-                  : "0",
-              flexShrink: "0",
-            }}
-          />
+          <div className="sidebar-ghost" />
           <Page
             dispatchNotes={dispatchNotes}
             visibleItems={visibleItems}
@@ -590,7 +578,6 @@ const page = () => {
             order={notesState.order}
             handleNoteClick={handleNoteClick}
             handleSelectNote={handleSelectNote}
-            handleDeleteLabel={handleDeleteLabel}
             selectedNotesIDs={selectedNotesIDs}
             fadingNotes={fadingNotes}
             setFadingNotes={setFadingNotes}

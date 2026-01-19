@@ -41,7 +41,6 @@ const NoteEditor = ({
   modalOpenRef,
   titleRef,
   contentRef,
-  labelsRef,
   archiveRef,
   trashRef,
   delayLabelDispatchRef,

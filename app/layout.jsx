@@ -7,6 +7,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/utils/authOptions";
 import FatalErrorBoundary from "@/utils/ErrorBoundry";
 import PolyfillClient from "@/utils/PolyfillClient";
+import { LabelsProvider } from "@/context/LabelsContext";
+import { GlobalProvider } from "@/context/GlobalContext";
 
 export const metadata = {
   title: "Notopia",
@@ -36,32 +38,20 @@ const MainLayout = async ({ children }) => {
         <FatalErrorBoundary>
           <PolyfillClient />
           <AuthProvider>
-            <SearchProvider>
-              <AppProvider initialUser={initialUser}>
-                <div id="tooltipPortal" />
-                <div id="snackbarPortal" />
-                {/* <div
-                  id="offscreen"
-                  tabIndex={-1}
-                  style={{
-                    position: "fixed",
-                    zIndex: "100000000000",
-                    backgroundColor: 'red',
-                    width: "20px",
-                    height: '20px',
-                    opacity: "1",
-                    left: "0",
-                    top: "0",
-                  }}
-                /> */}
-
-                {children}
-
-                <div id="menu" />
-                <div id="modal-portal" />
-                <div id="selectionBox" />
-              </AppProvider>
-            </SearchProvider>
+            <GlobalProvider>
+              <SearchProvider>
+                <AppProvider initialUser={initialUser}>
+                  <LabelsProvider userID={initialUser.id}>
+                    <div id="tooltipPortal" />
+                    <div id="snackbarPortal" />
+                    {children}
+                    <div id="menu" />
+                    <div id="modal-portal" />
+                    <div id="selectionBox" />
+                  </LabelsProvider>
+                </AppProvider>
+              </SearchProvider>
+            </GlobalProvider>
           </AuthProvider>
         </FatalErrorBoundary>
       </body>

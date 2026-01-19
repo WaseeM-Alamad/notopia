@@ -1,4 +1,5 @@
 import { useAppContext } from "@/context/AppContext";
+import { useLabelsContext } from "@/context/LabelsContext";
 import { Popper } from "@mui/material";
 import { motion } from "framer-motion";
 import React, { useEffect, useState } from "react";
@@ -6,11 +7,11 @@ import { createPortal } from "react-dom";
 import { v4 as generateUUID } from "uuid";
 
 const TextLabelMenu = ({ anchor, setAnchor, labelSearch, setLabelSearch }) => {
-  const { labelsRef } = useAppContext();
+  const { labelsRef } = useLabelsContext();
   const [isClient, setIsClient] = useState();
   const allLabelsMatchSearch = [...labelsRef.current].every(
     ([uuid, labelData]) =>
-      labelData.label.toLowerCase() !== labelSearch.toLowerCase()
+      labelData.label.toLowerCase() !== labelSearch.toLowerCase(),
   );
 
   useEffect(() => {
@@ -165,7 +166,7 @@ const TextLabelMenu = ({ anchor, setAnchor, labelSearch, setLabelSearch }) => {
         </div>
       </motion.div>
     </Popper>,
-    document.getElementById("menu")
+    document.getElementById("menu"),
   );
 };
 

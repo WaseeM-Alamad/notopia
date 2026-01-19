@@ -14,6 +14,7 @@ import ComposeNote from "../others/ComposeNote";
 import FolderIcon from "../icons/FolderIcon";
 import SectionHeader from "../others/SectionHeader";
 import SetLabelModal from "../others/SetLabelModal";
+import { useGlobalContext } from "@/context/GlobalContext";
 
 const GAP_BETWEEN_SECTIONS = 88;
 
@@ -83,7 +84,7 @@ const NoteWrapper = memo(
         </div>
       </motion.div>
     );
-  }
+  },
 );
 
 const DynamicLabel = ({
@@ -106,8 +107,8 @@ const DynamicLabel = ({
   containerRef,
   isGrid,
 }) => {
-  const { layout, calculateLayoutRef, focusedIndex, isExpanded, breakpoint } =
-    useAppContext();
+  const { layout, focusedIndex, breakpoint } = useAppContext();
+  const { calculateLayoutRef } = useGlobalContext();
   const [pinnedHeight, setPinnedHeight] = useState(null);
   const [sectionsHeight, setSectionsHeight] = useState(null);
   const [layoutReady, setLayoutReady] = useState(false);
@@ -223,7 +224,7 @@ const DynamicLabel = ({
           }
 
           const minColumnIndex = columnHeights.indexOf(
-            Math.min(...columnHeights)
+            Math.min(...columnHeights),
           );
           const x = minColumnIndex * (COLUMN_WIDTH + GUTTER);
           const y = columnHeights[minColumnIndex];
@@ -240,13 +241,13 @@ const DynamicLabel = ({
       // Gap between pinned and unpinned sections
       const pinnedHeight = positionItems(
         pinnedItems,
-        pinnedItems.length > 0 && 30
+        pinnedItems.length > 0 && 30,
       );
 
       const unpinnedGap = pinnedItems.length > 0 ? GAP_BETWEEN_SECTIONS : 0;
       const unpinnedHeight = positionItems(
         unpinnedItems,
-        pinnedHeight + unpinnedGap
+        pinnedHeight + unpinnedGap,
       );
 
       const archivedGap =

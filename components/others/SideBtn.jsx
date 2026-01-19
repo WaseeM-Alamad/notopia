@@ -3,6 +3,7 @@ import React, { memo, useEffect, useRef, useState } from "react";
 import Menu from "./Menu";
 import { useAppContext } from "@/context/AppContext";
 import SideTooltip from "../Tools/SideTooltip";
+import { useLabelsContext } from "@/context/LabelsContext";
 
 const SideBtn = ({
   type,
@@ -18,10 +19,9 @@ const SideBtn = ({
   setOverUUID,
   overUUID,
   isDragging,
-  isExpanded,
-  setIsExpanded,
 }) => {
-  const { handlePin, labelsRef, currentSection } = useAppContext();
+  const { currentSection } = useAppContext();
+  const { handlePin, labelsRef } = useLabelsContext();
   const [mounted, setMounted] = useState(null);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
@@ -58,7 +58,9 @@ const SideBtn = ({
     const currentTarget = e.currentTarget;
     let virtualAnchor = null;
 
-    if (!isExpanded.open) {
+    const sidebarClosed = document.body.classList.contains("sidebar-closed");
+
+      if (sidebarClosed) {
       virtualAnchor = {
         getBoundingClientRect: () => {
           const targetRect = currentTarget.getBoundingClientRect();
@@ -73,7 +75,7 @@ const SideBtn = ({
             containerRect.left + offsetX - scrollContainer.scrollLeft,
             containerRect.top + offsetY - scrollContainer.scrollTop,
             targetRect.width,
-            targetRect.height
+            targetRect.height,
           );
         },
         contextElement: scrollContainer,
@@ -92,8 +94,7 @@ const SideBtn = ({
 
   const handleIconClick = (e, hash) => {
     hideSideTooltip();
-    window.innerWidth < 605 &&
-      setIsExpanded((prev) => ({ ...prev, open: false }));
+    window.innerWidth < 605 && window.dispatchEvent(new Event("close-sidebar"));
     const currentHash = window.location.hash.replace("#", "");
     if (hash === currentHash.toLowerCase()) return;
     e.preventDefault();
@@ -181,7 +182,10 @@ const SideBtn = ({
   const tooltipTimeoutRef = useRef(null);
 
   const showSideTooltip = (e) => {
-    if (isExpanded.open || moreMenuOpen) return;
+    const sidebarOpen = document.body.classList.contains("sidebar-open");
+    const isSmallScreen = window.innerWidth < 605;
+
+    if (moreMenuOpen || isSmallScreen || sidebarOpen) return;
     const scrollContainer = containerRef.current;
     const currentTarget = e.currentTarget;
     tooltipTimeoutRef.current = setTimeout(() => {
@@ -192,7 +196,7 @@ const SideBtn = ({
             targetRect.left,
             targetRect.top,
             targetRect.width,
-            targetRect.height
+            targetRect.height,
           );
         },
         contextElement: scrollContainer,

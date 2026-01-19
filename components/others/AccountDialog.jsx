@@ -7,20 +7,20 @@ import SecuritySettings from "./SecuritySettings";
 import DeleteAccSettings from "./DeleteAccSettings";
 import { useAppContext } from "@/context/AppContext";
 import Menu from "./Menu";
+import { useGlobalContext } from "@/context/GlobalContext";
 
 const AccountDialog = ({ isOpen, setIsOpen }) => {
   const {
     showTooltip,
     hideTooltip,
     closeToolTip,
-    isExpanded,
     ignoreKeysRef,
-    lockScroll,
     user,
     setUser,
   } = useAppContext();
   const [isMounted, setIsMounted] = useState(false);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const { isExpanded, lockScroll } = useGlobalContext();
 
   const [selectedSection, setSelectedSection] = useState(0);
   const [selectMenuOpen, setSelectMenuOpen] = useState(false);

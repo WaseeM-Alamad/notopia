@@ -1,7 +1,8 @@
-import React, { memo, useEffect, useRef, useState } from "react";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAppContext } from "@/context/AppContext";
+import { useLabelsContext } from "@/context/LabelsContext";
 
 const SetLabelModal = ({
   showCloseBtn = false,
@@ -14,13 +15,13 @@ const SetLabelModal = ({
     hideTooltip,
     showTooltip,
     skipLabelObjRefresh,
-    lockScroll,
     isActionModalOpenRef,
   } = useAppContext();
+  const { lockScroll } = useCallback();
   const [isMounted, setIsMounted] = useState(false);
   const [label, setLabel] = useState(labelObj?.label);
   const [error, setError] = useState("");
-  const { updateLabel, labelsRef } = useAppContext();
+  const { updateLabel, labelsRef } = useLabelsContext();
   const initialLabel = labelObj?.label;
   const noChange = initialLabel.trim() === label.trim();
 
@@ -255,7 +256,7 @@ const SetLabelModal = ({
         </form>
       </motion.div>
     </>,
-    document.getElementById("modal-portal")
+    document.getElementById("modal-portal"),
   );
 };
 

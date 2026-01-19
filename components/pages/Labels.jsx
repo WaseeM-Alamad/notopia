@@ -13,6 +13,8 @@ import { v4 as uuid } from "uuid";
 import { motion } from "framer-motion";
 import { useSearch } from "@/context/SearchContext";
 import SectionHeader from "../others/SectionHeader";
+import { useLabelsContext } from "@/context/LabelsContext";
+import { useGlobalContext } from "@/context/GlobalContext";
 
 const Labels = memo(
   ({
@@ -23,21 +25,14 @@ const Labels = memo(
     setFadingNotes,
     dispatchNotes,
     fadingNotes,
-    handleDeleteLabel,
     rootContainerRef,
     containerRef,
     isGrid,
   }) => {
-    const {
-      createLabel,
-      labelsRef,
-      labelsReady,
-      layout,
-      calculateLayoutRef,
-      isExpanded,
-      breakpoint,
-    } = useAppContext();
+    const { labelsReady, layout, breakpoint } = useAppContext();
+    const { calculateLayoutRef } = useGlobalContext();
     const { labelSearchTerm } = useSearch();
+    const { createLabel, labelsRef } = useLabelsContext();
     const [reRender, triggerReRender] = useState(false);
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
@@ -98,7 +93,7 @@ const Labels = memo(
           itemList.forEach((item) => {
             if (item.classList.contains("labelInput")) return;
             const minColumnIndex = columnHeights.indexOf(
-              Math.min(...columnHeights)
+              Math.min(...columnHeights),
             );
             const x = minColumnIndex * (COLUMN_WIDTH + GUTTER);
             const y = columnHeights[minColumnIndex];
@@ -158,7 +153,7 @@ const Labels = memo(
       triggerReRender((prev) => !prev);
       requestAnimationFrame(() => {
         const element = document.querySelector(
-          '.section-container [data-index="0"]'
+          '.section-container [data-index="0"]',
         );
         element.focus();
       });
@@ -208,23 +203,19 @@ const Labels = memo(
 
     return (
       <>
-        <div
-          ref={rootContainerRef}
-          className="starting-div"
-        >
+        <div ref={rootContainerRef} className="starting-div">
           <SectionHeader title="Labels" iconClass="section-folders-icon" />
           <div ref={containerRef} className="section-container">
             {/* <NewLabel triggerReRender={triggerReRender} /> */}
             {[...labelsRef.current]
               .sort(
-                ([, a], [, b]) => new Date(b.createdAt) - new Date(a.createdAt)
+                ([, a], [, b]) => new Date(b.createdAt) - new Date(a.createdAt),
               )
               .map(([uuid, labelData], index) => {
                 if (!visibleItems.has(uuid)) return null;
                 return (
                   <Label
                     index={index === 0 ? index : ""}
-                    handleDeleteLabel={handleDeleteLabel}
                     key={uuid}
                     isGrid={isGrid}
                     gridNoteWidth={gridNoteWidth}
@@ -294,7 +285,7 @@ const Labels = memo(
         </div>
       </>
     );
-  }
+  },
 );
 
 Labels.displayName = "Labels";

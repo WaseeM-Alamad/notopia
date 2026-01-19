@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import FilteredNotes from "../others/FilteredNotes";
 import { useSearch } from "@/context/SearchContext";
 import { useAppContext } from "@/context/AppContext";
+import { useLabelsContext } from "@/context/LabelsContext";
 
 const Search = ({
   notesStateRef,
@@ -32,14 +33,13 @@ const Search = ({
     skipHashChangeRef,
   } = useSearch();
   const {
-    labelsRef,
     setIsFiltered,
     showTooltip,
     hideTooltip,
     closeToolTip,
     focusedIndex,
-    isExpanded,
   } = useAppContext();
+  const { labelsRef } = useLabelsContext();
   const [colorsSet, setColorsSet] = useState(new Set());
   const [labelsSet, setLabelsSet] = useState(new Set());
   const [typesSet, setTypesSet] = useState(new Set());
@@ -90,7 +90,7 @@ const Search = ({
         return true;
       }
       return false;
-    })
+    }),
   );
 
   const noMatchingNotes = filteredNotes.size === 0;
@@ -175,10 +175,7 @@ const Search = ({
 
   return (
     <>
-      <div
-        ref={rootContainerRef}
-        className="starting-div"
-      >
+      <div ref={rootContainerRef} className="starting-div">
         {noMatchingNotes || !filtersExist ? (
           <div
             className="search-section"

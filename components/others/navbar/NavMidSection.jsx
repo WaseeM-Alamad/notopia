@@ -7,6 +7,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import NavButtons from "./NavButtons";
 import InputSearchIcon from "@/components/icons/InputSearchIcon";
 import InputLeftArrow from "@/components/icons/InputLeftArrow";
+import { useLabelsContext } from "@/context/LabelsContext";
 
 const NavMidSection = () => {
   const {
@@ -14,7 +15,6 @@ const NavMidSection = () => {
     hideTooltip,
     closeToolTip,
     currentSection,
-    labelsRef,
     labelsReady,
   } = useAppContext();
   const {
@@ -25,6 +25,8 @@ const NavMidSection = () => {
     filters: searchFilters,
     skipHashChangeRef,
   } = useSearch();
+
+  const { labelsRef } = useLabelsContext();
 
   const [inputPlaceHolder, setInputPlaceHolder] = useState("Search notes");
 
@@ -59,7 +61,7 @@ const NavMidSection = () => {
             setInputPlaceHolder(
               `Search within "${
                 within.charAt(0).toUpperCase() + within.slice(1)
-              }"`
+              }"`,
             );
           } else if (type === "label") {
             if (!labelsReady || !searchFilters.label) return;
@@ -120,7 +122,7 @@ const NavMidSection = () => {
           setSearchTerm(e.target.value.trim());
         }
       }, 300),
-    []
+    [],
   );
 
   return (
