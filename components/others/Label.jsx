@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useRef, useState } from "react";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import Button from "../Tools/Button";
 import MoreVert from "../icons/MoreVert";
 import { getNoteFormattedDate } from "@/utils/noteDateFormatter";
@@ -211,7 +211,7 @@ const Label = ({
       updateLabel(
         labelData.uuid,
         labelTitleRef.current.innerText.trim(),
-        originalTitleRef.current
+        originalTitleRef.current,
       );
       originalTitleRef.current = labelTitleRef.current.innerText.trim();
       window.dispatchEvent(new Event("refreshPinnedLabels"));
@@ -407,7 +407,7 @@ const Label = ({
     },
   ];
 
-  function highlightMatch(text) {
+  const highlightMatch = useCallback((text) => {
     if (!labelSearchTerm) return text;
 
     const regex = new RegExp(`(${labelSearchTerm.toLowerCase().trim()})`, "ig");
@@ -421,9 +421,9 @@ const Label = ({
         </span>
       ) : (
         part
-      )
+      ),
     );
-  }
+  }, []);
 
   return (
     <>
@@ -456,7 +456,7 @@ const Label = ({
                   e.pageX - window.scrollX,
                   e.pageY - window.scrollY,
                   0,
-                  0
+                  0,
                 ),
               contextElement: document.body,
             };

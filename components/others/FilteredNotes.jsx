@@ -76,7 +76,7 @@ const NoteWrapper = memo(
         </div>
       </motion.div>
     );
-  }
+  },
 );
 
 NoteWrapper.displayName = "NoteWrapper";
@@ -102,7 +102,6 @@ const FilteredNotes = memo(
     const { layout, calculateLayoutRef, breakpoint } = useAppContext();
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
-    const [layoutReady, setLayoutReady] = useState(false); // New state to track layout completion
     const filteredNotesRef = useRef(null);
     const [pinnedHeight, setPinnedHeight] = useState(null);
     const [sectionsHeight, setSectionsHeight] = useState(null);
@@ -162,19 +161,15 @@ const FilteredNotes = memo(
         container.style.left = "50%";
         container.style.transform = "translateX(-50%)";
 
-        // Get all the items in the container
-        // const items = Array.from(container.children);
         const items = notesStateRef.current.order.map((uuid, index) => {
           const note = notesStateRef.current.notes.get(uuid);
           return { ...note, index: index };
         });
 
-        // Sort items based on their position value (ascending order)
         const sortedItems = items.sort((a, b) => {
           return a.index - b.index; // Ascending order
         });
 
-        // Filter out pinned and unpinned items
         const pinnedItems = sortedItems.filter((item) => {
           if (
             !filteredNotesRef.current.has(item.uuid) ||
@@ -211,7 +206,7 @@ const FilteredNotes = memo(
             }
 
             const minColumnIndex = columnHeights.indexOf(
-              Math.min(...columnHeights)
+              Math.min(...columnHeights),
             );
             const x = minColumnIndex * (COLUMN_WIDTH + GUTTER);
             const y = columnHeights[minColumnIndex];
@@ -225,16 +220,15 @@ const FilteredNotes = memo(
           return Math.max(...columnHeights);
         };
 
-        // Gap between pinned and unpinned sections
         const pinnedHeight = positionItems(
           pinnedItems,
-          pinnedItems.length > 0 && 30
+          pinnedItems.length > 0 && 30,
         );
 
         const unpinnedGap = pinnedItems.length > 0 ? GAP_BETWEEN_SECTIONS : 0;
         const unpinnedHeight = positionItems(
           unpinnedItems,
-          pinnedHeight + unpinnedGap
+          pinnedHeight + unpinnedGap,
         );
 
         const archivedGap =
@@ -259,7 +253,6 @@ const FilteredNotes = memo(
 
         setPinnedHeight(pinnedHeight + GAP_BETWEEN_SECTIONS + 2 - 16);
         container.style.height = `${archivedHeight}px`;
-        setLayoutReady(true);
       });
     }, [isGrid, COLUMN_WIDTH, GUTTER]);
 
@@ -276,10 +269,7 @@ const FilteredNotes = memo(
       calculateLayoutRef.current = calculateLayout;
     }, [calculateLayout, layout]);
 
-    // Initialize layout on component mount
     useEffect(() => {
-      // Set layoutReady to false before any new calculations
-      setLayoutReady(false);
       setTimeout(() => {
         calculateLayout();
       }, 0);
@@ -296,11 +286,8 @@ const FilteredNotes = memo(
       };
     }, [calculateLayout, debouncedCalculateLayout, notes]);
 
-    // Run additional layout calculation after initial render
     useEffect(() => {
       if (notes.length > 0) {
-        setLayoutReady(false); // Reset layout state
-        // Use multiple timing attempts to ensure layout is calculated properly
         const immediateTimer = requestAnimationFrame(calculateLayout);
         const backupTimer = setTimeout(calculateLayout, 50);
         const finalTimer = setTimeout(calculateLayout, 150);
@@ -314,18 +301,8 @@ const FilteredNotes = memo(
     }, [notes, calculateLayout]);
 
     useEffect(() => {
-      setLayoutReady(false);
-      calculateLayout();
+      // calculateLayout();
     }, [searchTerm, calculateLayout]);
-
-    // Add CSS class for fade-in effect
-    useEffect(() => {
-      if (containerRef.current && layoutReady) {
-        containerRef.current.classList.add("layout-ready");
-      } else if (containerRef.current) {
-        containerRef.current.classList.remove("layout-ready");
-      }
-    }, [layoutReady]);
 
     useEffect(() => {
       calculateLayout();
@@ -387,7 +364,7 @@ const FilteredNotes = memo(
         </div>
       </>
     );
-  }
+  },
 );
 
 export default FilteredNotes;

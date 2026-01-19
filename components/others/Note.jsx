@@ -55,7 +55,7 @@ const Note = memo(
     const [moreMenuOpen, setMoreMenuOpen] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
     const [selected, setSelected] = useState(
-      selectedNotesRef.current.has(note?.uuid)
+      selectedNotesRef.current.has(note?.uuid),
     );
     const [selectedColor, setSelectedColor] = useState(note?.color);
     const uncheckedItems = note?.checkboxes?.filter((cb) => !cb.isCompleted);
@@ -116,7 +116,7 @@ const Note = memo(
                 clientID: clientID,
               }),
           ],
-          openSnackRef.current
+          openSnackRef.current,
         );
       } else {
         noteActions({
@@ -168,7 +168,7 @@ const Note = memo(
         if (deselect.includes(note?.uuid)) {
           setSelected(false);
           setSelectedNotesIDs((prev) =>
-            prev.filter((noteData) => noteData.uuid !== note?.uuid)
+            prev.filter((noteData) => noteData.uuid !== note?.uuid),
           );
         }
       };
@@ -212,7 +212,7 @@ const Note = memo(
               clientID: clientID,
             }),
         ],
-        openSnackRef.current
+        openSnackRef.current,
       );
     };
 
@@ -242,7 +242,7 @@ const Note = memo(
               clientID: clientID,
             }),
         ],
-        openSnackRef.current
+        openSnackRef.current,
       );
     };
 
@@ -304,23 +304,25 @@ const Note = memo(
       focusedIndex.current = notesIndexMapRef.current.get(note.uuid);
     };
 
-    function highlightMatch(text) {
-      if (!searchTerm) return text;
+    const highlightMatch = useCallback(
+      (text) => {
+        if (!searchTerm) return text;
 
-      const regex = new RegExp(`(${searchTerm.toLowerCase().trim()})`, "ig");
+        const regex = new RegExp(`(${searchTerm.toLowerCase().trim()})`, "ig");
+        const parts = text.split(regex);
 
-      const parts = text.split(regex);
-
-      return parts.map((part, index) =>
-        regex.test(part) ? (
-          <span key={index} className="highlight">
-            {part}
-          </span>
-        ) : (
-          part
-        )
-      );
-    }
+        return parts.map((part, index) =>
+          regex.test(part) ? (
+            <span key={index} className="highlight">
+              {part}
+            </span>
+          ) : (
+            part
+          ),
+        );
+      },
+      [],
+    );
 
     return (
       <>
@@ -410,7 +412,7 @@ const Note = memo(
                   e.pageX - window.scrollX,
                   e.pageY - window.scrollY,
                   0,
-                  0
+                  0,
                 ),
               contextElement: document.body,
             };
@@ -554,7 +556,7 @@ const Note = memo(
                               handleCheckboxClick(
                                 e,
                                 checkbox.uuid,
-                                !checkbox.isCompleted
+                                !checkbox.isCompleted,
                               )
                             }
                             className={`note-checkbox checkbox-unchecked ${
@@ -617,7 +619,7 @@ const Note = memo(
                                 handleCheckboxClick(
                                   e,
                                   checkbox.uuid,
-                                  !checkbox.isCompleted
+                                  !checkbox.isCompleted,
                                 )
                               }
                               className={`note-checkbox checkbox-unchecked ${
@@ -684,7 +686,7 @@ const Note = memo(
         </div>
       </>
     );
-  }
+  },
 );
 
 Note.displayName = "Note";
