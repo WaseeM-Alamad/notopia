@@ -31,6 +31,7 @@ export function AppProvider({ children, initialUser }) {
   const [isOnline, setIsOnline] = useState(true);
   const [isExpanded, setIsExpanded] = useState({ open: null, threshold: null });
   const [breakpoint, setBreakpoint] = useState(1);
+  const [initialLoading, setInitialLoading] = useState(false);
   const isExpandedRef = useRef(null);
   const focusedIndex = useRef(null);
   const clientID = useRef(uuid());
@@ -444,7 +445,17 @@ export function AppProvider({ children, initialUser }) {
     clearTimeout(tooltipTimeoutRef.current);
   }, []);
 
-  const [initialLoading, setInitialLoading] = useState(false);
+  useEffect(()=> {
+
+    const handler = ()=> {
+      closeToolTip()
+    }
+
+    document.addEventListener("click", handler);
+    return ()=> document.removeEventListener("click", handler);
+  }, [])
+
+  
 
   useEffect(() => {
     if (status === "loading" && !user) {

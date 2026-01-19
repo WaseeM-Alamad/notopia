@@ -92,7 +92,7 @@ export function useBatchLoading({
       currentSection?.toLowerCase() === "labels"
         ? [...labelsRef.current]
             .sort(
-              ([, a], [, b]) => new Date(b.createdAt) - new Date(a.createdAt)
+              ([, a], [, b]) => new Date(b.createdAt) - new Date(a.createdAt),
             )
             .filter(([uuid, labelData]) => {
               const search = labelSearchTerm.trim().toLowerCase();
@@ -191,7 +191,7 @@ export function useBatchLoading({
               version: version,
             });
           },
-          timeout ? 100 : 10
+          timeout ? 100 : 10,
         );
       });
     });
@@ -254,18 +254,14 @@ export function useBatchLoading({
       setIsGrid(layout === "grid");
       return;
     }
+    resetBatchLoading();
     requestIdleCallback(() => {
-      resetBatchLoading();
-      const version = layoutVersionRef.current;
       clearTimeout(layoutTimeoutRef.current);
       setIsGrid(layout === "grid");
 
       requestAnimationFrame(() => {
         layoutTimeoutRef.current = setTimeout(() => {
-          loadNextBatch({
-            currentSet: new Set(),
-            version: version,
-          });
+          resetAndLoad();
         }, 200);
       });
     });

@@ -2189,7 +2189,7 @@ export const batchManageLabelsAction = async (data) => {
 
 function cleanNoteForDB(note) {
   const { _id, ref, createdAt, updatedAt, _v, creator, type, ...cleanNote } =
-    note; // exclude _id and any other unwanted props
+    note;
   return cleanNote;
 }
 

@@ -41,6 +41,7 @@ export function useKeyBindings({
     openSnackRef,
     isActionModalOpenRef,
     isContextMenuOpenRef,
+    closeToolTip,
   } = useAppContext();
   const userID = user?.id;
   const { filters, searchRef } = useSearch();
@@ -86,6 +87,7 @@ export function useKeyBindings({
         return;
       }
       if (event.key === "Escape") {
+        closeToolTip();
         if (isActionModalOpenRef.current || isContextMenuOpenRef.current) {
           return;
         }
@@ -284,7 +286,7 @@ export function useKeyBindings({
                 clientID: clientID,
               }),
           ],
-          openSnackRef.current
+          openSnackRef.current,
         );
       }
 
@@ -387,7 +389,7 @@ export function useKeyBindings({
                 clientID: clientID,
               }),
           ],
-          openSnackRef.current
+          openSnackRef.current,
         );
       }
 
@@ -549,7 +551,7 @@ export function useKeyBindings({
                     clientID: clientID,
                   }),
               ],
-              openSnackRef.current
+              openSnackRef.current,
             );
           }
         }
@@ -576,7 +578,7 @@ export function useKeyBindings({
               select: [note?.uuid],
               deselect: [],
             },
-          })
+          }),
         );
       }
 
@@ -618,7 +620,7 @@ export function useKeyBindings({
                 clientID: clientID,
               }),
           ],
-          openSnackRef.current
+          openSnackRef.current,
         );
       }
 
