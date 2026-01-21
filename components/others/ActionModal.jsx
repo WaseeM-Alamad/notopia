@@ -15,8 +15,7 @@ const ActionModal = ({
   btnMsg,
   cancelBtnMsg = "Cancel",
 }) => {
-  const { closeToolTip, hideTooltip, showTooltip, isActionModalOpenRef } =
-    useAppContext();
+  const { hideTooltip, showTooltip, isActionModalOpenRef } = useAppContext();
   const { lockScroll } = useGlobalContext();
   const [isMounted, setIsMounted] = useState(false);
 
@@ -71,6 +70,7 @@ const ActionModal = ({
           damping: 50,
           mass: 1,
         }}
+        style={{ zIndex: "209" }}
         onClick={() => {
           cancelFunc();
           setDialogInfo(null);
@@ -101,7 +101,6 @@ const ActionModal = ({
           <div
             style={{ top: ".5rem", right: "0.7rem" }}
             onClick={() => {
-              closeToolTip();
               cancelFunc();
               setDialogInfo(null);
             }}

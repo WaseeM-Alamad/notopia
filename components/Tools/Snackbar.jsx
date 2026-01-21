@@ -15,7 +15,7 @@ const Snackbar = ({
   setUnloadWarn,
   onClose,
 }) => {
-  const { showTooltip, hideTooltip, closeToolTip } = useAppContext();
+  const { showTooltip, hideTooltip } = useAppContext();
   const [isMounted, setIsMounted] = useState(false);
   const timeoutRef = useRef(null);
   useEffect(() => {
@@ -30,7 +30,7 @@ const Snackbar = ({
           onClose.current();
           // }
         },
-        snackbarState.showUndo ? 6000 : 4000
+        snackbarState.showUndo ? 6000 : 4000,
       );
     } else {
       setUnloadWarn(false);
@@ -108,7 +108,6 @@ const Snackbar = ({
             onMouseEnter={(e) => showTooltip(e, "Dismiss")}
             onMouseLeave={hideTooltip}
             onClick={() => {
-              closeToolTip();
               setSnackbarState((prev) => ({
                 ...prev,
                 snackOpen: false,
@@ -121,7 +120,7 @@ const Snackbar = ({
         </div>
       </motion.div>
     </>,
-    document.getElementById("snackbarPortal")
+    document.getElementById("snackbarPortal"),
   );
 };
 

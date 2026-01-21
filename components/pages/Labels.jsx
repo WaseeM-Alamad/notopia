@@ -15,6 +15,7 @@ import { useSearch } from "@/context/SearchContext";
 import SectionHeader from "../others/SectionHeader";
 import { useLabelsContext } from "@/context/LabelsContext";
 import { useGlobalContext } from "@/context/GlobalContext";
+import { useLayout } from "@/context/LayoutContext";
 
 const Labels = memo(
   ({
@@ -27,16 +28,18 @@ const Labels = memo(
     fadingNotes,
     rootContainerRef,
     containerRef,
-    isGrid,
   }) => {
-    const { labelsReady, layout, breakpoint } = useAppContext();
+    const { labelsReady } = useAppContext();
     const { calculateLayoutRef } = useGlobalContext();
     const { labelSearchTerm } = useSearch();
+    const { layout, breakpoint } = useLayout();
     const { createLabel, labelsRef } = useLabelsContext();
     const [reRender, triggerReRender] = useState(false);
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
     const isFirstRenderRef = useRef(true);
+
+    const isGrid = layout === "grid";
 
     const gridNoteWidth = breakpoint === 1 ? 240 : breakpoint === 2 ? 180 : 150;
     const COLUMN_WIDTH = layout === "grid" ? gridNoteWidth : 450;

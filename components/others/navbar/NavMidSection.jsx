@@ -10,13 +10,8 @@ import InputLeftArrow from "@/components/icons/InputLeftArrow";
 import { useLabelsContext } from "@/context/LabelsContext";
 
 const NavMidSection = () => {
-  const {
-    showTooltip,
-    hideTooltip,
-    closeToolTip,
-    currentSection,
-    labelsReady,
-  } = useAppContext();
+  const { showTooltip, hideTooltip, currentSection, labelsReady } =
+    useAppContext();
   const {
     searchRef,
     labelSearchTerm,
@@ -88,7 +83,6 @@ const NavMidSection = () => {
   }, [labelsReady, searchFilters, currentSection]);
 
   const inputClick = () => {
-    closeToolTip();
     const currentHash = window.location.hash.replace("#", "");
     if (currentHash.startsWith("search") || currentHash === "labels") {
       return;
@@ -101,7 +95,6 @@ const NavMidSection = () => {
   };
 
   const handleClearSearch = () => {
-    closeToolTip();
     const hash = window.location.hash.replace("#", "");
 
     if (hash.startsWith("search/")) {

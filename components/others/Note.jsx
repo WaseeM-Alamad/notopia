@@ -42,7 +42,6 @@ const Note = memo(
       clientID,
       showTooltip,
       hideTooltip,
-      closeToolTip,
       focusedIndex,
       notesIndexMapRef,
       openSnackRef,
@@ -89,7 +88,6 @@ const Note = memo(
     const lastInputWasKeyboard = useLastInputWasKeyboard();
 
     const handlePinClick = async (e) => {
-      closeToolTip();
       handleSelectNote({ clear: true });
       e.stopPropagation(); // Prevent note click event
       if (!note?.isArchived) {
@@ -412,7 +410,6 @@ const Note = memo(
             e.preventDefault();
             if (e.button !== 2) return;
 
-            closeToolTip();
             if (touchActiveRef.current) return;
 
             const virtualAnchor = {

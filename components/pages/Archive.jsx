@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { useAppContext } from "@/context/AppContext";
 import SectionHeader from "../others/SectionHeader";
 import { useGlobalContext } from "@/context/GlobalContext";
+import { useLayout } from "@/context/LayoutContext";
 
 const NoteWrapper = memo(
   ({
@@ -98,10 +99,12 @@ const Archive = memo(
     noteActions,
     notesReady,
     containerRef,
-    isGrid,
   }) => {
-    const { layout, focusedIndex, breakpoint } = useAppContext();
-    const {calculateLayoutRef} = useGlobalContext();
+    const { focusedIndex } = useAppContext();
+    const { layout, breakpoint } = useLayout();
+    const { calculateLayoutRef } = useGlobalContext();
+    const isGrid = layout === "grid";
+
     const gridNoteWidth = breakpoint === 1 ? 240 : breakpoint === 2 ? 180 : 150;
     const COLUMN_WIDTH = layout === "grid" ? gridNoteWidth : 600;
     const GUTTER = breakpoint === 1 ? 15 : 8;

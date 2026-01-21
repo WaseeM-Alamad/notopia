@@ -13,10 +13,9 @@ const NoteImagesLayout = ({
   noteImageDelete,
   AddNoteImageDelete,
 }) => {
-  const { loadingImages, showTooltip, hideTooltip, closeToolTip } =
-    useAppContext();
+  const { loadingImages, showTooltip, hideTooltip } = useAppContext();
   // const { calculateLayoutRef } = useGlobalContext();
-  const calculateMasonryLayout = ()=> {};
+  const calculateMasonryLayout = () => {};
   const containerRef = useRef(null);
   const [layout, setLayout] = useState([]);
   const [loadedImages, setLoadedImages] = useState([]);
@@ -151,7 +150,6 @@ const NoteImagesLayout = ({
   };
 
   const handleImageDeletion = (imageID, url) => {
-    closeToolTip();
     if (deleteSource === "note") {
       noteImageDelete(imageID, url);
     } else if (deleteSource === "AddModal") {

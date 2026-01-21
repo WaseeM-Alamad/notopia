@@ -9,6 +9,7 @@ import handleServerCall from "@/utils/handleServerCall";
 import localDbReducer from "@/utils/localDbReducer";
 import { useNoteDragging } from "@/hooks/useNoteDragging";
 import { useGlobalContext } from "@/context/GlobalContext";
+import { useLayout } from "@/context/LayoutContext";
 
 const GAP_BETWEEN_SECTIONS = 88;
 
@@ -234,16 +235,10 @@ const Home = memo(
     notesReady,
     containerRef,
     rootContainerRef,
-    isGrid,
   }) => {
-    const {
-      user,
-      layout,
-      focusedIndex,
-      notesStateRef,
-      notesIndexMapRef,
-      breakpoint,
-    } = useAppContext();
+    const { user, focusedIndex, notesStateRef, notesIndexMapRef } =
+      useAppContext();
+    const { layout, breakpoint } = useLayout();
     const { calculateLayoutRef } = useGlobalContext();
     const userID = user?.id;
     const [pinnedHeight, setPinnedHeight] = useState(null);
@@ -251,14 +246,21 @@ const Home = memo(
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
     const [layoutReady, setLayoutReady] = useState(false);
+    const [isGrid, setIsGrid] = useState(layout);
     const gridNoteWidth = breakpoint === 1 ? 240 : breakpoint === 2 ? 180 : 150;
-    const COLUMN_WIDTH = layout === "grid" ? gridNoteWidth : 600;
+    const COLUMN_WIDTH = isGrid ? gridNoteWidth : 600;
     const GUTTER = breakpoint === 1 ? 15 : 8;
     const touchOverElementRef = useRef(null);
     const overIndexRef = useRef(null);
     const overIsPinnedRef = useRef(null);
     const isDraggingRef = useRef(false);
     const handleDragStartRef = useRef(null);
+
+    useEffect(()=> {
+      setTimeout(() => {
+        setIsGrid(layout === "grid");
+      }, 10);
+    }, [layout])
 
     const hasPinned = [...visibleItems].some((uuid) => {
       const note = notes.get(uuid);
@@ -379,7 +381,7 @@ const Home = memo(
 
     useEffect(() => {
       calculateLayoutRef.current = calculateLayout;
-    }, [calculateLayout, layout]);
+    }, [calculateLayout]);
 
     const debouncedCalculateLayout = useCallback(() => {
       if (resizeTimeoutRef.current) {

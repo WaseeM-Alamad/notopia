@@ -54,7 +54,7 @@ const NoteEditor = ({
   openCollab,
 }) => {
   const { filters } = useSearch();
-  const { user, clientID, showTooltip, hideTooltip, closeToolTip } =
+  const { user, clientID, showTooltip, hideTooltip } =
     useAppContext();
 
   const userID = user?.id;
@@ -643,7 +643,6 @@ const NoteEditor = ({
         </button>
         <button
           onClick={() => {
-            closeToolTip();
             archiveRef.current = true;
             setIsOpen(false);
           }}

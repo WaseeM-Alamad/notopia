@@ -7,7 +7,7 @@ const NoteCollabs = ({
   modalView = false,
   openCollab = () => {},
 }) => {
-  const { user, showTooltip, hideTooltip, closeToolTip, notesIndexMapRef } =
+  const { user, showTooltip, hideTooltip, notesIndexMapRef } =
     useAppContext();
   const userID = user?.id;
   const [collaborators, setCollaborators] = useState([]);
@@ -45,7 +45,6 @@ const NoteCollabs = ({
             className={`collab-user-img ${modalView ? "modal-collab-image" : "collab-note-image"}`}
             onClick={(e) => {
               e.stopPropagation();
-              closeToolTip();
               if (modalView) {
                 openCollab();
                 return;

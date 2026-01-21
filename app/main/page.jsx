@@ -45,7 +45,6 @@ import { useLabelsContext } from "@/context/LabelsContext";
 const page = () => {
   const { searchTerm, filters } = useSearch();
   const {
-    layout,
     currentSection,
     setCurrentSection,
     modalOpenRef,
@@ -78,7 +77,6 @@ const page = () => {
   const [unloadWarn, setUnloadWarn] = useState(false);
   const [noActionUndone, setNoActionUndone] = useState(false);
   const [labelObj, setLabelObj] = useState(null);
-  const [isGrid, setIsGrid] = useState(layout === "grid");
   const [dialogInfo, setDialogInfo] = useState(null);
 
   const undoFunction = useRef(null);
@@ -475,7 +473,6 @@ const page = () => {
     visibleItems,
     labelObj,
     notesReady,
-    setIsGrid,
     containerRef,
     matchesFilters,
   });
@@ -584,7 +581,6 @@ const page = () => {
             setSelectedNotesIDs={setSelectedNotesIDs}
             noteActions={noteActions}
             notesReady={notesReady}
-            isGrid={isGrid}
             containerRef={containerRef}
             rootContainerRef={rootContainerRef}
             labelObj={labelObj}

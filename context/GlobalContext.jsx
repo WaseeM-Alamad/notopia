@@ -69,14 +69,6 @@ export const GlobalProvider = ({ children }) => {
       } else if (isExpanded.threshold !== "after") {
         setIsExpanded({ open: false, threshold: "after" });
       }
-
-      if (width < 341) {
-        setLayout("list");
-      } else {
-        const savedLayout = localStorage.getItem("layout");
-        setLayout(savedLayout);
-        setBreakpoint(width > 527 ? 1 : width < 400 ? 3 : 2);
-      }
     };
 
     window.addEventListener("resize", handler);
@@ -136,7 +128,13 @@ export const GlobalProvider = ({ children }) => {
 
   return (
     <GlobalContext.Provider
-      value={{ isExpanded, setIsExpanded, isDarkModeRef, calculateLayoutRef, lockScroll }}
+      value={{
+        isExpanded,
+        setIsExpanded,
+        isDarkModeRef,
+        calculateLayoutRef,
+        lockScroll,
+      }}
     >
       {children}
     </GlobalContext.Provider>

@@ -24,7 +24,7 @@ const AddModalTools = ({
   setLabelsOpen,
   inputRef,
 }) => {
-  const { showTooltip, hideTooltip, closeToolTip, openSnackRef } =
+  const { showTooltip, hideTooltip, openSnackRef } =
     useAppContext();
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
   const [colorAnchorEl, setColorAnchorEl] = useState();
@@ -39,7 +39,6 @@ const AddModalTools = ({
   };
 
   const toggleMenu = (e) => {
-    closeToolTip();
     const width = window.innerWidth;
 
     if (width < 605) {
@@ -52,7 +51,6 @@ const AddModalTools = ({
 
   const handleBackground = useCallback(
     async (newBG) => {
-      closeToolTip();
       if (note?.background === newBG) return;
       setNote((prev) => ({ ...prev, background: newBG }));
     },
@@ -179,7 +177,6 @@ const AddModalTools = ({
         />
         <Button
           onClick={(e) => {
-            closeToolTip();
             setAnchorEl(e.currentTarget);
             setMoreMenuOpen((prev) => !prev);
             setLabelsOpen(false);

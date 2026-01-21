@@ -4,12 +4,11 @@ import { useGlobalContext } from "@/context/GlobalContext";
 import React, { memo } from "react";
 
 const LogoSection = () => {
-  const { hideTooltip, showTooltip, closeToolTip } = useAppContext();
+  const { hideTooltip, showTooltip } = useAppContext();
 
   const { setIsExpanded } = useGlobalContext();
 
   const handleMenuClick = () => {
-    closeToolTip();
     const width = window.innerWidth;
     setIsExpanded((prev) => ({
       open: !prev.open,

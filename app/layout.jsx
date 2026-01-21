@@ -9,6 +9,7 @@ import FatalErrorBoundary from "@/utils/ErrorBoundry";
 import PolyfillClient from "@/utils/PolyfillClient";
 import { LabelsProvider } from "@/context/LabelsContext";
 import { GlobalProvider } from "@/context/GlobalContext";
+import { LayoutProvider } from "@/context/LayoutContext";
 
 export const metadata = {
   title: "Notopia",
@@ -38,20 +39,22 @@ const MainLayout = async ({ children }) => {
         <FatalErrorBoundary>
           <PolyfillClient />
           <AuthProvider>
-            <GlobalProvider>
-              <SearchProvider>
-                <AppProvider initialUser={initialUser}>
-                  <LabelsProvider userID={initialUser.id}>
-                    <div id="tooltipPortal" />
-                    <div id="snackbarPortal" />
-                    {children}
-                    <div id="menu" />
-                    <div id="modal-portal" />
-                    <div id="selectionBox" />
-                  </LabelsProvider>
-                </AppProvider>
-              </SearchProvider>
-            </GlobalProvider>
+            <LayoutProvider>
+              <GlobalProvider>
+                <SearchProvider>
+                  <AppProvider initialUser={initialUser}>
+                    <LabelsProvider userID={initialUser.id}>
+                      <div id="tooltipPortal" />
+                      <div id="snackbarPortal" />
+                      {children}
+                      <div id="menu" />
+                      <div id="modal-portal" />
+                      <div id="selectionBox" />
+                    </LabelsProvider>
+                  </AppProvider>
+                </SearchProvider>
+              </GlobalProvider>
+            </LayoutProvider>
           </AuthProvider>
         </FatalErrorBoundary>
       </body>

@@ -15,6 +15,7 @@ import FolderIcon from "../icons/FolderIcon";
 import SectionHeader from "../others/SectionHeader";
 import SetLabelModal from "../others/SetLabelModal";
 import { useGlobalContext } from "@/context/GlobalContext";
+import { useLayout } from "@/context/LayoutContext";
 
 const GAP_BETWEEN_SECTIONS = 88;
 
@@ -105,9 +106,9 @@ const DynamicLabel = ({
   handleSelectNote,
   labelObj,
   containerRef,
-  isGrid,
 }) => {
-  const { layout, focusedIndex, breakpoint } = useAppContext();
+  const { focusedIndex } = useAppContext();
+  const { layout, breakpoint } = useLayout();
   const { calculateLayoutRef } = useGlobalContext();
   const [pinnedHeight, setPinnedHeight] = useState(null);
   const [sectionsHeight, setSectionsHeight] = useState(null);
@@ -116,6 +117,8 @@ const DynamicLabel = ({
   const resizeTimeoutRef = useRef(null);
   const layoutFrameRef = useRef(null);
   const lastAddedNoteRef = useRef(null);
+  const isGrid = layout === "grid";
+
   const gridNoteWidth = breakpoint === 1 ? 240 : breakpoint === 2 ? 180 : 150;
   const COLUMN_WIDTH = layout === "grid" ? gridNoteWidth : 600;
   const GUTTER = breakpoint === 1 ? 15 : 8;

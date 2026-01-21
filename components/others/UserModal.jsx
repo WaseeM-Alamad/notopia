@@ -6,8 +6,7 @@ import GalleryCarousel from "./GalleryCarousel";
 import { format } from "date-fns";
 
 const UserModal = ({ setUser, user }) => {
-  const { closeToolTip, hideTooltip, showTooltip, isActionModalOpenRef } =
-    useAppContext();
+  const { hideTooltip, showTooltip, isActionModalOpenRef } = useAppContext();
   const [isMounted, setIsMounted] = useState(false);
   const [isImageOpen, setIsImageOpen] = useState(false);
   const createdAt = user?.createdAt
@@ -97,7 +96,6 @@ const UserModal = ({ setUser, user }) => {
         <div
           style={{ top: ".7rem", right: "1rem" }}
           onClick={() => {
-            closeToolTip();
             setUser(null);
           }}
           onMouseEnter={(e) => showTooltip(e, "Close")}
@@ -222,7 +220,7 @@ const UserModal = ({ setUser, user }) => {
         )}
       </AnimatePresence>
     </>,
-    document.getElementById("modal-portal")
+    document.getElementById("modal-portal"),
   );
 };
 

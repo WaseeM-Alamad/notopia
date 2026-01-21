@@ -10,8 +10,7 @@ import HorizontalLoader from "../Tools/HorizontalLoader";
 import CustomThreeLineSpinner from "../Tools/CustomSpinner";
 
 const SetAvatarModal = ({ setIsOpen, initialFileRef, isGif }) => {
-  const { closeToolTip, hideTooltip, showTooltip, saveNewAvatar } =
-    useAppContext();
+  const { hideTooltip, showTooltip, saveNewAvatar } = useAppContext();
   const [isMounted, setIsMounted] = useState(false);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -19,7 +18,7 @@ const SetAvatarModal = ({ setIsOpen, initialFileRef, isGif }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isPreview, setIsPreview] = useState(isGif);
   const [finalBlob, setFinalBlob] = useState(
-    URL.createObjectURL(initialFileRef.current)
+    URL.createObjectURL(initialFileRef.current),
   );
 
   const cropperImageRef = useRef(URL.createObjectURL(initialFileRef.current));
@@ -72,7 +71,7 @@ const SetAvatarModal = ({ setIsOpen, initialFileRef, isGif }) => {
         }}
         style={{
           backdropFilter: "blur(3px)",
-          zIndex: "200",
+          zIndex: "205",
           willChange: "backdrop-filter, opacity",
         }}
         onClick={() => !isLoading && setIsOpen(false)}
@@ -108,7 +107,6 @@ const SetAvatarModal = ({ setIsOpen, initialFileRef, isGif }) => {
           height: isLoading ? "200px" : isPreview ? "340px" : "38.5rem",
           borderRadius: isLoading && "2rem",
           pointerEvents: isLoading ? "none" : "auto",
-          zIndex: "201",
           userSelect: "none",
           transitionProperty: "width, height, border-radius",
           transitionDuration: "0.2s",
@@ -122,7 +120,6 @@ const SetAvatarModal = ({ setIsOpen, initialFileRef, isGif }) => {
             display: isLoading ? "none" : "",
           }}
           onClick={() => {
-            closeToolTip();
             !isLoading && setIsOpen(false);
           }}
           onMouseEnter={(e) => showTooltip(e, "Close")}
@@ -225,6 +222,7 @@ const SetAvatarModal = ({ setIsOpen, initialFileRef, isGif }) => {
                     objectFit: "cover",
                     border: "1px solid var(--border)",
                   }}
+                  draggable={false}
                   width={124}
                   height={124}
                   src={previewUrlRef.current}
@@ -391,7 +389,7 @@ const SetAvatarModal = ({ setIsOpen, initialFileRef, isGif }) => {
                   const avatarBlob = await getCroppedAvatar(
                     URL.createObjectURL(initialFileRef.current),
                     croppedAreaPixels,
-                    400
+                    400,
                   );
                   previewUrlRef.current = URL.createObjectURL(avatarBlob);
                   setFinalBlob(avatarBlob);
@@ -406,7 +404,7 @@ const SetAvatarModal = ({ setIsOpen, initialFileRef, isGif }) => {
         {/* crop image end */}
       </motion.div>
     </>,
-    document.getElementById("modal-portal")
+    document.getElementById("modal-portal"),
   );
 };
 

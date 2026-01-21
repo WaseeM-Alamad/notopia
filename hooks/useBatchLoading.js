@@ -2,6 +2,7 @@
 
 import { useAppContext } from "@/context/AppContext";
 import { useLabelsContext } from "@/context/LabelsContext";
+import { useLayout } from "@/context/LayoutContext";
 import { useSearch } from "@/context/SearchContext";
 import { useEffect, useRef } from "react";
 
@@ -12,20 +13,20 @@ export function useBatchLoading({
   visibleItems,
   labelObj,
   notesReady,
-  setIsGrid,
+  // setIsGrid,
   containerRef,
   matchesFilters,
 }) {
   const {
-    layout,
     labelsReady,
     currentSection,
     loadNextBatchRef,
     notesIndexMapRef,
-    breakpoint,
     initialLoading,
     skipLabelObjRefresh,
   } = useAppContext();
+
+  const { layout, breakpoint } = useLayout();
 
   const {
     filters,
@@ -254,13 +255,13 @@ export function useBatchLoading({
     if (!layout) return;
     if (isFirstRenderRef.current) {
       isFirstRenderRef.current = false;
-      setIsGrid(layout === "grid");
+      // setIsGrid(layout === "grid");
       return;
     }
     resetBatchLoading();
     requestIdleCallback(() => {
       clearTimeout(layoutTimeoutRef.current);
-      setIsGrid(layout === "grid");
+      // setIsGrid(layout === "grid");
 
       requestAnimationFrame(() => {
         layoutTimeoutRef.current = setTimeout(() => {

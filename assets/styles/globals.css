@@ -678,7 +678,7 @@ svg {
 }
 
 .dark-mode .distinct-section {
-  border-color: var(--border);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .modal-bottom-icons {
@@ -750,7 +750,7 @@ svg {
   border: solid 1px var(--border);
   left: 50%;
   top: 40%;
-  z-index: 205;
+  z-index: 210;
 }
 
 .action-btns-container {
@@ -2457,11 +2457,15 @@ img {
 }
 
 .ghost-note .note-wrapper {
-  box-shadow: 2px 1px 25px -3px rgba(112, 112, 112, 0.8) !important;
+  box-shadow:
+    0 1px 13px rgba(0, 0, 0, 0.1),
+    0 4px 12px rgba(0, 0, 0, 0.1) !important;
 }
 
 .dark-mode .ghost-note .note-wrapper {
-  box-shadow: 2px 1px 25px -3px rgb(0, 0, 0) !important;
+  box-shadow:
+    0 1px 13px rgba(0, 0, 0, 0.7),
+    0 4px 12px rgba(0, 0, 0, 0.7) !important;
 }
 
 .ghost-note .note-bottom,
@@ -4216,7 +4220,7 @@ img {
   height: 95%;
   max-width: 900px;
   max-height: 550px;
-  z-index: 250;
+  z-index: 205;
   border: 1px solid var(--border);
   left: 50%;
   top: 45%;

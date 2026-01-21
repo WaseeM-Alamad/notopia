@@ -1,4 +1,5 @@
 import { useAppContext } from "@/context/AppContext";
+import { useLayout } from "@/context/LayoutContext";
 import { updateOrderAction } from "@/utils/actions";
 import handleServerCall from "@/utils/handleServerCall";
 import localDbReducer from "@/utils/localDbReducer";
@@ -14,7 +15,8 @@ export function useNoteDragging({
   overIndexRef,
   dispatchNotes,
 }) {
-  const { layout, user, openSnackRef, clientID } = useAppContext();
+  const { user, openSnackRef, clientID } = useAppContext();
+  const { layout } = useLayout();
 
   const userID = user?.id;
 

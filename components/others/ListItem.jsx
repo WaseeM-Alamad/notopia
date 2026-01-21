@@ -18,7 +18,7 @@ const ListItem = ({
   modalOpen,
   index,
 }) => {
-  const { clientID, showTooltip, hideTooltip, closeToolTip, openSnackRef } =
+  const { clientID, showTooltip, hideTooltip, openSnackRef } =
     useAppContext();
   const listItemRef = useRef(null);
   const containerRef = useRef(null);
@@ -78,7 +78,6 @@ const ListItem = ({
   };
 
   const handleDelete = async () => {
-    closeToolTip();
     setLocalNote((prev) => ({
       ...prev,
       checkboxes: prev.checkboxes.filter((cb) => {

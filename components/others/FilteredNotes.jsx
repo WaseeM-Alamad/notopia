@@ -5,6 +5,7 @@ import { useSearch } from "@/context/SearchContext";
 import { useAppContext } from "@/context/AppContext";
 import Note from "./Note";
 import { useGlobalContext } from "@/context/GlobalContext";
+import { useLayout } from "@/context/LayoutContext";
 
 const GAP_BETWEEN_SECTIONS = 88;
 
@@ -97,16 +98,17 @@ const FilteredNotes = memo(
     fadingNotes,
     visibleItems,
     containerRef,
-    isGrid,
   }) => {
     const { searchTerm } = useSearch();
-    const { layout, breakpoint } = useAppContext();
+    const { layout, breakpoint } = useLayout();
     const { calculateLayoutRef } = useGlobalContext();
     const resizeTimeoutRef = useRef(null);
     const layoutFrameRef = useRef(null);
     const filteredNotesRef = useRef(null);
     const [pinnedHeight, setPinnedHeight] = useState(null);
     const [sectionsHeight, setSectionsHeight] = useState(null);
+
+    const isGrid = layout === "grid";
 
     const gridNoteWidth = breakpoint === 1 ? 240 : breakpoint === 2 ? 180 : 150;
     const COLUMN_WIDTH = layout === "grid" ? gridNoteWidth : 600;

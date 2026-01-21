@@ -33,7 +33,6 @@ const NoteTools = ({
     clientID,
     showTooltip,
     hideTooltip,
-    closeToolTip,
     setLoadingImages,
     setDialogInfoRef,
     notesIndexMapRef,
@@ -55,7 +54,6 @@ const NoteTools = ({
   const isColorFiltered = filters.color;
 
   const handleColorClick = async (newColor) => {
-    closeToolTip();
     if (newColor === note?.color && !isColorFiltered) return;
     setSelectedColor(newColor);
 
@@ -76,7 +74,7 @@ const NoteTools = ({
               clientID: clientID,
             }),
         ],
-        openSnackRef.current
+        openSnackRef.current,
       );
     } else {
       noteActions({
@@ -95,7 +93,7 @@ const NoteTools = ({
                 clientID: clientID,
               }),
           ],
-          openSnackRef.current
+          openSnackRef.current,
         );
       }
     }
@@ -131,7 +129,7 @@ const NoteTools = ({
                 clientID: clientID,
               }),
           ],
-          openSnackRef.current
+          openSnackRef.current,
         );
       }
     };
@@ -145,7 +143,6 @@ const NoteTools = ({
 
   const handleBackground = useCallback(
     async (newBG) => {
-      closeToolTip();
       if (newBG === note?.background) return;
 
       dispatchNotes({
@@ -164,7 +161,7 @@ const NoteTools = ({
               clientID: clientID,
             }),
         ],
-        openSnackRef.current
+        openSnackRef.current,
       );
       localDbReducer({
         notes: notesStateRef.current.notes,
@@ -175,11 +172,10 @@ const NoteTools = ({
         newBG: newBG,
       });
     },
-    [note?.background]
+    [note?.background],
   );
 
   const toggleMenu = (e) => {
-    closeToolTip();
     setColorAnchorEl(e.currentTarget);
     setColorMenuOpen(!colorMenuOpen);
   };
@@ -303,8 +299,6 @@ const NoteTools = ({
   };
 
   const handleMoreClick = (e) => {
-    closeToolTip();
-
     // Get button's rect relative to viewport at click
     const rect = e.currentTarget.getBoundingClientRect();
 
@@ -319,7 +313,7 @@ const NoteTools = ({
           pageX - window.pageXOffset,
           pageY - window.pageYOffset,
           rect.width,
-          rect.height
+          rect.height,
         ),
       contextElement: document.body,
     };
@@ -376,7 +370,7 @@ const NoteTools = ({
       });
       handleServerCall(
         [() => removeSelfAction(note?.uuid, clientID)],
-        openSnackRef.current
+        openSnackRef.current,
       );
     };
     setDialogInfoRef.current({
@@ -427,7 +421,7 @@ const NoteTools = ({
             clientID: clientID,
           }),
       ],
-      openSnackRef.current
+      openSnackRef.current,
     );
     localDbReducer({
       notes: notesStateRef.current.notes,
@@ -456,7 +450,7 @@ const NoteTools = ({
             clientID: clientID,
           }),
       ],
-      openSnackRef.current
+      openSnackRef.current,
     );
     localDbReducer({
       notes: notesStateRef.current.notes,
@@ -484,7 +478,7 @@ const NoteTools = ({
             clientID: clientID,
           }),
       ],
-      openSnackRef.current
+      openSnackRef.current,
     );
     localDbReducer({
       notes: notesStateRef.current.notes,
@@ -512,7 +506,7 @@ const NoteTools = ({
             clientID: clientID,
           }),
       ],
-      openSnackRef.current
+      openSnackRef.current,
     );
     localDbReducer({
       notes: notesStateRef.current.notes,
@@ -628,13 +622,12 @@ const NoteTools = ({
   }, [labelsOpen]);
 
   const handleCollab = () => {
-    closeToolTip();
     const element = note?.ref.current.parentElement;
     handleNoteClick(
       { currentTarget: element },
       note,
       notesIndexMapRef.current.get(note.uuid),
-      true
+      true,
     );
   };
 
@@ -682,7 +675,6 @@ const NoteTools = ({
                     note?.isArchived ? "unarchive-icon" : "archive-icon"
                   } btn-hover`}
                   onClick={() => {
-                    closeToolTip();
                     noteActions({
                       type: "archive",
                       index: notesIndexMapRef.current.get(note.uuid),
@@ -693,14 +685,14 @@ const NoteTools = ({
                   onMouseEnter={(e) =>
                     showTooltip(
                       e,
-                      `${note?.isArchived ? "Unarchive" : "Archive"}`
+                      `${note?.isArchived ? "Unarchive" : "Archive"}`,
                     )
                   }
                   onMouseLeave={hideTooltip}
                   onFocus={(e) =>
                     showTooltip(
                       e,
-                      `${note?.isArchived ? "Unarchive" : "Archive"}`
+                      `${note?.isArchived ? "Unarchive" : "Archive"}`,
                     )
                   }
                   onBlur={hideTooltip}
@@ -709,7 +701,6 @@ const NoteTools = ({
                   tabIndex="0"
                   className="image-icon btn-hover"
                   onClick={() => {
-                    closeToolTip();
                     inputRef.current.click();
                   }}
                   onMouseEnter={(e) => showTooltip(e, "Add image")}

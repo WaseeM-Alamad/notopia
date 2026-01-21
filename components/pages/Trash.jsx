@@ -8,6 +8,7 @@ import localDbReducer from "@/utils/localDbReducer";
 import { batchDeleteNotes } from "@/utils/actions";
 import SectionHeader from "../others/SectionHeader";
 import { useGlobalContext } from "@/context/GlobalContext";
+import { useLayout } from "@/context/LayoutContext";
 
 const NoteWrapper = memo(
   ({
@@ -78,7 +79,7 @@ const NoteWrapper = memo(
         </div>
       </motion.div>
     );
-  }
+  },
 );
 
 NoteWrapper.displayName = "NoteWrapper";
@@ -100,19 +101,15 @@ const Trash = memo(
     setFadingNotes,
     fadingNotes,
     containerRef,
-    isGrid,
   }) => {
-    const {
-      layout,
-      focusedIndex,
-      openSnackRef,
-      user,
-      setDialogInfoRef,
-      clientID,
-      breakpoint,
-    } = useAppContext();
-    const {calculateLayoutRef} = useGlobalContext();
+    const { focusedIndex, openSnackRef, user, setDialogInfoRef, clientID } =
+      useAppContext();
+    const { calculateLayoutRef } = useGlobalContext();
+    const { layout, breakpoint } = useLayout();
     const userID = user?.id;
+
+    const isGrid = layout === "grid";
+
     const gridNoteWidth = breakpoint === 1 ? 240 : breakpoint === 2 ? 180 : 150;
     const COLUMN_WIDTH = layout === "grid" ? gridNoteWidth : 600;
     const GUTTER = breakpoint === 1 ? 15 : 8;
@@ -171,7 +168,7 @@ const Trash = memo(
             const wrapper = item.ref?.current?.parentElement;
             if (!wrapper) return;
             const minColumnIndex = columnHeights.indexOf(
-              Math.min(...columnHeights)
+              Math.min(...columnHeights),
             );
             const x = minColumnIndex * (COLUMN_WIDTH + GUTTER);
             const y = columnHeights[minColumnIndex];
@@ -236,7 +233,7 @@ const Trash = memo(
 
       handleServerCall(
         [() => batchDeleteNotes(deletedNotesData, clientID)],
-        openSnackRef.current
+        openSnackRef.current,
       );
     };
 
@@ -267,7 +264,7 @@ const Trash = memo(
     useEffect(() => {
       const handler = async () => {
         const trashNotes = order.some(
-          (uuid) => notes.get(uuid).isTrash === true
+          (uuid) => notes.get(uuid).isTrash === true,
         );
 
         if (trashNotes) {
@@ -353,7 +350,7 @@ const Trash = memo(
         </div>
       </>
     );
-  }
+  },
 );
 
 Trash.displayName = "Trash";

@@ -29,7 +29,6 @@ const Label = ({
     loadingImages,
     showTooltip,
     hideTooltip,
-    closeToolTip,
     openSnackRef,
     setDialogInfoRef,
   } = useAppContext();
@@ -105,7 +104,6 @@ const Label = ({
 
   const handleMoreClick = (e) => {
     e.stopPropagation();
-    closeToolTip();
     setAnchorEL(e.currentTarget);
     setIsOpen((prev) => !prev);
     setColorMenuOpen(false);
@@ -452,7 +450,6 @@ const Label = ({
         <div
           onContextMenu={(e) => {
             e.preventDefault();
-            closeToolTip();
 
             const virtualAnchor = {
               getBoundingClientRect: () =>

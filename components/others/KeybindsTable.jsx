@@ -5,7 +5,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 const KeybindsTable = ({ keybindsRef, isOpen, setIsOpen }) => {
-  const { showTooltip, hideTooltip, closeToolTip } = useAppContext();
+  const { showTooltip, hideTooltip } = useAppContext();
 
   const { lockScroll } = useGlobalContext();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -188,7 +188,6 @@ const KeybindsTable = ({ keybindsRef, isOpen, setIsOpen }) => {
       >
         <div
           onClick={() => {
-            closeToolTip();
             setIsOpen(false);
           }}
           onMouseEnter={(e) => showTooltip(e, "Close")}

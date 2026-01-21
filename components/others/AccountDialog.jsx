@@ -13,7 +13,6 @@ const AccountDialog = ({ isOpen, setIsOpen }) => {
   const {
     showTooltip,
     hideTooltip,
-    closeToolTip,
     ignoreKeysRef,
     user,
     setUser,
@@ -173,7 +172,6 @@ const AccountDialog = ({ isOpen, setIsOpen }) => {
       >
         <div
           onClick={() => {
-            closeToolTip();
             setIsOpen(false);
           }}
           onMouseEnter={(e) => showTooltip(e, "Close")}

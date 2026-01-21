@@ -273,6 +273,7 @@ const NoteModal = ({
       removeSelfRef.current = false;
       setInitialStyle(null);
       reset();
+      setLocalNote(null);
     });
   };
 
@@ -844,9 +845,6 @@ const NoteModal = ({
         collabBox.style.opacity = "0";
       });
       collabTimeoutRef.current = setTimeout(() => {
-        const editorScrollableDiv = editorBox.querySelector(
-          ".modal-inputs-container",
-        );
         modal.style.removeProperty("height");
         editorBox.style.position = "relative";
         editorBox.removeAttribute("style");

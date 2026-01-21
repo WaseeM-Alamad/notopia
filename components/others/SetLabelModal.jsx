@@ -12,7 +12,6 @@ const SetLabelModal = ({
   labelObj,
 }) => {
   const {
-    closeToolTip,
     hideTooltip,
     showTooltip,
     skipLabelObjRefresh,
@@ -124,9 +123,6 @@ const SetLabelModal = ({
         {showCloseBtn && (
           <div
             style={{ top: ".5rem", right: "0.7rem" }}
-            onClick={() => {
-              closeToolTip();
-            }}
             onMouseEnter={(e) => showTooltip(e, "Close")}
             onMouseLeave={hideTooltip}
             className="clear-icon btn small-btn"

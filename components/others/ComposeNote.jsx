@@ -29,7 +29,6 @@ const ComposeNote = ({
     setLoadingImages,
     showTooltip,
     hideTooltip,
-    closeToolTip,
     openSnackRef,
     notesStateRef,
     clientID,
@@ -387,7 +386,6 @@ const ComposeNote = ({
   }, [isOpen]);
 
   const handlePinClick = () => {
-    // closeToolTip();
     setNote((prev) => ({ ...prev, isPinned: !prev.isPinned }));
   };
 
@@ -744,7 +742,6 @@ const ComposeNote = ({
                       <div
                         onClick={(e) => {
                           e.stopPropagation();
-                          closeToolTip();
                           removeLabel(labelUUID);
                         }}
                         onMouseEnter={(e) => showTooltip(e, "Remove label")}

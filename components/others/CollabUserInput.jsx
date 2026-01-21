@@ -13,7 +13,7 @@ const CollabUserInput = ({
   note,
   setCollabOpsMap,
 }) => {
-  const { user, showTooltip, hideTooltip, closeToolTip } = useAppContext();
+  const { user, showTooltip, hideTooltip } = useAppContext();
   const [errorMsg, setErrorMsg] = useState("");
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -32,7 +32,6 @@ const CollabUserInput = ({
 
   const handleSubmitUser = async (e) => {
     e.preventDefault();
-    closeToolTip();
 
     if (isLoading) return;
 

@@ -6,8 +6,7 @@ import KeybindsTable from "../KeybindsTable";
 import AccountDialog from "../AccountDialog";
 
 const NavProfileSection = () => {
-  const { user, showTooltip, hideTooltip, closeToolTip, setBindsOpenRef } =
-    useAppContext();
+  const { user, showTooltip, hideTooltip, setBindsOpenRef } = useAppContext();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [bindsOpen, setBindsOpen] = useState(false);
@@ -25,7 +24,6 @@ const NavProfileSection = () => {
   }, []);
 
   const handleProfileOpen = () => {
-    closeToolTip();
     const rect = imageRef.current?.getBoundingClientRect();
     setMenuPosition({
       top: rect.top,
@@ -66,7 +64,7 @@ const NavProfileSection = () => {
                   <br />
                   {user?.email}
                 </div>
-              </>
+              </>,
             )
           }
           onMouseLeave={hideTooltip}

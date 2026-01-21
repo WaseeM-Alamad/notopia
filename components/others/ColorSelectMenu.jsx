@@ -42,8 +42,7 @@ const ColorSelectMenu = ({
   setIsOpen,
   anchorEl,
 }) => {
-  const { showTooltip, hideTooltip, closeToolTip, isContextMenuOpenRef } =
-    useAppContext();
+  const { showTooltip, hideTooltip, isContextMenuOpenRef } = useAppContext();
   const [hoveredItem, setHoveredItem] = useState(false);
   const menuRef = useRef(null);
 
@@ -141,7 +140,6 @@ const ColorSelectMenu = ({
             return (
               <button
                 onClick={() => {
-                  closeToolTip();
                   handleColorClick(color);
                 }}
                 onMouseEnter={(e) => {
@@ -209,7 +207,6 @@ const ColorSelectMenu = ({
               return (
                 <button
                   onClick={() => {
-                    closeToolTip();
                     handleBackground(name);
                   }}
                   onMouseEnter={(e) => {

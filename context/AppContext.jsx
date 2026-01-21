@@ -23,9 +23,8 @@ export function AppProvider({ children, initialUser }) {
   const [loadingImages, setLoadingImages] = useState(new Set());
   const [labelsReady, setLabelsReady] = useState(false);
   const [isFiltered, setIsFiltered] = useState(false);
-  const [layout, setLayout] = useState(null);
+
   const [isOnline, setIsOnline] = useState(true);
-  const [breakpoint, setBreakpoint] = useState(1);
   const [initialLoading, setInitialLoading] = useState(false);
   const focusedIndex = useRef(null);
   const clientID = useRef(uuid());
@@ -51,20 +50,6 @@ export function AppProvider({ children, initialUser }) {
     currentSection !== "DynamicLabel" && currentSection !== "Search";
 
   useEffect(() => {
-    const width = window.innerWidth;
-
-    if (width < 341) {
-      setLayout("list");
-    } else {
-      const savedLayout = localStorage.getItem("layout");
-      setLayout(savedLayout);
-      setBreakpoint(width > 527 ? 1 : width < 400 ? 3 : 2);
-    }
-  }, []);
-
-  
-
-  useEffect(() => {
     focusedIndex.current = null;
     if (currentSection?.toLowerCase() === "search") return;
     requestAnimationFrame(() => {
@@ -81,16 +66,6 @@ export function AppProvider({ children, initialUser }) {
     }
     session && setUser(sessionUser);
   }, [session, status]);
-
-  useEffect(() => {
-    const savedLayout = localStorage.getItem("layout");
-    if (!savedLayout) {
-      localStorage.setItem("layout", "grid");
-      setLayout("grid");
-      return;
-    }
-    setLayout(window.innerWidth <= 384 ? "list" : savedLayout);
-  }, []);
 
   const tooltipTimeoutRef = useRef(null);
 
@@ -126,8 +101,8 @@ export function AppProvider({ children, initialUser }) {
       closeToolTip();
     };
 
-    document.addEventListener("click", handler);
-    return () => document.removeEventListener("click", handler);
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, []);
 
   useEffect(() => {
@@ -188,8 +163,6 @@ export function AppProvider({ children, initialUser }) {
         labelsReady,
         setLabelsReady,
         ignoreKeysRef,
-        layout,
-        setLayout,
         isFiltered,
         setIsFiltered,
         currentSection,
@@ -219,7 +192,6 @@ export function AppProvider({ children, initialUser }) {
         loadNextBatchRef,
         notesIndexMapRef,
         floatingBtnRef,
-        breakpoint,
         skipLabelObjRefresh,
         isActionModalOpenRef,
         isContextMenuOpenRef,

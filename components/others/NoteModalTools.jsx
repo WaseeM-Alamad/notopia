@@ -43,7 +43,6 @@ const ModalTools = ({
     clientID,
     showTooltip,
     hideTooltip,
-    closeToolTip,
     setDialogInfoRef,
     openSnackRef,
     notesStateRef,
@@ -72,13 +71,12 @@ const ModalTools = ({
             clientID: clientID,
           }),
       ],
-      openSnackRef.current
+      openSnackRef.current,
     );
   });
 
   const handleBackground = useCallback(
     async (newBG) => {
-      closeToolTip();
       if (localNote?.background === newBG) return;
       setLocalNote((prev) => ({ ...prev, background: newBG }));
 
@@ -98,10 +96,10 @@ const ModalTools = ({
               clientID: clientID,
             }),
         ],
-        openSnackRef.current
+        openSnackRef.current,
       );
     },
-    [localNote?.background]
+    [localNote?.background],
   );
 
   const handleOnChange = async (event) => {
@@ -181,7 +179,7 @@ const ModalTools = ({
     if (failedImages.length > 0) {
       const imagesSet = new Set(failedImages.map((img) => img.uuid));
       const filteredImages = newLocalImages.filter(
-        (img) => !imagesSet.has(img.uuid)
+        (img) => !imagesSet.has(img.uuid),
       );
       setLocalNote((prev) => ({
         ...prev,
@@ -220,7 +218,7 @@ const ModalTools = ({
           (img) => {
             if (imagesMap.has(img.uuid)) return imagesMap.get(img.uuid);
             return img;
-          }
+          },
         );
 
         setLocalNote((prev) => ({
@@ -250,7 +248,6 @@ const ModalTools = ({
   };
 
   const restoreNote = async () => {
-    closeToolTip();
     const undo = async () => {
       setLocalNote((prev) => ({ ...prev, isTrash: true }));
 
@@ -264,7 +261,7 @@ const ModalTools = ({
               clientID: clientID,
             }),
         ],
-        openSnackRef.current
+        openSnackRef.current,
       );
     };
 
@@ -281,7 +278,7 @@ const ModalTools = ({
               clientID: clientID,
             }),
         ],
-        openSnackRef.current
+        openSnackRef.current,
       );
     };
 
@@ -295,7 +292,6 @@ const ModalTools = ({
   };
 
   const toggleColorMenu = (e) => {
-    closeToolTip();
     const width = window.innerWidth;
 
     if (width < 605) {
@@ -307,7 +303,6 @@ const ModalTools = ({
   };
 
   const handleModalArchive = (e) => {
-    closeToolTip();
     archiveRef.current = true;
 
     setIsOpen(false);
@@ -340,7 +335,7 @@ const ModalTools = ({
 
     handleServerCall(
       [() => DeleteNoteAction(localNote.uuid, note?.creator?._id)],
-      openSnackRef.current
+      openSnackRef.current,
     );
   };
 
@@ -391,7 +386,7 @@ const ModalTools = ({
             clientID: clientID,
           }),
       ],
-      openSnackRef.current
+      openSnackRef.current,
     );
   };
 
@@ -415,13 +410,13 @@ const ModalTools = ({
             clientID: clientID,
           }),
       ],
-      openSnackRef.current
+      openSnackRef.current,
     );
   };
 
   const deleteCheckedItems = async () => {
     const newCheckboxArr = localNote?.checkboxes.filter(
-      (ch) => !ch.isCompleted
+      (ch) => !ch.isCompleted,
     );
 
     setLocalNote((prev) => ({ ...prev, checkboxes: newCheckboxArr }));
@@ -438,7 +433,7 @@ const ModalTools = ({
             clientID: clientID,
           }),
       ],
-      openSnackRef.current
+      openSnackRef.current,
     );
   };
 
@@ -456,12 +451,11 @@ const ModalTools = ({
             clientID: clientID,
           }),
       ],
-      openSnackRef.current
+      openSnackRef.current,
     );
   };
 
   const handleMoreMenu = (e) => {
-    closeToolTip();
     const width = window.innerWidth;
     if (width < 605) {
       setMenuDrawerOpen(true);
@@ -539,7 +533,6 @@ const ModalTools = ({
       tooltip: "Add image",
       style: { backgroundSize: "22px" },
       onClick: () => {
-        closeToolTip();
         inputRef.current.click();
       },
       type: "mobile",
@@ -569,7 +562,6 @@ const ModalTools = ({
     {
       className: "pc-btn person-add-icon btn-hover",
       onClick: () => {
-        closeToolTip();
         openCollab();
       },
       tooltip: "Collaborator",
@@ -582,7 +574,6 @@ const ModalTools = ({
     {
       className: "pc-btn image-icon btn-hover",
       onClick: () => {
-        closeToolTip();
         inputRef.current.click();
       },
       tooltip: "Add image",
@@ -635,7 +626,7 @@ const ModalTools = ({
                     style = {},
                     type = "pc",
                   },
-                  index
+                  index,
                 ) => {
                   return type === "mobile" ? (
                     <button
@@ -660,7 +651,7 @@ const ModalTools = ({
                       {Icon && <Icon direction={direction} />}
                     </Button>
                   );
-                }
+                },
               )}
             </>
           ) : (

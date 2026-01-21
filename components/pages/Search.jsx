@@ -20,7 +20,6 @@ const Search = ({
   noteActions,
   notesReady,
   containerRef,
-  isGrid,
   visibleItems,
   setVisibleItems,
 }) => {
@@ -36,7 +35,6 @@ const Search = ({
     setIsFiltered,
     showTooltip,
     hideTooltip,
-    closeToolTip,
     focusedIndex,
   } = useAppContext();
   const { labelsRef } = useLabelsContext();
@@ -240,7 +238,6 @@ const Search = ({
                         <div
                           className="filter-item-wrapper"
                           onClick={() => {
-                            closeToolTip();
                             resetText();
                             item.function(setItem);
                           }}
@@ -288,7 +285,6 @@ const Search = ({
             visibleItems={visibleItems}
             setVisibleItems={setVisibleItems}
             containerRef={containerRef}
-            isGrid={isGrid}
           />
         )}
       </div>

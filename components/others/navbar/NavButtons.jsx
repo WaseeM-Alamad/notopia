@@ -6,19 +6,14 @@ import RefreshIcon from "@/components/icons/RefreshIcon";
 import Button from "@/components/Tools/Button";
 import CustomThreeLineSpinner from "@/components/Tools/CustomSpinner";
 import { useAppContext } from "@/context/AppContext";
+import { useLayout } from "@/context/LayoutContext";
 import { useSearch } from "@/context/SearchContext";
 import { AnimatePresence, motion } from "framer-motion";
 import React, { useRef, useState, useEffect } from "react";
 
 const NavButtons = () => {
-  const {
-    hideTooltip,
-    showTooltip,
-    closeToolTip,
-    layout,
-    setLayout,
-    isOnline,
-  } = useAppContext();
+  const { hideTooltip, showTooltip, isOnline } = useAppContext();
+  const { layout } = useLayout();
 
   const [isLoading, setIsLoading] = useState(0);
   const [UpToDatetrigger, setUpToDateTrigger] = useState(true);
@@ -28,20 +23,8 @@ const NavButtons = () => {
   const timeoutRef = useRef(null);
 
   const handleRefresh = () => {
-    closeToolTip();
     if (!isLoading && UpToDatetrigger)
       window.dispatchEvent(new Event("refresh"));
-  };
-
-  const toggleLayout = () => {
-    closeToolTip();
-    if (isGrid) {
-      localStorage.setItem("layout", "list");
-      setLayout("list");
-    } else {
-      localStorage.setItem("layout", "grid");
-      setLayout("grid");
-    }
   };
 
   useEffect(() => {
@@ -87,7 +70,7 @@ const NavButtons = () => {
         onMouseLeave={hideTooltip}
         onFocus={(e) => showTooltip(e, isGrid ? "List view" : "Grid view")}
         onBlur={hideTooltip}
-        onClick={toggleLayout}
+        onClick={() => window.dispatchEvent(new Event("toggleLayout"))}
         className="nav-btn layout-btn"
       >
         {isGrid ? <ListIcon /> : <GridIcon />}

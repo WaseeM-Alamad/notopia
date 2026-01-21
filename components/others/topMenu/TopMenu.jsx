@@ -36,7 +36,6 @@ const TopMenuHome = ({
     clientID,
     showTooltip,
     hideTooltip,
-    closeToolTip,
     openSnackRef,
     setDialogInfoRef,
     fadeNote,
@@ -70,7 +69,6 @@ const TopMenuHome = ({
   };
 
   const handleClose = () => {
-    closeToolTip();
     setSelectedNotesIDs([]);
     setMoreMenuOpen(false);
     setLabelsOpen(false);
@@ -123,11 +121,10 @@ const TopMenuHome = ({
           setSelectedNumber(length);
         });
       });
-    }
-    else {
+    } else {
       requestAnimationFrame(() => {
-          setSelectedNumber(length);
-        });
+        setSelectedNumber(length);
+      });
     }
     if (selectedNotesIDs.length > 0) {
       selectedNotesRef.current = selectedNotesIDs;
@@ -181,7 +178,6 @@ const TopMenuHome = ({
   }, [selectedNotesIDs.length]);
 
   const handleOpenColor = (e) => {
-    closeToolTip();
     const width = window.innerWidth;
 
     if (width < 605) {
@@ -193,7 +189,6 @@ const TopMenuHome = ({
   };
 
   const handleColorClick = async (newColor) => {
-    closeToolTip();
     if (selectedColor === newColor) return;
     if (!filters.color) {
       localDbReducer({
@@ -223,7 +218,7 @@ const TopMenuHome = ({
             clientID: clientID,
           }),
       ],
-      openSnackRef.current
+      openSnackRef.current,
     );
   };
 
@@ -296,12 +291,11 @@ const TopMenuHome = ({
             clientID: clientID,
           }),
       ],
-      openSnackRef.current
+      openSnackRef.current,
     );
   };
 
   const handleArchive = async () => {
-    closeToolTip();
     const length = selectedNotesIDs.length;
     let clearSet = false;
 
@@ -349,7 +343,7 @@ const TopMenuHome = ({
             });
           }
         },
-        fadeNote ? 250 : 0
+        fadeNote ? 250 : 0,
       );
 
       handleServerCall(
@@ -363,7 +357,7 @@ const TopMenuHome = ({
               clientID,
             }),
         ],
-        openSnackRef.current
+        openSnackRef.current,
       );
     };
 
@@ -381,7 +375,7 @@ const TopMenuHome = ({
               clientID,
             }),
         ],
-        openSnackRef.current
+        openSnackRef.current,
       );
 
       if (fadeNote && !clearSet) {
@@ -435,7 +429,7 @@ const TopMenuHome = ({
       currentSection.toLowerCase() === "archive" &&
       notes.get(firstItem.uuid).isArchived;
     const clearSet = selectedNotesIDs.some(
-      (item) => !visibleItems.has(item.uuid)
+      (item) => !visibleItems.has(item.uuid),
     );
 
     if (clearSet) {
@@ -458,7 +452,7 @@ const TopMenuHome = ({
                   clientID,
                 }),
             ],
-            openSnackRef.current
+            openSnackRef.current,
           );
 
           localDbReducer({
@@ -522,7 +516,7 @@ const TopMenuHome = ({
               return updated;
             });
         },
-        ArchiveVal ? 250 : 0
+        ArchiveVal ? 250 : 0,
       );
 
       handleServerCall(
@@ -535,13 +529,12 @@ const TopMenuHome = ({
               clientID,
             }),
         ],
-        openSnackRef.current
+        openSnackRef.current,
       );
     });
   };
 
   const handleOpenMenu = (e) => {
-    closeToolTip();
     setAnchorEl(e.currentTarget);
     setMoreMenuOpen((prev) => !prev);
     setLabelsOpen(false);
@@ -627,7 +620,7 @@ const TopMenuHome = ({
                 clientID,
               }),
           ],
-          openSnackRef.current
+          openSnackRef.current,
         );
       };
 
@@ -671,7 +664,7 @@ const TopMenuHome = ({
                 clientID,
               }),
           ],
-          openSnackRef.current
+          openSnackRef.current,
         );
       };
 
@@ -735,7 +728,7 @@ const TopMenuHome = ({
 
     handleServerCall(
       [() => batchDeleteNotes(deletedNotesData, clientID)],
-      openSnackRef.current
+      openSnackRef.current,
     );
   };
 
@@ -765,7 +758,7 @@ const TopMenuHome = ({
           newImagesUUIDs.push(newImageUUID);
           imagesMap.set(
             newImageUUID,
-            `${note?.creator?._id}/${note?.uuid}/${image.uuid}`
+            `${note?.creator?._id}/${note?.uuid}/${image.uuid}`,
           );
           imagesToDel.push(`${userID}/${newNoteUUID}/`);
           newImages.push(newImage);
@@ -785,7 +778,7 @@ const TopMenuHome = ({
 
         copiedCheckboxes.forEach((checkbox) => {
           const newChildren = checkbox.children.map((childUUID) =>
-            oldToNewCBMap.get(childUUID)
+            oldToNewCBMap.get(childUUID),
           );
           const finalCheckbox = {
             ...checkbox,
@@ -852,7 +845,7 @@ const TopMenuHome = ({
               clientID: clientID,
             }),
         ],
-        openSnackRef.current
+        openSnackRef.current,
       );
       setLoadingImages((prev) => {
         const newSet = new Set(prev);
@@ -898,7 +891,7 @@ const TopMenuHome = ({
               clientID: clientID,
             }),
         ],
-        openSnackRef.current
+        openSnackRef.current,
       );
     };
 

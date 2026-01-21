@@ -32,8 +32,6 @@ export function useKeyBindings({
     clientID,
     currentSection,
     ignoreKeysRef,
-    layout,
-    setLayout,
     focusedIndex,
     addButtonRef,
     labelObjRef,
@@ -635,13 +633,7 @@ export function useKeyBindings({
         event.preventDefault();
         const width = window.innerWidth;
         if (width < 605) return;
-        if (layout === "grid") {
-          localStorage.setItem("layout", "list");
-          setLayout("list");
-        } else {
-          localStorage.setItem("layout", "grid");
-          setLayout("grid");
-        }
+        window.dispatchEvent(new Event("toggleLayout"));
       }
 
       if (
@@ -729,7 +721,6 @@ export function useKeyBindings({
   }, [
     currentSection,
     filters,
-    layout,
     notesStateRef,
     selectedNotesRef,
     undoFunction,

@@ -3,7 +3,7 @@ import { useLabelsContext } from "@/context/LabelsContext";
 import React from "react";
 
 const NoteLabels = ({ note, modalRemoveLabel = null, noteActions }) => {
-  const { closeToolTip, showTooltip, hideTooltip } = useAppContext();
+  const { showTooltip, hideTooltip } = useAppContext();
   const { labelsRef } = useLabelsContext();
 
   const handleLabelClick = (e, label) => {
@@ -44,7 +44,6 @@ const NoteLabels = ({ note, modalRemoveLabel = null, noteActions }) => {
               <div
                 onClick={(e) => {
                   e.stopPropagation();
-                  closeToolTip();
                   modalRemoveLabel
                     ? modalRemoveLabel(labelUUID)
                     : removeLabel(labelUUID);
