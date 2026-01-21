@@ -57,6 +57,7 @@ export function useNoteDragging({
       if (!document.body.classList.contains("dragging")) {
         document.body.classList.add("dragging");
       }
+      isTouch && window.dispatchEvent(new Event("topMenuClose"))
       const draggedElement = targetElement;
       const draggedInitialIndex = index;
       draggedIndexRef.current = index;

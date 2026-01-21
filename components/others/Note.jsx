@@ -304,25 +304,22 @@ const Note = memo(
       focusedIndex.current = notesIndexMapRef.current.get(note.uuid);
     };
 
-    const highlightMatch = useCallback(
-      (text) => {
-        if (!searchTerm) return text;
+    const highlightMatch = useCallback((text) => {
+      if (!searchTerm) return text;
 
-        const regex = new RegExp(`(${searchTerm.toLowerCase().trim()})`, "ig");
-        const parts = text.split(regex);
+      const regex = new RegExp(`(${searchTerm.toLowerCase().trim()})`, "ig");
+      const parts = text.split(regex);
 
-        return parts.map((part, index) =>
-          regex.test(part) ? (
-            <span key={index} className="highlight">
-              {part}
-            </span>
-          ) : (
-            part
-          ),
-        );
-      },
-      [],
-    );
+      return parts.map((part, index) =>
+        regex.test(part) ? (
+          <span key={index} className="highlight">
+            {part}
+          </span>
+        ) : (
+          part
+        ),
+      );
+    }, []);
 
     return (
       <>
@@ -390,12 +387,24 @@ const Note = memo(
             clearTimeout(touchTimerRef.current);
             setTimeout(() => {
               touchDownRef.current = false;
-            }, 200);
+            }, 0);
           }}
-          onTouchMove={() => {
+          onTouchMove={(e) => {
             if (!selected) {
               clearTimeout(touchTimerRef.current);
               return;
+            } else {
+              if (!touchDownRef.current) return;
+              handleSelectNote({
+                source: "touch",
+                e: e,
+                selected: selected,
+                setSelected: setSelected,
+                uuid: note?.uuid,
+                index: notesIndexMapRef.current.get(note.uuid),
+                isPinned: note?.isPinned,
+                isArchived: note.isArchived,
+              });
             }
           }}
           onMouseLeave={handleNoteMouseLeave}

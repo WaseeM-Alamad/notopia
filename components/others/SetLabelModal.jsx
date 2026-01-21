@@ -1,8 +1,9 @@
-import React, { memo, useCallback, useEffect, useRef, useState } from "react";
+import React, { memo, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAppContext } from "@/context/AppContext";
 import { useLabelsContext } from "@/context/LabelsContext";
+import { useGlobalContext } from "@/context/GlobalContext";
 
 const SetLabelModal = ({
   showCloseBtn = false,
@@ -17,7 +18,7 @@ const SetLabelModal = ({
     skipLabelObjRefresh,
     isActionModalOpenRef,
   } = useAppContext();
-  const { lockScroll } = useCallback();
+  const { lockScroll } = useGlobalContext();
   const [isMounted, setIsMounted] = useState(false);
   const [label, setLabel] = useState(labelObj?.label);
   const [error, setError] = useState("");

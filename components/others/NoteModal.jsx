@@ -757,9 +757,20 @@ const NoteModal = ({
       const editorBox = noteEditorRef?.current;
       if (!editorBox || !collabBox || !modal) return;
       clearTimeout(collabTimeoutRef.current);
+      const editorScrollableDiv = editorBox.querySelector(
+        ".modal-inputs-container",
+      );
+      const scrollableHeight = editorScrollableDiv.scrollHeight;
+      const modalHeight = modal.offsetHeight;
+      console.log(scrollableHeight);
+      if (scrollableHeight < modalHeight) {
+        editorScrollableDiv.style.overflow = "hidden";
+      }
+
+      editorBox.style.pointerEvents = "none";
       skipCenterRef.current = true;
       collabBox.style.display = "flex";
-      const modalHeight = modal.offsetHeight;
+
       const width = window.innerWidth;
       if (width < 605) {
         collabBox.style.transform = "translateY(70%)";
@@ -833,6 +844,9 @@ const NoteModal = ({
         collabBox.style.opacity = "0";
       });
       collabTimeoutRef.current = setTimeout(() => {
+        const editorScrollableDiv = editorBox.querySelector(
+          ".modal-inputs-container",
+        );
         modal.style.removeProperty("height");
         editorBox.style.position = "relative";
         editorBox.removeAttribute("style");

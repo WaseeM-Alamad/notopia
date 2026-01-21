@@ -244,7 +244,7 @@ const Home = memo(
       notesIndexMapRef,
       breakpoint,
     } = useAppContext();
-    const {calculateLayoutRef} = useGlobalContext();
+    const { calculateLayoutRef } = useGlobalContext();
     const userID = user?.id;
     const [pinnedHeight, setPinnedHeight] = useState(null);
     const lastAddedNoteRef = useRef(null);
