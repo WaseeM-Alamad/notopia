@@ -1,15 +1,10 @@
 "use client";
-import React, { memo, useCallback, useEffect, useRef, useState } from "react";
+import React, { memo, useEffect, useRef, useState } from "react";
 import Note from "../others/Note";
 import { motion } from "framer-motion";
-import { updateOrderAction } from "@/utils/actions";
 import ComposeNote from "../others/ComposeNote";
 import { useAppContext } from "@/context/AppContext";
-import handleServerCall from "@/utils/handleServerCall";
-import localDbReducer from "@/utils/localDbReducer";
 import { useNoteDragging } from "@/hooks/useNoteDragging";
-import { useGlobalContext } from "@/context/GlobalContext";
-import { useLayout } from "@/context/LayoutContext";
 import { useMasonry } from "@/context/MasonryContext";
 
 const GAP_BETWEEN_SECTIONS = 88;

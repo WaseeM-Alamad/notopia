@@ -67,10 +67,10 @@ export const MasonryProvider = ({
     }
   };
 
-  const isGrid = layout === "grid";
+  const [isGrid, setIsGrid] = useState(layout);
   const GAP_BETWEEN_SECTIONS = 88;
   const gridNoteWidth = breakpoint === 1 ? 240 : breakpoint === 2 ? 180 : 150;
-  const COLUMN_WIDTH = layout === "grid" ? gridNoteWidth : 600;
+  const COLUMN_WIDTH = isGrid ? gridNoteWidth : 600;
   const GUTTER = breakpoint === 1 ? 15 : 8;
   const [sectionsHeight, setSectionsHeight] = useState(null);
   const resizeTimeoutRef = useRef(null);
@@ -114,6 +114,14 @@ export const MasonryProvider = ({
       if (!container) return;
 
       const section = currentSection?.toLowerCase();
+      const willCalcArchSection = [
+        "search",
+        "dynamiclabel",
+        "archive",
+      ].includes(section);
+      const isArchSection = section === "archive";
+      const isTrashSection = section === "trash";
+      const isHomeSection = section === "home";
 
       const parent = container.parentElement;
       const parentWidth = parent.clientWidth;
@@ -131,33 +139,47 @@ export const MasonryProvider = ({
       container.style.left = "50%";
       container.style.transform = "translateX(-50%)";
 
-      // Get all the items in the container
-      // const items = Array.from(container.children);
       const items = notesStateRef.current.order.map((uuid, index) => {
         const note = notesStateRef.current.notes.get(uuid);
         return { ...note, index: index };
       });
 
-      // Sort items based on their position value (ascending order)
       const sortedItems = items.sort((a, b) => {
-        return a.index - b.index; // Ascending order
+        return a.index - b.index;
       });
 
-      // Filter out pinned and unpinned items
-      const pinnedItems = sortedItems.filter((item) => {
-        if (!isInCurrentSection(item) || item.isTrash || item.isArchived)
-          return false;
-        return item.isPinned === true;
-      });
-      const unpinnedItems = sortedItems.filter((item) => {
-        if (!isInCurrentSection(item) || item.isTrash || item.isArchived)
-          return false;
-        return item.isPinned === false;
-      });
-      const archivedItems = sortedItems.filter((item) => {
-        if (!isInCurrentSection(item) || item.isTrash) return false;
-        return item.isArchived === true;
-      });
+      let pinnedItems = [];
+
+      if (!isArchSection && !isTrashSection) {
+        pinnedItems = sortedItems.filter((item) => {
+          if (!isInCurrentSection(item) || item.isTrash || item.isArchived)
+            return false;
+          return item.isPinned === true;
+        });
+      }
+
+      let unpinnedItems = [];
+
+      if (!isArchSection) {
+        unpinnedItems = sortedItems.filter((item) => {
+          if (
+            !isInCurrentSection(item) ||
+            (!isTrashSection && item.isTrash) ||
+            item.isArchived
+          )
+            return false;
+          return item.isPinned === false;
+        });
+      }
+
+      let archivedItems = [];
+
+      if (!isTrashSection && !isHomeSection) {
+        archivedItems = sortedItems.filter((item) => {
+          if (!isInCurrentSection(item) || item.isTrash) return false;
+          return item.isArchived === true;
+        });
+      }
 
       const positionItems = (itemList, startY = 0) => {
         const columnHeights = new Array(columns).fill(startY);
@@ -184,11 +206,10 @@ export const MasonryProvider = ({
         return Math.max(...columnHeights);
       };
 
-      // Gap between pinned and unpinned sections
-      const pinnedHeight = positionItems(
-        pinnedItems,
-        pinnedItems.length > 0 && 30,
-      );
+      let pinnedHeight = 0;
+      if (!isArchSection) {
+        pinnedHeight = positionItems(pinnedItems, pinnedItems.length > 0 && 30);
+      }
 
       const unpinnedGap = pinnedItems.length > 0 ? GAP_BETWEEN_SECTIONS : 0;
       const unpinnedHeight = positionItems(
@@ -205,9 +226,9 @@ export const MasonryProvider = ({
 
       let archivedHeight = 0;
 
-      const archivedY = unpinnedHeight + archivedGap || 30;
-      const willCalcArch = ["search", "dynamiclabel"].includes(section);
-      if (willCalcArch) {
+      const archivedY = isArchSection ? 0 : unpinnedHeight + archivedGap || 30;
+
+      if (willCalcArchSection) {
         archivedHeight = positionItems(archivedItems, archivedY);
       }
 
@@ -219,10 +240,10 @@ export const MasonryProvider = ({
           ? GAP_BETWEEN_SECTIONS + 2
           : 32);
 
-      setSectionsHeight(willCalcArch ? sectionGap - 16 : unpinnedHeight);
+      setSectionsHeight(willCalcArchSection ? sectionGap - 16 : unpinnedHeight);
 
       setPinnedHeight(pinnedHeight + GAP_BETWEEN_SECTIONS + 2 - 16);
-      container.style.height = `${willCalcArch ? archivedHeight : unpinnedHeight}px`;
+      container.style.height = `${willCalcArchSection ? archivedHeight : unpinnedHeight}px`;
     });
   }, [labelObj, isGrid, COLUMN_WIDTH, GUTTER, currentSection]);
 
@@ -236,9 +257,7 @@ export const MasonryProvider = ({
   }, [calculateLayout, labelObj]);
 
   useEffect(() => {
-    setTimeout(() => {
-      calculateLayout();
-    }, 0);
+    calculateLayout();
     window.addEventListener("resize", debouncedCalculateLayout);
 
     return () => {
@@ -257,6 +276,12 @@ export const MasonryProvider = ({
     visibleItems,
     order,
   ]);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setIsGrid(layout === "grid");
+    }, 10);
+  }, [layout]);
 
   return (
     <MasonryContext.Provider

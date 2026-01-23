@@ -6,6 +6,7 @@ import { useAppContext } from "@/context/AppContext";
 import SectionHeader from "../others/SectionHeader";
 import { useGlobalContext } from "@/context/GlobalContext";
 import { useLayout } from "@/context/LayoutContext";
+import { useMasonry } from "@/context/MasonryContext";
 
 const NoteWrapper = memo(
   ({
@@ -85,7 +86,6 @@ NoteWrapper.displayName = "NoteWrapper";
 const Archive = memo(
   ({
     visibleItems,
-    notesStateRef,
     selectedNotesRef,
     notes,
     order,
@@ -100,127 +100,7 @@ const Archive = memo(
     notesReady,
     containerRef,
   }) => {
-    const { focusedIndex } = useAppContext();
-    const { layout, breakpoint } = useLayout();
-    const { calculateLayoutRef } = useGlobalContext();
-    const isGrid = layout === "grid";
-
-    const gridNoteWidth = breakpoint === 1 ? 240 : breakpoint === 2 ? 180 : 150;
-    const COLUMN_WIDTH = layout === "grid" ? gridNoteWidth : 600;
-    const GUTTER = breakpoint === 1 ? 15 : 8;
-    const resizeTimeoutRef = useRef(null);
-    const layoutFrameRef = useRef(null);
-
-    const notesExist = order.some((uuid, index) => {
-      const note = notes.get(uuid);
-      if (!note) return false;
-      if (!note?.isArchived || note?.isTrash) return false;
-      if (!focusedIndex.current) {
-        focusedIndex.current = index;
-      }
-      return true;
-    });
-
-    const calculateLayout = useCallback(() => {
-      if (layoutFrameRef.current) {
-        cancelAnimationFrame(layoutFrameRef.current);
-      }
-
-      layoutFrameRef.current = requestAnimationFrame(() => {
-        const container = containerRef.current;
-        if (!container) return;
-
-        const parent = container.parentElement;
-        const parentWidth = parent.clientWidth;
-        const style = window.getComputedStyle(parent);
-        const paddingLeft = parseFloat(style.paddingLeft) || 0;
-        const paddingRight = parseFloat(style.paddingRight) || 0;
-        const availableWidth = parentWidth - paddingLeft - paddingRight;
-
-        const columns = !isGrid
-          ? 1
-          : Math.max(1, Math.floor(availableWidth / (COLUMN_WIDTH + GUTTER)));
-        const contentWidth = !isGrid
-          ? COLUMN_WIDTH
-          : columns * (COLUMN_WIDTH + GUTTER) - GUTTER;
-
-        container.style.width = `${contentWidth}px`;
-        container.style.maxWidth = isGrid ? "100%" : "95%";
-        container.style.position = "relative";
-        container.style.left = "50%";
-        container.style.transform = "translateX(-50%)";
-
-        const items = notesStateRef.current.order.map((uuid, index) => {
-          const note = notesStateRef.current.notes.get(uuid);
-          return { ...note, index: index };
-        });
-
-        const positionItems = (itemList) => {
-          const columnHeights = new Array(columns).fill(0);
-
-          itemList.forEach((item) => {
-            const wrapper = item.ref?.current?.parentElement;
-            if (!wrapper) return;
-            const minColumnIndex = columnHeights.indexOf(
-              Math.min(...columnHeights),
-            );
-            const x = minColumnIndex * (COLUMN_WIDTH + GUTTER);
-            const y = columnHeights[minColumnIndex];
-
-            wrapper.style.transform = `translate(${x}px, ${y}px)`;
-            wrapper.style.position = "absolute";
-
-            columnHeights[minColumnIndex] += wrapper.offsetHeight + GUTTER;
-          });
-
-          return Math.max(...columnHeights);
-        };
-
-        const totalHeight = positionItems(Array.from(items));
-        container.style.height = `${totalHeight}px`;
-      });
-    }, [isGrid, COLUMN_WIDTH, GUTTER]);
-
-    const debouncedCalculateLayout = useCallback(() => {
-      if (resizeTimeoutRef.current) {
-        clearTimeout(resizeTimeoutRef.current);
-      }
-      resizeTimeoutRef.current = setTimeout(() => {
-        calculateLayout();
-      }, 100);
-    }, [calculateLayout]);
-
-    useEffect(() => {
-      calculateLayoutRef.current = calculateLayout;
-    }, [calculateLayout, layout]);
-
-    useEffect(() => {
-      calculateLayout();
-    }, [visibleItems]);
-
-    useEffect(() => {
-      setTimeout(() => {
-        calculateLayout();
-      }, 0);
-      window.addEventListener("resize", debouncedCalculateLayout);
-
-      return () => {
-        window.removeEventListener("resize", debouncedCalculateLayout);
-        if (resizeTimeoutRef.current) {
-          clearTimeout(resizeTimeoutRef.current);
-        }
-        if (layoutFrameRef.current) {
-          cancelAnimationFrame(layoutFrameRef.current);
-        }
-      };
-    }, [calculateLayout, debouncedCalculateLayout, notes]);
-
-    useEffect(() => {
-      if (notes.length > 0) {
-        const timer = setTimeout(calculateLayout, 50);
-        return () => clearTimeout(timer);
-      }
-    }, [notes, calculateLayout]);
+    const { gridNoteWidth, GUTTER, isGrid, notesExist } = useMasonry();
 
     return (
       <>
