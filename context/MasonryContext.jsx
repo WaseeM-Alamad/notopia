@@ -245,7 +245,15 @@ export const MasonryProvider = ({
       setPinnedHeight(pinnedHeight + GAP_BETWEEN_SECTIONS + 2 - 16);
       container.style.height = `${willCalcArchSection ? archivedHeight : unpinnedHeight}px`;
     });
-  }, [labelObj, isGrid, COLUMN_WIDTH, GUTTER, currentSection]);
+  }, [
+    labelObj,
+    isGrid,
+    COLUMN_WIDTH,
+    GUTTER,
+    currentSection,
+    filters,
+    visibleItems,
+  ]);
 
   const debouncedCalculateLayout = useCallback(() => {
     if (resizeTimeoutRef.current) {
@@ -254,7 +262,7 @@ export const MasonryProvider = ({
     resizeTimeoutRef.current = setTimeout(() => {
       calculateLayout();
     }, 100);
-  }, [calculateLayout, labelObj]);
+  }, [calculateLayout]);
 
   useEffect(() => {
     calculateLayout();
@@ -275,6 +283,7 @@ export const MasonryProvider = ({
     labelObj,
     visibleItems,
     order,
+    notes,
   ]);
 
   useEffect(() => {

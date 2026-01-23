@@ -1,6 +1,6 @@
 "use client";
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
-import Note from "../others/Note";
+import Note from "../others/note/Note";
 import { motion } from "framer-motion";
 import { useAppContext } from "@/context/AppContext";
 import handleServerCall from "@/utils/handleServerCall";
@@ -10,80 +10,7 @@ import SectionHeader from "../others/SectionHeader";
 import { useGlobalContext } from "@/context/GlobalContext";
 import { useLayout } from "@/context/LayoutContext";
 import { useMasonry } from "@/context/MasonryContext";
-
-const NoteWrapper = memo(
-  ({
-    gridNoteWidth,
-    GUTTER,
-    isGrid,
-    note,
-    noteActions,
-    selectedNotesRef,
-    ref,
-    setSelectedNotesIDs,
-    dispatchNotes,
-    selectedNotes,
-    index,
-    handleSelectNote,
-    handleNoteClick,
-    fadingNotes,
-  }) => {
-    const [mounted, setMounted] = useState(false);
-    const touchDownRef = useRef(null);
-
-    useEffect(() => {
-      requestAnimationFrame(() => {
-        setMounted(true);
-      });
-    }, []);
-
-    return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.2, type: "tween" }}
-      >
-        <div
-          ref={ref}
-          className={`grid-item ${
-            fadingNotes.has(note?.uuid) ? "fade-out" : ""
-          }`}
-          onClick={(e) =>
-            !touchDownRef.current && handleNoteClick(e, note, index)
-          }
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              !touchDownRef.current && handleNoteClick(e, note, index);
-            }
-          }}
-          style={{
-            maxWidth: `${isGrid ? gridNoteWidth : 600}px`,
-            width: "100%",
-            marginBottom: `${GUTTER}px`,
-            transition: `transform ${
-              mounted ? "0.22s" : "0"
-            } cubic-bezier(0.5, 0.2, 0.3, 1), opacity 0s`,
-          }}
-        >
-          <Note
-            note={note}
-            selectedNotesRef={selectedNotesRef}
-            noteActions={noteActions}
-            setSelectedNotesIDs={setSelectedNotesIDs}
-            selectedNotes={selectedNotes}
-            dispatchNotes={dispatchNotes}
-            handleSelectNote={handleSelectNote}
-            handleNoteClick={handleNoteClick}
-            touchDownRef={touchDownRef}
-          />
-          {/* <p>{index}</p> */}
-        </div>
-      </motion.div>
-    );
-  },
-);
-
-NoteWrapper.displayName = "NoteWrapper";
+import NoteWrapper from "../others/note/NoteWrapper";
 
 const Trash = memo(
   ({
@@ -104,7 +31,8 @@ const Trash = memo(
     containerRef,
   }) => {
     const { openSnackRef, user, setDialogInfoRef, clientID } = useAppContext();
-    const { gridNoteWidth, GUTTER, isGrid, notesExist } = useMasonry();
+    const { gridNoteWidth, GUTTER, isGrid, notesExist, calculateLayout } =
+      useMasonry();
     const userID = user?.id;
 
     const handleEmptyTrash = async () => {
@@ -188,6 +116,7 @@ const Trash = memo(
                     fadingNotes={fadingNotes}
                     gridNoteWidth={gridNoteWidth}
                     GUTTER={GUTTER}
+                    calculateLayout={calculateLayout}
                   />
                 );
             })}

@@ -195,7 +195,7 @@ export function useBatchLoading({
               version: version,
             });
           },
-          timeout ? 100 : 10,
+          timeout ? 100 : 0,
         );
       });
     });
@@ -312,10 +312,6 @@ export function useBatchLoading({
 
   useEffect(() => {
     if (!notesReady || !labelsReady) return;
-
-    if (currentSection?.toLowerCase() === "dynamiclabel") {
-      return;
-    }
 
     resetBatchLoading();
     const version = layoutVersionRef.current;

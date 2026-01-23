@@ -8,21 +8,21 @@ import React, {
 } from "react";
 import "@/assets/styles/LinearLoader.css";
 import NoteTools from "./NoteTools";
-import PinIcon from "../icons/PinIcon";
 import { NoteUpdateAction } from "@/utils/actions";
-import Button from "../Tools/Button";
-import NoteImagesLayout from "../Tools/NoteImagesLayout";
-import CheckMark from "../icons/CheckMark";
 import { useAppContext } from "@/context/AppContext";
-import ImageDropZone from "../Tools/ImageDropZone";
 import { AnimatePresence } from "framer-motion";
 import { useLastInputWasKeyboard } from "@/hooks/useLastInputWasKeyboard";
 import handleServerCall from "@/utils/handleServerCall";
 import localDbReducer from "@/utils/localDbReducer";
 import { useSearch } from "@/context/SearchContext";
-import NoteLabels from "./NoteLabels";
-import NoteCollabs from "./NoteCollabs";
-import NoteOverlay from "./NoteOverlay";
+import PinIcon from "@/components/icons/PinIcon";
+import Button from "@/components/Tools/Button";
+import NoteImagesLayout from "@/components/Tools/NoteImagesLayout";
+import CheckMark from "@/components/icons/CheckMark";
+import ImageDropZone from "@/components/Tools/ImageDropZone";
+import NoteLabels from "../NoteLabels";
+import NoteCollabs from "../NoteCollabs";
+import NoteOverlay from "../NoteOverlay";
 
 const Note = memo(
   ({
@@ -34,8 +34,9 @@ const Note = memo(
     setFadingNotes,
     handleSelectNote,
     handleNoteClick,
-    touchDownRef,
+    touchDownRef = { current: false },
     startDragging,
+    isHomeSection,
   }) => {
     const {
       user,
@@ -392,7 +393,7 @@ const Note = memo(
               clearTimeout(touchTimerRef.current);
               return;
             } else {
-              if (!touchDownRef.current) return;
+              if (!touchDownRef.current || !isHomeSection) return;
               handleSelectNote({
                 source: "touch",
                 e: e,

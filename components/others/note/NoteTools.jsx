@@ -1,17 +1,16 @@
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import { NoteUpdateAction, removeSelfAction } from "@/utils/actions";
-import ColorSelectMenu from "./ColorSelectMenu";
-import Button from "../Tools/Button";
 import { v4 as uuid } from "uuid";
-import Menu from "./Menu";
 import { AnimatePresence } from "framer-motion";
 import { useAppContext } from "@/context/AppContext";
-import ManageLabelsMenu from "./ManageLabelsMenu";
 import { useSearch } from "@/context/SearchContext";
 import { validateImageFile } from "@/utils/validateImage";
 import handleServerCall from "@/utils/handleServerCall";
 import localDbReducer from "@/utils/localDbReducer";
-import ColorDrawer from "./ColorDrawer.jsx";
+import ColorSelectMenu from "../ColorSelectMenu";
+import Button from "@/components/Tools/Button";
+import Menu from "../Menu";
+import ManageLabelsMenu from "../ManageLabelsMenu";
 
 const NoteTools = ({
   note = {},

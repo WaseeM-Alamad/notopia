@@ -38,6 +38,8 @@ const NavMidSection = () => {
       const hash = window.location.hash.replace("#", "");
       const decodedHash = doubleDecode(hash.replace("search/", ""));
 
+      if (hash.toLowerCase().startsWith("note/")) return;
+
       if (hash.startsWith("search/")) {
         const filters = decodedHash.split("&");
 

@@ -763,7 +763,6 @@ const NoteModal = ({
       );
       const scrollableHeight = editorScrollableDiv.scrollHeight;
       const modalHeight = modal.offsetHeight;
-      console.log(scrollableHeight);
       if (scrollableHeight < modalHeight) {
         editorScrollableDiv.style.overflow = "hidden";
       }

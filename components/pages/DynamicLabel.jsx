@@ -7,7 +7,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import Note from "../others/Note";
+import Note from "../others/note/Note";
 import { AnimatePresence, motion } from "framer-motion";
 import { getNoteFormattedDate } from "@/utils/noteDateFormatter";
 import ComposeNote from "../others/ComposeNote";
@@ -17,95 +17,7 @@ import SetLabelModal from "../others/SetLabelModal";
 import { useGlobalContext } from "@/context/GlobalContext";
 import { useLayout } from "@/context/LayoutContext";
 import { useMasonry } from "@/context/MasonryContext";
-
-const NoteWrapper = memo(
-  ({
-    gridNoteWidth,
-    GUTTER,
-    dispatchNotes,
-    selectedNotesRef,
-    isGrid,
-    note,
-    noteActions,
-    fadingNotes,
-    setFadingNotes,
-    setSelectedNotesIDs,
-    index,
-    handleSelectNote,
-    handleNoteClick,
-    calculateLayout,
-  }) => {
-    const [mounted, setMounted] = useState(false);
-    const [height, setHeight] = useState(0);
-    const touchDownRef = useRef(null);
-    const noteRef = useRef(null);
-
-    useEffect(() => {
-      if (!noteRef.current) return;
-
-      const observer = new ResizeObserver(([entry]) => {
-        setHeight(entry.contentRect.height);
-      });
-
-      observer.observe(noteRef.current);
-
-      return () => observer.disconnect();
-    }, []);
-
-    useEffect(() => {
-      calculateLayout();
-    }, [height]);
-
-    useEffect(() => {
-      requestAnimationFrame(() => {
-        setMounted(true);
-      });
-    }, []);
-
-    return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.2, type: "tween" }}
-      >
-        <div
-          ref={noteRef}
-          onClick={(e) =>
-            !touchDownRef.current && handleNoteClick(e, note, index)
-          }
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              !touchDownRef.current && handleNoteClick(e, note, index);
-            }
-          }}
-          className={`grid-item ${
-            fadingNotes.has(note?.uuid) ? "fade-out" : ""
-          }`}
-          style={{
-            maxWidth: `${isGrid ? gridNoteWidth : 600}px`,
-            width: "100%",
-            marginBottom: `${GUTTER}px`,
-            transition: `transform ${
-              mounted ? "0.22s" : "0"
-            } cubic-bezier(0.5, 0.2, 0.3, 1), opacity 0s`,
-          }}
-        >
-          <Note
-            dispatchNotes={dispatchNotes}
-            note={note}
-            noteActions={noteActions}
-            selectedNotesRef={selectedNotesRef}
-            setFadingNotes={setFadingNotes}
-            setSelectedNotesIDs={setSelectedNotesIDs}
-            handleSelectNote={handleSelectNote}
-            handleNoteClick={handleNoteClick}
-            touchDownRef={touchDownRef}
-          />
-        </div>
-      </motion.div>
-    );
-  },
-);
+import NoteWrapper from "../others/note/NoteWrapper";
 
 const DynamicLabel = ({
   visibleItems,
