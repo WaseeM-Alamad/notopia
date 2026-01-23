@@ -179,7 +179,7 @@ export function useRealtimeUpdates({
     };
 
     eventSourceRef.current.onerror = (error) => {
-      console.error("EventSource failed:", error);
+      // console.error("EventSource failed:", error);
     };
 
     return () => {

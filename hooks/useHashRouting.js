@@ -159,7 +159,7 @@ export function useHashRouting({
     return () => {
       window.removeEventListener("hashchange", handleHashChange);
     };
-  }, [labelsReady]);
+  }, [labelsReady, currentSection]);
 
   useEffect(() => {
     if (firstRun.current) {

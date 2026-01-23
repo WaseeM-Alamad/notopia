@@ -15,7 +15,7 @@ const GalleryCarousel = ({
 }) => {
   const [emblaRef, emblaApi] = useEmblaCarousel(
     { loop: false, startIndex: startIndex },
-    [ClassNames()]
+    [ClassNames()],
   );
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -150,7 +150,7 @@ const GalleryCarousel = ({
       />
     </motion.div>,
 
-    document.getElementById("modal-portal")
+    document.getElementById("modal-portal"),
   );
 };
 

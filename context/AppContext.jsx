@@ -98,11 +98,23 @@ export function AppProvider({ children, initialUser }) {
 
   useEffect(() => {
     const handler = () => {
-      closeToolTip();
+      requestAnimationFrame(() => {
+        closeToolTip();
+      });
     };
 
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  useEffect(() => {
+    const handler = () => {
+      closeToolTip();
+    };
+
+    window.addEventListener("blur", handler);
+
+    return () => window.removeEventListener("blur", handler);
   }, []);
 
   useEffect(() => {

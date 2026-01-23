@@ -16,8 +16,7 @@ import SectionHeader from "../others/SectionHeader";
 import SetLabelModal from "../others/SetLabelModal";
 import { useGlobalContext } from "@/context/GlobalContext";
 import { useLayout } from "@/context/LayoutContext";
-
-const GAP_BETWEEN_SECTIONS = 88;
+import { useMasonry } from "@/context/MasonryContext";
 
 const NoteWrapper = memo(
   ({
@@ -34,9 +33,28 @@ const NoteWrapper = memo(
     index,
     handleSelectNote,
     handleNoteClick,
+    calculateLayout,
   }) => {
     const [mounted, setMounted] = useState(false);
+    const [height, setHeight] = useState(0);
     const touchDownRef = useRef(null);
+    const noteRef = useRef(null);
+
+    useEffect(() => {
+      if (!noteRef.current) return;
+
+      const observer = new ResizeObserver(([entry]) => {
+        setHeight(entry.contentRect.height);
+      });
+
+      observer.observe(noteRef.current);
+
+      return () => observer.disconnect();
+    }, []);
+
+    useEffect(() => {
+      calculateLayout();
+    }, [height]);
 
     useEffect(() => {
       requestAnimationFrame(() => {
@@ -51,6 +69,7 @@ const NoteWrapper = memo(
         transition={{ duration: 0.2, type: "tween" }}
       >
         <div
+          ref={noteRef}
           onClick={(e) =>
             !touchDownRef.current && handleNoteClick(e, note, index)
           }
@@ -93,7 +112,6 @@ const DynamicLabel = ({
   setVisibleItems,
   dispatchNotes,
   notes,
-  notesStateRef,
   selectedNotesRef,
   noteActions,
   notesReady,
@@ -104,221 +122,23 @@ const DynamicLabel = ({
   setSelectedNotesIDs,
   handleNoteClick,
   handleSelectNote,
-  labelObj,
   containerRef,
+  labelObj,
 }) => {
-  const { focusedIndex } = useAppContext();
-  const { layout, breakpoint } = useLayout();
-  const { calculateLayoutRef } = useGlobalContext();
-  const [pinnedHeight, setPinnedHeight] = useState(null);
-  const [sectionsHeight, setSectionsHeight] = useState(null);
-  const [layoutReady, setLayoutReady] = useState(false);
+  const {
+    gridNoteWidth,
+    GUTTER,
+    isGrid,
+    pinnedHeight,
+    sectionsHeight,
+    notesExist,
+    hasArchivedNotes,
+    hasPinned,
+    hasUnpinned,
+    calculateLayout,
+  } = useMasonry();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const resizeTimeoutRef = useRef(null);
-  const layoutFrameRef = useRef(null);
   const lastAddedNoteRef = useRef(null);
-  const isGrid = layout === "grid";
-
-  const gridNoteWidth = breakpoint === 1 ? 240 : breakpoint === 2 ? 180 : 150;
-  const COLUMN_WIDTH = layout === "grid" ? gridNoteWidth : 600;
-  const GUTTER = breakpoint === 1 ? 15 : 8;
-
-  const hasPinned = [...visibleItems].some((uuid) => {
-    const note = notes.get(uuid);
-    return note?.isPinned;
-  });
-
-  const hasUnpinned = [...visibleItems].some((uuid) => {
-    const note = notes.get(uuid);
-    if (!note) return false;
-    return !note?.isPinned && !note?.isArchived;
-  });
-
-  const hasArchivedNotes = [...visibleItems].some((uuid) => {
-    const note = notes.get(uuid);
-    return note?.isArchived;
-  });
-
-  const notesExist = order.some((uuid, index) => {
-    const note = notes.get(uuid);
-    if (!note) return false;
-    if (!note?.labels?.includes(labelObj?.uuid) || note?.isTrash) return false;
-    if (!focusedIndex.current) {
-      focusedIndex.current = index;
-    }
-    return true;
-  });
-
-  const calculateLayout = useCallback(() => {
-    if (layoutFrameRef.current) {
-      cancelAnimationFrame(layoutFrameRef.current);
-    }
-
-    layoutFrameRef.current = requestAnimationFrame(() => {
-      const container = containerRef.current;
-      if (!container) return;
-
-      const parent = container.parentElement;
-      const parentWidth = parent.clientWidth;
-      const style = window.getComputedStyle(parent);
-      const paddingLeft = parseFloat(style.paddingLeft) || 0;
-      const paddingRight = parseFloat(style.paddingRight) || 0;
-      const availableWidth = parentWidth - paddingLeft - paddingRight;
-
-      const columns = !isGrid
-        ? 1
-        : Math.max(1, Math.floor(availableWidth / (COLUMN_WIDTH + GUTTER)));
-      const contentWidth = !isGrid
-        ? COLUMN_WIDTH
-        : columns * (COLUMN_WIDTH + GUTTER) - GUTTER;
-
-      container.style.width = `${contentWidth}px`;
-      container.style.maxWidth = isGrid ? "100%" : "95%";
-      container.style.position = "relative";
-      container.style.left = "50%";
-      container.style.transform = "translateX(-50%)";
-
-      // Get all the items in the container
-      // const items = Array.from(container.children);
-      const items = notesStateRef.current.order.map((uuid, index) => {
-        const note = notesStateRef.current.notes.get(uuid);
-        return { ...note, index: index };
-      });
-
-      // Sort items based on their position value (ascending order)
-      const sortedItems = items.sort((a, b) => {
-        return a.index - b.index; // Ascending order
-      });
-
-      // Filter out pinned and unpinned items
-      const pinnedItems = sortedItems.filter((item) => {
-        if (
-          !item?.labels?.includes(labelObj?.uuid) ||
-          item.isTrash ||
-          item.isArchived
-        )
-          return false;
-        return item.isPinned === true;
-      });
-      const unpinnedItems = sortedItems.filter((item) => {
-        if (
-          !item?.labels?.includes(labelObj?.uuid) ||
-          item.isTrash ||
-          item.isArchived
-        )
-          return false;
-        return item.isPinned === false;
-      });
-
-      const archivedItems = sortedItems.filter((item) => {
-        if (!item?.labels?.includes(labelObj?.uuid) || item.isTrash)
-          return false;
-        return item.isArchived === true;
-      });
-
-      const positionItems = (itemList, startY = 0) => {
-        const columnHeights = new Array(columns).fill(startY);
-
-        itemList.forEach((item) => {
-          const wrapper = item.ref?.current?.parentElement;
-
-          if (!wrapper) {
-            return;
-          }
-
-          const minColumnIndex = columnHeights.indexOf(
-            Math.min(...columnHeights),
-          );
-          const x = minColumnIndex * (COLUMN_WIDTH + GUTTER);
-          const y = columnHeights[minColumnIndex];
-
-          wrapper.style.transform = `translate(${x}px, ${y}px)`;
-          wrapper.style.position = "absolute";
-
-          columnHeights[minColumnIndex] += wrapper.offsetHeight + GUTTER;
-        });
-
-        return Math.max(...columnHeights);
-      };
-
-      // Gap between pinned and unpinned sections
-      const pinnedHeight = positionItems(
-        pinnedItems,
-        pinnedItems.length > 0 && 30,
-      );
-
-      const unpinnedGap = pinnedItems.length > 0 ? GAP_BETWEEN_SECTIONS : 0;
-      const unpinnedHeight = positionItems(
-        unpinnedItems,
-        pinnedHeight + unpinnedGap,
-      );
-
-      const archivedGap =
-        unpinnedItems.length > 0 || pinnedItems.length > 0
-          ? pinnedItems.length > 0 && unpinnedItems.length === 0
-            ? 0
-            : GAP_BETWEEN_SECTIONS
-          : 0;
-
-      const archivedY = unpinnedHeight + archivedGap || 30;
-      const archivedHeight = positionItems(archivedItems, archivedY);
-
-      const sectionGap =
-        (pinnedItems.length > 0 && unpinnedItems.length === 0
-          ? unpinnedHeight - GAP_BETWEEN_SECTIONS
-          : unpinnedHeight) +
-        (pinnedItems.length > 0 || unpinnedItems.length > 0
-          ? GAP_BETWEEN_SECTIONS + 2
-          : 32);
-
-      setSectionsHeight(sectionGap - 16);
-
-      setPinnedHeight(pinnedHeight + GAP_BETWEEN_SECTIONS + 2 - 16);
-      container.style.height = `${archivedHeight}px`;
-      setLayoutReady(true);
-    });
-  }, [labelObj, isGrid, COLUMN_WIDTH, GUTTER]);
-
-  const debouncedCalculateLayout = useCallback(() => {
-    if (resizeTimeoutRef.current) {
-      clearTimeout(resizeTimeoutRef.current);
-    }
-    resizeTimeoutRef.current = setTimeout(() => {
-      calculateLayout();
-    }, 100);
-  }, [calculateLayout, labelObj]);
-
-  useEffect(() => {
-    calculateLayoutRef.current = calculateLayout;
-  }, [calculateLayout, layout]);
-
-  useEffect(() => {
-    setTimeout(() => {
-      calculateLayout();
-    }, 0);
-    window.addEventListener("resize", debouncedCalculateLayout);
-
-    return () => {
-      window.removeEventListener("resize", debouncedCalculateLayout);
-      if (resizeTimeoutRef.current) {
-        clearTimeout(resizeTimeoutRef.current);
-      }
-      if (layoutFrameRef.current) {
-        cancelAnimationFrame(layoutFrameRef.current);
-      }
-    };
-  }, [calculateLayout, debouncedCalculateLayout, notes, order, labelObj]);
-
-  useEffect(() => {
-    if (notes.length > 0) {
-      const timer = setTimeout(calculateLayout, 50);
-      return () => clearTimeout(timer);
-    }
-  }, [notes, calculateLayout, labelObj]);
-
-  useEffect(() => {
-    calculateLayout();
-  }, [visibleItems]);
 
   const getLastRef = () => {
     let lastRef = null;
@@ -349,11 +169,7 @@ const DynamicLabel = ({
           isLabel={true}
           onClick={() => setIsModalOpen(true)}
         />
-        <div
-          ref={containerRef}
-          className="section-container"
-          style={{ opacity: !layoutReady && "0" }}
-        >
+        <div ref={containerRef} className="section-container">
           <p
             className="section-label"
             style={{
@@ -403,6 +219,7 @@ const DynamicLabel = ({
                 handleSelectNote={handleSelectNote}
                 gridNoteWidth={gridNoteWidth}
                 GUTTER={GUTTER}
+                calculateLayout={calculateLayout}
               />
             );
           })}

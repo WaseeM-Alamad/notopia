@@ -4659,7 +4659,7 @@ img {
 
 .animated-dash {
   fill: none;
-  stroke: #6c8dd3;
+  stroke: var(--primary);
   stroke-width: 3;
   stroke-dasharray: 10 5;
   animation: dash-move 3s linear infinite;

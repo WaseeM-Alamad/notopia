@@ -10,12 +10,11 @@ export function useNoteDragging({
   isDraggingRef,
   handleDragStartRef,
   calculateLayout,
-  notesStateRef,
   overIsPinnedRef,
   overIndexRef,
   dispatchNotes,
 }) {
-  const { user, openSnackRef, clientID } = useAppContext();
+  const { user, openSnackRef, clientID, notesStateRef } = useAppContext();
   const { layout } = useLayout();
 
   const userID = user?.id;
@@ -59,7 +58,7 @@ export function useNoteDragging({
       if (!document.body.classList.contains("dragging")) {
         document.body.classList.add("dragging");
       }
-      isTouch && window.dispatchEvent(new Event("topMenuClose"))
+      isTouch && window.dispatchEvent(new Event("topMenuClose"));
       const draggedElement = targetElement;
       const draggedInitialIndex = index;
       draggedIndexRef.current = index;

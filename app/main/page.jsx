@@ -41,6 +41,7 @@ import ActionModal from "@/components/others/ActionModal";
 import CustomThreeLineSpinner from "@/components/Tools/CustomSpinner";
 import SplashScreen from "@/components/others/SplashScreen";
 import { useLabelsContext } from "@/context/LabelsContext";
+import { MasonryProvider } from "@/context/MasonryContext";
 
 const page = () => {
   const { searchTerm, filters } = useSearch();
@@ -565,26 +566,34 @@ const page = () => {
         />
         <div style={{ display: "flex" }}>
           <div className="sidebar-ghost" />
-          <Page
-            dispatchNotes={dispatchNotes}
+          <MasonryProvider
             visibleItems={visibleItems}
-            setVisibleItems={setVisibleItems}
-            selectedNotesRef={selectedNotesRef}
             notes={notesState.notes}
-            notesStateRef={notesStateRef}
             order={notesState.order}
-            handleNoteClick={handleNoteClick}
-            handleSelectNote={handleSelectNote}
-            selectedNotesIDs={selectedNotesIDs}
-            fadingNotes={fadingNotes}
-            setFadingNotes={setFadingNotes}
-            setSelectedNotesIDs={setSelectedNotesIDs}
-            noteActions={noteActions}
-            notesReady={notesReady}
-            containerRef={containerRef}
-            rootContainerRef={rootContainerRef}
             labelObj={labelObj}
-          />
+            containerRef={containerRef}
+          >
+            <Page
+              dispatchNotes={dispatchNotes}
+              visibleItems={visibleItems}
+              setVisibleItems={setVisibleItems}
+              selectedNotesRef={selectedNotesRef}
+              notes={notesState.notes}
+              notesStateRef={notesStateRef}
+              order={notesState.order}
+              handleNoteClick={handleNoteClick}
+              handleSelectNote={handleSelectNote}
+              selectedNotesIDs={selectedNotesIDs}
+              fadingNotes={fadingNotes}
+              setFadingNotes={setFadingNotes}
+              setSelectedNotesIDs={setSelectedNotesIDs}
+              noteActions={noteActions}
+              notesReady={notesReady}
+              containerRef={containerRef}
+              rootContainerRef={rootContainerRef}
+              labelObj={labelObj}
+            />
+          </MasonryProvider>
         </div>
 
         <SelectionBox ref={selectionBoxRef} />
