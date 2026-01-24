@@ -6,6 +6,7 @@ const LayoutContext = createContext();
 export const LayoutProvider = ({ children }) => {
   const [layout, setLayout] = useState(null);
   const [breakpoint, setBreakpoint] = useState(1);
+  const calculateLayoutRef = useRef(null);
 
   useEffect(() => {
     const width = window.innerWidth;
@@ -64,7 +65,13 @@ export const LayoutProvider = ({ children }) => {
 
   return (
     <LayoutContext.Provider
-      value={{ layout, setLayout, breakpoint, setBreakpoint }}
+      value={{
+        layout,
+        setLayout,
+        breakpoint,
+        setBreakpoint,
+        calculateLayoutRef,
+      }}
     >
       {children}
     </LayoutContext.Provider>

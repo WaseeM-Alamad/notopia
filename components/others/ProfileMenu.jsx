@@ -163,7 +163,7 @@ const ProfileMenu = ({
         ))}
       </motion.div>
     </>,
-    document.getElementById("menu")
+    document.getElementById("menu"),
   );
 };
 

@@ -7,13 +7,14 @@ import {
   useRef,
   useState,
 } from "react";
+import { useLayout } from "./LayoutContext";
 
 const GlobalContext = createContext();
 
 export const GlobalProvider = ({ children }) => {
+  const { calculateLayoutRef } = useLayout();
   const [isExpanded, setIsExpanded] = useState({ open: null, threshold: null });
   const isDarkModeRef = useRef(false);
-  const calculateLayoutRef = useRef(null);
 
   useEffect(() => {
     if (!calculateLayoutRef.current) return;
@@ -132,7 +133,6 @@ export const GlobalProvider = ({ children }) => {
         isExpanded,
         setIsExpanded,
         isDarkModeRef,
-        calculateLayoutRef,
         lockScroll,
       }}
     >

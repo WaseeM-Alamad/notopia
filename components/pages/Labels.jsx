@@ -14,7 +14,6 @@ import { motion } from "framer-motion";
 import { useSearch } from "@/context/SearchContext";
 import SectionHeader from "../others/SectionHeader";
 import { useLabelsContext } from "@/context/LabelsContext";
-import { useGlobalContext } from "@/context/GlobalContext";
 import { useLayout } from "@/context/LayoutContext";
 
 const Labels = memo(
@@ -28,11 +27,11 @@ const Labels = memo(
     fadingNotes,
     rootContainerRef,
     containerRef,
+    handleDeleteLabel,
   }) => {
     const { labelsReady } = useAppContext();
-    const { calculateLayoutRef } = useGlobalContext();
     const { labelSearchTerm } = useSearch();
-    const { layout, breakpoint } = useLayout();
+    const { layout, breakpoint, calculateLayoutRef } = useLayout();
     const { createLabel, labelsRef } = useLabelsContext();
     const [reRender, triggerReRender] = useState(false);
     const resizeTimeoutRef = useRef(null);
@@ -70,14 +69,10 @@ const Labels = memo(
 
         const parent = container.parentElement;
         const parentWidth = parent.clientWidth;
-        const style = window.getComputedStyle(parent);
-        const paddingLeft = parseFloat(style.paddingLeft) || 0;
-        const paddingRight = parseFloat(style.paddingRight) || 0;
-        const availableWidth = parentWidth - paddingLeft - paddingRight;
 
         const columns = !isGrid
           ? 1
-          : Math.max(1, Math.floor(availableWidth / (COLUMN_WIDTH + GUTTER)));
+          : Math.max(1, Math.floor(parentWidth / (COLUMN_WIDTH + GUTTER)));
         const contentWidth = !isGrid
           ? COLUMN_WIDTH
           : columns * (COLUMN_WIDTH + GUTTER) - GUTTER;
@@ -123,10 +118,6 @@ const Labels = memo(
         calculateLayout();
       }, 100);
     }, [calculateLayout, reRender]);
-
-    useEffect(() => {
-      calculateLayoutRef.current = calculateLayout;
-    }, [calculateLayout, layout]);
 
     const handleCreateLabel = () => {
       const newUUID = uuid();
@@ -204,6 +195,10 @@ const Labels = memo(
       triggerReRender((prev) => !prev);
     }, [labelSearchTerm]);
 
+    useEffect(() => {
+      calculateLayoutRef.current = calculateLayout;
+    }, [calculateLayout]);
+
     return (
       <>
         <div ref={rootContainerRef} className="starting-div">
@@ -231,11 +226,16 @@ const Labels = memo(
                     setVisibleItems={setVisibleItems}
                     notes={notes}
                     order={order}
+                    handleDeleteLabel={handleDeleteLabel}
+                    calculateLayout={calculateLayout}
                   />
                 );
               })}
           </div>
-          <div className="empty-page">
+          <div
+            style={{ display: labelsExist && "none" }}
+            className="empty-page"
+          >
             {labelsReady && !labelsExist && !labelSearchTerm.trim() && (
               <motion.div
                 initial={{ opacity: 0 }}

@@ -44,7 +44,7 @@ const NoteWrapper = ({
   }, []);
 
   useEffect(() => {
-    // calculateLayout();
+    calculateLayout();
   }, [height]);
 
   useEffect(() => {

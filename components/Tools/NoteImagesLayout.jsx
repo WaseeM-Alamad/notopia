@@ -14,8 +14,6 @@ const NoteImagesLayout = ({
   AddNoteImageDelete,
 }) => {
   const { loadingImages, showTooltip, hideTooltip } = useAppContext();
-  // const { calculateLayoutRef } = useGlobalContext();
-  const calculateMasonryLayout = () => {};
   const containerRef = useRef(null);
   const [layout, setLayout] = useState([]);
   const [loadedImages, setLoadedImages] = useState([]);
@@ -58,17 +56,6 @@ const NoteImagesLayout = ({
       // setLoadedImages([]);
     }
   }, [images]);
-
-  useEffect(() => {
-    if (layout.length > 0) {
-      if (calculateMasonryLayout) {
-        calculateMasonryLayout();
-        setTimeout(() => {
-          calculateMasonryLayout();
-        }, 100);
-      }
-    }
-  }, [layout.length]);
 
   const calculateLayout = () => {
     if (!containerRef.current || loadedImages.length === 0) return;

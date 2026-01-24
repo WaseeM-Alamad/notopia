@@ -24,6 +24,8 @@ const Label = ({
   index,
   notes,
   order,
+  handleDeleteLabel,
+  calculateLayout
 }) => {
   const {
     loadingImages,
@@ -33,10 +35,8 @@ const Label = ({
     setDialogInfoRef,
   } = useAppContext();
   const { labelSearchTerm } = useSearch();
-  const {calculateLayoutRef} = useGlobalContext();
   const {
     labelsRef,
-    handleDeleteLabel,
     updateLabel,
     updateLabelColor,
     updateLabelImage,
@@ -269,7 +269,7 @@ const Label = ({
       isFirstRender.current = false;
       return;
     }
-    calculateLayoutRef.current();
+    calculateLayout();
   }, [height]);
 
   const handleColorClick = (color) => {
@@ -430,15 +430,10 @@ const Label = ({
   return (
     <>
       <motion.div
-        tabIndex={-1}
+        tabIndex="0"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{
-          type: "spring",
-          stiffness: 800,
-          damping: 50,
-          mass: 1,
-        }}
+        transition={{ duration: 0.2, type: "tween" }}
         style={{
           maxWidth: `${isGrid ? gridNoteWidth : 450}px`,
           width: "100%",
@@ -487,9 +482,16 @@ const Label = ({
             />
             <div className="label-more-icon">
               <Button
+                tabIndex="0"
                 onClick={handleMoreClick}
-                onMouseEnter={(e) => showTooltip(e, "Options")}
+                onMouseEnter={(e) =>
+                  showTooltip(e, `${"Options"}`)
+                }
                 onMouseLeave={hideTooltip}
+                onFocus={(e) =>
+                  showTooltip(e, `${"Options"}`)
+                }
+                onBlur={hideTooltip}
                 ref={moreRef}
                 className="btn-hover"
                 style={{

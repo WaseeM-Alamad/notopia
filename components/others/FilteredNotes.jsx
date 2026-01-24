@@ -1,11 +1,5 @@
 "use client";
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
-import { useSearch } from "@/context/SearchContext";
-import { useAppContext } from "@/context/AppContext";
-import Note from "./note/Note";
-import { useGlobalContext } from "@/context/GlobalContext";
-import { useLayout } from "@/context/LayoutContext";
 import { useMasonry } from "@/context/MasonryContext";
 import NoteWrapper from "./note/NoteWrapper";
 
@@ -24,7 +18,6 @@ const FilteredNotes = memo(
     visibleItems,
     containerRef,
   }) => {
-    const { searchTerm } = useSearch();
     const {
       gridNoteWidth,
       GUTTER,
@@ -35,11 +28,8 @@ const FilteredNotes = memo(
       hasPinned,
       hasUnpinned,
       calculateLayout,
+      isInCurrentSection,
     } = useMasonry();
-
-    useEffect(() => {
-      // calculateLayout();
-    }, [searchTerm, calculateLayout]);
 
     return (
       <>
@@ -73,9 +63,9 @@ const FilteredNotes = memo(
             ARCHIVED
           </p>
           {order.map((uuid, index) => {
-            if (!filteredNotes.has(uuid)) return;
-            if (!visibleItems.has(uuid)) return null;
             const note = notes.get(uuid);
+            if (!isInCurrentSection(note)) return;
+            if (!visibleItems.has(uuid)) return null;
             return (
               <NoteWrapper
                 key={note?.uuid || index}

@@ -356,6 +356,9 @@ export function useBatchLoading({
 
   useEffect(() => {
     const handler = () => {
+
+      if (currentSection?.toLowerCase() === "labels") return;
+
       const order = notesStateRef.current.order;
       const notes = notesStateRef.current.notes;
 

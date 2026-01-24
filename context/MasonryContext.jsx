@@ -23,7 +23,9 @@ export const MasonryProvider = ({
 }) => {
   const { notesStateRef, focusedIndex, currentSection } = useAppContext();
   const { filters, searchTerm } = useSearch();
-  const { layout, breakpoint } = useLayout();
+  const { layout, breakpoint, calculateLayoutRef } = useLayout();
+
+  const isLabelsSection = currentSection?.toLowerCase() === "labels";
 
   const matchesFilters = (note) => {
     if (note?.isTrash) return false;
@@ -52,20 +54,23 @@ export const MasonryProvider = ({
     return true;
   };
 
-  const isInCurrentSection = (note) => {
-    switch (currentSection?.toLowerCase()) {
-      case "home":
-        return !note?.isArchived && !note?.isTrash;
-      case "archive":
-        return note?.isArchived && !note?.isTrash;
-      case "trash":
-        return note?.isTrash;
-      case "search":
-        return matchesFilters(note);
-      case "dynamiclabel":
-        return note?.labels?.includes(labelObj?.uuid) && !note?.isTrash;
-    }
-  };
+  const isInCurrentSection = useCallback(
+    (note) => {
+      switch (currentSection?.toLowerCase()) {
+        case "home":
+          return !note?.isArchived && !note?.isTrash;
+        case "archive":
+          return note?.isArchived && !note?.isTrash;
+        case "trash":
+          return note?.isTrash;
+        case "search":
+          return matchesFilters(note);
+        case "dynamiclabel":
+          return note?.labels?.includes(labelObj?.uuid) && !note?.isTrash;
+      }
+    },
+    [currentSection, searchTerm, filters],
+  );
 
   const [isGrid, setIsGrid] = useState(layout);
   const GAP_BETWEEN_SECTIONS = 88;
@@ -105,23 +110,22 @@ export const MasonryProvider = ({
   });
 
   const calculateLayout = useCallback(() => {
+    if (isLabelsSection) return;
     if (layoutFrameRef.current) {
       cancelAnimationFrame(layoutFrameRef.current);
     }
 
+    const section = currentSection?.toLowerCase();
+    const willCalcArchSection = ["search", "dynamiclabel", "archive"].includes(
+      section,
+    );
+    const isArchSection = section === "archive";
+    const isTrashSection = section === "trash";
+    const isHomeSection = section === "home";
+
     layoutFrameRef.current = requestAnimationFrame(() => {
       const container = containerRef.current;
       if (!container) return;
-
-      const section = currentSection?.toLowerCase();
-      const willCalcArchSection = [
-        "search",
-        "dynamiclabel",
-        "archive",
-      ].includes(section);
-      const isArchSection = section === "archive";
-      const isTrashSection = section === "trash";
-      const isHomeSection = section === "home";
 
       const parent = container.parentElement;
       const parentWidth = parent.clientWidth;
@@ -256,6 +260,7 @@ export const MasonryProvider = ({
   ]);
 
   const debouncedCalculateLayout = useCallback(() => {
+    if (isLabelsSection) return;
     if (resizeTimeoutRef.current) {
       clearTimeout(resizeTimeoutRef.current);
     }
@@ -265,6 +270,7 @@ export const MasonryProvider = ({
   }, [calculateLayout]);
 
   useEffect(() => {
+    if (isLabelsSection) return;
     calculateLayout();
     window.addEventListener("resize", debouncedCalculateLayout);
 
@@ -283,7 +289,6 @@ export const MasonryProvider = ({
     labelObj,
     visibleItems,
     order,
-    notes,
   ]);
 
   useEffect(() => {
@@ -291,6 +296,11 @@ export const MasonryProvider = ({
       setIsGrid(layout === "grid");
     }, 10);
   }, [layout]);
+
+  useEffect(() => {
+    if (isLabelsSection) return;
+    calculateLayoutRef.current = calculateLayout;
+  }, [calculateLayout]);
 
   return (
     <MasonryContext.Provider
@@ -306,6 +316,7 @@ export const MasonryProvider = ({
         sectionsHeight,
         layoutFrameRef,
         notesExist,
+        isInCurrentSection,
       }}
     >
       {children}

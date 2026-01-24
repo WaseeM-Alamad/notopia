@@ -592,6 +592,7 @@ const page = () => {
               containerRef={containerRef}
               rootContainerRef={rootContainerRef}
               labelObj={labelObj}
+              handleDeleteLabel={handleDeleteLabel}
             />
           </MasonryProvider>
         </div>

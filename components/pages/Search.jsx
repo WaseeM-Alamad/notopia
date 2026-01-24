@@ -4,6 +4,7 @@ import FilteredNotes from "../others/FilteredNotes";
 import { useSearch } from "@/context/SearchContext";
 import { useAppContext } from "@/context/AppContext";
 import { useLabelsContext } from "@/context/LabelsContext";
+import { useMasonry } from "@/context/MasonryContext";
 
 const Search = ({
   notesStateRef,
@@ -31,13 +32,10 @@ const Search = ({
     setFilters,
     skipHashChangeRef,
   } = useSearch();
-  const {
-    setIsFiltered,
-    showTooltip,
-    hideTooltip,
-    focusedIndex,
-  } = useAppContext();
+  const { setIsFiltered, showTooltip, hideTooltip, focusedIndex } =
+    useAppContext();
   const { labelsRef } = useLabelsContext();
+  const { notesExist } = useMasonry();
   const [colorsSet, setColorsSet] = useState(new Set());
   const [labelsSet, setLabelsSet] = useState(new Set());
   const [typesSet, setTypesSet] = useState(new Set());
@@ -78,20 +76,7 @@ const Search = ({
     return true;
   };
 
-  const filteredNotes = new Set(
-    order.filter((uuid, index) => {
-      const note = notes.get(uuid);
-      if (note && matchesFilters(note) && filtersExist) {
-        if (!focusedIndex.current) {
-          focusedIndex.current = index;
-        }
-        return true;
-      }
-      return false;
-    }),
-  );
-
-  const noMatchingNotes = filteredNotes.size === 0;
+  const noMatchingNotes = !notesExist;
 
   useEffect(() => {
     setIsFiltered(!noMatchingNotes);
@@ -271,7 +256,6 @@ const Search = ({
         ) : (
           <FilteredNotes
             notesStateRef={notesStateRef}
-            filteredNotes={filteredNotes}
             selectedNotesRef={selectedNotesRef}
             notes={notes}
             order={order}
