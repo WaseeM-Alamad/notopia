@@ -9,6 +9,7 @@ const ActionModal = ({
   dialogInfo,
   func,
   cancelFunc = () => {},
+  closeFunc = () => {},
   showCloseBtn = false,
   title,
   message,
@@ -33,7 +34,7 @@ const ActionModal = ({
   useEffect(() => {
     const handler = (e) => {
       if (e.key === "Escape") {
-        cancelFunc();
+        closeFunc();
         setDialogInfo(null);
       }
     };
@@ -72,7 +73,7 @@ const ActionModal = ({
         }}
         style={{ zIndex: "209" }}
         onClick={() => {
-          cancelFunc();
+          closeFunc();
           setDialogInfo(null);
         }}
       />
@@ -101,7 +102,7 @@ const ActionModal = ({
           <div
             style={{ top: ".5rem", right: "0.7rem" }}
             onClick={() => {
-              cancelFunc();
+              closeFunc();
               setDialogInfo(null);
             }}
             onMouseEnter={(e) => showTooltip(e, "Close")}

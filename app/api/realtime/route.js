@@ -34,7 +34,7 @@ export async function GET(request) {
             },
           },
         ],
-        { fullDocument: "updateLookup" }
+        { fullDocument: "updateLookup" },
       );
 
       // User (order array) change stream
@@ -47,7 +47,7 @@ export async function GET(request) {
             },
           },
         ],
-        { fullDocument: "updateLookup" }
+        { fullDocument: "updateLookup" },
       );
 
       const settingsStream = UserSettings.collection.watch(
@@ -61,7 +61,7 @@ export async function GET(request) {
             },
           },
         ],
-        { fullDocument: "updateLookup" }
+        { fullDocument: "updateLookup" },
       );
 
       settingsStream.on("change", async (change) => {
@@ -168,7 +168,7 @@ export async function GET(request) {
           }
 
           controller.enqueue(
-            encoder.encode(`data: ${JSON.stringify(payload)}\n\n`)
+            encoder.encode(`data: ${JSON.stringify(payload)}\n\n`),
           );
         }
       }, 1500);

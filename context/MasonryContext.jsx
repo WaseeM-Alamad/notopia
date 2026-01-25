@@ -69,7 +69,7 @@ export const MasonryProvider = ({
           return note?.labels?.includes(labelObj?.uuid) && !note?.isTrash;
       }
     },
-    [currentSection, searchTerm, filters],
+    [currentSection, searchTerm, filters, labelObj],
   );
 
   const [isGrid, setIsGrid] = useState(layout);

@@ -1,7 +1,17 @@
 "use client";
-import React, { memo, useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useMasonry } from "@/context/MasonryContext";
 import NoteWrapper from "./note/NoteWrapper";
+import SectionHeader from "./SectionHeader";
+import { useSearch } from "@/context/SearchContext";
+import { useLabelsContext } from "@/context/LabelsContext";
 
 const FilteredNotes = memo(
   ({
@@ -31,8 +41,37 @@ const FilteredNotes = memo(
       isInCurrentSection,
     } = useMasonry();
 
+    const { filters } = useSearch();
+
+    const { labelsRef } = useLabelsContext();
+
+    const getLabel = (labelUUID) => {
+      return labelsRef.current.get(labelUUID).label;
+    };
+
+    const sectionHeaderInfo = useMemo(() => {
+      if (filters.image) {
+        return { title: "Images", class: "section-images-icon" };
+      } else if (filters.color) {
+        return {
+          title: filters.color,
+          class: `section-header-color ${filters.color} ${filters.color === "Default" ? "default-border" : ""}`,
+        };
+      } else if (filters.label) {
+        return {
+          title: getLabel(filters.label),
+          class: "section-label-icon",
+        };
+      }
+      return { title: "", class: "" };
+    }, [filters]);
+
     return (
       <>
+        <SectionHeader
+          title={sectionHeaderInfo.title}
+          iconClass={sectionHeaderInfo.class}
+        />
         <div ref={containerRef} className="section-container">
           <p
             className="section-label"

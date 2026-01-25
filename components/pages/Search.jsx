@@ -79,8 +79,8 @@ const Search = ({
   const noMatchingNotes = !notesExist;
 
   useEffect(() => {
-    setIsFiltered(!noMatchingNotes);
-  }, [noMatchingNotes]);
+    setIsFiltered(Object.values(filters).some((filter) => filter));
+  }, [filters]);
 
   const getFilters = () => {
     const colors = new Set();

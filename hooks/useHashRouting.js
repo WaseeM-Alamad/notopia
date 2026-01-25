@@ -106,6 +106,10 @@ export function useHashRouting({
       return;
     }
 
+    if (!currentSection) {
+      setCurrentSection("Home");
+    }
+
     const [, noteUUID] = hash.split("/");
     const note = notesStateRef.current.notes.get(noteUUID);
     if (!note || modalOpenRef.current) return;
@@ -141,10 +145,10 @@ export function useHashRouting({
   const handleHashChange = useCallback(() => {
     const hash = window.location.hash.replace("#", "");
     handleSectionFromHash(hash);
+    handleNoteFromHash(hash);
     if (!currentSection) return;
     resetUIState();
 
-    handleNoteFromHash(hash);
     handleSearchFromHash(hash);
   }, [labelsReady, currentSection]);
 

@@ -37,6 +37,7 @@ const NavButtons = () => {
       setTimeout(() => {
         setIsLoading((prev) => {
           if (prev > 0) return prev - 1;
+          return prev;
         });
       }, 800);
     };

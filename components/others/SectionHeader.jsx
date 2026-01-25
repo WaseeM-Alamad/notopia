@@ -29,7 +29,7 @@ const SectionHeader = ({
     <div
       className={`section-header ${isScrolled ? "nav-shadow" : ""} ${isLabel ? "is-label-section" : ""}`}
     >
-      <div style={{marginRight: "0.4rem"}} className={iconClass} />
+      <div className={`section-header-icon ${iconClass}`} />
       <div
         onClick={onClick}
         className="section-header-title-wrapper"

@@ -43,8 +43,8 @@ export function useRealtimeUpdates({
             switch (item.operationType) {
               case "update":
               case "replace": {
-                const { creator, ...newNote } = doc;
                 if (!doc) continue;
+                const { creator, ...newNote } = doc;
                 let lastVersion = newNote;
                 const existingUpdatedNote = updatedNotes.get(doc?.uuid);
                 if (
@@ -116,11 +116,28 @@ export function useRealtimeUpdates({
               willUpdate = false;
               break;
             }
+
+            const originalCollabs = originalNote?.collaborators || [];
+            const originalCollabsIdsSet = new Map(
+              originalCollabs.map((collab) => [collab.id, collab]),
+            );
+            const receivedCollabs = newNote?.collaborators || [];
+            const finalCollabs = [];
+
+            receivedCollabs.forEach((collab) => {
+              if (originalCollabsIdsSet.has(collab.id)) {
+                finalCollabs.push(originalCollabsIdsSet.get(collab.id));
+                return;
+              }
+              finalCollabs.push(collab);
+            });
+
             const { ut, ...clearNewNote } = newNote;
             const updatedNote = {
               ...originalNote,
               ...clearNewNote,
               creator: originalNote.creator,
+              collaborators: finalCollabs,
             };
             newUpdatedNotes.push(updatedNote);
           }

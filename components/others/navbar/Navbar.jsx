@@ -10,6 +10,8 @@ import "@/assets/styles/navbar.css";
 const Navbar = () => {
   const { currentSection, isFiltered } = useAppContext();
   const [isScrolled, setIsScrolled] = useState(false);
+  const showShadow =
+    isScrolled && ["Home", "Search"].includes(currentSection) && !isFiltered;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -24,7 +26,7 @@ const Navbar = () => {
 
   return (
     <nav
-      className={`${isScrolled && currentSection === "Home" ? "nav-shadow" : ""} ${currentSection?.toLowerCase() === "search" ? "search-page" : ""} ${isFiltered ? "search-filtered" : ""}`}
+      className={`${showShadow ? "nav-shadow" : ""} ${currentSection?.toLowerCase() === "search" ? "search-page" : ""} ${isFiltered ? "search-filtered" : ""}`}
     >
       <LogoSection />
       <NavMidSection />

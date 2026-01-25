@@ -60,7 +60,7 @@ const SideBtn = ({
 
     const sidebarClosed = document.body.classList.contains("sidebar-closed");
 
-      if (sidebarClosed) {
+    if (sidebarClosed) {
       virtualAnchor = {
         getBoundingClientRect: () => {
           const targetRect = currentTarget.getBoundingClientRect();

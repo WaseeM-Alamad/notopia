@@ -256,6 +256,7 @@ const page = () => {
             "This note may have been deleted or you may not have permission to view it.",
           btnMsg: "Okay",
           cancelFunc: () => window.location.replace("#home"),
+          closeFunc: () => window.location.replace("#home"),
         });
       }
     }
@@ -605,6 +606,7 @@ const page = () => {
               dialogInfo={dialogInfo}
               func={dialogInfo?.func || (() => {})}
               cancelFunc={dialogInfo?.cancelFunc || (() => {})}
+              closeFunc={dialogInfo?.closeFunc || (() => {})}
               title={dialogInfo?.title || ""}
               message={dialogInfo?.message || ""}
               btnMsg={dialogInfo?.btnMsg || "okay"}
