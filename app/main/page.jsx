@@ -403,6 +403,25 @@ const page = () => {
     if (filters.image && note?.images.length === 0) {
       return false;
     }
+
+    if (filters.collab) {
+      const selected = filters.collab.toLowerCase();
+
+      const creatorUsername = note?.creator?.username?.toLowerCase();
+      const isOtherCreator =
+        creatorUsername === selected && note?.creator?._id !== userID;
+
+      const hasMatchingCollab = note?.collaborators?.some((collab) => {
+        const username = collab?.data?.username || collab?.snapshot?.username;
+
+        return username?.toLowerCase() === selected;
+      });
+
+      if (!hasMatchingCollab && !isOtherCreator) {
+        return false;
+      }
+    }
+
     return true;
   };
 

@@ -56,7 +56,9 @@ export function useHashRouting({
 
     if (hash === "search") {
       emptySearchRef.current = true;
-      setFilters({ color: null, label: null, image: null });
+      setFilters((prev) =>
+        Object.fromEntries(Object.keys(prev).map((key) => [key, null])),
+      );
       setSearchTerm("");
       requestAnimationFrame(() => {
         if (searchRef.current) searchRef.current.value = "";
@@ -73,6 +75,7 @@ export function useHashRouting({
     const color = params.get("color");
     const text = params.get("text") ?? "";
     const image = params.has("image");
+    const collab = params.get("collab");
 
     let labelUUID = null;
     const labelName = params.get("label")?.toLowerCase();
@@ -89,6 +92,7 @@ export function useHashRouting({
       color: color ? color.charAt(0).toUpperCase() + color.slice(1) : null,
       label: labelUUID,
       image: image || null,
+      collab: collab || null,
     });
 
     setSearchTerm(text);
@@ -270,12 +274,18 @@ export function useHashRouting({
           const colorSet = new Set();
           const labelSet = new Set();
           const typeSet = new Set();
+          const peopleSet = new Set();
           notesStateRef.current.order.forEach((order) => {
             const note = notesStateRef.current.notes.get(order);
             if (note?.isTrash) return;
             colorSet.add(note?.color);
             note?.labels.forEach((label) => labelSet.add(label));
             note?.images.length > 0 && typeSet.add("images");
+            note?.collaborators.forEach((collab) => {
+              const username =
+                collab?.data?.username || collab?.snapshot?.username;
+              peopleSet.add(username);
+            });
           });
           let filtersNum = 0;
 
@@ -291,13 +301,18 @@ export function useHashRouting({
             ++filtersNum;
           }
 
+          if (peopleSet.size > 0) {
+            ++filtersNum;
+          }
+
           if (filtersNum > 2) {
             window.location.hash = "search";
             setCurrentSection(captialized(selected));
           } else if (
             colorSet.size > 1 ||
             labelSet.size > 1 ||
-            typeSet.size > 1
+            typeSet.size > 1 ||
+            peopleSet.size > 1
           ) {
             window.location.hash = "search";
             setCurrentSection(captialized(selected));

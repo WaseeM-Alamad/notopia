@@ -421,8 +421,6 @@ export const updateUsernameAction = async (input) => {
     await connectDB();
     const user = await User.findOne({ username: newUsername });
 
-    console.log("user", user);
-
     if (user) {
       if (user._id.equals(userID)) {
         return {
@@ -2473,8 +2471,6 @@ export const updateCollabsAction = async (data) => {
         { _id: { $in: [...addIDsSet] } },
         { _id: 1, displayName: 1, username: 1, image: 1, createdAt: 1 },
       );
-
-      console.log("createdAt", newUsers[0]);
 
       const collabsToAdd = newUsers.map((u) => {
         return {

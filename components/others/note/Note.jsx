@@ -326,7 +326,7 @@ const Note = memo(
           onClick={(e) => {
             e.stopPropagation();
             console.log("userID", userID);
-            console.log("creatorID", note?.creator?._id);
+            console.log("creatorID", note);
           }}
         >
           ggg

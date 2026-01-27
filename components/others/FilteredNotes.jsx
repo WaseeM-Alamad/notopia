@@ -62,6 +62,11 @@ const FilteredNotes = memo(
           title: getLabel(filters.label),
           class: "section-label-icon",
         };
+      } else if (filters.collab) {
+        return {
+          title: filters?.collab,
+          class: "section-collab-icon",
+        };
       }
       return { title: "", class: "" };
     }, [filters]);

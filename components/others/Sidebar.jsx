@@ -317,7 +317,7 @@ const Sidebar = memo(() => {
           onClick={(e) => e.stopPropagation()}
         >
           <AnimatePresence>
-            {isSmallScreen && (
+            {isSmallScreen && currentSection !== "Search" && (
               <FloatingButton
                 addButtonRef={addButtonRef}
                 handleAddNote={handleAddNote}

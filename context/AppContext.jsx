@@ -17,7 +17,7 @@ const AppContext = createContext();
 
 export function AppProvider({ children, initialUser }) {
   const { data: session, status } = useSession();
-  const { setFilters, setSearchTerm } = useSearch();
+  const { filters, setFilters, setSearchTerm } = useSearch();
   const [user, setUser] = useState(initialUser);
   const [currentSection, setCurrentSection] = useState(null);
   const [loadingImages, setLoadingImages] = useState(new Set());
@@ -55,7 +55,9 @@ export function AppProvider({ children, initialUser }) {
     requestAnimationFrame(() => {
       setSearchTerm("");
       setIsFiltered(false);
-      setFilters({ image: null, color: null, label: null });
+      setFilters((prev) =>
+        Object.fromEntries(Object.keys(prev).map((key) => [key, null])),
+      );
     });
   }, [currentSection]);
 
@@ -66,6 +68,10 @@ export function AppProvider({ children, initialUser }) {
     }
     session && setUser(sessionUser);
   }, [session, status]);
+
+  useEffect(() => {
+    setIsFiltered(Object.values(filters).some((filter) => filter));
+  }, [filters]);
 
   const tooltipTimeoutRef = useRef(null);
 

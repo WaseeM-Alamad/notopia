@@ -12,6 +12,7 @@ export const SearchProvider = ({ children }) => {
     image: null,
     color: null,
     label: null,
+    collab: null,
   });
 
   return (
