@@ -1,12 +1,12 @@
 import React, { memo } from "react";
 
-const TypeFilterItem = ({ isImages, onClick }) => {
-  const iconClass = isImages ? "image" : "";
-  const title = isImages ? "Images" : "";
+const TypeFilterItem = ({ onClick, isImages, isLists }) => {
+  const iconClass = isImages ? "image" : isLists ? "lists" : "";
+  const title = isImages ? "Images" : isLists ? "Lists" : "";
 
   return (
-    <div onClick={() => onClick("Images")} className="filter-type-container">
-      <div className={`filter-${iconClass}-icon`} />
+    <div onClick={() => onClick(title)} className="filter-type-container">
+      <div className={`filter-type-icon filter-${iconClass}-icon`} />
       <div
         style={{
           color: "var(--bw)",

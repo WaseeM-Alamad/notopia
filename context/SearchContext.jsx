@@ -13,6 +13,7 @@ export const SearchProvider = ({ children }) => {
     color: null,
     label: null,
     collab: null,
+    lists: null,
   });
 
   return (

@@ -10,9 +10,9 @@ const FloatingButton = ({ addButtonRef, handleAddNote }) => {
     <motion.div
       ref={floatingBtnRef}
       className="floating-btn"
-      initial={{ bottom: -50 }}
-      animate={{ bottom: 40 }}
-      exit={{ bottom: -50 }}
+      initial={{ bottom: -50, opacity: 0 }}
+      animate={{ bottom: 40, opacity: 1 }}
+      exit={{ bottom: -50, opacity: 0 }}
       transition={{
         type: "spring",
         stiffness: 800,
@@ -31,7 +31,7 @@ const FloatingButton = ({ addButtonRef, handleAddNote }) => {
         <AddButton />
       </button>{" "}
     </motion.div>,
-    document.getElementById("menu")
+    document.getElementById("menu"),
   );
 };
 

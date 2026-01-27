@@ -67,7 +67,12 @@ const NavMidSection = () => {
             setInputPlaceHolder('Search within "' + label + `"`);
           } else if (type === "image") {
             setInputPlaceHolder(`Search within "Images"`);
-          } else if (type === "collab") {
+          }
+          else if (type === "list") {
+            setInputPlaceHolder(`Search within "Lists"`);
+          }
+          
+          else if (type === "collab") {
             const ph = searchFilters?.collab
               ? `Search within "${searchFilters?.collab}"`
               : "Search";

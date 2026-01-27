@@ -75,6 +75,7 @@ export function useHashRouting({
     const color = params.get("color");
     const text = params.get("text") ?? "";
     const image = params.has("image");
+    const lists = params.has("list");
     const collab = params.get("collab");
 
     let labelUUID = null;
@@ -91,8 +92,9 @@ export function useHashRouting({
     setFilters({
       color: color ? color.charAt(0).toUpperCase() + color.slice(1) : null,
       label: labelUUID,
-      image: image || null,
       collab: collab || null,
+      image: image || null,
+      lists: lists || null,
     });
 
     setSearchTerm(text);
@@ -281,6 +283,7 @@ export function useHashRouting({
             colorSet.add(note?.color);
             note?.labels.forEach((label) => labelSet.add(label));
             note?.images.length > 0 && typeSet.add("images");
+            note?.checkboxes.length > 0 && typeSet.add("lists");
             note?.collaborators.forEach((collab) => {
               const username =
                 collab?.data?.username || collab?.snapshot?.username;
