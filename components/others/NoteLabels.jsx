@@ -2,7 +2,12 @@ import { useAppContext } from "@/context/AppContext";
 import { useLabelsContext } from "@/context/LabelsContext";
 import React from "react";
 
-const NoteLabels = ({ note, modalRemoveLabel = null, noteActions }) => {
+const NoteLabels = ({
+  note,
+  modalRemoveLabel = null,
+  noteActions,
+  isModal = false,
+}) => {
   const { showTooltip, hideTooltip } = useAppContext();
   const { labelsRef } = useLabelsContext();
 
@@ -30,7 +35,9 @@ const NoteLabels = ({ note, modalRemoveLabel = null, noteActions }) => {
           return labelA.localeCompare(labelB);
         })
         .map((labelUUID, index) => {
-          if (index + 1 >= 3 && note?.labels.length > 3) return;
+          const showTwoMax =
+            index + 1 >= 3 && note?.labels.length > 3 && !isModal;
+          if (showTwoMax) return;
           const label = labelsRef.current.get(labelUUID)?.label;
           return (
             <div
@@ -55,7 +62,7 @@ const NoteLabels = ({ note, modalRemoveLabel = null, noteActions }) => {
             </div>
           );
         })}
-      {note?.labels.length > 3 && (
+      {note?.labels.length > 3 && !isModal && (
         <div className="more-labels">
           <label className="more-labels-label">
             +{note?.labels.length - 2}

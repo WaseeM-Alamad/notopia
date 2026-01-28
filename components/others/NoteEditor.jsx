@@ -54,8 +54,7 @@ const NoteEditor = ({
   openCollab,
 }) => {
   const { filters } = useSearch();
-  const { user, clientID, showTooltip, hideTooltip } =
-    useAppContext();
+  const { user, clientID, showTooltip, hideTooltip } = useAppContext();
 
   const userID = user?.id;
 
@@ -159,7 +158,7 @@ const NoteEditor = ({
               clientID: clientID,
             }),
         ],
-        openSnackRef.current
+        openSnackRef.current,
       );
     };
 
@@ -181,7 +180,7 @@ const NoteEditor = ({
               clientID: clientID,
             }),
         ],
-        openSnackRef.current
+        openSnackRef.current,
       );
     };
 
@@ -212,7 +211,7 @@ const NoteEditor = ({
               clientID: clientID,
             }),
         ],
-        openSnackRef.current
+        openSnackRef.current,
       );
     } else {
       const redo = async () => {
@@ -227,7 +226,7 @@ const NoteEditor = ({
                   clientID: clientID,
                 }),
             ],
-            openSnackRef.current
+            openSnackRef.current,
           );
         } else {
           handleServerCall(
@@ -241,7 +240,7 @@ const NoteEditor = ({
                   clientID: clientID,
                 }),
             ],
-            openSnackRef.current
+            openSnackRef.current,
           );
         }
       };
@@ -273,7 +272,7 @@ const NoteEditor = ({
                 clientID: clientID,
               }),
           ],
-          openSnackRef.current
+          openSnackRef.current,
         );
       };
 
@@ -319,7 +318,7 @@ const NoteEditor = ({
             () =>
               NoteImageDeleteAction(filePath, note?.uuid, imageUUID, clientID),
           ],
-          openSnackRef.current
+          openSnackRef.current,
         );
       };
 
@@ -330,7 +329,7 @@ const NoteEditor = ({
         unloadWarn: true,
       });
     },
-    [note?.uuid]
+    [note?.uuid],
   );
 
   const handlePaste = (e, max) => {
@@ -379,10 +378,10 @@ const NoteEditor = ({
     debounce(async (values) => {
       handleServerCall(
         [() => NoteTextUpdateAction(values, note?.uuid, clientID)],
-        openSnackRef.current
+        openSnackRef.current,
       );
     }, 600),
-    [note?.uuid] // Dependencies array, make sure it's updated when `note?.uuid` changes
+    [note?.uuid], // Dependencies array, make sure it's updated when `note?.uuid` changes
   );
 
   const titleDebouncedSetUndo = debounce((data) => {
@@ -411,10 +410,10 @@ const NoteEditor = ({
             NoteTextUpdateAction(
               { title: note?.title, content: note?.content },
               note?.uuid,
-              clientID
+              clientID,
             ),
         ],
-        openSnackRef.current
+        openSnackRef.current,
       );
     } else {
       const redoItem = undoStack[undoStack.length - 1];
@@ -437,10 +436,10 @@ const NoteEditor = ({
             NoteTextUpdateAction(
               { title: undoItem.title, content: undoItem.content },
               note?.uuid,
-              clientID
+              clientID,
             ),
         ],
-        openSnackRef.current
+        openSnackRef.current,
       );
     }
   };
@@ -465,10 +464,10 @@ const NoteEditor = ({
           NoteTextUpdateAction(
             { title: redoItem.title, content: redoItem.content },
             note?.uuid,
-            clientID
+            clientID,
           ),
       ],
-      openSnackRef.current
+      openSnackRef.current,
     );
   };
 
@@ -562,7 +561,7 @@ const NoteEditor = ({
         e.target.innerText = "";
       }
     },
-    [note?.content, note?.title, localNote?.isTrash, undoStack]
+    [note?.content, note?.title, localNote?.isTrash, undoStack],
   );
 
   const handleContentInput = useCallback(
@@ -595,12 +594,12 @@ const NoteEditor = ({
         e.target.innerText = "";
       }
     },
-    [note?.content, note?.title, localNote?.isTrash, undoStack]
+    [note?.content, note?.title, localNote?.isTrash, undoStack],
   );
 
   const removeLabel = async (labelUUID) => {
     const newLabels = localNote?.labels.filter(
-      (noteLabelUUID) => noteLabelUUID !== labelUUID
+      (noteLabelUUID) => noteLabelUUID !== labelUUID,
     );
     setLocalNote((prev) => ({ ...prev, labels: newLabels }));
 
@@ -613,7 +612,7 @@ const NoteEditor = ({
             clientID: clientID,
           }),
       ],
-      openSnackRef.current
+      openSnackRef.current,
     );
   };
 
@@ -762,6 +761,7 @@ const NoteEditor = ({
                 note={localNote}
                 modalRemoveLabel={removeLabel}
                 noteActions={noteActions}
+                isModal={true}
               />
             )}
             {localNote?.collaborators && (

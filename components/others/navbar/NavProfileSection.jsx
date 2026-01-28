@@ -51,6 +51,7 @@ const NavProfileSection = () => {
     <>
       <div className="nav-img-wrapper">
         <div
+          tabIndex={0}
           style={{ padding: "8px", opacity: "1" }}
           className="btn"
           onClick={handleProfileOpen}

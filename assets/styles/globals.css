@@ -1363,8 +1363,8 @@ svg {
   background-color: var(--c);
   bottom: 0;
   gap: 1rem;
-  border-bottom-left-radius: 0.55rem;
-  border-bottom-right-radius: 0.55rem;
+  border-bottom-left-radius: 0.9rem;
+  border-bottom-right-radius: 0.9rem;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -2936,7 +2936,7 @@ img {
   font-size: 0.6875rem;
   align-items: center;
   color: rgb(60, 64, 67);
-  padding: 0.8rem 0.8rem 0 0.8rem;
+  padding: 0.8rem;
   font-weight: 550;
   gap: 0.4rem;
 }
@@ -6344,7 +6344,6 @@ aside svg {
   height: 55px;
   overflow: hidden;
   background-color: var(--c);
-  /* border: 1px solid var(--c); */
   cursor: pointer;
   border: 1px solid var(--border);
 }

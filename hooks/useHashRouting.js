@@ -22,7 +22,8 @@ export function useHashRouting({
   selectedNote,
   skipSetLabelObjRef,
 }) {
-  const { labelsReady, labelObjRef, openSnackRef } = useAppContext();
+  const { labelsReady, labelObjRef, openSnackRef, closeToolTip } =
+    useAppContext();
   const {
     setFilters,
     setSearchTerm,
@@ -149,6 +150,7 @@ export function useHashRouting({
   };
 
   const handleHashChange = useCallback(() => {
+    closeToolTip();
     const hash = window.location.hash.replace("#", "");
     handleSectionFromHash(hash);
     handleNoteFromHash(hash);
