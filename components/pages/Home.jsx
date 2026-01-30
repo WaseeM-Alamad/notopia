@@ -1,7 +1,7 @@
 "use client";
 import React, { memo, useEffect, useRef, useState } from "react";
 import Note from "../others/note/Note";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import ComposeNote from "../others/ComposeNote";
 import { useAppContext } from "@/context/AppContext";
 import { useNoteDragging } from "@/hooks/useNoteDragging";
@@ -17,8 +17,6 @@ const Home = memo(
     setVisibleItems,
     notes,
     order,
-    fadingNotes,
-    setFadingNotes,
     dispatchNotes,
     handleNoteClick,
     setSelectedNotesIDs,
@@ -37,6 +35,8 @@ const Home = memo(
       hasPinned,
       hasUnpinned,
       calculateLayout,
+      elligbleNotes,
+      fadingNotes,
     } = useMasonry();
     const lastAddedNoteRef = useRef(null);
     const touchOverElementRef = useRef(null);
@@ -103,7 +103,7 @@ const Home = memo(
             <p
               className="section-label"
               style={{
-                top: `${pinnedHeight + GAP_BETWEEN_SECTIONS + 2}px`,
+                top: `${pinnedHeight}px`,
                 opacity: hasPinned && hasUnpinned ? "1" : "0",
                 display: visibleItems.size === 0 && "none",
               }}
@@ -111,22 +111,21 @@ const Home = memo(
               OTHERS
             </p>
 
-            {order.map((uuid, index) => {
-              const note = notes.get(uuid);
-              if (!visibleItems.has(note?.uuid)) return null;
+            <AnimatePresence presenceAffectsLayout={false}>
+              {order.map((uuid, index) => {
+                const note = notes.get(uuid);
+                if (!visibleItems.has(note?.uuid)) return null;
+                if (note?.isArchived || note?.isTrash) return null;
 
-              return (
-                !note?.isArchived &&
-                !note?.isTrash && (
+                return (
                   <NoteWrapper
                     selectedNotesRef={selectedNotesRef}
-                    key={note?.uuid || index}
+                    key={note?.uuid}
                     note={note}
                     isGrid={isGrid}
+                    // fadingNotes={fadingNotes}
                     overIndexRef={overIndexRef}
                     overIsPinnedRef={overIsPinnedRef}
-                    fadingNotes={fadingNotes}
-                    setFadingNotes={setFadingNotes}
                     noteActions={noteActions}
                     dispatchNotes={dispatchNotes}
                     handleDragStart={handleDragStartRef.current}
@@ -139,9 +138,9 @@ const Home = memo(
                     touchOverElementRef={touchOverElementRef}
                     calculateLayout={calculateLayout}
                   />
-                )
-              );
-            })}
+                );
+              })}
+            </AnimatePresence>
           </div>
           <div style={{ display: notesExist && "none" }} className="empty-page">
             {notesReady && !notesExist && (

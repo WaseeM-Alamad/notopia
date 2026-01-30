@@ -21,7 +21,10 @@ export const LabelsProvider = ({ children, userID }) => {
 
   const updateLocalLabels = useMemo(
     () =>
-      debounce(async () => await saveLabelsMap(labelsRef.current, userID), 500),
+      debounce(
+        async () => userID && (await saveLabelsMap(labelsRef.current, userID)),
+        500,
+      ),
     [],
   );
 

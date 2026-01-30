@@ -20,7 +20,6 @@ const ManageTopLabelsMenu = ({
   selectedNotesIDs,
   setSelectedNotesIDs,
   notes,
-  setFadingNotes,
   setVisibleItems,
 }) => {
   const { labelObjRef, openSnackRef, notesStateRef, user, clientID } =
@@ -132,17 +131,6 @@ const ManageTopLabelsMenu = ({
       if (notesLabels.get(uuid) === selectedNotesIDs.length) {
         const notesUUIDs = selectedNotesIDs.map((n) => n.uuid);
 
-        const delay = filteredlabel === uuid;
-
-        delay &&
-          setFadingNotes((prev) => {
-            const updated = new Set(prev);
-            notesUUIDs.forEach((uuid) => {
-              updated.add(uuid);
-            });
-            return updated;
-          });
-
         localDbReducer({
           notes: notesStateRef.current.notes,
           order: notesStateRef.current.order,
@@ -152,34 +140,11 @@ const ManageTopLabelsMenu = ({
           uuid: uuid,
         });
 
-        setTimeout(
-          () => {
-            dispatchNotes({
-              type: "BATCH_REMOVE_LABEL",
-              selectedNotesIDs: selectedNotesIDs,
-              uuid: uuid,
-            });
-            if (delay) {
-              setFadingNotes((prev) => {
-                const updated = new Set(prev);
-                notesUUIDs.forEach((uuid) => {
-                  updated.delete(uuid);
-                });
-                return updated;
-              });
-              setVisibleItems((prev) => {
-                const updated = new Set(prev);
-                notesUUIDs.forEach((uuid) => {
-                  updated.delete(uuid);
-                });
-                return updated;
-              });
-            }
-          },
-          delay ? 250 : 0,
-        );
-
-        delay && setSelectedNotesIDs([]);
+        dispatchNotes({
+          type: "BATCH_REMOVE_LABEL",
+          selectedNotesIDs: selectedNotesIDs,
+          uuid: uuid,
+        });
 
         handleServerCall(
           [

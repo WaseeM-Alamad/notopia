@@ -1,7 +1,9 @@
 import { useAppContext } from "@/context/AppContext";
 import { useLabelsContext } from "@/context/LabelsContext";
+import { useLayout } from "@/context/LayoutContext";
 import { saveOrderArray } from "@/utils/localDb";
 import localDbReducer from "@/utils/localDbReducer";
+import { delay } from "lodash";
 import { useEffect, useRef } from "react";
 
 export function useRealtimeUpdates({
@@ -12,6 +14,8 @@ export function useRealtimeUpdates({
   const { user, clientID, notesStateRef, isOnline } = useAppContext();
 
   const { labelsRef } = useLabelsContext();
+
+  const { calculateLayoutRef } = useLayout();
 
   const userID = user?.id;
 
@@ -83,16 +87,25 @@ export function useRealtimeUpdates({
               }
             }
           } else if (item.type === "order") {
-            const orderSet = new Set(item.notesOrder);
-            const existingOrder = notesStateRef.current.order;
+            const delay = updatedNotes.size > 0;
+            setTimeout(
+              () => {
+                const orderSet = new Set(item.notesOrder);
+                const existingOrder = notesStateRef.current.order;
 
-            existingOrder.forEach((uuid) => {
-              if (!orderSet.has(uuid)) {
-                deletedNotesIDs.add(uuid);
-              }
-            });
+                existingOrder.forEach((uuid) => {
+                  if (!orderSet.has(uuid)) {
+                    deletedNotesIDs.add(uuid);
+                  }
+                });
 
-            dispatchNotes({ type: "SET_ORDER", newOrder: item.notesOrder });
+                dispatchNotes({ type: "SET_ORDER", newOrder: item.notesOrder });
+                if (calculateLayoutRef.current) {
+                  calculateLayoutRef.current();
+                }
+              },
+              delay ? 0 : 0,
+            );
             await saveOrderArray(item.notesOrder, user?.id);
           } else if (item.type === "labels") {
             labelsRef.current = new Map(
@@ -117,22 +130,27 @@ export function useRealtimeUpdates({
               break;
             }
 
-            const originalCollabs = originalNote?.collaborators || [];
-            const originalCollabsIdsSet = new Map(
-              originalCollabs.map((collab) => [collab.id, collab]),
-            );
-            const receivedCollabs = newNote?.collaborators || [];
-            const finalCollabs = [];
-
-            receivedCollabs.forEach((collab) => {
-              if (originalCollabsIdsSet.has(collab.id)) {
-                finalCollabs.push(originalCollabsIdsSet.get(collab.id));
-                return;
-              }
-              finalCollabs.push(collab);
-            });
-
             const { ut, ...clearNewNote } = newNote;
+            let finalCollabs = [];
+            const originalCollabs = originalNote?.collaborators || [];
+
+            if (ut === "settings") {
+              finalCollabs = originalCollabs;
+            } else {
+              const originalCollabsIdsSet = new Map(
+                originalCollabs.map((collab) => [collab.id, collab]),
+              );
+              const receivedCollabs = newNote?.collaborators || [];
+
+              receivedCollabs.forEach((collab) => {
+                if (originalCollabsIdsSet.has(collab.id)) {
+                  finalCollabs.push(originalCollabsIdsSet.get(collab.id));
+                  return;
+                }
+                finalCollabs.push(collab);
+              });
+            }
+
             const updatedNote = {
               ...originalNote,
               ...clearNewNote,
@@ -154,6 +172,9 @@ export function useRealtimeUpdates({
               type: "SET_NOTES",
               notes: newUpdatedNotes,
             });
+          }
+          if (calculateLayoutRef.current) {
+            calculateLayoutRef.current();
           }
         }
 

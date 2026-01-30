@@ -10,7 +10,7 @@ import React, {
 import { useAppContext } from "@/context/AppContext";
 import Label from "../others/Label";
 import { v4 as uuid } from "uuid";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useSearch } from "@/context/SearchContext";
 import SectionHeader from "../others/SectionHeader";
 import { useLabelsContext } from "@/context/LabelsContext";
@@ -22,9 +22,7 @@ const Labels = memo(
     order,
     visibleItems,
     setVisibleItems,
-    setFadingNotes,
     dispatchNotes,
-    fadingNotes,
     rootContainerRef,
     containerRef,
     handleDeleteLabel,
@@ -204,33 +202,33 @@ const Labels = memo(
         <div ref={rootContainerRef} className="starting-div">
           <SectionHeader title="Labels" iconClass="section-folders-icon" />
           <div ref={containerRef} className="section-container">
-            {/* <NewLabel triggerReRender={triggerReRender} /> */}
-            {[...labelsRef.current]
-              .sort(
-                ([, a], [, b]) => new Date(b.createdAt) - new Date(a.createdAt),
-              )
-              .map(([uuid, labelData], index) => {
-                if (!visibleItems.has(uuid)) return null;
-                return (
-                  <Label
-                    index={index === 0 ? index : ""}
-                    key={uuid}
-                    isGrid={isGrid}
-                    gridNoteWidth={gridNoteWidth}
-                    dispatchNotes={dispatchNotes}
-                    setFadingNotes={setFadingNotes}
-                    fadingNotes={fadingNotes}
-                    labelData={labelData}
-                    triggerReRender={triggerReRender}
-                    reRender={reRender}
-                    setVisibleItems={setVisibleItems}
-                    notes={notes}
-                    order={order}
-                    handleDeleteLabel={handleDeleteLabel}
-                    calculateLayout={calculateLayout}
-                  />
-                );
-              })}
+            <AnimatePresence presenceAffectsLayout={false}>
+              {[...labelsRef.current]
+                .sort(
+                  ([, a], [, b]) =>
+                    new Date(b.createdAt) - new Date(a.createdAt),
+                )
+                .map(([uuid, labelData], index) => {
+                  if (!visibleItems.has(uuid)) return null;
+                  return (
+                    <Label
+                      index={index === 0 ? index : ""}
+                      key={uuid}
+                      isGrid={isGrid}
+                      gridNoteWidth={gridNoteWidth}
+                      dispatchNotes={dispatchNotes}
+                      labelData={labelData}
+                      triggerReRender={triggerReRender}
+                      reRender={reRender}
+                      setVisibleItems={setVisibleItems}
+                      notes={notes}
+                      order={order}
+                      handleDeleteLabel={handleDeleteLabel}
+                      calculateLayout={calculateLayout}
+                    />
+                  );
+                })}
+            </AnimatePresence>
           </div>
           <div
             style={{ display: labelsExist && "none" }}

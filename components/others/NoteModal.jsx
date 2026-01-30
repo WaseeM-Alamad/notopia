@@ -17,7 +17,6 @@ import { useGlobalContext } from "@/context/GlobalContext";
 const NoteModal = ({
   localNote,
   setLocalNote,
-  setFadingNotes,
   noteActions,
   initialStyle,
   setInitialStyle,
@@ -62,8 +61,6 @@ const NoteModal = ({
   const archiveRef = useRef(false);
   const trashRef = useRef(false);
   const removeSelfRef = useRef(false);
-  const delayLabelDispatchRef = useRef(false);
-  const delayImageDispatchRef = useRef(false);
   const prevHash = useRef(null);
   const modalOpenRef = useRef(false);
 
@@ -258,14 +255,6 @@ const NoteModal = ({
       initialStyle.element.style.opacity = "1";
     }
 
-    if (noFilterMatch || dynamicLabelNoMatch || isArchivePinned) {
-      setVisibleItems((prev) => {
-        const updated = new Set(prev);
-        updated.delete(localNote?.uuid);
-        return updated;
-      });
-    }
-
     requestAnimationFrame(() => {
       skipHashChangeRef.current = false;
       archiveRef.current = false;
@@ -328,23 +317,6 @@ const NoteModal = ({
   }
 
   const onOpen = () => {
-    Object.entries(filters).forEach((filter) => {
-      const title = filter[0];
-      const content = filter[1];
-
-      if (content) {
-        if (title === "label") {
-          const matchingLabel = note?.labels.find(
-            (labelUUID) => labelUUID === content,
-          );
-          if (matchingLabel === content) {
-            delayLabelDispatchRef.current = true;
-          }
-        } else if (title === "image") {
-          delayImageDispatchRef.current = content;
-        }
-      }
-    });
     setLocalIsPinned(note?.isPinned);
     updateWithCursor(contentRef, note?.content);
     updateWithCursor(titleRef, note?.title);
@@ -391,12 +363,6 @@ const NoteModal = ({
 
     if (isOpen) {
       window.location.hash = `NOTE/${localNote?.uuid}`;
-      // history.pushState(null, null, `#NOTE/${note?.uuid}`);
-      // window.dispatchEvent(new HashChangeEvent("hashchange"));
-
-      if (currentSection === "DynamicLabel") {
-        delayLabelDispatchRef.current = true;
-      }
 
       onOpen();
 
@@ -517,8 +483,6 @@ const NoteModal = ({
 
       if (initialStyle?.element && initialStyle?.initialNote?.ref?.current) {
         setTimeout(() => {
-          delayLabelDispatchRef.current = false;
-          delayImageDispatchRef.current = false;
           closeModal();
         }, 220);
       } else {
@@ -528,8 +492,6 @@ const NoteModal = ({
         modalRef.current.style.marginTop =
           modalRef.current.offsetHeight / 5 + "px";
         setTimeout(() => {
-          delayLabelDispatchRef.current = false;
-          delayImageDispatchRef.current = false;
           closeModal();
         }, 90);
       }
@@ -556,9 +518,6 @@ const NoteModal = ({
         ? { ...note, isArchived: !note?.isArchived }
         : note;
     const undoArchive = async () => {
-      if (localIsPinned && localNote?.isArchived) {
-        setFadingNotes((prev) => new Set(prev).add(localNote?.uuid));
-      }
       const initialIndex = initialStyle.index;
       localDbReducer({
         notes: notesStateRef.current.notes,
@@ -568,21 +527,11 @@ const NoteModal = ({
         note: passedNote,
         initialIndex: initialIndex,
       });
-      setTimeout(
-        () => {
-          dispatchNotes({
-            type: "UNDO_ARCHIVE",
-            note: passedNote,
-            initialIndex: initialIndex,
-          });
-          setFadingNotes((prev) => {
-            const newSet = new Set(prev);
-            newSet.delete(localNote?.uuid);
-            return newSet;
-          });
-        },
-        localIsPinned && localNote?.isArchived ? 250 : 0,
-      );
+      dispatchNotes({
+        type: "UNDO_ARCHIVE",
+        note: passedNote,
+        initialIndex: initialIndex,
+      });
 
       handleServerCall(
         [
@@ -603,14 +552,7 @@ const NoteModal = ({
 
     const first = initialStyle.index === 0;
 
-    const redo = async (fadeNote) => {
-      const fade =
-        fadeNote &&
-        ((localNote?.isArchived && !localIsPinned) || !localNote?.isArchived);
-      if (fade) {
-        setFadingNotes((prev) => new Set(prev).add(localNote?.uuid));
-      }
-
+    const redo = async () => {
       localDbReducer({
         notes: notesStateRef.current.notes,
         order: notesStateRef.current.order,
@@ -619,21 +561,10 @@ const NoteModal = ({
         note: passedNote,
       });
 
-      setTimeout(
-        () => {
-          dispatchNotes({
-            type: "ARCHIVE_NOTE",
-            note: passedNote,
-          });
-
-          setFadingNotes((prev) => {
-            const newSet = new Set(prev);
-            newSet.delete(localNote?.uuid);
-            return newSet;
-          });
-        },
-        fade ? 250 : 0,
-      );
+      dispatchNotes({
+        type: "ARCHIVE_NOTE",
+        note: passedNote,
+      });
 
       handleServerCall(
         [
@@ -957,7 +888,6 @@ const NoteModal = ({
           labelsRef={labelsRef}
           archiveRef={archiveRef}
           trashRef={trashRef}
-          delayLabelDispatchRef={delayLabelDispatchRef}
           openSnackRef={openSnackRef}
           noteActions={noteActions}
           dispatchNotes={dispatchNotes}

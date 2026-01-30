@@ -31,7 +31,6 @@ const Note = memo(
     selectedNotesRef,
     dispatchNotes,
     setSelectedNotesIDs,
-    setFadingNotes,
     handleSelectNote,
     handleNoteClick,
     touchDownRef = { current: false },
@@ -673,7 +672,6 @@ const Note = memo(
             handleNoteClick={handleNoteClick}
             setColorMenuOpen={handleMenuIsOpenChange}
             moreMenuOpen={moreMenuOpen}
-            setFadingNotes={setFadingNotes}
             anchorEl={anchorEl}
             setAnchorEl={setAnchorEl}
             selectedColor={selectedColor}

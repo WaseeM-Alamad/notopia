@@ -23,7 +23,6 @@ const TopMenuHome = ({
   visibleItems,
   setVisibleItems,
   dispatchNotes,
-  setFadingNotes,
   selectedNotesIDs,
   setSelectedNotesIDs,
   isDraggingRef,
@@ -38,7 +37,6 @@ const TopMenuHome = ({
     hideTooltip,
     openSnackRef,
     setDialogInfoRef,
-    fadeNote,
     notesStateRef,
   } = useAppContext();
   const { filters } = useSearch();
@@ -231,7 +229,6 @@ const TopMenuHome = ({
       ) {
         const selectedNotes = selectedNotesRef.current;
         const selectedUUIDs = selectedNotes.map(({ uuid }) => uuid);
-        setFadingNotes(new Set(selectedUUIDs));
         localDbReducer({
           notes: notesStateRef.current.notes,
           order: notesStateRef.current.order,
@@ -240,21 +237,11 @@ const TopMenuHome = ({
           selectedNotes: selectedNotes,
           color: selectedColor,
         });
-        setTimeout(() => {
-          dispatchNotes({
-            type: "BATCH_UPDATE_COLOR",
-            selectedNotes: selectedNotes,
-            color: selectedColor,
-          });
-          setFadingNotes(new Set());
-          setVisibleItems((prev) => {
-            const updated = new Set(prev);
-            selectedUUIDs.forEach((uuid) => {
-              updated.delete(uuid);
-            });
-            return updated;
-          });
-        }, 250);
+        dispatchNotes({
+          type: "BATCH_UPDATE_COLOR",
+          selectedNotes: selectedNotes,
+          color: selectedColor,
+        });
         setSelectedNotesIDs([]);
         window.dispatchEvent(new Event("topMenuClose"));
       }
@@ -305,15 +292,10 @@ const TopMenuHome = ({
     });
 
     if (clearSet) {
-      setVisibleItems(new Set());
       window.dispatchEvent(new Event("reloadNotes"));
     }
 
     const redo = async () => {
-      if (fadeNote) {
-        setFadingNotes(new Set(selectedUUIDs));
-      }
-
       localDbReducer({
         notes: notesStateRef.current.notes,
         order: notesStateRef.current.order,
@@ -324,27 +306,12 @@ const TopMenuHome = ({
         val: archiveNotes,
       });
 
-      setTimeout(
-        () => {
-          dispatchNotes({
-            type: "BATCH_ARCHIVE/TRASH",
-            selectedNotes: selectedNotesIDs,
-            property: "isArchived",
-            val: archiveNotes,
-          });
-          setFadingNotes(new Set());
-          if (fadeNote && !clearSet) {
-            setVisibleItems((prev) => {
-              const updated = new Set(prev);
-              selectedUUIDs.forEach((uuid) => {
-                updated.delete(uuid);
-              });
-              return updated;
-            });
-          }
-        },
-        fadeNote ? 250 : 0,
-      );
+      dispatchNotes({
+        type: "BATCH_ARCHIVE/TRASH",
+        selectedNotes: selectedNotesIDs,
+        property: "isArchived",
+        val: archiveNotes,
+      });
 
       handleServerCall(
         [
@@ -378,16 +345,6 @@ const TopMenuHome = ({
         openSnackRef.current,
       );
 
-      if (fadeNote && !clearSet) {
-        setVisibleItems((prev) => {
-          const updated = new Set(prev);
-          selectedUUIDs.forEach((uuid) => {
-            updated.add(uuid);
-          });
-          return updated;
-        });
-      }
-
       localDbReducer({
         notes: notesStateRef.current.notes,
         order: notesStateRef.current.order,
@@ -405,6 +362,13 @@ const TopMenuHome = ({
         property: "isArchived",
         val: archiveNotes,
         selectedUUIDs,
+      });
+      setVisibleItems((prev) => {
+        const updated = new Set(prev);
+        selectedUUIDs.forEach((uuid) => {
+          updated.add(uuid);
+        });
+        return updated;
       });
     };
 
@@ -433,14 +397,12 @@ const TopMenuHome = ({
     );
 
     if (clearSet) {
-      setVisibleItems(new Set());
       window.dispatchEvent(new Event("reloadNotes"));
     }
 
     requestAnimationFrame(() => {
       if (ArchiveVal) {
         const length = selectedNotesIDs.length;
-        setFadingNotes(new Set(selectedUUIDs));
 
         const undo = () => {
           handleServerCall(
@@ -469,14 +431,13 @@ const TopMenuHome = ({
             selectedUUIDs,
           });
 
-          ArchiveVal &&
-            setVisibleItems((prev) => {
-              const updated = new Set(prev);
-              selectedUUIDs.forEach((uuid) => {
-                updated.add(uuid);
-              });
-              return updated;
+          setVisibleItems((prev) => {
+            const updated = new Set(prev);
+            selectedUUIDs.forEach((uuid) => {
+              updated.add(uuid);
             });
+            return updated;
+          });
         };
 
         const snackMessage =
@@ -499,26 +460,11 @@ const TopMenuHome = ({
         isPinned: pinNotes,
       });
 
-      setTimeout(
-        () => {
-          dispatchNotes({
-            type: "BATCH_PIN",
-            selectedNotes: selectedNotesIDs,
-            isPinned: pinNotes,
-          });
-          setFadingNotes(new Set());
-          ArchiveVal &&
-            setVisibleItems((prev) => {
-              const updated = new Set(prev);
-              selectedUUIDs.forEach((uuid) => {
-                updated.delete(uuid);
-              });
-              return updated;
-            });
-        },
-        ArchiveVal ? 250 : 0,
-      );
-
+      dispatchNotes({
+        type: "BATCH_PIN",
+        selectedNotes: selectedNotesIDs,
+        isPinned: pinNotes,
+      });
       handleServerCall(
         [
           () =>
@@ -570,7 +516,6 @@ const TopMenuHome = ({
 
     const execute = () => {
       const redo = async () => {
-        setFadingNotes((prev) => new Set([...prev, ...selectedUUIDs]));
         localDbReducer({
           notes: notesStateRef.current.notes,
           order: notesStateRef.current.order,
@@ -590,23 +535,13 @@ const TopMenuHome = ({
             deletedUUIDs: [...sharedNotesSet],
           });
         });
-        setTimeout(() => {
-          dispatchNotes({
-            type: "BATCH_ARCHIVE/TRASH",
-            selectedNotes: selectedNotesIDs,
-            property: "isTrash",
-            sharedNotesSet,
-            val,
-          });
-          setFadingNotes(new Set());
-          setVisibleItems((prev) => {
-            const updated = new Set(prev);
-            selectedUUIDs.forEach((uuid) => {
-              updated.delete(uuid);
-            });
-            return updated;
-          });
-        }, 250);
+        dispatchNotes({
+          type: "BATCH_ARCHIVE/TRASH",
+          selectedNotes: selectedNotesIDs,
+          property: "isTrash",
+          sharedNotesSet,
+          val,
+        });
 
         handleServerCall(
           [
@@ -707,8 +642,6 @@ const TopMenuHome = ({
       selectedUUIDs.push(uuid);
     });
 
-    setFadingNotes(new Set(selectedUUIDs));
-
     localDbReducer({
       notes: notesStateRef.current.notes,
       order: notesStateRef.current.order,
@@ -716,13 +649,10 @@ const TopMenuHome = ({
       type: "BATCH_DELETE_NOTES",
       deletedUUIDs: selectedUUIDs,
     });
-    setTimeout(() => {
-      dispatchNotes({
-        type: "BATCH_DELETE_NOTES",
-        deletedUUIDs: selectedUUIDs,
-      });
-      setFadingNotes(new Set());
-    }, 250);
+    dispatchNotes({
+      type: "BATCH_DELETE_NOTES",
+      deletedUUIDs: selectedUUIDs,
+    });
 
     handleClose();
 
@@ -866,7 +796,6 @@ const TopMenuHome = ({
     redo();
 
     const undo = async () => {
-      setFadingNotes(new Set(newUUIDs));
       localDbReducer({
         notes: notesStateRef.current.notes,
         order: notesStateRef.current.order,
@@ -874,13 +803,10 @@ const TopMenuHome = ({
         type: "UNDO_BATCH_COPY",
         notesToDel: newUUIDs,
       });
-      setTimeout(() => {
-        dispatchNotes({
-          type: "UNDO_BATCH_COPY",
-          notesToDel: newUUIDs,
-        });
-        setFadingNotes(new Set());
-      }, 250);
+      dispatchNotes({
+        type: "UNDO_BATCH_COPY",
+        notesToDel: newUUIDs,
+      });
       handleServerCall(
         [
           () =>
@@ -1073,7 +999,6 @@ const TopMenuHome = ({
             anchorEl={anchorEl}
             selectedNotesIDs={selectedNotesIDs}
             notes={notes}
-            setFadingNotes={setFadingNotes}
             setVisibleItems={setVisibleItems}
             setSelectedNotesIDs={setSelectedNotesIDs}
           />

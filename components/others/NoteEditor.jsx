@@ -43,7 +43,6 @@ const NoteEditor = ({
   contentRef,
   archiveRef,
   trashRef,
-  delayLabelDispatchRef,
   openSnackRef,
   noteActions,
   dispatchNotes,
@@ -797,7 +796,6 @@ const NoteEditor = ({
         openCollab={openCollab}
         modalOpenRef={modalOpenRef}
         filters={filters}
-        delayLabelDispatchRef={delayLabelDispatchRef}
         archiveRef={archiveRef}
         trashRef={trashRef}
         setLocalNote={setLocalNote}

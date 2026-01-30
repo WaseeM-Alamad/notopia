@@ -49,8 +49,8 @@ export const GlobalProvider = ({ children }) => {
     const width = window.innerWidth;
     const sidebarExpanded = localStorage.getItem("sidebar-expanded");
     setIsExpanded({
-      open: width < 605 ? false : sidebarExpanded === "true",
-      threshold: width < 605 ? "before" : "after",
+      open: width <= 605 ? false : sidebarExpanded === "true",
+      threshold: width <= 605 ? "before" : "after",
     });
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme === "dark") {
@@ -63,7 +63,7 @@ export const GlobalProvider = ({ children }) => {
     const handler = () => {
       const width = window.innerWidth;
 
-      if (width < 605) {
+      if (width <= 605) {
         if (isExpanded.threshold !== "before") {
           setIsExpanded({ open: false, threshold: "before" });
         }

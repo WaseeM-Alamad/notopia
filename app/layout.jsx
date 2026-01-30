@@ -43,7 +43,7 @@ const MainLayout = async ({ children }) => {
               <GlobalProvider>
                 <SearchProvider>
                   <AppProvider initialUser={initialUser}>
-                    <LabelsProvider userID={initialUser.id}>
+                    <LabelsProvider userID={initialUser?.id}>
                       <div id="tooltipPortal" />
                       <div id="snackbarPortal" />
                       {children}

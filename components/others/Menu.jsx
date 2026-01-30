@@ -103,10 +103,12 @@ const Menu = ({
               opacity: 0,
               transform: "scale(.97)",
               willChange: "none",
+              pointerEvents: "auto",
             }}
             animate={{
               opacity: 1,
               transform: "scale(1)",
+              pointerEvents: "auto",
             }}
             exit={{
               opacity: 0,

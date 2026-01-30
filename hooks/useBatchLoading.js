@@ -26,7 +26,7 @@ export function useBatchLoading({
     skipLabelObjRefresh,
   } = useAppContext();
 
-  const { layout, breakpoint } = useLayout();
+  const { layout, breakpoint, calculateLayoutRef } = useLayout();
 
   const {
     filters,
@@ -174,7 +174,7 @@ export function useBatchLoading({
   }, [loadNextBatch]);
 
   const resetBatchLoading = () => {
-    if (layoutVersionRef.current >= 1) {
+    if (layoutVersionRef.current >= 10) {
       layoutVersionRef.current = 0;
     } else {
       layoutVersionRef.current += 0.1;
@@ -356,7 +356,6 @@ export function useBatchLoading({
 
   useEffect(() => {
     const handler = () => {
-
       if (currentSection?.toLowerCase() === "labels") return;
 
       const order = notesStateRef.current.order;
@@ -378,20 +377,16 @@ export function useBatchLoading({
 
       const isGrid = layout === "grid";
       const gridNoteWidth =
-        breakpoint === 1 ? 240 : breakpoint === 2 ? 180 : 240;
+        breakpoint === 1 ? 240 : breakpoint === 2 ? 180 : 150;
       const COLUMN_WIDTH = isGrid ? gridNoteWidth : 600;
       const GUTTER = breakpoint === 1 ? 15 : 8;
 
       const parent = container.parentElement;
       const parentWidth = parent.clientWidth;
-      const style = window.getComputedStyle(parent);
-      const paddingLeft = parseFloat(style.paddingLeft) || 0;
-      const paddingRight = parseFloat(style.paddingRight) || 0;
-      const availableWidth = parentWidth - paddingLeft - paddingRight;
 
       const columns = !isGrid
         ? 1
-        : Math.max(1, Math.floor(availableWidth / (COLUMN_WIDTH + GUTTER)));
+        : Math.max(1, Math.floor(parentWidth / (COLUMN_WIDTH + GUTTER)));
 
       let lastUUID = null;
 
@@ -442,6 +437,8 @@ export function useBatchLoading({
             break;
           }
         }
+
+        requestAnimationFrame(() => calculateLayoutRef.current());
 
         return newItems;
       });

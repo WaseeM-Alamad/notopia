@@ -46,9 +46,6 @@ export function AppProvider({ children, initialUser }) {
   const isActionModalOpenRef = useRef(null);
   const isContextMenuOpenRef = useRef(null);
 
-  const fadeNote =
-    currentSection !== "DynamicLabel" && currentSection !== "Search";
-
   useEffect(() => {
     focusedIndex.current = null;
     if (currentSection?.toLowerCase() === "search") return;
@@ -76,9 +73,11 @@ export function AppProvider({ children, initialUser }) {
   const tooltipTimeoutRef = useRef(null);
 
   const showTooltip = useCallback((e, text) => {
+    if (!setTooltipRef.current) return;
     const target = e.currentTarget;
-
+    clearTimeout(tooltipTimeoutRef.current);
     tooltipTimeoutRef.current = setTimeout(() => {
+      if (!document.body.contains(target)) return;
       setTooltipRef.current((prev) => {
         const newMap = new Map(prev);
         newMap.set(target, text);
@@ -88,6 +87,7 @@ export function AppProvider({ children, initialUser }) {
   }, []);
 
   const hideTooltip = useCallback((e) => {
+    if (!setTooltipRef.current) return;
     const target = e.currentTarget;
     clearTimeout(tooltipTimeoutRef.current);
     setTooltipRef.current((prev) => {
@@ -98,6 +98,7 @@ export function AppProvider({ children, initialUser }) {
   }, []);
 
   const closeToolTip = useCallback(() => {
+    if (!setTooltipRef.current) return;
     setTooltipRef.current(new Map());
     clearTimeout(tooltipTimeoutRef.current);
   }, []);
@@ -203,7 +204,6 @@ export function AppProvider({ children, initialUser }) {
         addButtonRef,
         setBindsOpenRef,
         notesStateRef,
-        fadeNote,
         isOnline,
         setIsOnline,
         rootContainerRef,

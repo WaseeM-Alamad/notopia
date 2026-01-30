@@ -58,8 +58,6 @@ export const MasonryProvider = ({
       return false;
     }
 
-    
-
     if (filters.collab) {
       const selected = filters.collab.toLowerCase();
 
@@ -136,155 +134,174 @@ export const MasonryProvider = ({
     return true;
   });
 
-  const calculateLayout = useCallback(() => {
-    if (isLabelsSection) return;
-    if (layoutFrameRef.current) {
-      cancelAnimationFrame(layoutFrameRef.current);
-    }
+  const skipCalcRef = useRef(false);
 
-    const section = currentSection?.toLowerCase();
-    const willCalcArchSection = ["search", "dynamiclabel", "archive"].includes(
-      section,
-    );
-    const isArchSection = section === "archive";
-    const isTrashSection = section === "trash";
-    const isHomeSection = section === "home";
+  const calculateLayout = useCallback(
+    (skip = false, force = false) => {
+      if (isLabelsSection) return;
 
-    layoutFrameRef.current = requestAnimationFrame(() => {
-      const container = containerRef.current;
-      if (!container) return;
-
-      const parent = container.parentElement;
-      const parentWidth = parent.clientWidth;
-
-      const columns = !isGrid
-        ? 1
-        : Math.max(1, Math.floor(parentWidth / (COLUMN_WIDTH + GUTTER)));
-      const contentWidth = !isGrid
-        ? COLUMN_WIDTH
-        : columns * (COLUMN_WIDTH + GUTTER) - GUTTER;
-
-      container.style.width = `${contentWidth}px`;
-      container.style.maxWidth = isGrid ? "100%" : "95%";
-      container.style.position = "relative";
-      container.style.left = "50%";
-      container.style.transform = "translateX(-50%)";
-
-      const items = notesStateRef.current.order.map((uuid, index) => {
-        const note = notesStateRef.current.notes.get(uuid);
-        return { ...note, index: index };
-      });
-
-      const sortedItems = items.sort((a, b) => {
-        return a.index - b.index;
-      });
-
-      let pinnedItems = [];
-
-      if (!isArchSection && !isTrashSection) {
-        pinnedItems = sortedItems.filter((item) => {
-          if (!isInCurrentSection(item) || item.isTrash || item.isArchived)
-            return false;
-          return item.isPinned === true;
-        });
+      if (skip) {
+        skipCalcRef.current = true;
+        return;
       }
 
-      let unpinnedItems = [];
-
-      if (!isArchSection) {
-        unpinnedItems = sortedItems.filter((item) => {
-          if (
-            !isInCurrentSection(item) ||
-            (!isTrashSection && item.isTrash) ||
-            item.isArchived
-          )
-            return false;
-          return item.isPinned === false;
-        });
+      if (skipCalcRef.current) {
+        skipCalcRef.current = false;
+        if (!force) return;
       }
 
-      let archivedItems = [];
+      skipCalcRef.current = !force;
 
-      if (!isTrashSection && !isHomeSection) {
-        archivedItems = sortedItems.filter((item) => {
-          if (!isInCurrentSection(item) || item.isTrash) return false;
-          return item.isArchived === true;
-        });
+      if (layoutFrameRef.current) {
+        cancelAnimationFrame(layoutFrameRef.current);
       }
 
-      const positionItems = (itemList, startY = 0) => {
-        const columnHeights = new Array(columns).fill(startY);
+      const section = currentSection?.toLowerCase();
+      const willCalcArchSection = [
+        "search",
+        "dynamiclabel",
+        "archive",
+      ].includes(section);
+      const isArchSection = section === "archive";
+      const isTrashSection = section === "trash";
+      const isHomeSection = section === "home";
 
-        itemList.forEach((item) => {
-          const wrapper = item.ref?.current?.parentElement;
+      layoutFrameRef.current = requestAnimationFrame(() => {
+        const container = containerRef.current;
+        if (!container) return;
 
-          if (!wrapper) {
-            return;
-          }
+        const parent = container.parentElement;
+        const parentWidth = parent.clientWidth;
 
-          const minColumnIndex = columnHeights.indexOf(
-            Math.min(...columnHeights),
+        const columns = !isGrid
+          ? 1
+          : Math.max(1, Math.floor(parentWidth / (COLUMN_WIDTH + GUTTER)));
+        const contentWidth = !isGrid
+          ? COLUMN_WIDTH
+          : columns * (COLUMN_WIDTH + GUTTER) - GUTTER;
+
+        container.style.width = `${contentWidth}px`;
+        container.style.maxWidth = isGrid ? "100%" : "95%";
+        container.style.position = "relative";
+        container.style.left = "50%";
+        container.style.transform = "translateX(-50%)";
+
+        const items = notesStateRef.current.order.map((uuid, index) => {
+          const note = notesStateRef.current.notes.get(uuid);
+          return { ...note, index: index };
+        });
+
+        const sortedItems = items.sort((a, b) => {
+          return a.index - b.index;
+        });
+
+        let pinnedItems = [];
+
+        if (!isArchSection && !isTrashSection) {
+          pinnedItems = sortedItems.filter((item) => {
+            if (!isInCurrentSection(item) || item.isTrash || item.isArchived)
+              return false;
+            return item.isPinned === true;
+          });
+        }
+
+        let unpinnedItems = [];
+
+        if (!isArchSection) {
+          unpinnedItems = sortedItems.filter((item) => {
+            if (
+              !isInCurrentSection(item) ||
+              (!isTrashSection && item.isTrash) ||
+              item.isArchived
+            )
+              return false;
+            return item.isPinned === false;
+          });
+        }
+
+        let archivedItems = [];
+
+        if (!isTrashSection && !isHomeSection) {
+          archivedItems = sortedItems.filter((item) => {
+            if (!isInCurrentSection(item) || item.isTrash) return false;
+            return item.isArchived === true;
+          });
+        }
+
+        const positionItems = (itemList, startY = 0) => {
+          const columnHeights = new Array(columns).fill(startY);
+
+          itemList.forEach((item) => {
+            const wrapper = item.ref?.current?.parentElement;
+
+            if (!wrapper) {
+              return;
+            }
+
+            const minColumnIndex = columnHeights.indexOf(
+              Math.min(...columnHeights),
+            );
+            const x = minColumnIndex * (COLUMN_WIDTH + GUTTER);
+            const y = columnHeights[minColumnIndex];
+
+            wrapper.style.transform = `translate(${x}px, ${y}px)`;
+            wrapper.style.position = "absolute";
+
+            columnHeights[minColumnIndex] += wrapper.offsetHeight + GUTTER;
+          });
+
+          return Math.max(...columnHeights);
+        };
+
+        let pinnedHeight = 0;
+        if (!isArchSection) {
+          pinnedHeight = positionItems(
+            pinnedItems,
+            pinnedItems.length > 0 && 30,
           );
-          const x = minColumnIndex * (COLUMN_WIDTH + GUTTER);
-          const y = columnHeights[minColumnIndex];
+        }
 
-          wrapper.style.transform = `translate(${x}px, ${y}px)`;
-          wrapper.style.position = "absolute";
+        const unpinnedGap = pinnedItems.length > 0 ? GAP_BETWEEN_SECTIONS : 0;
+        const unpinnedHeight = positionItems(
+          unpinnedItems,
+          pinnedHeight + unpinnedGap,
+        );
 
-          columnHeights[minColumnIndex] += wrapper.offsetHeight + GUTTER;
-        });
+        const archivedGap =
+          unpinnedItems.length > 0 || pinnedItems.length > 0
+            ? pinnedItems.length > 0 && unpinnedItems.length === 0
+              ? 0
+              : GAP_BETWEEN_SECTIONS
+            : 0;
 
-        return Math.max(...columnHeights);
-      };
+        let archivedHeight = 0;
 
-      let pinnedHeight = 0;
-      if (!isArchSection) {
-        pinnedHeight = positionItems(pinnedItems, pinnedItems.length > 0 && 30);
-      }
+        const archivedY = isArchSection
+          ? 0
+          : unpinnedHeight + archivedGap || 30;
 
-      const unpinnedGap = pinnedItems.length > 0 ? GAP_BETWEEN_SECTIONS : 0;
-      const unpinnedHeight = positionItems(
-        unpinnedItems,
-        pinnedHeight + unpinnedGap,
-      );
+        if (willCalcArchSection) {
+          archivedHeight = positionItems(archivedItems, archivedY);
+        }
 
-      const archivedGap =
-        unpinnedItems.length > 0 || pinnedItems.length > 0
-          ? pinnedItems.length > 0 && unpinnedItems.length === 0
-            ? 0
-            : GAP_BETWEEN_SECTIONS
-          : 0;
+        const sectionGap =
+          (pinnedItems.length > 0 && unpinnedItems.length === 0
+            ? unpinnedHeight - GAP_BETWEEN_SECTIONS
+            : unpinnedHeight) +
+          (pinnedItems.length > 0 || unpinnedItems.length > 0
+            ? GAP_BETWEEN_SECTIONS + 2
+            : 32);
 
-      let archivedHeight = 0;
+        setSectionsHeight(
+          willCalcArchSection ? sectionGap - 16 : unpinnedHeight,
+        );
 
-      const archivedY = isArchSection ? 0 : unpinnedHeight + archivedGap || 30;
-
-      if (willCalcArchSection) {
-        archivedHeight = positionItems(archivedItems, archivedY);
-      }
-
-      const sectionGap =
-        (pinnedItems.length > 0 && unpinnedItems.length === 0
-          ? unpinnedHeight - GAP_BETWEEN_SECTIONS
-          : unpinnedHeight) +
-        (pinnedItems.length > 0 || unpinnedItems.length > 0
-          ? GAP_BETWEEN_SECTIONS + 2
-          : 32);
-
-      setSectionsHeight(willCalcArchSection ? sectionGap - 16 : unpinnedHeight);
-
-      setPinnedHeight(pinnedHeight + GAP_BETWEEN_SECTIONS + 2 - 16);
-      container.style.height = `${willCalcArchSection ? archivedHeight : unpinnedHeight}px`;
-    });
-  }, [
-    labelObj,
-    isGrid,
-    COLUMN_WIDTH,
-    GUTTER,
-    currentSection,
-    filters,
-    visibleItems,
-  ]);
+        setPinnedHeight(pinnedHeight + GAP_BETWEEN_SECTIONS + 2 - 16);
+        container.style.height = `${willCalcArchSection ? archivedHeight : unpinnedHeight}px`;
+      });
+    },
+    [labelObj, isGrid, COLUMN_WIDTH, GUTTER, currentSection, filters],
+  );
 
   const debouncedCalculateLayout = useCallback(() => {
     if (isLabelsSection) return;

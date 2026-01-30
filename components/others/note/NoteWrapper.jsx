@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import React, { memo, useEffect, useRef, useState } from "react";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import Note from "./Note";
 import { useAppContext } from "@/context/AppContext";
 
@@ -12,8 +12,6 @@ const NoteWrapper = ({
   overIndexRef,
   overIsPinnedRef,
   noteActions,
-  fadingNotes,
-  setFadingNotes,
   setSelectedNotesIDs,
   handleDragStart,
   handleSelectNote,
@@ -23,7 +21,7 @@ const NoteWrapper = ({
   touchOverElementRef,
   calculateLayout = () => {},
 }) => {
-  const { currentSection, notesIndexMapRef } = useAppContext();
+  const { currentSection, notesIndexMapRef, layout } = useAppContext();
   const [mounted, setMounted] = useState(false);
   const [height, setHeight] = useState(0);
   const noteRef = useRef(null);
@@ -99,7 +97,7 @@ const NoteWrapper = ({
     overIsPinnedRef.current = note?.isPinned;
   };
 
-  const startDragging = () => {
+  const startDragging = useCallback(() => {
     if (!isHomeSection) return;
     const targetElement = noteRef.current;
 
@@ -135,7 +133,7 @@ const NoteWrapper = ({
     document.addEventListener("touchcancel", handleTouchEnd, {
       passive: true,
     });
-  };
+  }, [isHomeSection, handleDragStart]);
 
   useEffect(() => {
     if (!isHomeSection) return;
@@ -168,11 +166,40 @@ const NoteWrapper = ({
       });
   }, []);
 
+  const [hideElement, setHideElement] = useState(false);
+
+  function isElementVisible() {
+    const el = noteRef.current;
+    if (!el) return false;
+    const rect = el.getBoundingClientRect();
+
+    return (
+      rect.bottom > 0 &&
+      rect.right > 0 &&
+      rect.top < window.innerHeight &&
+      rect.left < window.innerWidth
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
       transition={{ duration: 0.2, type: "tween" }}
+      onAnimationStart={(def) => {
+        if (def.opacity === 0) {
+          setHideElement(!isElementVisible());
+          calculateLayout(true);
+        }
+      }}
+      onAnimationComplete={(definition) => {
+        if (definition.opacity === 0) {
+          setHideElement(false);
+          calculateLayout(false, true);
+        }
+      }}
+      style={{ display: hideElement && "none" }}
       className="top-note-wrapper"
     >
       <div
@@ -193,7 +220,8 @@ const NoteWrapper = ({
               handleNoteClick(e, note, notesIndexMapRef.current.get(note.uuid));
           }
         }}
-        className={`grid-item ${fadingNotes.has(note?.uuid) ? "fade-out" : ""}`}
+        className={`grid-item`}
+        // ${fadingNotes.has(note?.uuid) ? "fade-out" : ""}
         style={{
           maxWidth: `${isGrid ? gridNoteWidth : 600}px`,
           width: "100%",
@@ -208,7 +236,6 @@ const NoteWrapper = ({
           selectedNotesRef={selectedNotesRef}
           note={note}
           noteActions={noteActions}
-          setFadingNotes={setFadingNotes}
           setSelectedNotesIDs={setSelectedNotesIDs}
           handleSelectNote={handleSelectNote}
           handleNoteClick={handleNoteClick}

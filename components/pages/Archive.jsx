@@ -1,7 +1,7 @@
 "use client";
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import Note from "../others/note/Note";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useAppContext } from "@/context/AppContext";
 import SectionHeader from "../others/SectionHeader";
 import { useGlobalContext } from "@/context/GlobalContext";
@@ -19,8 +19,6 @@ const Archive = memo(
     setSelectedNotesIDs,
     handleNoteClick,
     handleSelectNote,
-    fadingNotes,
-    setFadingNotes,
     rootContainerRef,
     noteActions,
     notesReady,
@@ -34,30 +32,30 @@ const Archive = memo(
         <div ref={rootContainerRef} className={`starting-div `}>
           <SectionHeader title="Archive" iconClass="section-archive-icon" />
           <div ref={containerRef} className="section-container">
-            {order.map((uuid, index) => {
-              const note = notes.get(uuid);
-              if (!visibleItems.has(note?.uuid)) return null;
-              if (note?.isArchived && !note?.isTrash)
-                return (
-                  <NoteWrapper
-                    key={note?.uuid}
-                    note={note}
-                    isGrid={isGrid}
-                    selectedNotesRef={selectedNotesRef}
-                    dispatchNotes={dispatchNotes}
-                    index={index}
-                    handleNoteClick={handleNoteClick}
-                    handleSelectNote={handleSelectNote}
-                    fadingNotes={fadingNotes}
-                    setFadingNotes={setFadingNotes}
-                    noteActions={noteActions}
-                    setSelectedNotesIDs={setSelectedNotesIDs}
-                    gridNoteWidth={gridNoteWidth}
-                    GUTTER={GUTTER}
-                    calculateLayout={calculateLayout}
-                  />
-                );
-            })}
+            <AnimatePresence presenceAffectsLayout={false}>
+              {order.map((uuid, index) => {
+                const note = notes.get(uuid);
+                if (!visibleItems.has(note?.uuid)) return null;
+                if (note?.isArchived && !note?.isTrash)
+                  return (
+                    <NoteWrapper
+                      key={note?.uuid}
+                      note={note}
+                      isGrid={isGrid}
+                      selectedNotesRef={selectedNotesRef}
+                      dispatchNotes={dispatchNotes}
+                      index={index}
+                      handleNoteClick={handleNoteClick}
+                      handleSelectNote={handleSelectNote}
+                      noteActions={noteActions}
+                      setSelectedNotesIDs={setSelectedNotesIDs}
+                      gridNoteWidth={gridNoteWidth}
+                      GUTTER={GUTTER}
+                      calculateLayout={calculateLayout}
+                    />
+                  );
+              })}
+            </AnimatePresence>
           </div>
           <div style={{ display: notesExist && "none" }} className="empty-page">
             {notesReady && !notesExist && (

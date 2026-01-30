@@ -18,14 +18,12 @@ const Label = ({
   gridNoteWidth,
   reRender,
   triggerReRender,
-  fadingNotes,
   setVisibleItems,
-  setFadingNotes,
   index,
   notes,
   order,
   handleDeleteLabel,
-  calculateLayout
+  calculateLayout,
 }) => {
   const {
     loadingImages,
@@ -224,23 +222,11 @@ const Label = ({
           .trim()
           .includes(labelSearchTerm.toLowerCase().trim())
       ) {
-        setFadingNotes((prev) => {
+        setVisibleItems((prev) => {
           const updated = new Set(prev);
-          updated.add(labelData.uuid);
+          updated.delete(labelData.uuid);
           return updated;
         });
-        setTimeout(() => {
-          setFadingNotes((prev) => {
-            const updated = new Set(prev);
-            updated.delete(labelData.uuid);
-            return updated;
-          });
-          setVisibleItems((prev) => {
-            const updated = new Set(prev);
-            updated.delete(labelData.uuid);
-            return updated;
-          });
-        }, 250);
       }
     } else {
       labelTitleRef.current.innerText = originalTitleRef.current.trim();
@@ -433,6 +419,12 @@ const Label = ({
         tabIndex="0"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onAnimationComplete={(definition) => {
+          if (definition.opacity === 0) {
+            requestAnimationFrame(() => calculateLayout());
+          }
+        }}
         transition={{ duration: 0.2, type: "tween" }}
         style={{
           maxWidth: `${isGrid ? gridNoteWidth : 450}px`,
@@ -474,7 +466,9 @@ const Label = ({
                 : labelData.color === "Default"
                   ? "default-border"
                   : "transparent-border"
-            } ${fadingNotes.has(labelData.uuid) ? "fade-out" : ""} `}
+            }
+             `}
+            // ${fadingNotes.has(labelData.uuid) ? "fade-out" : ""}
           >
             <div
               style={{ display: labelData.image && "none" }}
@@ -484,13 +478,9 @@ const Label = ({
               <Button
                 tabIndex="0"
                 onClick={handleMoreClick}
-                onMouseEnter={(e) =>
-                  showTooltip(e, `${"Options"}`)
-                }
+                onMouseEnter={(e) => showTooltip(e, `${"Options"}`)}
                 onMouseLeave={hideTooltip}
-                onFocus={(e) =>
-                  showTooltip(e, `${"Options"}`)
-                }
+                onFocus={(e) => showTooltip(e, `${"Options"}`)}
                 onBlur={hideTooltip}
                 ref={moreRef}
                 className="btn-hover"

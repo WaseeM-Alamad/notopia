@@ -188,6 +188,7 @@ const SideBtn = ({
     if (moreMenuOpen || isSmallScreen || sidebarOpen) return;
     const scrollContainer = containerRef.current;
     const currentTarget = e.currentTarget;
+    clearTimeout(tooltipTimeoutRef.current);
     tooltipTimeoutRef.current = setTimeout(() => {
       const virtualAnchor = {
         getBoundingClientRect: () => {

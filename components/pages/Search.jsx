@@ -12,8 +12,6 @@ const Search = ({
   setSelectedNotesIDs,
   handleNoteClick,
   handleSelectNote,
-  fadingNotes,
-  setFadingNotes,
   rootContainerRef,
   noteActions,
   notesReady,
@@ -55,8 +53,6 @@ const Search = ({
             handleNoteClick={handleNoteClick}
             handleSelectNote={handleSelectNote}
             noteActions={noteActions}
-            setFadingNotes={setFadingNotes}
-            fadingNotes={fadingNotes}
             visibleItems={visibleItems}
             setVisibleItems={setVisibleItems}
             containerRef={containerRef}

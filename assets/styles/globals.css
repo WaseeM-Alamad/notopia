@@ -11,6 +11,7 @@
   --linear-loader-bg: rgba(176, 214, 255, 0.75);
   --light-blue-hover: rgba(91, 156, 230, 0.074);
   --light-blue-active: rgba(91, 156, 230, 0.11);
+  --60-color: rgba(0, 0, 0, 0.65);
   --form-label: #333333;
   --form-input-placeholder: #bdbdbd;
   --error: #ff5b5b;
@@ -52,6 +53,7 @@ html.dark-mode {
   --linear-loader-bg: rgba(20, 36, 82, 0.45);
   --light-blue-hover: rgba(91, 156, 230, 0.074);
   --light-blue-active: rgba(91, 156, 230, 0.11);
+  --60-color: rgba(255, 255, 255, 0.65);
   --form-label: #d6d6d6;
   --form-input-placeholder: #868686;
   --error: #e55353;
@@ -1456,22 +1458,19 @@ svg {
 .empty-note::before {
   display: flex;
   position: absolute;
+  top: 50%;
+  transform: translate(13%, -90%);
+  will-change: transform;
   content: attr(aria-label);
-  color: rgba(0, 0, 0, 0.75);
-  margin-left: 1.5rem;
+  color: var(--60-color);
   font-family: "DM Sans";
   text-align: center;
   height: fit-content;
   width: fit-content;
-  margin-top: 2rem;
   letter-spacing: 0.00625em;
   font-size: 1.475rem;
   line-height: 1.5rem;
   cursor: text;
-}
-
-.dark-mode .empty-note::before {
-  color: rgb(255, 255, 255, 0.75);
 }
 
 .note-placeholder {
@@ -4469,6 +4468,7 @@ img {
   z-index: 99;
   top: 0;
   pointer-events: none;
+  box-sizing: border-box;
   transition: opacity 0.26s cubic-bezier(0.5, 0.2, 0.3, 1);
 }
 

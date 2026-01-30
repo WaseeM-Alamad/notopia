@@ -12,6 +12,7 @@ import NoteWrapper from "./note/NoteWrapper";
 import SectionHeader from "./SectionHeader";
 import { useSearch } from "@/context/SearchContext";
 import { useLabelsContext } from "@/context/LabelsContext";
+import { AnimatePresence } from "framer-motion";
 
 const FilteredNotes = memo(
   ({
@@ -24,7 +25,6 @@ const FilteredNotes = memo(
     handleNoteClick,
     handleSelectNote,
     noteActions,
-    fadingNotes,
     visibleItems,
     containerRef,
   }) => {
@@ -111,29 +111,30 @@ const FilteredNotes = memo(
           >
             ARCHIVED
           </p>
-          {order.map((uuid, index) => {
-            const note = notes.get(uuid);
-            if (!isInCurrentSection(note)) return;
-            if (!visibleItems.has(uuid)) return null;
-            return (
-              <NoteWrapper
-                key={note?.uuid || index}
-                note={note}
-                noteActions={noteActions}
-                selectedNotesRef={selectedNotesRef}
-                dispatchNotes={dispatchNotes}
-                isGrid={isGrid}
-                index={index}
-                setSelectedNotesIDs={setSelectedNotesIDs}
-                handleNoteClick={handleNoteClick}
-                handleSelectNote={handleSelectNote}
-                fadingNotes={fadingNotes}
-                GUTTER={GUTTER}
-                gridNoteWidth={gridNoteWidth}
-                calculateLayout={calculateLayout}
-              />
-            );
-          })}
+          <AnimatePresence presenceAffectsLayout={false}>
+            {order.map((uuid, index) => {
+              const note = notes.get(uuid);
+              if (!isInCurrentSection(note)) return;
+              if (!visibleItems.has(uuid)) return null;
+              return (
+                <NoteWrapper
+                  key={note?.uuid}
+                  note={note}
+                  noteActions={noteActions}
+                  selectedNotesRef={selectedNotesRef}
+                  dispatchNotes={dispatchNotes}
+                  isGrid={isGrid}
+                  index={index}
+                  setSelectedNotesIDs={setSelectedNotesIDs}
+                  handleNoteClick={handleNoteClick}
+                  handleSelectNote={handleSelectNote}
+                  GUTTER={GUTTER}
+                  gridNoteWidth={gridNoteWidth}
+                  calculateLayout={calculateLayout}
+                />
+              );
+            })}
+          </AnimatePresence>
         </div>
       </>
     );

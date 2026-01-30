@@ -42,6 +42,7 @@ import CustomThreeLineSpinner from "@/components/Tools/CustomSpinner";
 import SplashScreen from "@/components/others/SplashScreen";
 import { useLabelsContext } from "@/context/LabelsContext";
 import { MasonryProvider } from "@/context/MasonryContext";
+import { useLayout } from "@/context/LayoutContext";
 
 const page = () => {
   const { searchTerm, filters } = useSearch();
@@ -61,6 +62,7 @@ const page = () => {
     initialLoading,
   } = useAppContext();
   const { removeLabel } = useLabelsContext();
+  const { calculateLayoutRef } = useLayout();
   const [tooltipAnchor, setTooltipAnchor] = useState(new Map());
   const [notesState, dispatchNotes] = useReducer(notesReducer, initialStates);
   const [visibleItems, setVisibleItems] = useState(new Set());
@@ -69,7 +71,6 @@ const page = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [notesReady, setNotesReady] = useState(false);
   const [selectedNotesIDs, setSelectedNotesIDs] = useState([]);
-  const [fadingNotes, setFadingNotes] = useState(new Set());
   const [snackbarState, setSnackbarState] = useState({
     snackOpen: false,
     showUndo: true,
@@ -297,7 +298,6 @@ const page = () => {
   }, [currentSection, notesState]);
 
   const handleDeleteLabel = useCallback((data) => {
-    setFadingNotes((prev) => new Set(prev).add(data.labelData.uuid));
     localDbReducer({
       notes: notesStateRef.current.notes,
       order: notesStateRef.current.order,
@@ -316,20 +316,13 @@ const page = () => {
       ],
       openSnackRef.current,
     );
-    setTimeout(async () => {
-      dispatchNotes({
-        type: "REMOVE_LABEL_FROM_NOTES",
-        labelUUID: data.labelData.uuid,
-      });
-      setVisibleItems((prev) => {
-        const updated = new Set(prev);
-        updated.delete(data.labelData.uuid);
-        return updated;
-      });
-      removeLabel(data.labelData.uuid, data.labelData.label);
-      data.triggerReRender((prev) => !prev);
-      window.dispatchEvent(new Event("refreshPinnedLabels"));
-    }, 250);
+    dispatchNotes({
+      type: "REMOVE_LABEL_FROM_NOTES",
+      labelUUID: data.labelData.uuid,
+    });
+    removeLabel(data.labelData.uuid, data.labelData.label);
+    data.triggerReRender((prev) => !prev);
+    window.dispatchEvent(new Event("refreshPinnedLabels"));
   }, []);
 
   const handleSelectNote = useCallback((data) => {
@@ -408,8 +401,6 @@ const page = () => {
       return false;
     }
 
-    
-
     if (filters.collab) {
       const selected = filters.collab.toLowerCase();
 
@@ -457,7 +448,6 @@ const page = () => {
   const { noteActions } = useNoteActions({
     dispatchNotes,
     setVisibleItems,
-    setFadingNotes,
     setLoadingImages,
     labelObj,
     currentSection,
@@ -515,6 +505,30 @@ const page = () => {
     allowRedoRef,
   });
 
+  useEffect(() => {
+    return;
+    setTimeout(() => {
+      const notes = notesStateRef.current.notes;
+      const order = notesStateRef.current.order;
+      const visibleSet = visibleItems;
+      let willUpdate = false;
+      order.forEach((uuid) => {
+        const note = notes.get(uuid);
+        const isNoteMounted = note.ref?.current;
+        const isVisible = visibleItems.has(note.uuid);
+        if (isVisible && !isNoteMounted) {
+          visibleSet.delete(note.uuid);
+          willUpdate = true;
+        }
+      });
+
+      if (willUpdate) {
+        setVisibleItems(visibleSet);
+        calculateLayoutRef.current();
+      }
+    }, 250);
+  }, [notesState.notes]);
+
   const components = {
     Home,
     Labels,
@@ -547,7 +561,6 @@ const page = () => {
           localNote={selectedNote}
           setLocalNote={setSelectedNote}
           setVisibleItems={setVisibleItems}
-          setFadingNotes={setFadingNotes}
           noteActions={noteActions}
           dispatchNotes={dispatchNotes}
           initialStyle={modalStyle}
@@ -583,7 +596,6 @@ const page = () => {
           setVisibleItems={setVisibleItems}
           functionRefs={{ batchArchiveRef, batchPinRef, batchDeleteRef }}
           dispatchNotes={dispatchNotes}
-          setFadingNotes={setFadingNotes}
           selectedNotesIDs={selectedNotesIDs}
           setSelectedNotesIDs={setSelectedNotesIDs}
           isDraggingRef={isDraggingRef}
@@ -599,6 +611,7 @@ const page = () => {
             labelObj={labelObj}
             containerRef={containerRef}
           >
+            {/* <button style={{zIndex: "10000", position: "fixed"}} onClick={()=> console.log(visibleItems)}>check</button> */}
             <Page
               dispatchNotes={dispatchNotes}
               visibleItems={visibleItems}
@@ -610,8 +623,6 @@ const page = () => {
               handleNoteClick={handleNoteClick}
               handleSelectNote={handleSelectNote}
               selectedNotesIDs={selectedNotesIDs}
-              fadingNotes={fadingNotes}
-              setFadingNotes={setFadingNotes}
               setSelectedNotesIDs={setSelectedNotesIDs}
               noteActions={noteActions}
               notesReady={notesReady}

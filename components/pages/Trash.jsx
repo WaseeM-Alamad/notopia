@@ -1,7 +1,7 @@
 "use client";
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import Note from "../others/note/Note";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useAppContext } from "@/context/AppContext";
 import handleServerCall from "@/utils/handleServerCall";
 import localDbReducer from "@/utils/localDbReducer";
@@ -26,8 +26,6 @@ const Trash = memo(
     noteActions,
     notesReady,
     rootContainerRef,
-    setFadingNotes,
-    fadingNotes,
     containerRef,
   }) => {
     const { openSnackRef, user, setDialogInfoRef, clientID } = useAppContext();
@@ -50,17 +48,13 @@ const Trash = memo(
         }
       });
 
-      setFadingNotes(new Set(deletedNotesUUIDs));
       localDbReducer({
         notes: notesStateRef.current.notes,
         order: notesStateRef.current.order,
         userID: userID,
         type: "EMPTY_TRASH",
       });
-      setTimeout(() => {
-        dispatchNotes({ type: "EMPTY_TRASH" });
-        setFadingNotes(new Set());
-      }, 250);
+      dispatchNotes({ type: "EMPTY_TRASH" });
 
       handleServerCall(
         [() => batchDeleteNotes(deletedNotesData, clientID)],
@@ -97,29 +91,30 @@ const Trash = memo(
             Notes in Trash are deleted after 7 days.
           </div>
           <div ref={containerRef} className="section-container">
-            {order.map((uuid, index) => {
-              const note = notes.get(uuid);
-              if (!visibleItems.has(note?.uuid)) return null;
-              if (note?.isTrash)
-                return (
-                  <NoteWrapper
-                    isGrid={isGrid}
-                    key={note?.uuid}
-                    note={note}
-                    selectedNotesRef={selectedNotesRef}
-                    noteActions={noteActions}
-                    dispatchNotes={dispatchNotes}
-                    index={index}
-                    setSelectedNotesIDs={setSelectedNotesIDs}
-                    handleSelectNote={handleSelectNote}
-                    handleNoteClick={handleNoteClick}
-                    fadingNotes={fadingNotes}
-                    gridNoteWidth={gridNoteWidth}
-                    GUTTER={GUTTER}
-                    calculateLayout={calculateLayout}
-                  />
-                );
-            })}
+            <AnimatePresence presenceAffectsLayout={false}>
+              {order.map((uuid, index) => {
+                const note = notes.get(uuid);
+                if (!visibleItems.has(note?.uuid)) return null;
+                if (note?.isTrash)
+                  return (
+                    <NoteWrapper
+                      isGrid={isGrid}
+                      key={note?.uuid}
+                      note={note}
+                      selectedNotesRef={selectedNotesRef}
+                      noteActions={noteActions}
+                      dispatchNotes={dispatchNotes}
+                      index={index}
+                      setSelectedNotesIDs={setSelectedNotesIDs}
+                      handleSelectNote={handleSelectNote}
+                      handleNoteClick={handleNoteClick}
+                      gridNoteWidth={gridNoteWidth}
+                      GUTTER={GUTTER}
+                      calculateLayout={calculateLayout}
+                    />
+                  );
+              })}
+            </AnimatePresence>
           </div>
           <div style={{ display: notesExist && "none" }} className="empty-page">
             {notesReady && !notesExist && (
