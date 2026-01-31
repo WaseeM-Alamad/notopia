@@ -11,7 +11,7 @@ const ColorDrawer = ({
   handleColorClick,
   handleBackground,
 }) => {
-  const { isContextMenuOpenRef} = useAppContext();
+  const { isContextMenuOpenRef } = useAppContext();
   const [isDragging, setIsDragging] = useState(false);
   const [isOpen, setIsOpen] = useState(open);
   const colors = [
@@ -55,6 +55,15 @@ const ColorDrawer = ({
   useEffect(() => {
     !isOpen && (isContextMenuOpenRef.current = true);
     return () => (isContextMenuOpenRef.current = false);
+  }, []);
+
+  useEffect(() => {
+    const handler = () => {
+      setIsOpen(false);
+    };
+
+    window.addEventListener("hashchange", handler);
+    return () => window.removeEventListener("hashchange", handler);
   }, []);
 
   useEffect(() => {

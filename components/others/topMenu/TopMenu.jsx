@@ -17,6 +17,7 @@ import handleServerCall from "@/utils/handleServerCall";
 import localDbReducer from "@/utils/localDbReducer";
 import ColorDrawer from "../ColorDrawer";
 import Menu from "../Menu";
+import MoreMenuDrawer from "../MoreMenuDrawer";
 
 const TopMenuHome = ({
   notes,
@@ -47,6 +48,7 @@ const TopMenuHome = ({
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
   const [colorDrawerOpen, setColorDrawerOpen] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  const [menuDrawerOpen, setMenuDrawerOpen] = useState(false);
   const [labelsOpen, setLabelsOpen] = useState(false);
   const [inTrash, setInTrash] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
@@ -481,6 +483,12 @@ const TopMenuHome = ({
   };
 
   const handleOpenMenu = (e) => {
+    const width = window.innerWidth;
+
+    if (width < 605) {
+      setMenuDrawerOpen(true);
+      return;
+    }
     setAnchorEl(e.currentTarget);
     setMoreMenuOpen((prev) => !prev);
     setLabelsOpen(false);
@@ -1011,6 +1019,14 @@ const TopMenuHome = ({
         setOpen={setColorDrawerOpen}
         selectedColor={selectedColor}
         selectedBG={selectedBG}
+      />
+      <MoreMenuDrawer
+        open={menuDrawerOpen}
+        setOpen={setMenuDrawerOpen}
+        selectedColor={selectedColor}
+        selectedBG={selectedBG}
+        menuItems={menuItems}
+        // updatedAt={localNote?.updatedAt}
       />
     </>
   );

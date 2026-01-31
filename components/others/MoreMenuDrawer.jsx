@@ -12,7 +12,8 @@ const MoreMenuDrawer = ({
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isOpen, setIsOpen] = useState(open);
-  const formattedEditedDate = isOpen ? getNoteFormattedDate(updatedAt) : null;
+  const formattedEditedDate =
+    isOpen && updatedAt ? getNoteFormattedDate(updatedAt) : null;
 
   const handleContentClick = useCallback((e) => {
     e.stopPropagation();
@@ -23,6 +24,15 @@ const MoreMenuDrawer = ({
     if (width < 605) return;
     setOpen(false);
   };
+
+  useEffect(() => {
+    const handler = () => {
+      setIsOpen(false);
+    };
+
+    window.addEventListener("hashchange", handler);
+    return () => window.removeEventListener("hashchange", handler);
+  }, []);
 
   useEffect(() => {
     if (open) {
@@ -73,9 +83,9 @@ const MoreMenuDrawer = ({
             <div className="drawer-handle" />
             <div className="drawer-top" />
             <div style={{ padding: "0 0rem" }} className="drawer-body">
-              <div className="menu-drawer-date">
+              { updatedAt && <div className="menu-drawer-date">
                 {"Edited " + formattedEditedDate}{" "}
-              </div>
+              </div>}
               <div>
                 {" "}
                 {menuItems.map((item, index) => {
