@@ -5128,7 +5128,7 @@ aside svg {
 }
 
 .dark-mode .modal-mobile-btn {
-  background-color: #18212b;
+  background-color: rgba(160, 170, 180, 0.25);
 }
 
 .modal-mobile-btn:hover,
