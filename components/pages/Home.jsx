@@ -35,8 +35,6 @@ const Home = memo(
       hasPinned,
       hasUnpinned,
       calculateLayout,
-      elligbleNotes,
-      fadingNotes,
     } = useMasonry();
     const lastAddedNoteRef = useRef(null);
     const touchOverElementRef = useRef(null);

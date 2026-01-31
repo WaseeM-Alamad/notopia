@@ -225,13 +225,11 @@ export function useNoteDragging({
     }
 
     if (!pointerMovedRef.current) {
-      animationFrame = requestAnimationFrame(checkCollisions);
-      return;
+      // animationFrame = requestAnimationFrame(checkCollisions);
+      // return;
     }
 
     pointerMovedRef.current = false;
-
-    const isGrid = layout === "grid";
 
     for (const uuid of notesStateRef.current.order) {
       const note = notesStateRef.current.notes.get(uuid);

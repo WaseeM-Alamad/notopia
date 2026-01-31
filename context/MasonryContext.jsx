@@ -150,7 +150,9 @@ export const MasonryProvider = ({
         if (!force) return;
       }
 
-      skipCalcRef.current = !force;
+      if (force) {
+        skipCalcRef.current = false;
+      }
 
       if (layoutFrameRef.current) {
         cancelAnimationFrame(layoutFrameRef.current);
