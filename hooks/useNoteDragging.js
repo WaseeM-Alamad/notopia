@@ -225,8 +225,8 @@ export function useNoteDragging({
     }
 
     if (!pointerMovedRef.current) {
-      // animationFrame = requestAnimationFrame(checkCollisions);
-      // return;
+      animationFrame = requestAnimationFrame(checkCollisions);
+      return;
     }
 
     pointerMovedRef.current = false;

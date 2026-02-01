@@ -506,27 +506,35 @@ const page = () => {
   });
 
   useEffect(() => {
-    return;
-    setTimeout(() => {
+    const t = setTimeout(() => {
       const notes = notesStateRef.current.notes;
       const order = notesStateRef.current.order;
-      const visibleSet = visibleItems;
-      let willUpdate = false;
-      order.forEach((uuid) => {
-        const note = notes.get(uuid);
-        const isNoteMounted = note.ref?.current;
-        const isVisible = visibleItems.has(note.uuid);
-        if (isVisible && !isNoteMounted) {
-          visibleSet.delete(note.uuid);
-          willUpdate = true;
-        }
-      });
 
-      if (willUpdate) {
-        setVisibleItems(visibleSet);
-        calculateLayoutRef.current();
-      }
-    }, 250);
+      setVisibleItems((prev) => {
+        const next = new Set(prev);
+        let changed = false;
+
+        order.forEach((uuid) => {
+          const note = notes.get(uuid);
+          const isMounted = note?.ref?.current;
+          const isVisible = next.has(uuid);
+
+          if (isVisible && !isMounted) {
+            next.delete(uuid);
+            changed = true;
+          }
+        });
+
+        if (changed) {
+          calculateLayoutRef.current();
+          return next;
+        }
+
+        return prev;
+      });
+    }, 240);
+
+    return () => clearTimeout(t);
   }, [notesState.notes]);
 
   const components = {

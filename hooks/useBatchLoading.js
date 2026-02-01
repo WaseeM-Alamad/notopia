@@ -438,8 +438,6 @@ export function useBatchLoading({
           }
         }
 
-        requestAnimationFrame(() => calculateLayoutRef.current());
-
         return newItems;
       });
     };

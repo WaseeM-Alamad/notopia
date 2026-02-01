@@ -88,6 +88,7 @@ export function AppProvider({ children, initialUser }) {
 
   const hideTooltip = useCallback((e) => {
     if (!setTooltipRef.current) return;
+
     const target = e.currentTarget;
     clearTimeout(tooltipTimeoutRef.current);
     setTooltipRef.current((prev) => {
@@ -110,8 +111,11 @@ export function AppProvider({ children, initialUser }) {
       });
     };
 
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    document.addEventListener("pointerdown", handler, true);
+
+    return () => {
+      document.removeEventListener("pointerdown", handler, true);
+    };
   }, []);
 
   useEffect(() => {

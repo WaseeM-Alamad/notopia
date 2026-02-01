@@ -30,7 +30,17 @@ const Tooltip = ({ anchorEl, text }) => {
         }}
         className="tooltip"
       >
-        <div dir="auto">{text}</div>
+        <div
+          dir="auto"
+          style={{
+            minWidth: 0,
+            overflow: "hidden",
+            whiteSpace: "nowrap",
+            textOverflow: "ellipsis",
+          }}
+        >
+          {text}
+        </div>
       </motion.div>
     </Popper>
   );

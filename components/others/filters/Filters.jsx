@@ -96,7 +96,15 @@ const Filters = ({
   const typeClick = (type) => {
     const title = type.toLowerCase().slice(0, type.length - 1);
     window.location.hash = `search/${title}`;
-    setFilters((prev) => ({ ...prev, [type.toLowerCase()]: true }));
+    setFilters((prev) =>
+      Object.fromEntries(
+        Object.keys(prev).map((key) => [
+          key,
+          key === `${[type.toLowerCase()]}` ? true : null,
+        ]),
+        [type.toLowerCase()],
+      ),
+    );
   };
 
   const colorClick = (color) => {
@@ -104,7 +112,11 @@ const Filters = ({
     const encodedColor =
       "color" + doubleEncode("=") + tripleEncode(color.toLowerCase());
     window.location.hash = `search/${encodedColor}`;
-    setFilters((prev) => ({ ...prev, color: color }));
+    setFilters((prev) =>
+      Object.fromEntries(
+        Object.keys(prev).map((key) => [key, key === "color" ? color : null]),
+      ),
+    );
   };
 
   const labelClick = (labelUUID) => {
@@ -112,7 +124,14 @@ const Filters = ({
     const label = labelsRef.current.get(labelUUID).label;
     const encodedLabel = "label" + doubleEncode("=") + tripleEncode(label);
     window.location.hash = `search/${encodedLabel}`;
-    setFilters((prev) => ({ ...prev, label: labelUUID }));
+    setFilters((prev) =>
+      Object.fromEntries(
+        Object.keys(prev).map((key) => [
+          key,
+          key === "label" ? labelUUID : null,
+        ]),
+      ),
+    );
   };
 
   const peopleClick = (username) => {
@@ -120,7 +139,14 @@ const Filters = ({
     const encodedUsername =
       "collab" + doubleEncode("=") + tripleEncode(username);
     window.location.hash = `search/${encodedUsername}`;
-    setFilters((prev) => ({ ...prev, collab: username }));
+    setFilters((prev) =>
+      Object.fromEntries(
+        Object.keys(prev).map((key) => [
+          key,
+          key === "collab" ? username : null,
+        ]),
+      ),
+    );
   };
 
   const tripleEncode = (str) => {

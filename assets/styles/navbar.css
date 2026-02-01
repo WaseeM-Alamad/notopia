@@ -68,11 +68,11 @@ nav {
   align-items: center;
   width: 2.875rem;
   height: 2.875rem;
-  transition: opacity 0.18s ease;
+  opacity: 0.76;
 }
 
 .nav-btn:hover {
-  opacity: 0.87;
+  opacity: 1;
 }
 
 .nav-btn:disabled {
