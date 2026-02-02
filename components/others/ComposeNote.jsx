@@ -192,9 +192,9 @@ const ComposeNote = ({
       uuid: newUUID,
       creator: {
         _id: userID,
-        displayName: user.displayName,
-        username: user.username,
-        image: user.image,
+        displayName: user?.displayName,
+        username: user?.username,
+        image: user?.image,
       },
       title: note?.title,
       content: note?.content,
@@ -239,9 +239,9 @@ const ComposeNote = ({
       ...result.firstResult.newNote,
       creator: {
         _id: userID,
-        displayName: user.displayName,
-        username: user.username,
-        image: user.image,
+        displayName: user?.displayName,
+        username: user?.username,
+        image: user?.image,
       },
     };
     dispatchNotes({ type: "SET_NOTE", note: receivedNote });

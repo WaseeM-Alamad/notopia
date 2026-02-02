@@ -46,7 +46,7 @@ const PhotoSettings = ({ rightHeader, selected, user }) => {
             className="settings-img-container"
           >
             <div className="acc-img-hv" />
-            <img src={user.image} alt="profile-image" />
+            <img src={user?.image} alt="profile-image" />
           </div>
           <div className="settings-img-desc">
             <div style={{ fontWeight: "510", marginBottom: "0.5rem" }}>
@@ -86,7 +86,7 @@ const PhotoSettings = ({ rightHeader, selected, user }) => {
         {isImageOpen && (
           <GalleryCarousel
             isAvatar={true}
-            images={[{ url: user.image }]}
+            images={[{ url: user?.image }]}
             setIsOpen={setIsImageOpen}
           />
         )}

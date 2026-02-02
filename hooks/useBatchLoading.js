@@ -65,7 +65,7 @@ export function useBatchLoading({
       version = layoutVersionRef.current,
     } = data;
     const container = containerRef.current;
-    if (!container || !currentSection) {
+    if (!container || !currentSection || initialLoading) {
       isLoadingRef.current = false;
       return;
     }

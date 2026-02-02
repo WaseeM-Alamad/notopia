@@ -38,13 +38,13 @@ const CollabUserInput = ({
     const isEmail = isValidateEmail(input);
     const normalizedInput = input.toLowerCase().trim();
     if (!isEmail) {
-      if (user.username.toLowerCase().trim() === normalizedInput) {
+      if (user?.username.toLowerCase().trim() === normalizedInput) {
         setErrorMsg("Username already exists");
         setIsLoading(false);
         return null;
       }
     } else {
-      if (user.email.toLowerCase().trim() === normalizedInput) {
+      if (user?.email.toLowerCase().trim() === normalizedInput) {
         setErrorMsg("Email already exists");
         setIsLoading(false);
         return null;
@@ -128,7 +128,7 @@ const CollabUserInput = ({
       return;
     }
 
-    if (newUser.id === user.id) {
+    if (newUser.id === user?.id) {
       removeSelfRef.current = false;
     }
 

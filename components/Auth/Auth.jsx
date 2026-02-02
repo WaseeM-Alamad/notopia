@@ -30,6 +30,18 @@ const Auth = () => {
 
   return (
     <>
+      <span
+        className="notopia nav-logo"
+        style={{
+          position: "fixed",
+          top: "1rem",
+          left: "1rem",
+          // fontSize: "2rem",
+          color: "#fff",
+        }}
+      >
+        Notopia
+      </span>
       <motion.div
         initial={{ transform: "translate(-50%, -50%) scale(0.9)", opacity: 0 }}
         animate={{ transform: "translate(-50%, -50%) scale(1)", opacity: 1 }}

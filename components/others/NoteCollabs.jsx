@@ -27,7 +27,7 @@ const NoteCollabs = ({
     collabs.push(...note?.collaborators);
     const filteredCollabs = collabs.filter((collab) => {
       const collabUser = collab?.data?.username || collab?.snapshot?.username;
-      return collabUser !== user.username;
+      return collabUser !== user?.username;
     });
     setCollaborators(filteredCollabs);
   }, [note?.collaborators]);

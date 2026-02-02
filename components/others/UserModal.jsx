@@ -109,7 +109,7 @@ const UserModal = ({ setUser, user }) => {
           <div className="acc-img-hv" />
           <img
             className="collab-dialog-img"
-            src={user.image}
+            src={user?.image}
             draggable={false}
             loading="lazy"
           />
@@ -139,7 +139,7 @@ const UserModal = ({ setUser, user }) => {
             textOverflow: "ellipsis",
           }}
         >
-          {user.username}
+          {user?.username}
         </div>
         <div
           className="action-msg"
@@ -205,7 +205,7 @@ const UserModal = ({ setUser, user }) => {
                 user?.handleRemoveCollab();
               }}
             >
-              Remove {user.isOwnUser ? " Self" : ""}
+              Remove {user?.isOwnUser ? " Self" : ""}
             </button>
           </div>
         )}
@@ -214,7 +214,7 @@ const UserModal = ({ setUser, user }) => {
         {isImageOpen && (
           <GalleryCarousel
             isAvatar={true}
-            images={[{ url: user.image }]}
+            images={[{ url: user?.image }]}
             setIsOpen={setIsImageOpen}
           />
         )}

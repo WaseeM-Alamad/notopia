@@ -17,7 +17,7 @@ const NavProfileSection = () => {
 
   const imageRef = useRef(null);
 
-  const image = user.image;
+  const image = user?.image;
 
   useEffect(() => {
     setBindsOpenRef.current = setBindsOpen;

@@ -1,17 +1,26 @@
+"use client";
 import Navbar from "@/components/others/navbar/Navbar";
 import Sidebar from "@/components/others/Sidebar";
-import { authOptions } from "@/utils/authOptions";
-import { getServerSession } from "next-auth";
+import { useAppContext } from "@/context/AppContext";
 import React from "react";
 
-const Layout = async ({ children }) => {
-  const session = await getServerSession(authOptions);
+const Layout = ({ children }) => {
+  const { initialLoading, session } = useAppContext();
+
   return (
     <>
       {session && (
         <>
-          <Navbar />
-          <Sidebar />
+          <div
+            style={{
+              pointerEvents: initialLoading && "none",
+              opacity: initialLoading ? "0" : "1",
+              transition: "opacity 0.2s ease",
+            }}
+          >
+            <Navbar />
+            <Sidebar />
+          </div>
           {children}
         </>
       )}

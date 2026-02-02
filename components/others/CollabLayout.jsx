@@ -20,7 +20,7 @@ const CollabLayout = ({
   const [collabOpsMap, setCollabOpsMap] = useState(new Map());
   const [dialogUser, setDialogUser] = useState(null);
 
-  const isCreator = note?.creator?._id === user.id;
+  const isCreator = note?.creator?._id === user?.id;
 
   const handleCancel = () => {
     removeSelfRef.current = false;

@@ -14,6 +14,7 @@ const ProfileMenu = ({
   setSettingsOpen,
   setBindsOpen,
 }) => {
+  const { setInitialLoading } = useAppContext();
   const { isDarkModeRef } = useGlobalContext();
   const [isClient, setIsClient] = useState(false);
 
@@ -89,6 +90,8 @@ const ProfileMenu = ({
       title: "Sign out",
       classes: "signout-menu-icon",
       func: () => {
+        setInitialLoading(true);
+        setIsOpen(false);
         signOut();
       },
     },
@@ -136,7 +139,7 @@ const ProfileMenu = ({
               <div className="img-edit-icon" />
             </div>
             <span dir="auto" className="username">
-              {user.displayName}
+              {user?.displayName}
             </span>
           </div>
         </div>

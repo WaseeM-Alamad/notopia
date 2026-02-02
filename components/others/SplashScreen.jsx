@@ -10,12 +10,12 @@ const SplashScreen = () => {
     <AnimatePresence>
       {initialLoading && (
         <motion.div
-          initial={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 250 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -150 }}
           transition={{
             opacity: { duration: 0.2 },
-            y: { type: "spring", stiffness: 300, damping: 30 },
+            y: { type: "spring", stiffness: 260, damping: 30 },
           }}
           style={{
             position: "fixed",
@@ -32,6 +32,7 @@ const SplashScreen = () => {
             alignItems: "center",
             height: "100dvh",
             userSelect: "none",
+            // boxShadow: "0px -11px 85px 0px rgba(0, 0, 0, 0.2)",
           }}
           key="splash"
         >

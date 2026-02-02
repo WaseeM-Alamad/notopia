@@ -133,10 +133,18 @@ export function AppProvider({ children, initialUser }) {
       setInitialLoading(true);
     } else {
       setTimeout(() => {
-        setInitialLoading(false);
-      }, 200);
+        session?.user && setInitialLoading(false);
+      }, 400);
     }
   }, [status]);
+
+  useEffect(() => {
+    if (initialLoading) {
+      document.body.setAttribute("data-scroll-locked", "1");
+    } else {
+      document.body.removeAttribute("data-scroll-locked");
+    }
+  }, [initialLoading]);
 
   const saveNewAvatar = useCallback(
     async ({ avatarBlob, setIsLoading, setIsOpen, gifFile }) => {
@@ -182,6 +190,7 @@ export function AppProvider({ children, initialUser }) {
   return (
     <AppContext.Provider
       value={{
+        setInitialLoading,
         initialLoading,
         labelsReady,
         setLabelsReady,

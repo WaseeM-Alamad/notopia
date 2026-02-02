@@ -101,7 +101,7 @@ export function useRealtimeUpdates({
 
                 dispatchNotes({ type: "SET_ORDER", newOrder: item.notesOrder });
                 if (calculateLayoutRef.current) {
-                  calculateLayoutRef.current();
+                  // calculateLayoutRef.current();
                 }
               },
               delay ? 0 : 0,
@@ -174,7 +174,7 @@ export function useRealtimeUpdates({
             });
           }
           if (calculateLayoutRef.current) {
-            calculateLayoutRef.current();
+            // calculateLayoutRef.current();
           }
         }
 

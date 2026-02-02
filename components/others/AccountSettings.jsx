@@ -30,7 +30,7 @@ const AccountSettings = ({ rightHeader, selected, user, setUser }) => {
   const displayRef = useRef(null);
 
   const newDisplayName = displayRef.current?.value?.trim();
-  const oldDisplayName = user.displayName?.trim() || "";
+  const oldDisplayName = user?.displayName?.trim() || "";
 
   const nameRef = useRef(null);
   const emailRef = useRef(null);
@@ -39,7 +39,7 @@ const AccountSettings = ({ rightHeader, selected, user, setUser }) => {
   const newEmailRef = useRef(null);
 
   const newUsername = nameRef.current?.value?.trim();
-  const oldUsername = user.username?.trim();
+  const oldUsername = user?.username?.trim();
   const spinnerColor = document.documentElement.classList.contains("dark-mode")
     ? "#dfdfdf"
     : "#6d6d6d";
@@ -325,7 +325,7 @@ const AccountSettings = ({ rightHeader, selected, user, setUser }) => {
                   ref={displayRef}
                   onInput={() => triggerRerender((prev) => !prev)}
                   disabled={isDisplayDisabled}
-                  defaultValue={user.displayName}
+                  defaultValue={user?.displayName}
                   type="text"
                   className="form-input"
                   style={{
@@ -427,7 +427,7 @@ const AccountSettings = ({ rightHeader, selected, user, setUser }) => {
                     triggerRerender((prev) => !prev);
                   }}
                   disabled={isNameDisabled}
-                  defaultValue={user.username}
+                  defaultValue={user?.username}
                   type="text"
                   className="form-input"
                   style={{
@@ -480,9 +480,9 @@ const AccountSettings = ({ rightHeader, selected, user, setUser }) => {
               <input
                 ref={emailRef}
                 disabled={true}
-                defaultValue={user.tempEmail || user.email}
+                defaultValue={user?.tempEmail || user?.email}
                 type="text"
-                className={`form-input ${user.tempEmail ? "warning-color" : ""}`}
+                className={`form-input ${user?.tempEmail ? "warning-color" : ""}`}
                 style={{ marginBottom: "0", paddingRight: "5rem" }}
               />
             </div>

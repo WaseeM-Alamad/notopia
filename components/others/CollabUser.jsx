@@ -21,7 +21,7 @@ const CollabUser = ({
   setDialogUser,
 }) => {
   const { user } = useAppContext();
-  const isOwnUser = collabID === user.id;
+  const isOwnUser = collabID === user?.id;
   const canDelete = isOwnUser || (!isOwner && isCreator);
 
   const handleRemoveCollab = async () => {

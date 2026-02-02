@@ -62,7 +62,7 @@ const page = () => {
     initialLoading,
   } = useAppContext();
   const { removeLabel } = useLabelsContext();
-  const { calculateLayoutRef } = useLayout();
+  const { calculateLayoutRef, layout } = useLayout();
   const [tooltipAnchor, setTooltipAnchor] = useState(new Map());
   const [notesState, dispatchNotes] = useReducer(notesReducer, initialStates);
   const [visibleItems, setVisibleItems] = useState(new Set());
@@ -104,6 +104,19 @@ const page = () => {
     notesStateRef.current = notesState;
     setDialogInfoRef.current = setDialogInfo;
   }, []);
+
+  const tRef = useRef(null);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    container.style.display = "none";
+    tRef.current = setTimeout(() => {
+      container.style.removeProperty("display");
+    }, 200);
+
+    return () => clearTimeout(tRef.current);
+  }, [layout]);
 
   useEffect(() => {
     const handleBeforeUnload = (event) => {
@@ -556,7 +569,13 @@ const page = () => {
   return (
     <>
       <SplashScreen />
-      <div style={{ pointerEvents: initialLoading && "none" }}>
+      <div
+        style={{
+          pointerEvents: initialLoading && "none",
+          opacity: initialLoading ? "0" : "1",
+          transition: "opacity 0.2s ease",
+        }}
+      >
         <div
           id="n-overlay"
           onClick={() => {
