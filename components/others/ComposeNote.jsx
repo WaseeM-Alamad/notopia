@@ -67,6 +67,7 @@ const ComposeNote = ({
   const contentRef = useRef(null);
   const inputRef = useRef(null);
   const dragCounter = useRef(0);
+  const isFirstRenderRef = useRef(true);
 
   useEffect(() => {
     if (labelObj) {
@@ -305,6 +306,10 @@ const ComposeNote = ({
   }, []);
 
   useEffect(() => {
+    if (isFirstRenderRef.current) {
+      isFirstRenderRef.current = false;
+      return;
+    }
     if (isOpen) {
       lockScroll(isOpen);
     } else {

@@ -569,13 +569,7 @@ const page = () => {
   return (
     <>
       <SplashScreen />
-      <div
-        style={{
-          pointerEvents: initialLoading && "none",
-          opacity: initialLoading ? "0" : "1",
-          transition: "opacity 0.2s ease",
-        }}
-      >
+      <div style={{ pointerEvents: initialLoading && "none" }}>
         <div
           id="n-overlay"
           onClick={() => {

@@ -63,6 +63,7 @@ const NoteModal = ({
   const removeSelfRef = useRef(false);
   const prevHash = useRef(null);
   const modalOpenRef = useRef(false);
+  const isFirstRenderRef = useRef(true);
 
   const timeoutRef = useRef(null);
 
@@ -499,6 +500,10 @@ const NoteModal = ({
   }, [isOpen]);
 
   useEffect(() => {
+    if (isFirstRenderRef.current) {
+      isFirstRenderRef.current = false;
+      return;
+    }
     if (isOpen) {
       lockScroll(isOpen);
     } else {
