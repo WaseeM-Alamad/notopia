@@ -80,6 +80,7 @@ const page = () => {
   const [noActionUndone, setNoActionUndone] = useState(false);
   const [labelObj, setLabelObj] = useState(null);
   const [dialogInfo, setDialogInfo] = useState(null);
+  const [reset, setReset] = useState(false);
 
   const undoFunction = useRef(null);
   const redoFunction = useRef(null);
@@ -497,6 +498,8 @@ const page = () => {
   });
 
   useBatchLoading({
+    reset,
+    setReset,
     notesState,
     notesStateRef,
     setVisibleItems,
@@ -651,6 +654,7 @@ const page = () => {
               rootContainerRef={rootContainerRef}
               labelObj={labelObj}
               handleDeleteLabel={handleDeleteLabel}
+              reset={reset}
             />
           </MasonryProvider>
         </div>

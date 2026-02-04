@@ -55,20 +55,6 @@ const NavProfileSection = () => {
           style={{ padding: "8px", opacity: "1" }}
           className="btn"
           onClick={handleProfileOpen}
-          onMouseEnter={(e) =>
-            showTooltip(
-              e,
-              <>
-                <span style={{ fontSize: "0.85rem" }}>Notopia account</span>
-                <div style={{ opacity: "0.7", paddingTop: "0.2rem" }}>
-                  {user?.username}
-                  <br />
-                  {user?.email}
-                </div>
-              </>,
-            )
-          }
-          onMouseLeave={hideTooltip}
           ref={imageRef}
         >
           <img

@@ -181,6 +181,10 @@ const NoteWrapper = ({
     );
   }
 
+  useEffect(() => {
+    // setHideElement(true);
+  }, [currentSection]);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}

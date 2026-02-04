@@ -3,6 +3,7 @@ import React, {
   memo,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -34,6 +35,7 @@ const DynamicLabel = ({
   handleSelectNote,
   containerRef,
   labelObj,
+  reset,
 }) => {
   const {
     gridNoteWidth,
@@ -69,6 +71,10 @@ const DynamicLabel = ({
   useEffect(() => {
     setIsModalOpen(false);
   }, [labelObj?.uuid]);
+
+  if (reset) {
+    return null;
+  }
 
   return (
     <>

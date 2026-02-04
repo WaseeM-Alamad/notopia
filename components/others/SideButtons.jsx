@@ -14,7 +14,7 @@ const SideButtons = ({
   isDragging,
 }) => {
   return (
-    <AnimatePresence>
+    <AnimatePresence presenceAffectsLayout={false}>
       {navItems.map(({ type, name, hash, Icon, uuid: labelUUID }) => (
         <SideBtn
           key={labelUUID || hash}

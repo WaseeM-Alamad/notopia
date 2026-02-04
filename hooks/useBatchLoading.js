@@ -7,6 +7,8 @@ import { useSearch } from "@/context/SearchContext";
 import { useEffect, useRef } from "react";
 
 export function useBatchLoading({
+  reset,
+  setReset,
   notesState,
   notesStateRef,
   setVisibleItems,
@@ -65,7 +67,7 @@ export function useBatchLoading({
       version = layoutVersionRef.current,
     } = data;
     const container = containerRef.current;
-    if (!container || !currentSection) {
+    if (!container || !currentSection || resetRef.current) {
       isLoadingRef.current = false;
       return;
     }
@@ -132,13 +134,13 @@ export function useBatchLoading({
         : unrendered;
 
     const nextBatch = sortedUnrendered.slice(0, batchSize);
-    if (nextBatch.length === 0) {
+    if (nextBatch.length === 0 || resetRef.current) {
       isLoadingRef.current = false;
       return;
     }
 
     requestIdleCallback(() => {
-      if (version !== layoutVersionRef.current) {
+      if (version !== layoutVersionRef.current || resetRef.current) {
         isLoadingRef.current = false;
         return;
       }
@@ -149,7 +151,7 @@ export function useBatchLoading({
           : nextBatch.forEach(([uuid, label]) => updated.add(uuid));
 
         setTimeout(() => {
-          if (version !== layoutVersionRef.current) {
+          if (version !== layoutVersionRef.current || resetRef.current) {
             isLoadingRef.current = false;
             return;
           }
@@ -174,6 +176,7 @@ export function useBatchLoading({
   }, [loadNextBatch]);
 
   const resetBatchLoading = () => {
+    if (resetRef.current) return;
     if (layoutVersionRef.current >= 10) {
       layoutVersionRef.current = 0;
     } else {
@@ -183,6 +186,7 @@ export function useBatchLoading({
   };
 
   const resetAndLoad = (timeout = true) => {
+    if (resetRef.current) return;
     requestIdleCallback(() => {
       resetBatchLoading();
       const version = layoutVersionRef.current;
@@ -290,12 +294,33 @@ export function useBatchLoading({
     });
   }, [filters]);
 
+  const resetRef = useRef(null);
+
+  useEffect(() => {
+    if (currentSection !== "DynamicLabel") return;
+    setReset(true);
+    requestAnimationFrame(() => setReset(false));
+  }, [labelObj]);
+
+  useEffect(() => {
+    resetRef.current = reset;
+    if (!reset) {
+      resetAndLoad(false);
+    }
+  }, [reset]);
+
   useEffect(() => {
     if (skipLabelObjRefresh.current) {
       skipLabelObjRefresh.current = false;
       return;
     }
-    if (isFirstRenderRef.current || !labelObj || !notesReady || !labelsReady)
+    if (
+      isFirstRenderRef.current ||
+      !labelObj ||
+      !notesReady ||
+      !labelsReady ||
+      resetRef.current
+    )
       return;
     requestAnimationFrame(() => {
       resetAndLoad(false);

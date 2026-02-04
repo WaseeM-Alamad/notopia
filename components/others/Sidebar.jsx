@@ -32,6 +32,7 @@ const Sidebar = memo(() => {
   const [actionTitle, setActionTitle] = useState("");
   const [tooltipOpen, setTooltipOpen] = useState(false);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const isDraggingRef = useRef(null);
 
   const layoutFrameRef = useRef(null);
   const tooltipTimeoutRef = useRef(null);
@@ -246,29 +247,30 @@ const Sidebar = memo(() => {
     overUUIDRef.current = overUUID;
   }, [overUUID]);
 
-  const handleDragStart = useCallback(
-    (labelUUID) => {
-      if (isDragging) return;
-      setIsDragging(labelUUID);
-      draggedUUIDRef.current = labelUUID;
-      document.body.classList.add("dragging-sidebar");
+  useEffect(() => {
+    isDraggingRef.current = isDragging;
+  }, [isDragging]);
 
-      const handleDragEnd = () => {
-        if (overUUIDRef.current !== draggedUUIDRef.current) {
-          swapPinnedLabels(labelUUID, overUUIDRef.current);
-        }
-        setIsDragging(null);
-        setOverUUID(null);
-        draggedUUIDRef.current = null;
+  const handleDragStart = useCallback((labelUUID) => {
+    if (isDraggingRef.current) return;
+    setIsDragging(labelUUID);
+    draggedUUIDRef.current = labelUUID;
+    document.body.classList.add("dragging-sidebar");
 
-        document.body.classList.remove("dragging-sidebar");
-        document.removeEventListener("mouseup", handleDragEnd);
-      };
+    const handleDragEnd = () => {
+      if (overUUIDRef.current !== draggedUUIDRef.current) {
+        swapPinnedLabels(labelUUID, overUUIDRef.current);
+      }
+      setIsDragging(null);
+      setOverUUID(null);
+      draggedUUIDRef.current = null;
 
-      document.addEventListener("mouseup", handleDragEnd);
-    },
-    [isDragging, overUUID],
-  );
+      document.body.classList.remove("dragging-sidebar");
+      document.removeEventListener("mouseup", handleDragEnd);
+    };
+
+    document.addEventListener("mouseup", handleDragEnd);
+  }, []);
 
   const showSideTooltip = (e) => {
     const sidebarOpen = document.body.classList.contains("sidebar-open");

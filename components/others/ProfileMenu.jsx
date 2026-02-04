@@ -101,15 +101,31 @@ const ProfileMenu = ({
     <>
       <motion.div
         ref={menuRef}
-        initial={{ opacity: 0, scale: 1, y: -5, pointerEvents: "auto" }}
-        animate={{ opacity: 1, scale: 1, y: 0, pointerEvents: "auto" }}
-        exit={{ opacity: 0, scale: 1, y: -3, pointerEvents: "none" }}
-        transition={{
-          type: "spring",
-          stiffness: 500,
-          damping: 30,
-          mass: 0.6,
+        variants={{
+          closed: {
+            opacity: 0,
+            scale: 0.97,
+            y: -17,
+            transition: {
+              duration: 0.15,
+              ease: "easeInOut",
+            },
+          },
+          open: {
+            opacity: 1,
+            scale: 1,
+            y: 0,
+            transition: {
+              duration: 0.3,
+              ease: [0.22, 1, 0.36, 1],
+              staggerChildren: 0.05,
+              delayChildren: 0.1,
+            },
+          },
         }}
+        initial="closed"
+        animate="open"
+        exit="closed"
         style={{
           zIndex: "110",
           position: "fixed",
