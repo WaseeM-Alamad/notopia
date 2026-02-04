@@ -132,6 +132,7 @@ const ProfileMenu = ({
           top: `${menuPosition.top + 50}px`,
           left: `${menuPosition.left - 175}px`,
           pointerEvents: !isOpen && "none",
+          willChange: "transform"
         }}
         className="profile-menu menu-border"
       >

@@ -4,9 +4,10 @@ import ProfileMenu from "../ProfileMenu";
 import { AnimatePresence } from "framer-motion";
 import KeybindsTable from "../KeybindsTable";
 import AccountDialog from "../AccountDialog";
+import ProfileTooltip from "../profileTooltip";
 
 const NavProfileSection = () => {
-  const { user, showTooltip, hideTooltip, setBindsOpenRef } = useAppContext();
+  const { user, setBindsOpenRef } = useAppContext();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [bindsOpen, setBindsOpen] = useState(false);
@@ -14,6 +15,7 @@ const NavProfileSection = () => {
     top: 100,
     left: 600,
   });
+  const [tooltipTop, setTooltipTop] = useState(null);
 
   const imageRef = useRef(null);
 
@@ -47,6 +49,9 @@ const NavProfileSection = () => {
     return () => window.removeEventListener("resize", handler);
   }, [isMenuOpen]);
 
+  const tooltipTimeoutRef = useRef(null);
+  const tooltipCloseTimeoutRef = useRef(null);
+
   return (
     <>
       <div className="nav-img-wrapper">
@@ -56,6 +61,23 @@ const NavProfileSection = () => {
           className="btn"
           onClick={handleProfileOpen}
           ref={imageRef}
+          onMouseEnter={(e) => {
+            clearTimeout(tooltipCloseTimeoutRef.current);
+            const rect = e.currentTarget.getBoundingClientRect();
+            tooltipTimeoutRef.current = setTimeout(() => {
+              setTooltipTop(rect.bottom);
+            }, 400);
+          }}
+          onMouseDown={() => {
+            clearTimeout(tooltipTimeoutRef.current);
+            setTooltipTop(null);
+          }}
+          onMouseLeave={() => {
+            clearTimeout(tooltipTimeoutRef.current);
+            tooltipCloseTimeoutRef.current = setTimeout(() => {
+              setTooltipTop(null);
+            }, 150);
+          }}
         >
           <img
             className="profile-image"
@@ -87,6 +109,11 @@ const NavProfileSection = () => {
       <AnimatePresence>
         {bindsOpen && (
           <KeybindsTable isOpen={bindsOpen} setIsOpen={setBindsOpen} />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {tooltipTop && !isMenuOpen && (
+          <ProfileTooltip tooltipTop={tooltipTop} />
         )}
       </AnimatePresence>
     </>

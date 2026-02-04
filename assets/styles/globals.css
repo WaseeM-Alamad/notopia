@@ -5818,7 +5818,9 @@ aside svg {
   width: fit-content;
   width: 220px;
   background-color: var(--bg2);
-  box-shadow: 0px 0px 32px -10px var(--shadow);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.07),
+    0 4px 12px rgba(0, 0, 0, 0.04);
   padding: 0.5rem 0.3rem;
 }
 
@@ -5845,13 +5847,13 @@ aside svg {
 }
 
 .profile-menu-icon {
-  background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 17V16.125C4 12.7423 6.68629 10 10 10M10 10C13.3137 10 16 12.7423 16 16.125V17M10 10C11.8935 10 13.4286 8.43296 13.4286 6.5C13.4286 4.567 11.8935 3 10 3C8.10645 3 6.57143 4.567 6.57143 6.5C6.57143 8.43296 8.10645 10 10 10Z' stroke='%23444444' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E%0A");
+  background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M10 2C12.3897 2 14.3409 3.96556 14.3409 6.40738C14.3408 7.762 13.7395 8.96909 12.7966 9.77613C15.2679 10.8701 16.9999 13.3691 17 16.287V17.1856C16.9997 17.6352 16.6437 18 16.2045 18C15.7655 17.9998 15.4093 17.6351 15.4091 17.1856V16.287C15.409 13.2722 12.9951 10.814 10 10.814C7.005 10.814 4.59102 13.2723 4.59094 16.287V17.1856C4.59067 17.6352 4.23463 18 3.79547 18C3.35632 18 3.00028 17.6352 3 17.1856V16.287C3.00006 13.3692 4.73229 10.8702 7.20342 9.77613C6.26062 8.96909 5.65923 7.76191 5.65908 6.40738C5.65908 3.96562 7.6103 2.00009 10 2ZM10 3.62871C8.47356 3.62879 7.25003 4.8808 7.25003 6.40738C7.25028 7.9337 8.47373 9.18516 10 9.18525C11.5263 9.18525 12.7497 7.93374 12.75 6.40738C12.75 4.88076 11.5265 3.62871 10 3.62871Z' fill='%23444444'/%3E%3C/svg%3E%0A");
   background-position: 0.7rem center;
   background-repeat: no-repeat;
 }
 
 .dark-mode .profile-menu-icon {
-  background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 17V16.125C4 12.7423 6.68629 10 10 10M10 10C13.3137 10 16 12.7423 16 16.125V17M10 10C11.8935 10 13.4286 8.43296 13.4286 6.5C13.4286 4.567 11.8935 3 10 3C8.10645 3 6.57143 4.567 6.57143 6.5C6.57143 8.43296 8.10645 10 10 10Z' stroke='%23d4d6d9' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E%0A");
+  background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M10 2C12.3897 2 14.3409 3.96556 14.3409 6.40738C14.3408 7.762 13.7395 8.96909 12.7966 9.77613C15.2679 10.8701 16.9999 13.3691 17 16.287V17.1856C16.9997 17.6352 16.6437 18 16.2045 18C15.7655 17.9998 15.4093 17.6351 15.4091 17.1856V16.287C15.409 13.2722 12.9951 10.814 10 10.814C7.005 10.814 4.59102 13.2723 4.59094 16.287V17.1856C4.59067 17.6352 4.23463 18 3.79547 18C3.35632 18 3.00028 17.6352 3 17.1856V16.287C3.00006 13.3692 4.73229 10.8702 7.20342 9.77613C6.26062 8.96909 5.65923 7.76191 5.65908 6.40738C5.65908 3.96562 7.6103 2.00009 10 2ZM10 3.62871C8.47356 3.62879 7.25003 4.8808 7.25003 6.40738C7.25028 7.9337 8.47373 9.18516 10 9.18525C11.5263 9.18525 12.7497 7.93374 12.75 6.40738C12.75 4.88076 11.5265 3.62871 10 3.62871Z' fill='%23D4D6D9'/%3E%3C/svg%3E%0A");
 }
 
 .theme-menu-icon {
@@ -6397,3 +6399,49 @@ aside svg {
 .filter-collab-item:hover {
   background-color: var(--light-blue-hover);
 }
+
+.profile-tooltip {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  right: 0;
+  z-index: 1000000;
+  /* max-width: 11rem; */
+  opacity: 1;
+  pointer-events: none;
+  background-color: var(--tooltip);
+  border: solid 0.5px rgba(255, 255, 255, 0.15);
+  /* box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.07),
+    0 4px 12px rgba(0, 0, 0, 0.07); */
+  color: white;
+  font-size: 12px;
+  letter-spacing: 0.3px;
+  line-height: 1rem;
+  font-weight: 350;
+  white-space: nowrap;
+  border-radius: 0.5rem;
+  padding: 0.3rem 0.5rem;
+  min-width: 8rem;
+  max-width: 10rem;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.dark-mode .profile-tooltip {
+  border: solid 0.5px var(--border);
+}
+
+/* .profile-tooltip::before {
+  content: "";
+  position: absolute;
+  top: -20%;
+  bottom: 100%;
+  right: 15px;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-bottom: 7px solid var(--bg2);
+  border-right: 7px solid transparent;
+  border-left: 7px solid transparent;
+} */
