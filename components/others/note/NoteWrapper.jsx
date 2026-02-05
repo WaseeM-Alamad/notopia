@@ -21,7 +21,7 @@ const NoteWrapper = ({
   touchOverElementRef,
   calculateLayout = () => {},
 }) => {
-  const { currentSection, notesIndexMapRef, layout } = useAppContext();
+  const { currentSection, notesIndexMapRef } = useAppContext();
   const [mounted, setMounted] = useState(false);
   const [height, setHeight] = useState(0);
   const noteRef = useRef(null);
@@ -166,44 +166,11 @@ const NoteWrapper = ({
       });
   }, []);
 
-  const [hideElement, setHideElement] = useState(false);
-
-  function isElementVisible() {
-    const el = noteRef.current;
-    if (!el) return false;
-    const rect = el.getBoundingClientRect();
-
-    return (
-      rect.bottom > 0 &&
-      rect.right > 0 &&
-      rect.top < window.innerHeight &&
-      rect.left < window.innerWidth
-    );
-  }
-
-  useEffect(() => {
-    // setHideElement(true);
-  }, [currentSection]);
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
       transition={{ duration: 0.2, type: "tween" }}
-      onAnimationStart={(def) => {
-        if (def.opacity === 0) {
-          setHideElement(!isElementVisible());
-          calculateLayout(true);
-        }
-      }}
-      onAnimationComplete={(definition) => {
-        if (definition.opacity === 0) {
-          setHideElement(false);
-          calculateLayout(false, true);
-        }
-      }}
-      style={{ display: hideElement && "none" }}
       className="top-note-wrapper"
     >
       <div

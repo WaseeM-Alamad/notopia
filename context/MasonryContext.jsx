@@ -20,6 +20,7 @@ export const MasonryProvider = ({
   labelObj,
   visibleItems,
   containerRef,
+  notesReady,
 }) => {
   const { notesStateRef, focusedIndex, currentSection, user } = useAppContext();
   const { filters, searchTerm } = useSearch();
@@ -302,7 +303,15 @@ export const MasonryProvider = ({
         container.style.height = `${willCalcArchSection ? archivedHeight : unpinnedHeight}px`;
       });
     },
-    [labelObj, isGrid, COLUMN_WIDTH, GUTTER, currentSection, filters],
+    [
+      labelObj,
+      isGrid,
+      COLUMN_WIDTH,
+      GUTTER,
+      currentSection,
+      filters,
+      notesReady,
+    ],
   );
 
   const debouncedCalculateLayout = useCallback(() => {
@@ -336,6 +345,10 @@ export const MasonryProvider = ({
     visibleItems,
     order,
   ]);
+
+  useEffect(()=> {
+    calculateLayout(false, true)
+  }, [notesReady])
 
   useEffect(() => {
     setTimeout(() => {

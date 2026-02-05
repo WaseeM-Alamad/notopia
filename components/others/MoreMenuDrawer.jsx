@@ -1,6 +1,7 @@
 import React, { memo, useCallback, useEffect, useState } from "react";
 import { Drawer } from "vaul";
 import { getNoteFormattedDate } from "@/utils/noteDateFormatter";
+import { useAppContext } from "@/context/AppContext";
 
 const MoreMenuDrawer = ({
   open,
@@ -10,6 +11,7 @@ const MoreMenuDrawer = ({
   menuItems,
   updatedAt,
 }) => {
+  const { isContextMenuOpenRef } = useAppContext();
   const [isDragging, setIsDragging] = useState(false);
   const [isOpen, setIsOpen] = useState(open);
   const formattedEditedDate =
@@ -51,6 +53,11 @@ const MoreMenuDrawer = ({
     });
   }, [open]);
 
+  useEffect(() => {
+    isContextMenuOpenRef.current = isOpen;
+    return () => (isContextMenuOpenRef.current = false);
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
@@ -83,9 +90,11 @@ const MoreMenuDrawer = ({
             <div className="drawer-handle" />
             <div className="drawer-top" />
             <div style={{ padding: "0 0rem" }} className="drawer-body">
-              { updatedAt && <div className="menu-drawer-date">
-                {"Edited " + formattedEditedDate}{" "}
-              </div>}
+              {updatedAt && (
+                <div className="menu-drawer-date">
+                  {"Edited " + formattedEditedDate}{" "}
+                </div>
+              )}
               <div>
                 {" "}
                 {menuItems.map((item, index) => {

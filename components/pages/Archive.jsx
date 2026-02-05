@@ -32,7 +32,6 @@ const Archive = memo(
         <div ref={rootContainerRef} className={`starting-div `}>
           <SectionHeader title="Archive" iconClass="section-archive-icon" />
           <div ref={containerRef} className="section-container">
-            <AnimatePresence presenceAffectsLayout={false}>
               {order.map((uuid, index) => {
                 const note = notes.get(uuid);
                 if (!visibleItems.has(note?.uuid)) return null;
@@ -55,7 +54,6 @@ const Archive = memo(
                     />
                   );
               })}
-            </AnimatePresence>
           </div>
           <div style={{ display: notesExist && "none" }} className="empty-page">
             {notesReady && !notesExist && (

@@ -111,7 +111,6 @@ const FilteredNotes = memo(
           >
             ARCHIVED
           </p>
-          <AnimatePresence presenceAffectsLayout={false}>
             {order.map((uuid, index) => {
               const note = notes.get(uuid);
               if (!isInCurrentSection(note)) return;
@@ -134,7 +133,6 @@ const FilteredNotes = memo(
                 />
               );
             })}
-          </AnimatePresence>
         </div>
       </>
     );

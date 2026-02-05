@@ -82,19 +82,22 @@ export function useKeyBindings({
 
   useEffect(() => {
     const handleKeyDown = async (event) => {
-      if (ignoreKeysRef.current) {
-        return;
-      }
       if (event.key === "Escape") {
         closeToolTip();
         if (isActionModalOpenRef.current || isContextMenuOpenRef.current) {
           return;
         }
         setIsModalOpen(false);
+
+        if (ignoreKeysRef.current) return;
         if (selectedNotesRef.current.size > 0) {
           setSelectedNotesIDs([]);
           window.dispatchEvent(new Event("topMenuClose"));
         }
+      }
+
+      if (ignoreKeysRef.current) {
+        return;
       }
 
       const notes = notesStateRef.current.notes;

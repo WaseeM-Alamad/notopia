@@ -202,7 +202,6 @@ const Labels = memo(
         <div ref={rootContainerRef} className="starting-div">
           <SectionHeader title="Labels" iconClass="section-folders-icon" />
           <div ref={containerRef} className="section-container">
-            <AnimatePresence presenceAffectsLayout={false}>
               {[...labelsRef.current]
                 .sort(
                   ([, a], [, b]) =>
@@ -228,7 +227,6 @@ const Labels = memo(
                     />
                   );
                 })}
-            </AnimatePresence>
           </div>
           <div
             style={{ display: labelsExist && "none" }}

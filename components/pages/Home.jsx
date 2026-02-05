@@ -109,7 +109,6 @@ const Home = memo(
               OTHERS
             </p>
 
-            <AnimatePresence presenceAffectsLayout={false}>
               {order.map((uuid, index) => {
                 const note = notes.get(uuid);
                 if (!visibleItems.has(note?.uuid)) return null;
@@ -138,7 +137,6 @@ const Home = memo(
                   />
                 );
               })}
-            </AnimatePresence>
           </div>
           <div style={{ display: notesExist && "none" }} className="empty-page">
             {notesReady && !notesExist && (

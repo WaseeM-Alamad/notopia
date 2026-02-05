@@ -91,7 +91,6 @@ const Trash = memo(
             Notes in Trash are deleted after 7 days.
           </div>
           <div ref={containerRef} className="section-container">
-            <AnimatePresence presenceAffectsLayout={false}>
               {order.map((uuid, index) => {
                 const note = notes.get(uuid);
                 if (!visibleItems.has(note?.uuid)) return null;
@@ -114,7 +113,6 @@ const Trash = memo(
                     />
                   );
               })}
-            </AnimatePresence>
           </div>
           <div style={{ display: notesExist && "none" }} className="empty-page">
             {notesReady && !notesExist && (

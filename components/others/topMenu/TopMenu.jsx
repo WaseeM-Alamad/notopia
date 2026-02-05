@@ -30,6 +30,7 @@ const TopMenuHome = ({
   rootContainerRef,
   functionRefs,
   currentSection,
+  temporarilyHideContainer,
 }) => {
   const {
     user,
@@ -295,6 +296,7 @@ const TopMenuHome = ({
 
     if (clearSet) {
       window.dispatchEvent(new Event("reloadNotes"));
+      temporarilyHideContainer();
     }
 
     const redo = async () => {
@@ -399,6 +401,7 @@ const TopMenuHome = ({
     );
 
     if (clearSet) {
+      temporarilyHideContainer();
       window.dispatchEvent(new Event("reloadNotes"));
     }
 
