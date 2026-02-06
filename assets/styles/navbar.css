@@ -79,6 +79,10 @@ nav {
   opacity: 0.56 !important;
 }
 
+.refresh-btn:disabled {
+  opacity: 0.76 !important;
+}
+
 .profile-image {
   display: block;
   object-fit: cover;

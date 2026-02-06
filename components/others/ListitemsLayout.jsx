@@ -101,7 +101,7 @@ const ListItemsLayout = ({
             clientID: clientID,
           }),
       ],
-      openSnackRef.current
+      openSnackRef.current,
     );
   };
 
@@ -138,7 +138,7 @@ const ListItemsLayout = ({
             clientID: clientID,
           }),
       ],
-      openSnackRef.current
+      openSnackRef.current,
     );
   };
 
@@ -177,10 +177,10 @@ const ListItemsLayout = ({
               clientID: clientID,
             }),
         ],
-        openSnackRef.current
+        openSnackRef.current,
       );
     },
-    [localNote?.uuid]
+    [localNote?.uuid],
   );
 
   const updateListItemContent = useCallback(
@@ -197,10 +197,10 @@ const ListItemsLayout = ({
               clientID: clientID,
             }),
         ],
-        openSnackRef.current
+        openSnackRef.current,
       );
     }, 600),
-    [localNote?.uuid]
+    [localNote?.uuid],
   );
 
   const draggedIndexRef = useRef(null);
@@ -346,7 +346,7 @@ const ListItemsLayout = ({
 
       document.addEventListener("mouseup", handleDragEnd);
     },
-    [localNote?.color]
+    [localNote?.color],
   );
 
   const calculateOnEnd = async (initialState, initialIndex, draggedItem) => {
@@ -451,7 +451,7 @@ const ListItemsLayout = ({
               clientID: clientID,
             }),
         ],
-        openSnackRef.current
+        openSnackRef.current,
       );
     }
   };
@@ -484,7 +484,7 @@ const ListItemsLayout = ({
       filteredList.splice(
         overIndex - childrenRef.current.length,
         0,
-        ...itemsToInsert
+        ...itemsToInsert,
       );
       draggedIndexRef.current =
         overIndexRef.current - childrenRef.current.length;
@@ -522,7 +522,7 @@ const ListItemsLayout = ({
     const newList = moveParentGroup(
       checkboxesRef.current,
       draggedIndexRef.current,
-      overIndexRef.current
+      overIndexRef.current,
     );
 
     setLocalNote((prev) => ({ ...prev, checkboxes: newList }));
@@ -565,7 +565,7 @@ const ListItemsLayout = ({
   const activeParentItems = activeItems?.filter((item) => item.parent === null);
 
   const completedParentItems = completedItems?.filter(
-    (item) => item.parent === null
+    (item) => item.parent === null,
   );
 
   const getCompletedChildren = (parentUUID) => {
@@ -687,7 +687,7 @@ const ListItemsLayout = ({
 
           {activeParentItems.map((parent, index) => {
             const completedChildren = getCompletedChildrenForActiveParent(
-              parent.uuid
+              parent.uuid,
             );
             if (completedChildren.length === 0) return null;
 

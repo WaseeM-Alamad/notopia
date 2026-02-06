@@ -78,7 +78,7 @@ const NavButtons = () => {
       </Button>
       <Button
         disabled={(isLoading && UpToDatetrigger) || !UpToDatetrigger}
-        className="nav-btn"
+        className="nav-btn refresh-btn"
         onClick={handleRefresh}
         onMouseEnter={(e) => showTooltip(e, "Refresh")}
         onMouseLeave={hideTooltip}

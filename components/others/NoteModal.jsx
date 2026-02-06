@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useRef, useState } from "react";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   NoteUpdateAction,
@@ -13,6 +13,7 @@ import localDbReducer from "@/utils/localDbReducer";
 import NoteEditor from "./NoteEditor";
 import CollabLayout from "./CollabLayout";
 import { useGlobalContext } from "@/context/GlobalContext";
+import { debounce, throttle } from "lodash";
 
 const NoteModal = ({
   localNote,
@@ -53,6 +54,7 @@ const NoteModal = ({
   const skipCenterRef = useRef(false);
 
   const collabTimeoutRef = useRef(null);
+  const skipUpdateDbRef = useRef(true);
 
   const userID = user?.id;
   const titleRef = useRef(null);
@@ -195,19 +197,34 @@ const NoteModal = ({
     setUndoStack([]);
   };
 
+  const updateLocalDbNote = useCallback(
+    debounce((newNote, pinned) => {
+      localDbReducer({
+        notes: notesStateRef.current.notes,
+        order: notesStateRef.current.order,
+        userID: userID,
+        type: "SET_NOTE",
+        note: { ...newNote, isPinned: pinned },
+      });
+    }, 200),
+    [],
+  );
+
+  useEffect(() => {
+    if (!isOpen) return;
+    if (skipUpdateDbRef.current) {
+      skipUpdateDbRef.current = false;
+      return;
+    }
+    updateLocalDbNote(localNote, localIsPinned);
+  }, [localNote, localIsPinned]);
+
   const updateNote = () => {
     const { ref: _, ...cleanLocalNote } = localNote;
     const { ref: __, ...cleanNote } = note;
 
     if (JSON.stringify(cleanLocalNote) !== JSON.stringify(cleanNote)) {
       dispatchNotes({ type: "SET_NOTE", note: localNote });
-      localDbReducer({
-        notes: notesStateRef.current.notes,
-        order: notesStateRef.current.order,
-        userID: userID,
-        type: "SET_NOTE",
-        note: localNote,
-      });
     }
   };
 
@@ -483,10 +500,12 @@ const NoteModal = ({
       }
 
       if (initialStyle?.element && initialStyle?.initialNote?.ref?.current) {
+        skipUpdateDbRef.current = true;
         setTimeout(() => {
           closeModal();
         }, 220);
       } else {
+        skipUpdateDbRef.current = true;
         modalRef.current.style.transition =
           "all 0.22s cubic-bezier(0.35, 0.9, 0.25, 1), opacity 0.09s, margin 0.22s cubic-bezier(0.5, 0.2, 0.3, 1)";
         modalRef.current.style.opacity = 0;
@@ -603,13 +622,6 @@ const NoteModal = ({
   };
 
   const handleTrash = () => {
-    localDbReducer({
-      notes: notesStateRef.current.notes,
-      order: notesStateRef.current.order,
-      userID: userID,
-      type: "TRASH_NOTE",
-      note: note,
-    });
     dispatchNotes({
       type: "TRASH_NOTE",
       note: note,
@@ -632,6 +644,13 @@ const NoteModal = ({
     };
 
     const onClose = async () => {
+      localDbReducer({
+        notes: notesStateRef.current.notes,
+        order: notesStateRef.current.order,
+        userID: userID,
+        type: "TRASH_NOTE",
+        note: note,
+      });
       handleServerCall(
         [
           () =>

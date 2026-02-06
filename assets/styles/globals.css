@@ -714,28 +714,17 @@ svg {
   margin-bottom: auto;
   margin-top: auto;
   padding: 0.65rem 1.5rem 0.65rem 1.5rem;
-  background-color: rgba(0, 0, 0, 0);
+  background-color: transparent;
   border: none;
   border-radius: 0.4rem;
   cursor: pointer;
+  color: var(--text);
   outline: none;
   transition: all 0.2s ease;
 }
 
-.dark-mode .close-btn {
-  color: rgb(232, 234, 237);
-}
-
 .close-btn:hover {
-  background-color: rgba(0, 0, 0, 0.07);
-}
-
-.close-btn:hover {
-  background-color: rgba(255, 255, 255, 0.03);
-}
-
-.close-btn:focus {
-  background-color: rgba(0, 0, 0, 0.07);
+  background-color: var(--icon-btn-hover);
 }
 
 .modal-corner {

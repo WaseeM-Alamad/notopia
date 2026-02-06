@@ -18,6 +18,7 @@ import localDbReducer from "@/utils/localDbReducer";
 import ColorDrawer from "../ColorDrawer";
 import Menu from "../Menu";
 import MoreMenuDrawer from "../MoreMenuDrawer";
+import { useLayout } from "@/context/LayoutContext";
 
 const TopMenuHome = ({
   notes,
@@ -30,7 +31,6 @@ const TopMenuHome = ({
   rootContainerRef,
   functionRefs,
   currentSection,
-  temporarilyHideContainer,
 }) => {
   const {
     user,
@@ -40,9 +40,10 @@ const TopMenuHome = ({
     openSnackRef,
     setDialogInfoRef,
     notesStateRef,
+    setLoadingImages,
   } = useAppContext();
   const { filters } = useSearch();
-  const { setLoadingImages } = useAppContext();
+  const { calculateLayoutRef } = useLayout();
   const userID = user?.id;
   const [selectedNumber, setSelectedNumber] = useState(false);
   const [colorAnchorEl, setColorAnchorEl] = useState(null);
@@ -288,15 +289,20 @@ const TopMenuHome = ({
   const handleArchive = async () => {
     const length = selectedNotesIDs.length;
     let clearSet = false;
+    const visibleUUIDs = [];
 
     const selectedUUIDs = selectedNotesIDs.map(({ uuid }) => {
       if (!visibleItems.has(uuid)) clearSet = true;
+      const note = notesStateRef.current.notes.get(uuid);
+      if (note.ref.current) {
+        visibleUUIDs.push(uuid);
+      }
       return uuid;
     });
 
     if (clearSet) {
+      calculateLayoutRef.current(true);
       window.dispatchEvent(new Event("reloadNotes"));
-      temporarilyHideContainer();
     }
 
     const redo = async () => {
@@ -369,7 +375,7 @@ const TopMenuHome = ({
       });
       setVisibleItems((prev) => {
         const updated = new Set(prev);
-        selectedUUIDs.forEach((uuid) => {
+        visibleUUIDs.forEach((uuid) => {
           updated.add(uuid);
         });
         return updated;
@@ -401,7 +407,7 @@ const TopMenuHome = ({
     );
 
     if (clearSet) {
-      temporarilyHideContainer();
+      calculateLayoutRef.current(true);
       window.dispatchEvent(new Event("reloadNotes"));
     }
 
@@ -1029,7 +1035,7 @@ const TopMenuHome = ({
         selectedColor={selectedColor}
         selectedBG={selectedBG}
         menuItems={menuItems}
-        // updatedAt={localNote?.updatedAt}
+        hasTopPadding={true}
       />
     </>
   );

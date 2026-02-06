@@ -184,13 +184,6 @@ export function useNoteActions({
         const initialIndex = data.index;
 
         const redo = async () => {
-          localDbReducer({
-            notes: notesStateRef.current.notes,
-            order: notesStateRef.current.order,
-            userID: userID,
-            type: "TRASH_NOTE",
-            note: data.note,
-          });
           dispatchNotes({
             type: "TRASH_NOTE",
             note: data.note,
@@ -221,6 +214,13 @@ export function useNoteActions({
         };
 
         const onClose = async () => {
+          localDbReducer({
+            notes: notesStateRef.current.notes,
+            order: notesStateRef.current.order,
+            userID: userID,
+            type: "TRASH_NOTE",
+            note: data.note,
+          });
           handleServerCall(
             [
               () =>

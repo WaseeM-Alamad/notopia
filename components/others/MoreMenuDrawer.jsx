@@ -10,6 +10,7 @@ const MoreMenuDrawer = ({
   selectedColor,
   menuItems,
   updatedAt,
+  hasTopPadding = false,
 }) => {
   const { isContextMenuOpenRef } = useAppContext();
   const [isDragging, setIsDragging] = useState(false);
@@ -89,7 +90,10 @@ const MoreMenuDrawer = ({
             <Drawer.Title></Drawer.Title>
             <div className="drawer-handle" />
             <div className="drawer-top" />
-            <div style={{ padding: "0 0rem" }} className="drawer-body">
+            <div
+              style={{ paddingTop: hasTopPadding && "1rem" }}
+              className="drawer-body"
+            >
               {updatedAt && (
                 <div className="menu-drawer-date">
                   {"Edited " + formattedEditedDate}{" "}

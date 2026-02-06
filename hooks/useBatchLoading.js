@@ -59,38 +59,14 @@ export function useBatchLoading({
     visibleItemsRef.current = visibleItems;
   }, [visibleItems]);
 
-  const loadNextBatch = (data = {}) => {
-    const {
-      currentSet: currentVisibleSet = visibleItems,
-      version = layoutVersionRef.current,
-    } = data;
-    const container = containerRef.current;
-    if (!container || !currentSection) {
-      isLoadingRef.current = false;
-      return;
-    }
-    const scrollY = window.scrollY;
-    const containerBottom = container.getBoundingClientRect().bottom + scrollY;
-    const viewportHeight = window.innerHeight;
-    const threshold = viewportHeight + scrollY + BUFFER;
-
-    if (containerBottom > threshold || version !== layoutVersionRef.current) {
-      isLoadingRef.current = false;
-      return;
-    }
-
+  const actuallyLoadBatch = ({ currentVisibleSet, version, data }) => {
     isLoadingRef.current = true;
 
     const currentNotes = data.notes || notesStateRef.current.notes;
     const currentOrder = data.order || notesStateRef.current.order;
-    let sectionCount = 0;
 
-    let batchSize = 5;
-
-    if (isFirstBatchRef.current) {
-      batchSize = 10;
-      isFirstBatchRef.current = false;
-    }
+    let batchSize = isFirstBatchRef.current ? 10 : 5;
+    isFirstBatchRef.current = false;
 
     const unrendered =
       currentSection?.toLowerCase() === "labels"
@@ -101,70 +77,90 @@ export function useBatchLoading({
             .filter(([uuid, labelData]) => {
               const search = labelSearchTerm.trim().toLowerCase();
               const label = labelData.label.toLowerCase().trim();
-
-              const notRenderedYet = !currentVisibleSet.has(uuid);
-              const matchesSearch = search === "" || label.includes(search);
-
-              return notRenderedYet && matchesSearch;
+              return (
+                !currentVisibleSet.has(uuid) &&
+                (search === "" || label.includes(search))
+              );
             })
         : currentOrder.filter((uuid) => {
             const note = currentNotes.get(uuid);
-            if (!currentVisibleSet.has(uuid) && isInCurrentSection(note)) {
-              sectionCount++;
-              return true;
-            }
+            return !currentVisibleSet.has(uuid) && isInCurrentSection(note);
           });
 
     const sortedUnrendered =
       currentSection?.toLowerCase() !== "labels"
         ? unrendered.sort((a, b) => {
-            const noteA = currentNotes.get(a);
-            const noteB = currentNotes.get(b);
+            const A = currentNotes.get(a);
+            const B = currentNotes.get(b);
 
-            if (noteA?.isPinned && !noteB?.isPinned) return -1;
-            if (!noteA?.isPinned && noteB?.isPinned) return 1;
-
-            if (!noteA?.isArchived && noteB?.isArchived) return -1;
-            if (noteA?.isArchived && !noteB?.isArchived) return 1;
-
+            if (A?.isPinned && !B?.isPinned) return -1;
+            if (!A?.isPinned && B?.isPinned) return 1;
+            if (!A?.isArchived && B?.isArchived) return -1;
+            if (A?.isArchived && !B?.isArchived) return 1;
             return 0;
           })
         : unrendered;
 
     const nextBatch = sortedUnrendered.slice(0, batchSize);
-    if (nextBatch.length === 0) {
+
+    if (!nextBatch.length) {
       isLoadingRef.current = false;
       return;
     }
 
     requestIdleCallback(() => {
-      if (version !== layoutVersionRef.current) {
-        isLoadingRef.current = false;
-        return;
-      }
+      if (version !== layoutVersionRef.current) return;
+
       setVisibleItems((prev) => {
         const updated = new Set(prev);
+
         currentSection?.toLowerCase() !== "labels"
-          ? nextBatch.forEach((uuid) => updated.add(uuid))
-          : nextBatch.forEach(([uuid, label]) => updated.add(uuid));
+          ? nextBatch.forEach((id) => updated.add(id))
+          : nextBatch.forEach(([id]) => updated.add(id));
 
-        setTimeout(() => {
-          if (version !== layoutVersionRef.current) {
-            isLoadingRef.current = false;
-            return;
-          }
-
-          requestAnimationFrame(() => {
-            setTimeout(() => {
-              loadNextBatch({
-                currentSet: updated,
-                version: version,
-              });
-            }, 700);
-          });
-        }, 50);
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            loadNextBatch({ currentSet: updated, version });
+          }, 300);
+        });
 
         return updated;
+      });
+    });
+  };
+
+  const loadNextBatch = (data = {}) => {
+    const {
+      currentSet: currentVisibleSet = visibleItems,
+      version = layoutVersionRef.current,
+      force = false,
+    } = data;
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const container = containerRef.current;
+        if (!container || !currentSection) {
+          isLoadingRef.current = false;
+          return;
+        }
+
+        const scrollY = window.scrollY;
+        const containerBottom =
+          container.getBoundingClientRect().bottom + scrollY;
+
+        const viewportHeight = window.innerHeight;
+        const threshold = viewportHeight + scrollY + BUFFER;
+
+        if (containerBottom > threshold && !force) {
+          isLoadingRef.current = false;
+          return;
+        }
+
+        actuallyLoadBatch({
+          currentVisibleSet,
+          version,
+          data,
+        });
       });
     });
   };
@@ -222,13 +218,14 @@ export function useBatchLoading({
       const viewportHeight = window.innerHeight;
       const fullHeight = document.body.offsetHeight;
       const version = layoutVersionRef.current;
-      if (scrollTop + viewportHeight >= fullHeight - BUFFER) {
+      if (scrollTop + viewportHeight >= fullHeight * 0.5) {
         requestAnimationFrame(() => {
           setTimeout(() => {
             if (isLoadingRef.current) return;
             loadNextBatch({
               currentSet: visibleItemsRef.current,
               version: version,
+              force: true,
             });
           }, 500);
         });
@@ -242,9 +239,7 @@ export function useBatchLoading({
 
   useEffect(() => {
     const handler = () => {
-      requestAnimationFrame(() => {
-        resetAndLoad();
-      });
+      resetAndLoad();
     };
 
     window.addEventListener("reloadNotes", handler);
@@ -297,9 +292,7 @@ export function useBatchLoading({
     }
     if (isFirstRenderRef.current || !labelObj || !notesReady || !labelsReady)
       return;
-    requestAnimationFrame(() => {
-      resetAndLoad(false);
-    });
+    resetAndLoad(false);
   }, [labelObj, notesReady, labelsReady]);
 
   useEffect(() => {
@@ -349,9 +342,12 @@ export function useBatchLoading({
     ) {
       return;
     }
-    requestAnimationFrame(() => {
+    let t = null;
+    t = setTimeout(() => {
       loadNextBatch();
-    });
+    }, 200);
+
+    return () => clearTimeout(t);
   }, [notesState]);
 
   useEffect(() => {

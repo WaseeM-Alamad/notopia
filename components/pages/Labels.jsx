@@ -36,7 +36,7 @@ const Labels = memo(
     const layoutFrameRef = useRef(null);
     const isFirstRenderRef = useRef(true);
 
-    const isGrid = layout === "grid";
+    const [isGrid, setIsGrid] = useState(layout === "grid");
 
     const gridNoteWidth = breakpoint === 1 ? 240 : breakpoint === 2 ? 180 : 150;
     const COLUMN_WIDTH = layout === "grid" ? gridNoteWidth : 450;
@@ -197,36 +197,41 @@ const Labels = memo(
       calculateLayoutRef.current = calculateLayout;
     }, [calculateLayout]);
 
+    useEffect(() => {
+      setTimeout(() => {
+        setIsGrid(layout === "grid");
+      }, 10);
+    }, [layout]);
+
     return (
       <>
         <div ref={rootContainerRef} className="starting-div">
           <SectionHeader title="Labels" iconClass="section-folders-icon" />
           <div ref={containerRef} className="section-container">
-              {[...labelsRef.current]
-                .sort(
-                  ([, a], [, b]) =>
-                    new Date(b.createdAt) - new Date(a.createdAt),
-                )
-                .map(([uuid, labelData], index) => {
-                  if (!visibleItems.has(uuid)) return null;
-                  return (
-                    <Label
-                      index={index === 0 ? index : ""}
-                      key={uuid}
-                      isGrid={isGrid}
-                      gridNoteWidth={gridNoteWidth}
-                      dispatchNotes={dispatchNotes}
-                      labelData={labelData}
-                      triggerReRender={triggerReRender}
-                      reRender={reRender}
-                      setVisibleItems={setVisibleItems}
-                      notes={notes}
-                      order={order}
-                      handleDeleteLabel={handleDeleteLabel}
-                      calculateLayout={calculateLayout}
-                    />
-                  );
-                })}
+            {[...labelsRef.current]
+              .sort(
+                ([, a], [, b]) => new Date(b.createdAt) - new Date(a.createdAt),
+              )
+              .map(([uuid, labelData], index) => {
+                if (!visibleItems.has(uuid)) return null;
+                return (
+                  <Label
+                    index={index === 0 ? index : ""}
+                    key={uuid}
+                    isGrid={isGrid}
+                    gridNoteWidth={gridNoteWidth}
+                    dispatchNotes={dispatchNotes}
+                    labelData={labelData}
+                    triggerReRender={triggerReRender}
+                    reRender={reRender}
+                    setVisibleItems={setVisibleItems}
+                    notes={notes}
+                    order={order}
+                    handleDeleteLabel={handleDeleteLabel}
+                    calculateLayout={calculateLayout}
+                  />
+                );
+              })}
           </div>
           <div
             style={{ display: labelsExist && "none" }}

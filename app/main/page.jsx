@@ -105,19 +105,6 @@ const page = () => {
     setDialogInfoRef.current = setDialogInfo;
   }, []);
 
-  const tRef = useRef(null);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    container.style.display = "none";
-    tRef.current = setTimeout(() => {
-      container.style.removeProperty("display");
-    }, 200);
-
-    return () => clearTimeout(tRef.current);
-  }, [layout]);
-
   useEffect(() => {
     const handleBeforeUnload = (event) => {
       if (unloadWarn) {
@@ -519,35 +506,31 @@ const page = () => {
   });
 
   useEffect(() => {
-    const t = setTimeout(() => {
-      const notes = notesStateRef.current.notes;
-      const order = notesStateRef.current.order;
+    const notes = notesStateRef.current.notes;
+    const order = notesStateRef.current.order;
 
-      setVisibleItems((prev) => {
-        const next = new Set(prev);
-        let changed = false;
+    setVisibleItems((prev) => {
+      const next = new Set(prev);
+      let changed = false;
 
-        order.forEach((uuid) => {
-          const note = notes.get(uuid);
-          const isMounted = note?.ref?.current;
-          const isVisible = next.has(uuid);
+      order.forEach((uuid) => {
+        const note = notes.get(uuid);
+        const isMounted = note?.ref?.current;
+        const isVisible = next.has(uuid);
 
-          if (isVisible && !isMounted) {
-            next.delete(uuid);
-            changed = true;
-          }
-        });
-
-        if (changed) {
-          calculateLayoutRef.current();
-          return next;
+        if (isVisible && !isMounted) {
+          next.delete(uuid);
+          changed = true;
         }
-
-        return prev;
       });
-    }, 240);
 
-    return () => clearTimeout(t);
+      if (changed) {
+        calculateLayoutRef.current();
+        return next;
+      }
+
+      return prev;
+    });
   }, [notesState.notes]);
 
   const components = {
@@ -632,7 +615,12 @@ const page = () => {
             labelObj={labelObj}
             containerRef={containerRef}
           >
-            {/* <button style={{zIndex: "10000", position: "fixed"}} onClick={()=> console.log(visibleItems)}>check</button> */}
+            {/* <button
+              style={{ zIndex: "10000", position: "fixed" }}
+              onClick={() => console.log(visibleItems)}
+            >
+              check
+            </button> */}
             <Page
               dispatchNotes={dispatchNotes}
               visibleItems={visibleItems}
