@@ -9,6 +9,8 @@ const NoteListItemsLayout = ({ note, dispatchNotes }) => {
 
   const userID = user?.id;
 
+  const hasTopNoteContent =
+    note?.images.length > 0 || note?.title || note?.content;
   const activeItems = note?.checkboxes?.filter((cb) => !cb.isCompleted);
   const completedItems = note?.checkboxes?.filter((cb) => cb.isCompleted);
   const activeParentItems = activeItems?.filter((item) => item.parent === null);
@@ -92,7 +94,11 @@ const NoteListItemsLayout = ({ note, dispatchNotes }) => {
   return (
     <div
       style={{
-        paddingTop: ".625rem",
+        paddingTop: !hasTopNoteContent
+          ? ".8rem"
+          : note?.content
+            ? "0"
+            : ".8rem",
         paddingBottom: ".4rem",
       }}
     >
@@ -136,20 +142,27 @@ const NoteListItemsLayout = ({ note, dispatchNotes }) => {
         })}
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-        }}
-      >
-        {completedItems.length > 0 && activeItems.length > 0 && (
+      {completedItems.length > 0 && (
+        <>
+          {(hasTopNoteContent || activeItems.length > 0) && (
+            <div className="checkboxes-divider" />
+          )}
           <div
             onClick={handleExpand}
-            className="checkboxes-divider"
-            style={{ cursor: "pointer" }}
-          />
-        )}
-      </div>
+            className="completed-items completed-items-note"
+            aria-label={`${completedItems.length} Completed item${
+              completedItems.length === 1 ? "" : "s"
+            }`}
+          >
+            <div
+              style={{ width: "18px", height: "18px" }}
+              className={`completed-collapsed ${
+                note?.expandCompleted ? "completed-expanded" : ""
+              }`}
+            />
+          </div>
+        </>
+      )}
       {note?.expandCompleted &&
         completedParentItems.map((parent) => (
           <div key={`completed-parent-item-${parent.uuid}`}>
@@ -215,55 +228,26 @@ const NoteListItemsLayout = ({ note, dispatchNotes }) => {
           </div>
         ))}
 
-      {activeParentItems.map((parent) => {
-        const completedChildren = getCompletedChildrenForActiveParent(
-          parent.uuid,
-        );
-        if (completedChildren.length === 0) return null;
+      {note?.expandCompleted &&
+        activeParentItems.map((parent) => {
+          const completedChildren = getCompletedChildrenForActiveParent(
+            parent.uuid,
+          );
+          if (completedChildren.length === 0) return null;
 
-        return (
-          <div key={`active-parent-item-${parent.uuid}`}>
-            <div
-              key={parent.uuid}
-              className="checkbox-wrapper note-checkbox-wrapper"
-              aria-label="empty"
-              style={{ pointerEvents: "none", opacity: ".5" }}
-            >
+          return (
+            <div key={`active-parent-item-${parent.uuid}`}>
               <div
-                className={`note-checkbox checkbox-unchecked ${
-                  parent.isCompleted ? "checkbox-checked" : ""
-                }`}
-                style={{ cursor: "not-allowed" }}
-              />
-              <div
-                style={{
-                  width: "100%",
-                  paddingLeft: "0.5rem",
-                  fontSize: ".875rem",
-                }}
-                className={`checkbox-content ${parent.isCompleted ? "checked-content" : ""}`}
-                aria-label="empty"
-              >
-                {parent.content}
-              </div>
-            </div>
-
-            {completedChildren.map((child, childIndex) => (
-              <div
-                key={child.uuid}
+                key={parent.uuid}
                 className="checkbox-wrapper note-checkbox-wrapper"
                 aria-label="empty"
-                style={{
-                  paddingLeft: "1.8rem",
-                }}
+                style={{ pointerEvents: "none", opacity: ".5" }}
               >
                 <div
-                  onClick={(e) =>
-                    handleCheckboxClick(e, child.uuid, !child.isCompleted)
-                  }
                   className={`note-checkbox checkbox-unchecked ${
-                    child.isCompleted ? "checkbox-checked" : ""
+                    parent.isCompleted ? "checkbox-checked" : ""
                   }`}
+                  style={{ cursor: "not-allowed" }}
                 />
                 <div
                   style={{
@@ -271,16 +255,46 @@ const NoteListItemsLayout = ({ note, dispatchNotes }) => {
                     paddingLeft: "0.5rem",
                     fontSize: ".875rem",
                   }}
-                  className={`checkbox-content ${child.isCompleted ? "checked-content" : ""}`}
+                  className={`checkbox-content ${parent.isCompleted ? "checked-content" : ""}`}
                   aria-label="empty"
                 >
-                  {child.content}
+                  {parent.content}
                 </div>
               </div>
-            ))}
-          </div>
-        );
-      })}
+
+              {completedChildren.map((child, childIndex) => (
+                <div
+                  key={child.uuid}
+                  className="checkbox-wrapper note-checkbox-wrapper"
+                  aria-label="empty"
+                  style={{
+                    paddingLeft: "1.8rem",
+                  }}
+                >
+                  <div
+                    onClick={(e) =>
+                      handleCheckboxClick(e, child.uuid, !child.isCompleted)
+                    }
+                    className={`note-checkbox checkbox-unchecked ${
+                      child.isCompleted ? "checkbox-checked" : ""
+                    }`}
+                  />
+                  <div
+                    style={{
+                      width: "100%",
+                      paddingLeft: "0.5rem",
+                      fontSize: ".875rem",
+                    }}
+                    className={`checkbox-content ${child.isCompleted ? "checked-content" : ""}`}
+                    aria-label="empty"
+                  >
+                    {child.content}
+                  </div>
+                </div>
+              ))}
+            </div>
+          );
+        })}
     </div>
   );
 };

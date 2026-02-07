@@ -634,7 +634,7 @@ const ListItemsLayout = ({
             />
           </div>
           <div style={{ display: "flex", justifyContent: "center" }}>
-            {renderCBdivider && (
+            {completedItems.length > 0 && (
               <div className="checkboxes-divider" style={{ width: "90%" }} />
             )}
           </div>
