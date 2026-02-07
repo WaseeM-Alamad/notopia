@@ -6,6 +6,7 @@ import handleServerCall from "@/utils/handleServerCall";
 
 const ListItem = ({
   no = false,
+  disabled = false,
   handleCheckboxClick,
   updateListItemContent,
   noteUUID,
@@ -18,8 +19,7 @@ const ListItem = ({
   modalOpen,
   index,
 }) => {
-  const { clientID, showTooltip, hideTooltip, openSnackRef } =
-    useAppContext();
+  const { clientID, showTooltip, hideTooltip, openSnackRef } = useAppContext();
   const listItemRef = useRef(null);
   const containerRef = useRef(null);
   const inputTimeoutRef = useRef(null);
@@ -38,7 +38,7 @@ const ListItem = ({
       setLocalNote((prev) => ({
         ...prev,
         checkboxes: prev.checkboxes.map((cb) =>
-          cb.uuid === checkbox.uuid ? { ...cb, content: t } : cb
+          cb.uuid === checkbox.uuid ? { ...cb, content: t } : cb,
         ),
       }));
     }
@@ -66,7 +66,7 @@ const ListItem = ({
     setLocalNote((prev) => ({
       ...prev,
       checkboxes: prev.checkboxes.map((cb) =>
-        cb.uuid === checkbox.uuid ? { ...cb, content: t } : cb
+        cb.uuid === checkbox.uuid ? { ...cb, content: t } : cb,
       ),
       updatedAt: new Date(),
     }));
@@ -101,7 +101,7 @@ const ListItem = ({
             clientID: clientID,
           }),
       ],
-      openSnackRef.current
+      openSnackRef.current,
     );
   };
 
@@ -154,6 +154,7 @@ const ListItem = ({
     >
       <div
         className={`checkbox-wrapper note-checkbox-wrapper modal-checkbox-wrapper`}
+        style={disabled ? { pointerEvents: "none", opacity: ".5" } : undefined}
       >
         {!no && <div onMouseDown={handleMouseDown} className="drag-db-area" />}
         <Button
@@ -165,11 +166,17 @@ const ListItem = ({
         {/* <div className="clear-icon"/> */}
         <div
           onClick={(e) =>
-            handleCheckboxClick(e, checkbox.uuid, !checkbox.isCompleted)
+            handleCheckboxClick(
+              e,
+              checkbox.uuid,
+              !checkbox.isCompleted,
+              checkbox?.parent,
+            )
           }
           className={`note-checkbox checkbox-unchecked ${
             checkbox.isCompleted ? "checkbox-checked" : ""
           }`}
+          style={disabled ? { cursor: "not-allowed" } : undefined}
         />
         <div
           dir="auto"

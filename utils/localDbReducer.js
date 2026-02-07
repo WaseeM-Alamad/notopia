@@ -58,12 +58,12 @@ const localDbReducer = (payload) => {
 
     case "UNDO_BATCH_COPY": {
       const updatedOrder = payload.order.filter(
-        (uuid) => !payload.notesToDel.includes(uuid)
+        (uuid) => !payload.notesToDel.includes(uuid),
       );
       deleteLocalNotesAndUpdateOrder(
         payload.notesToDel,
         updatedOrder,
-        payload.userID
+        payload.userID,
       );
       break;
     }
@@ -91,12 +91,12 @@ const localDbReducer = (payload) => {
         isArchived: false,
       };
       const updatedOrder = [...payload.order].filter(
-        (uuid) => uuid !== payload.note?.uuid
+        (uuid) => uuid !== payload.note?.uuid,
       );
       updateLocalNotesAndOrder(
         [newNote],
         [newNote.uuid, ...updatedOrder],
-        payload.userID
+        payload.userID,
       );
       break;
     }
@@ -108,12 +108,12 @@ const localDbReducer = (payload) => {
         isPinned: false,
       };
       const updatedOrder = [...payload.order].filter(
-        (uuid) => uuid !== payload.note?.uuid
+        (uuid) => uuid !== payload.note?.uuid,
       );
       updateLocalNotesAndOrder(
         [newNote],
         [newNote.uuid, ...updatedOrder],
-        payload.userID
+        payload.userID,
       );
       break;
     }
@@ -143,7 +143,7 @@ const localDbReducer = (payload) => {
 
     case "BATCH_ARCHIVE/TRASH": {
       const sortedNotes = payload.selectedNotes.sort(
-        (a, b) => b.index - a.index
+        (a, b) => b.index - a.index,
       );
       let sortedUUIDS = [];
       const newNotes = [];
@@ -161,7 +161,7 @@ const localDbReducer = (payload) => {
       });
 
       const updatedOrder = payload.order.filter(
-        (uuid) => !sortedUUIDS.includes(uuid)
+        (uuid) => !sortedUUIDS.includes(uuid),
       );
 
       updatedOrder.unshift(...sortedUUIDS);
@@ -171,7 +171,7 @@ const localDbReducer = (payload) => {
 
     case "BATCH_PIN": {
       const sortedNotes = payload.selectedNotes.sort(
-        (a, b) => b.index - a.index
+        (a, b) => b.index - a.index,
       );
       const newNotes = [];
       let sortedUUIDS = [];
@@ -187,7 +187,7 @@ const localDbReducer = (payload) => {
       });
 
       const updatedOrder = payload.order.filter(
-        (uuid) => !sortedUUIDS.includes(uuid)
+        (uuid) => !sortedUUIDS.includes(uuid),
       );
 
       updatedOrder.unshift(...sortedUUIDS);
@@ -209,7 +209,7 @@ const localDbReducer = (payload) => {
       deleteLocalNotesAndUpdateOrder(
         payload.deletedUUIDs,
         updatedOrder,
-        payload.userID
+        payload.userID,
       );
       break;
     }
@@ -231,11 +231,11 @@ const localDbReducer = (payload) => {
 
     case "UNDO_BATCH_ARCHIVE/TRASH": {
       const sortedNotes = payload.selectedNotes.sort(
-        (a, b) => a.index - b.index
+        (a, b) => a.index - b.index,
       );
       const newNotes = [];
       const updatedOrder = payload.order.filter(
-        (uuid) => !payload.selectedUUIDs.includes(uuid)
+        (uuid) => !payload.selectedUUIDs.includes(uuid),
       );
 
       sortedNotes.forEach((noteData) => {
@@ -254,11 +254,11 @@ const localDbReducer = (payload) => {
 
     case "UNDO_BATCH_PIN_ARCHIVED": {
       const sortedNotes = payload.selectedNotes.sort(
-        (a, b) => a.index - b.index
+        (a, b) => a.index - b.index,
       );
       const newNotes = [];
       const updatedOrder = payload.order.filter(
-        (uuid) => !payload.selectedUUIDs.includes(uuid)
+        (uuid) => !payload.selectedUUIDs.includes(uuid),
       );
 
       sortedNotes.forEach((noteData) => {
@@ -281,12 +281,12 @@ const localDbReducer = (payload) => {
         isPinned: false,
       };
       const updatedOrder = [...payload.order].filter(
-        (uuid) => uuid !== payload.note?.uuid
+        (uuid) => uuid !== payload.note?.uuid,
       );
       updateLocalNotesAndOrder(
         [newNote],
         [newNote.uuid, ...updatedOrder],
-        payload.userID
+        payload.userID,
       );
       break;
     }
@@ -314,12 +314,12 @@ const localDbReducer = (payload) => {
     }
     case "DELETE_NOTE": {
       const updatedOrder = [...payload.order].filter(
-        (uuid) => uuid !== payload.note?.uuid
+        (uuid) => uuid !== payload.note?.uuid,
       );
       deleteLocalNotesAndUpdateOrder(
         [payload.note?.uuid],
         updatedOrder,
-        payload.userID
+        payload.userID,
       );
       break;
     }
@@ -396,7 +396,7 @@ const localDbReducer = (payload) => {
       };
       const updatedNotes = new Map(payload.notes).set(
         payload.note?.uuid,
-        newNote
+        newNote,
       );
     }
     case "UPDATE_TEXT": {
@@ -425,12 +425,12 @@ const localDbReducer = (payload) => {
 
     case "UNDO_COPY": {
       const updatedOrder = [...payload.order].filter(
-        (uuid) => uuid !== payload.noteUUID
+        (uuid) => uuid !== payload.noteUUID,
       );
       deleteLocalNotesAndUpdateOrder(
         [payload.noteUUID],
         updatedOrder,
-        payload.userID
+        payload.userID,
       );
       break;
     }
@@ -452,7 +452,7 @@ const localDbReducer = (payload) => {
       const newNote = {
         ...targetedNote,
         labels: targetedNote.labels.filter(
-          (noteLabelUUID) => noteLabelUUID !== payload.labelUUID
+          (noteLabelUUID) => noteLabelUUID !== payload.labelUUID,
         ),
       };
       updateLocalNotesAndOrder([newNote], null, payload.userID);
@@ -465,7 +465,7 @@ const localDbReducer = (payload) => {
         const note = payload.notes.get(noteUUID);
         const prevLength = note?.labels.length;
         note.labels = note?.labels.filter(
-          (noteLabelUUID) => noteLabelUUID !== payload.labelUUID
+          (noteLabelUUID) => noteLabelUUID !== payload.labelUUID,
         );
 
         const afterLength = note?.labels.length;
@@ -494,7 +494,7 @@ const localDbReducer = (payload) => {
         const note = payload.notes.get(noteUUID);
 
         const updatedLabels = note?.labels.filter(
-          (labelUUID) => labelUUID !== payload.uuid
+          (labelUUID) => labelUUID !== payload.uuid,
         );
         const newNote = {
           ...note,
@@ -566,9 +566,23 @@ const localDbReducer = (payload) => {
 
     case "CHECKBOX_STATE": {
       const note = payload.notes.get(payload.noteUUID);
+      const parentUUID = note?.checkboxes.find(
+        (cb) => cb.uuid === payload.checkboxUUID,
+      )?.parent;
       const newCheckboxArr = note?.checkboxes.map((checkbox) => {
-        if (checkbox.uuid !== payload.checkboxUUID) return checkbox;
-        return { ...checkbox, isCompleted: payload.value };
+        if (
+          checkbox.uuid === payload.checkboxUUID ||
+          checkbox.parent === payload.checkboxUUID
+        ) {
+          return { ...checkbox, isCompleted: payload.value };
+        } else if (
+          parentUUID &&
+          checkbox.uuid === parentUUID &&
+          payload.value === false
+        ) {
+          return { ...checkbox, isCompleted: false };
+        }
+        return checkbox;
       });
       const newNote = {
         ...note,
@@ -583,7 +597,7 @@ const localDbReducer = (payload) => {
       const updatedNotes = new Map(payload.notes);
       const note = updatedNotes.get(payload.noteUUID);
       const newCheckboxArr = note?.checkboxes.filter(
-        (checkbox) => checkbox.uuid !== payload.checkboxUUID
+        (checkbox) => checkbox.uuid !== payload.checkboxUUID,
       );
       updatedNotes.set(payload.noteUUID, {
         ...note,
@@ -595,7 +609,7 @@ const localDbReducer = (payload) => {
     case "DELETE_CHECKED": {
       const note = payload.notes.get(payload.noteUUID);
       const newCheckboxArr = note?.checkboxes.filter(
-        (checkbox) => !checkbox.isCompleted
+        (checkbox) => !checkbox.isCompleted,
       );
       const newNote = {
         ...note,

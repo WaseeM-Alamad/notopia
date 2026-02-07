@@ -69,7 +69,7 @@ export function notesReducer(state, action) {
       const updatedNotes = new Map(state.notes);
       [...updatedNotes].filter((n) => !action.notesToDel.includes(n.uuid));
       const updatedOrder = state.order.filter(
-        (uuid) => !action.notesToDel.includes(uuid)
+        (uuid) => !action.notesToDel.includes(uuid),
       );
 
       return {
@@ -119,7 +119,7 @@ export function notesReducer(state, action) {
       };
       const updatedNotes = new Map(state.notes).set(action.note?.uuid, newNote);
       const updatedOrder = [...state.order].filter(
-        (uuid) => uuid !== action.note?.uuid
+        (uuid) => uuid !== action.note?.uuid,
       );
       return {
         ...state,
@@ -136,7 +136,7 @@ export function notesReducer(state, action) {
       };
       const updatedNotes = new Map(state.notes).set(action.note?.uuid, newNote);
       const updatedOrder = [...state.order].filter(
-        (uuid) => uuid !== action.note?.uuid
+        (uuid) => uuid !== action.note?.uuid,
       );
       return {
         ...state,
@@ -174,7 +174,7 @@ export function notesReducer(state, action) {
 
     case "BATCH_ARCHIVE/TRASH": {
       const sortedNotes = action.selectedNotes.sort(
-        (a, b) => b.index - a.index
+        (a, b) => b.index - a.index,
       );
       let sortedUUIDS = [];
       const updatedNotes = new Map(state.notes);
@@ -202,7 +202,7 @@ export function notesReducer(state, action) {
       });
 
       const updatedOrder = state.order.filter(
-        (uuid) => !sortedUUIDS.includes(uuid)
+        (uuid) => !sortedUUIDS.includes(uuid),
       );
 
       updatedOrder.unshift(...sortedUUIDS);
@@ -216,7 +216,7 @@ export function notesReducer(state, action) {
 
     case "BATCH_PIN": {
       const sortedNotes = action.selectedNotes.sort(
-        (a, b) => b.index - a.index
+        (a, b) => b.index - a.index,
       );
       const updatedNotes = new Map(state.notes);
       let sortedUUIDS = [];
@@ -232,7 +232,7 @@ export function notesReducer(state, action) {
       });
 
       const updatedOrder = state.order.filter(
-        (uuid) => !sortedUUIDS.includes(uuid)
+        (uuid) => !sortedUUIDS.includes(uuid),
       );
 
       updatedOrder.unshift(...sortedUUIDS);
@@ -279,11 +279,11 @@ export function notesReducer(state, action) {
 
     case "UNDO_BATCH_ARCHIVE/TRASH": {
       const sortedNotes = action.selectedNotes.sort(
-        (a, b) => a.index - b.index
+        (a, b) => a.index - b.index,
       );
       const updatedNotes = new Map(state.notes);
       const updatedOrder = state.order.filter(
-        (uuid) => !action.selectedUUIDs.includes(uuid)
+        (uuid) => !action.selectedUUIDs.includes(uuid),
       );
 
       sortedNotes.forEach((noteData) => {
@@ -306,11 +306,11 @@ export function notesReducer(state, action) {
 
     case "UNDO_BATCH_PIN_ARCHIVED": {
       const sortedNotes = action.selectedNotes.sort(
-        (a, b) => a.index - b.index
+        (a, b) => a.index - b.index,
       );
       const updatedNotes = new Map(state.notes);
       const updatedOrder = state.order.filter(
-        (uuid) => !action.selectedUUIDs.includes(uuid)
+        (uuid) => !action.selectedUUIDs.includes(uuid),
       );
 
       sortedNotes.forEach((noteData) => {
@@ -338,7 +338,7 @@ export function notesReducer(state, action) {
       };
       const updatedNotes = new Map(state.notes).set(action.note?.uuid, newNote);
       const updatedOrder = [...state.order].filter(
-        (uuid) => uuid !== action.note?.uuid
+        (uuid) => uuid !== action.note?.uuid,
       );
       return {
         ...state,
@@ -376,7 +376,7 @@ export function notesReducer(state, action) {
       const newNotes = new Map(state.notes);
       newNotes.delete(action.note?.uuid);
       const updatedOrder = [...state.order].filter(
-        (uuid) => uuid !== action.note?.uuid
+        (uuid) => uuid !== action.note?.uuid,
       );
       return {
         ...state,
@@ -531,7 +531,7 @@ export function notesReducer(state, action) {
       const updatedNotes = new Map(state.notes);
       updatedNotes.delete(action.noteUUID);
       const updatedOrder = [...state.order].filter(
-        (uuid) => uuid !== action.noteUUID
+        (uuid) => uuid !== action.noteUUID,
       );
 
       return {
@@ -561,7 +561,7 @@ export function notesReducer(state, action) {
       const newNote = {
         ...targetedNote,
         labels: targetedNote.labels.filter(
-          (noteLabelUUID) => noteLabelUUID !== action.labelUUID
+          (noteLabelUUID) => noteLabelUUID !== action.labelUUID,
         ),
       };
 
@@ -577,7 +577,7 @@ export function notesReducer(state, action) {
       state.order.map((noteUUID) => {
         const note = state.notes.get(noteUUID);
         note.labels = note?.labels.filter(
-          (noteLabelUUID) => noteLabelUUID !== action.labelUUID
+          (noteLabelUUID) => noteLabelUUID !== action.labelUUID,
         );
 
         updatedNotes.set(noteUUID, note);
@@ -608,7 +608,7 @@ export function notesReducer(state, action) {
         const note = updatedNotes.get(noteUUID);
 
         const updatedLabels = note?.labels.filter(
-          (labelUUID) => labelUUID !== action.uuid
+          (labelUUID) => labelUUID !== action.uuid,
         );
 
         updatedNotes.set(noteUUID, {
@@ -700,9 +700,23 @@ export function notesReducer(state, action) {
     case "CHECKBOX_STATE": {
       const updatedNotes = new Map(state.notes);
       const note = updatedNotes.get(action.noteUUID);
+      const parentUUID = note?.checkboxes.find(
+        (cb) => cb.uuid === action.checkboxUUID,
+      )?.parent;
       const newCheckboxArr = note?.checkboxes.map((checkbox) => {
-        if (checkbox.uuid !== action.checkboxUUID) return checkbox;
-        return { ...checkbox, isCompleted: action.value };
+        if (
+          checkbox.uuid === action.checkboxUUID ||
+          checkbox.parent === action.checkboxUUID
+        ) {
+          return { ...checkbox, isCompleted: action.value };
+        } else if (
+          parentUUID &&
+          checkbox.uuid === parentUUID &&
+          action.value === false
+        ) {
+          return { ...checkbox, isCompleted: false };
+        }
+        return checkbox;
       });
       updatedNotes.set(action.noteUUID, {
         ...note,
@@ -720,7 +734,7 @@ export function notesReducer(state, action) {
       const updatedNotes = new Map(state.notes);
       const note = updatedNotes.get(action.noteUUID);
       const newCheckboxArr = note?.checkboxes.filter(
-        (checkbox) => checkbox.uuid !== action.checkboxUUID
+        (checkbox) => checkbox.uuid !== action.checkboxUUID,
       );
       updatedNotes.set(action.noteUUID, {
         ...note,
@@ -738,7 +752,7 @@ export function notesReducer(state, action) {
       const updatedNotes = new Map(state.notes);
       const note = updatedNotes.get(action.noteUUID);
       const newCheckboxArr = note?.checkboxes.filter(
-        (checkbox) => !checkbox.isCompleted
+        (checkbox) => !checkbox.isCompleted,
       );
       updatedNotes.set(action.noteUUID, {
         ...note,

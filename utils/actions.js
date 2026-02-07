@@ -869,18 +869,69 @@ export const NoteUpdateAction = async (data) => {
           break;
         }
         case "MANAGE_COMPLETED": {
-          await Note.updateOne(
-            {
-              uuid: data.noteUUIDs[0],
-              "checkboxes.uuid": data.checkboxUUID,
-            },
-            {
-              $set: {
-                "checkboxes.$.isCompleted": data.value,
-                lastModifiedBy: data.clientID,
-              },
-            },
-          );
+          const session = await startSession();
+
+          try {
+            await session.withTransaction(async () => {
+              await Note.updateOne(
+                {
+                  uuid: data.noteUUIDs[0],
+                },
+                {
+                  $set: {
+                    "checkboxes.$[cb].isCompleted": data.value,
+                    lastModifiedBy: data.clientID,
+                  },
+                },
+                {
+                  arrayFilters: [
+                    {
+                      $or: [
+                        { "cb.uuid": data.checkboxUUID },
+                        { "cb.parent": data.checkboxUUID },
+                      ],
+                    },
+                  ],
+                  session,
+                },
+              );
+
+              if (data.value === false) {
+                const note = await Note.findOne(
+                  {
+                    uuid: data.noteUUIDs[0],
+                    "checkboxes.uuid": data.checkboxUUID,
+                  },
+                  {
+                    "checkboxes.$": 1,
+                  },
+                  { session },
+                );
+
+                const parentUUID = note?.checkboxes?.[0]?.parent;
+
+                if (!parentUUID) return;
+
+                await Note.updateOne(
+                  { uuid: data.noteUUIDs[0] },
+                  {
+                    $set: {
+                      "checkboxes.$[parent].isCompleted": false,
+                    },
+                  },
+                  {
+                    arrayFilters: [{ "parent.uuid": parentUUID }],
+                    session,
+                  },
+                );
+              }
+            });
+          } catch (err) {
+            throw err;
+          } finally {
+            session.endSession();
+          }
+
           break;
         }
         case "DELETE_CHECKBOX": {

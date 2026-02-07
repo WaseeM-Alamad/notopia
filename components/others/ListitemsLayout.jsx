@@ -153,14 +153,18 @@ const ListItemsLayout = ({
   };
 
   const handleCheckboxClick = useCallback(
-    async (e, checkboxUUID, value) => {
+    async (e, checkboxUUID, value, parentUUID) => {
       e.stopPropagation();
+
       setLocalNote((prev) => ({
         ...prev,
         checkboxes: prev.checkboxes.map((cb) => {
-          return cb.uuid === checkboxUUID || cb.parent === checkboxUUID
-            ? { ...cb, isCompleted: value }
-            : cb;
+          if (cb.uuid === checkboxUUID || cb.parent === checkboxUUID) {
+            return { ...cb, isCompleted: value };
+          } else if (parentUUID && cb.uuid === parentUUID && value === false) {
+            return { ...cb, isCompleted: false };
+          }
+          return cb;
         }),
         updatedAt: new Date(),
       }));
@@ -244,7 +248,7 @@ const ListItemsLayout = ({
       const ghostElement = ghostElementRef.current;
       const draggedRect = draggedElement.getBoundingClientRect();
       const container = containerRef.current;
-      draggedElement.classList.add("dragged-element");
+      draggedElement.children[0].classList.add("dragged-element");
       document.body.appendChild(ghostElement);
       document.body.classList.add("dragging");
       container.classList.add("items-container-transition");
@@ -315,7 +319,7 @@ const ListItemsLayout = ({
           requestAnimationFrame(() => {
             setTimeout(() => {
               setTimeout(() => {
-                draggedElement.classList.remove("dragged-element");
+                draggedElement.children[0].classList.remove("dragged-element");
                 document.body.removeChild(ghostElement);
                 if (document.body.classList.contains("dragging")) {
                   document.body.classList.remove("dragging");
@@ -696,7 +700,8 @@ const ListItemsLayout = ({
                 <ListItem
                   no={true}
                   dispatchNotes={dispatchNotes}
-                  handleCheckboxClick={handleCheckboxClick}
+                  handleCheckboxClick={() => {}}
+                  disabled={true}
                   updateListItemContent={updateListItemContent}
                   checkbox={parent}
                   itemRefs={itemRefs}

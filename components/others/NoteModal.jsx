@@ -891,6 +891,7 @@ const NoteModal = ({
             : "transparent",
         }}
       >
+        {/* <button onClick={()=> console.log(localNote?.checkboxes)}>check</button> */}
         <NoteEditor
           noteEditorRef={noteEditorRef}
           note={note}
