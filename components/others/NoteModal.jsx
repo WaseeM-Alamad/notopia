@@ -164,6 +164,14 @@ const NoteModal = ({
     const modal = modalRef.current;
     const rect = initialStyle.element.getBoundingClientRect();
 
+    if (rect.top === 0) {
+      modal.style.transition =
+        "all 0.22s cubic-bezier(0.35, 0.9, 0.25, 1), opacity 0.09s, margin 0.22s cubic-bezier(0.5, 0.2, 0.3, 1)";
+      modal.style.opacity = 0;
+      modal.style.transform = "translateY(20%)";
+      return;
+    }
+
     const modalWidth = modal.offsetWidth;
     const modalHeight = modal.offsetHeight;
 

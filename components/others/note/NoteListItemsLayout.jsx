@@ -2,7 +2,7 @@ import { useAppContext } from "@/context/AppContext";
 import { NoteUpdateAction } from "@/utils/actions";
 import handleServerCall from "@/utils/handleServerCall";
 import localDbReducer from "@/utils/localDbReducer";
-import React, { memo } from "react";
+import React, { memo, useEffect, useState } from "react";
 
 const NoteListItemsLayout = ({ note, dispatchNotes }) => {
   const { notesStateRef, user, openSnackRef, clientID } = useAppContext();
@@ -91,8 +91,23 @@ const NoteListItemsLayout = ({ note, dispatchNotes }) => {
     );
   };
 
+  const [hideCompleted, setHideCompleted] = useState(false);
+
+  useEffect(() => {
+    const handler = () => {
+      const width = window.innerWidth;
+      setHideCompleted(width <= 605);
+    };
+
+    handler();
+
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+
   return (
     <div
+      className="note-list-items-wrapper"
       style={{
         paddingTop: !hasTopNoteContent
           ? ".8rem"
@@ -156,7 +171,7 @@ const NoteListItemsLayout = ({ note, dispatchNotes }) => {
           >
             <div
               style={{ width: "18px", height: "18px" }}
-              className={`completed-collapsed ${
+              className={`completed-collapsed expand-items-note ${
                 note?.expandCompleted ? "completed-expanded" : ""
               }`}
             />
@@ -164,6 +179,7 @@ const NoteListItemsLayout = ({ note, dispatchNotes }) => {
         </>
       )}
       {note?.expandCompleted &&
+        !hideCompleted &&
         completedParentItems.map((parent) => (
           <div key={`completed-parent-item-${parent.uuid}`}>
             <div
@@ -229,6 +245,7 @@ const NoteListItemsLayout = ({ note, dispatchNotes }) => {
         ))}
 
       {note?.expandCompleted &&
+        !hideCompleted &&
         activeParentItems.map((parent) => {
           const completedChildren = getCompletedChildrenForActiveParent(
             parent.uuid,
