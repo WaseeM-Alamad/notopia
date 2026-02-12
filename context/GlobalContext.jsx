@@ -15,6 +15,7 @@ export const GlobalProvider = ({ children }) => {
   const { calculateLayoutRef } = useLayout();
   const [isExpanded, setIsExpanded] = useState({ open: null, threshold: null });
   const isDarkModeRef = useRef(false);
+  const isFirstRenderRef = useRef(true);
 
   useEffect(() => {
     if (!calculateLayoutRef.current) return;
@@ -25,6 +26,10 @@ export const GlobalProvider = ({ children }) => {
 
   useEffect(() => {
     const width = window.innerWidth;
+    if (isFirstRenderRef.current) {
+      isFirstRenderRef.current = false;
+      return;
+    }
     if (width < 605) return;
     localStorage.setItem(
       "sidebar-expanded",

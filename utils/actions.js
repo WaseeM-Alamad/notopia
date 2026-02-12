@@ -981,18 +981,29 @@ export const NoteUpdateAction = async (data) => {
           break;
         }
         case "UPDATE_CONTENT": {
-          await Note.updateOne(
-            {
-              uuid: data.noteUUIDs[0],
-              "checkboxes.uuid": data.checkboxUUID,
-            },
-            {
-              $set: {
-                "checkboxes.$.content": data.value,
-                lastModifiedBy: data.clientID,
-              },
+          const operations = [...data.checkboxesMap.entries()].map(
+            ([checkboxUUID, content]) => {
+              console.log(checkboxUUID, content);
+
+              return {
+                updateOne: {
+                  filter: {
+                    uuid: data.noteUUIDs[0],
+                    "checkboxes.uuid": checkboxUUID,
+                  },
+                  update: {
+                    $set: {
+                      "checkboxes.$.content": content,
+                      lastModifiedBy: data.clientID,
+                    },
+                  },
+                },
+              };
             },
           );
+
+          await Note.bulkWrite(operations);
+
           break;
         }
         case "UPDATE_ORDER-FAM": {

@@ -346,9 +346,9 @@ export const MasonryProvider = ({
     order,
   ]);
 
-  useEffect(()=> {
-    calculateLayout(false, true)
-  }, [notesReady])
+  useEffect(() => {
+    calculateLayout(false, true);
+  }, [notesReady]);
 
   useEffect(() => {
     setTimeout(() => {

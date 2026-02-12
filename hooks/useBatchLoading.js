@@ -13,7 +13,6 @@ export function useBatchLoading({
   visibleItems,
   labelObj,
   notesReady,
-  // setIsGrid,
   containerRef,
   matchesFilters,
 }) {
@@ -250,13 +249,11 @@ export function useBatchLoading({
     if (!layout) return;
     if (isFirstRenderRef.current) {
       isFirstRenderRef.current = false;
-      // setIsGrid(layout === "grid");
       return;
     }
     resetBatchLoading();
     requestIdleCallback(() => {
-      clearTimeout(layoutTimeoutRef.current);
-      // setIsGrid(layout === "grid");
+      isLoadingRef.current = true;
 
       requestAnimationFrame(() => {
         layoutTimeoutRef.current = setTimeout(() => {
@@ -264,6 +261,7 @@ export function useBatchLoading({
         }, 200);
       });
     });
+    return () => clearTimeout(layoutTimeoutRef.current);
   }, [layout]);
 
   useEffect(() => {
@@ -325,6 +323,7 @@ export function useBatchLoading({
       if (isLoadingRef.current) return;
       requestAnimationFrame(() => {
         setTimeout(() => {
+          if (isLoadingRef.current) return;
           loadNextBatch();
         }, 500);
       });
@@ -332,7 +331,7 @@ export function useBatchLoading({
 
     window.addEventListener("resize", handler);
     return () => window.removeEventListener("resize", handler);
-  }, [loadNextBatch]);
+  }, [loadNextBatch, layout]);
 
   useEffect(() => {
     if (

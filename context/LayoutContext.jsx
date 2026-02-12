@@ -21,16 +21,6 @@ export const LayoutProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    const savedLayout = localStorage.getItem("layout");
-    if (!savedLayout) {
-      localStorage.setItem("layout", "grid");
-      setLayout("grid");
-      return;
-    }
-    setLayout(window.innerWidth <= 384 ? "list" : savedLayout);
-  }, [setLayout]);
-
-  useEffect(() => {
     const toggleLayout = () => {
       const isGrid = layout === "grid";
       if (isGrid) {

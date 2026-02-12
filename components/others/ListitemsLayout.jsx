@@ -21,9 +21,6 @@ const ListItemsLayout = ({
   isOpen,
 }) => {
   const { clientID, openSnackRef } = useAppContext();
-  const renderCBdivider =
-    localNote?.checkboxes.some((cb) => cb.isCompleted) &&
-    localNote?.checkboxes.some((cb) => !cb.isCompleted);
   const activeItems = localNote?.checkboxes.filter((cb) => !cb.isCompleted);
   const completedItems = localNote?.checkboxes.filter((cb) => cb.isCompleted);
   const layoutFrameRef = useRef(null);
@@ -187,23 +184,33 @@ const ListItemsLayout = ({
     [localNote?.uuid],
   );
 
-  const updateListItemContent = useCallback(
-    debounce(async (text, cbUUID) => {
+  const batchUpdateContent = useCallback(
+    debounce(async () => {
       handleServerCall(
         [
           () =>
             NoteUpdateAction({
               type: "checkboxes",
               operation: "UPDATE_CONTENT",
-              value: text,
-              checkboxUUID: cbUUID,
+              checkboxesMap: contentChangesMapRef.current,
               noteUUIDs: [localNote?.uuid],
               clientID: clientID,
             }),
         ],
         openSnackRef.current,
       );
+      contentChangesMapRef.current = new Map();
     }, 600),
+    [localNote?.uuid],
+  );
+
+  const contentChangesMapRef = useRef(new Map());
+
+  const updateListItemContent = useCallback(
+    async (text, cbUUID) => {
+      contentChangesMapRef.current.set(cbUUID, text);
+      batchUpdateContent();
+    },
     [localNote?.uuid],
   );
 
@@ -248,7 +255,7 @@ const ListItemsLayout = ({
       const ghostElement = ghostElementRef.current;
       const draggedRect = draggedElement.getBoundingClientRect();
       const container = containerRef.current;
-      draggedElement.children[0].classList.add("dragged-element");
+      draggedElement.classList.add("dragged-element-list");
       document.body.appendChild(ghostElement);
       document.body.classList.add("dragging");
       container.classList.add("items-container-transition");
@@ -319,8 +326,9 @@ const ListItemsLayout = ({
           requestAnimationFrame(() => {
             setTimeout(() => {
               setTimeout(() => {
-                draggedElement.children[0].classList.remove("dragged-element");
+                draggedElement.classList.remove("dragged-element-list");
                 document.body.removeChild(ghostElement);
+
                 if (document.body.classList.contains("dragging")) {
                   document.body.classList.remove("dragging");
                 }
@@ -510,26 +518,18 @@ const ListItemsLayout = ({
     if (now - lastSwapRef.current < 150) return;
 
     lastSwapRef.current = now;
-
-    if (draggedIndexRef.current === null || overIndexRef.current === null)
-      return;
     endIndexRef.current = overIndexRef.current;
 
-    // const overItem = checkboxesRef.current[overIndexRef.current];
-    // {
-    //   console.log("overitem", overItem.parent);
-    //   console.log("draggedItem", draggedItemRef.current.uuid);
-    //   if (draggedItemRef.current.uuid === overItem.parent) return;
-    // }
-    // Copy notes to avoid mutating state directly
+    setLocalNote((prev) => {
+      const newList = moveParentGroup(
+        prev.checkboxes,
+        draggedIndexRef.current,
+        overIndexRef.current,
+      );
 
-    const newList = moveParentGroup(
-      checkboxesRef.current,
-      draggedIndexRef.current,
-      overIndexRef.current,
-    );
-
-    setLocalNote((prev) => ({ ...prev, checkboxes: newList }));
+      checkboxesRef.current = newList; // ✅ Update ref immediately
+      return { ...prev, checkboxes: newList };
+    });
   };
 
   const nestingZoneRef = useRef("left");
@@ -635,7 +635,10 @@ const ListItemsLayout = ({
           </div>
           <div style={{ display: "flex", justifyContent: "center" }}>
             {completedItems.length > 0 && (
-              <div className="checkboxes-divider" style={{ width: "90%" }} />
+              <div
+                className="checkboxes-divider"
+                style={{ width: "100%", margin: "0.6rem 14px 0.8rem 14px" }}
+              />
             )}
           </div>
           {completedItems.length > 0 && (
