@@ -51,11 +51,11 @@ export const MasonryProvider = ({
       return false;
     }
 
-    if (filters.lists && note?.checkboxes.length === 0) {
+    if (filters.lists && note?.checkboxes?.length === 0) {
       return false;
     }
 
-    if (filters.image && note?.images.length === 0) {
+    if (filters.image && note?.images?.length === 0) {
       return false;
     }
 

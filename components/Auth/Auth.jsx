@@ -50,7 +50,9 @@ const Auth = () => {
             mass: 1.25,
           }}
           className="login-slider"
-        />
+        >
+          
+          </motion.div>
         <RightPanel
           isLogin={isLogin}
           toggleForm={toggleForm}

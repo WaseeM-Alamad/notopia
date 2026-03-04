@@ -16,6 +16,7 @@ import handleServerCall from "@/utils/handleServerCall";
 import localDbReducer from "@/utils/localDbReducer";
 import { useLabelsContext } from "@/context/LabelsContext";
 import { useGlobalContext } from "@/context/GlobalContext";
+import { useMasonry } from "@/context/MasonryContext";
 
 const ComposeNote = ({
   dispatchNotes,
@@ -35,6 +36,7 @@ const ComposeNote = ({
   } = useAppContext();
   const { labelsRef } = useLabelsContext();
   const { lockScroll } = useGlobalContext();
+  const { isInCurrentSection } = useMasonry();
   const [isDragOver, setIsDragOver] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -186,9 +188,7 @@ const ComposeNote = ({
     }
   };
 
-  const handleCreateNote = async () => {
-    const newUUID = uuid();
-
+  const handleCreateNote = async (newUUID) => {
     const newNote = {
       uuid: newUUID,
       creator: {
@@ -357,7 +357,8 @@ const ComposeNote = ({
           reset();
         }, 220);
       } else {
-        handleCreateNote();
+        const newUUID = uuid();
+        handleCreateNote(newUUID);
         modalRef.current.style.transformOrigin = "top left";
         const observer = new MutationObserver(() => {
           const lastNote = lastAddedNoteRef.current;
@@ -365,8 +366,8 @@ const ComposeNote = ({
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               const rect = lastNote.getBoundingClientRect();
-              positionModal(rect);
               lastNote.style.opacity = "0";
+              positionModal(rect);
             });
           });
           observer.disconnect();

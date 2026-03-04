@@ -48,7 +48,7 @@ const Home = memo(
       for (let uuid of order) {
         const note = notes.get(uuid);
         if (!note?.isArchived && !note?.isTrash) {
-          lastRef = note?.ref.current;
+          lastRef = note?.ref.current?.parentElement;
           lastAddedNoteRef.current = lastRef;
           return lastRef;
         }

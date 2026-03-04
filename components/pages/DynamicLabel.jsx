@@ -57,7 +57,7 @@ const DynamicLabel = ({
     for (let uuid of order) {
       const note = notes.get(uuid);
       if (note?.labels?.includes(labelObj?.uuid) && !note?.isTrash) {
-        lastRef = note?.ref.current;
+        lastRef = note?.ref.current?.parentElement;
         lastAddedNoteRef.current = lastRef;
         return lastRef;
       }
@@ -114,29 +114,29 @@ const DynamicLabel = ({
           >
             ARCHIVED
           </p>
-            {order.map((uuid, index) => {
-              const note = notes.get(uuid);
-              if (!visibleItems.has(note?.uuid)) return null;
-              if (!note?.labels?.includes(labelObj?.uuid) || note?.isTrash)
-                return null;
-              return (
-                <NoteWrapper
-                  key={note?.uuid}
-                  note={note}
-                  selectedNotesRef={selectedNotesRef}
-                  noteActions={noteActions}
-                  isGrid={isGrid}
-                  index={index}
-                  dispatchNotes={dispatchNotes}
-                  setSelectedNotesIDs={setSelectedNotesIDs}
-                  handleNoteClick={handleNoteClick}
-                  handleSelectNote={handleSelectNote}
-                  gridNoteWidth={gridNoteWidth}
-                  GUTTER={GUTTER}
-                  calculateLayout={calculateLayout}
-                />
-              );
-            })}
+          {order.map((uuid, index) => {
+            const note = notes.get(uuid);
+            if (!visibleItems.has(note?.uuid)) return null;
+            if (!note?.labels?.includes(labelObj?.uuid) || note?.isTrash)
+              return null;
+            return (
+              <NoteWrapper
+                key={note?.uuid}
+                note={note}
+                selectedNotesRef={selectedNotesRef}
+                noteActions={noteActions}
+                isGrid={isGrid}
+                index={index}
+                dispatchNotes={dispatchNotes}
+                setSelectedNotesIDs={setSelectedNotesIDs}
+                handleNoteClick={handleNoteClick}
+                handleSelectNote={handleSelectNote}
+                gridNoteWidth={gridNoteWidth}
+                GUTTER={GUTTER}
+                calculateLayout={calculateLayout}
+              />
+            );
+          })}
         </div>
         <div style={{ display: notesExist && "none" }} className="empty-page">
           {notesReady && !notesExist && (
