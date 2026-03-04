@@ -68,6 +68,16 @@ const localDbReducer = (payload) => {
       break;
     }
 
+    case "MERGE_NOTE": {
+      const newNote = {
+        ...payload.notes.get(payload.note?.uuid),
+        ...payload.note,
+        updatedAt: new Date(),
+      };
+      updateLocalNotesAndOrder([newNote], null, payload.userID);
+      break;
+    }
+
     case "SET_NOTE": {
       const newNote = { ...payload.note, updatedAt: new Date() };
       updateLocalNotesAndOrder([newNote], null, payload.userID);
@@ -388,17 +398,15 @@ const localDbReducer = (payload) => {
       updateLocalNotesAndOrder(newNotes, null, payload.userID);
       break;
     }
-    case "ADD_IMAGES": {
+
+    case "SET_IMAGES": {
       const newNote = {
-        ...payload.notes.get(payload.note?.uuid),
-        updatedAt: new Date(),
-        images: [...payload.note?.images, ...payload.newImages],
+        ...payload.notes.get(payload.uuid),
+        images: payload.images,
       };
-      const updatedNotes = new Map(payload.notes).set(
-        payload.note?.uuid,
-        newNote,
-      );
+      updateLocalNotesAndOrder([newNote], null, payload.userID);
     }
+
     case "UPDATE_TEXT": {
       const newNote = {
         ...payload.notes.get(payload.note?.uuid),

@@ -711,7 +711,7 @@ export const createNoteAction = async (note, clientID) => {
       content: note.content || "",
       creator: userID,
       checkboxes: note.checkboxes || [],
-      images: note.images || [],
+      images: [],
       collaborators: note.collaborators || [],
       lastModifiedBy: clientID,
     };

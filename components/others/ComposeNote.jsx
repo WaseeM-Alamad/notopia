@@ -128,7 +128,8 @@ const ComposeNote = ({
     modal.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scaleX}, ${scaleY})`;
   };
 
-  const UploadImagesAction = async (noteUUID) => {
+  const UploadImagesAction = async (newNote) => {
+    const noteUUID = newNote.uuid;
     const formData = new FormData();
     const files = note?.imageFiles;
 
@@ -137,6 +138,8 @@ const ComposeNote = ({
     const imageUUIDs = [];
 
     formData.append("noteUUID", noteUUID);
+    formData.append("creatorID", userID);
+    formData.append("clientID", clientID);
 
     files.forEach(({ file, uuid }) => {
       const imageUUID = uuid;
@@ -144,7 +147,6 @@ const ComposeNote = ({
 
       formData.append("files", file);
       formData.append("imageUUIDs", imageUUID);
-      formData.append("clientID", clientID);
     });
 
     setLoadingImages((prev) => {
@@ -160,37 +162,39 @@ const ComposeNote = ({
 
     const data = await res.json();
 
+    const failedImages = data.errors;
+    const successImages = data.uploads;
+
+    dispatchNotes({
+      type: "SET_IMAGES",
+      uuid: noteUUID,
+      images: successImages,
+    });
+
+    localDbReducer({
+      notes: notesStateRef.current.notes,
+      order: notesStateRef.current.order,
+      userID: userID,
+      type: "SET_IMAGES",
+      uuid: noteUUID,
+      images: successImages,
+    });
+
+    if (failedImages.length > 0) {
+      openSnackRef.current({
+        snackMessage:
+          successImages.length > 0
+            ? "Some images were not uploaded successfully"
+            : "Error uploading images",
+        showUndo: false,
+      });
+    }
+
     setLoadingImages((prev) => {
       const newSet = new Set(prev);
       imageUUIDs.forEach((id) => newSet.delete(id));
       return newSet;
     });
-
-    if (data.error) {
-      openSnackRef.current({
-        snackMessage: "Error uploading images",
-        showUndo: false,
-      });
-    } else {
-      const updatedImages = data;
-      const imagesMap = new Map();
-      updatedImages.forEach((imageData) => {
-        imagesMap.set(imageData.uuid, imageData);
-      });
-      dispatchNotes({
-        type: "UPDATE_IMAGES",
-        note: { uuid: noteUUID },
-        imagesMap: imagesMap,
-      });
-      localDbReducer({
-        notes: notesStateRef.current.notes,
-        order: notesStateRef.current.order,
-        userID: userID,
-        type: "UPDATE_IMAGES",
-        note: { uuid: noteUUID },
-        imagesMap: imagesMap,
-      });
-    }
   };
 
   const handleCreateNote = async () => {
@@ -238,7 +242,7 @@ const ComposeNote = ({
     const result = await handleServerCall(
       [
         () => createNoteAction(newNote, clientID),
-        () => UploadImagesAction(newNote?.uuid),
+        () => UploadImagesAction(newNote),
       ],
       openSnackRef.current,
       true,
@@ -253,12 +257,16 @@ const ComposeNote = ({
         image: user?.image,
       },
     };
-    dispatchNotes({ type: "SET_NOTE", note: receivedNote });
+    const { images, ...noteWithNoImages } = receivedNote;
+    dispatchNotes({
+      type: "MERGE_NOTE",
+      note: note?.imageFiles.length === 0 ? receivedNote : noteWithNoImages,
+    });
     localDbReducer({
       notes: notesStateRef.current.notes,
       order: notesStateRef.current.order,
       userID: userID,
-      type: "SET_NOTE",
+      type: "MERGE_NOTE",
       note: receivedNote,
     });
   };

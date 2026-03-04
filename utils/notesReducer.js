@@ -102,6 +102,20 @@ export function notesReducer(state, action) {
       };
     }
 
+    case "MERGE_NOTE": {
+      const newMap = new Map(state.notes);
+      const updatedNotes = newMap.set(action.note?.uuid, {
+        ...newMap.get(action.note?.uuid),
+        ...action.note,
+        updatedAt: new Date(),
+        ref: createRef(),
+      });
+      return {
+        ...state,
+        notes: updatedNotes,
+      };
+    }
+
     case "SET_NOTE": {
       const updatedNotes = new Map(state.notes).set(action.note?.uuid, {
         ...action.note,
@@ -491,6 +505,19 @@ export function notesReducer(state, action) {
         images: [...action.note?.images, ...action.newImages],
       };
       const updatedNotes = new Map(state.notes).set(action.note?.uuid, newNote);
+
+      return {
+        ...state,
+        notes: updatedNotes,
+      };
+    }
+
+    case "SET_IMAGES": {
+      const newNote = {
+        ...state.notes.get(action.uuid),
+        images: action.images,
+      };
+      const updatedNotes = new Map(state.notes).set(action.uuid, newNote);
 
       return {
         ...state,
