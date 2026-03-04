@@ -27,6 +27,22 @@ export function notesReducer(state, action) {
         order: [action.newNote.uuid, ...state.order],
       };
 
+    case "SHOW_NOTE": {
+      const existingNote = state.notes.get(action.uuid);
+
+      const { isVisible, ...noteWithoutVisible } = existingNote;
+
+      const updatedNotes = new Map(state.notes).set(
+        action.uuid,
+        noteWithoutVisible,
+      );
+
+      return {
+        ...state,
+        notes: updatedNotes,
+      };
+    }
+
     case "ADD_NOTES": {
       const updatedNotes = new Map(state.notes);
 

@@ -1,4 +1,11 @@
-import React, { memo, useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { createPortal } from "react-dom";
 import Button from "../Tools/Button";
 import PinIcon from "../icons/PinIcon";
@@ -6,7 +13,7 @@ import NoteImagesLayout from "../Tools/NoteImagesLayout";
 import { v4 as uuid } from "uuid";
 import { createNoteAction } from "@/utils/actions";
 import ComposeTools from "./ComposeTools";
-import { debounce, result } from "lodash";
+import { debounce } from "lodash";
 import { useAppContext } from "@/context/AppContext";
 import { AnimatePresence } from "framer-motion";
 import Menu from "./Menu";
@@ -16,14 +23,13 @@ import handleServerCall from "@/utils/handleServerCall";
 import localDbReducer from "@/utils/localDbReducer";
 import { useLabelsContext } from "@/context/LabelsContext";
 import { useGlobalContext } from "@/context/GlobalContext";
-import { useMasonry } from "@/context/MasonryContext";
 
 const ComposeNote = ({
   dispatchNotes,
   setVisibleItems,
-  containerRef,
-  lastAddedNoteRef,
   labelObj,
+  notes,
+  order,
 }) => {
   const {
     user,
@@ -36,7 +42,6 @@ const ComposeNote = ({
   } = useAppContext();
   const { labelsRef } = useLabelsContext();
   const { lockScroll } = useGlobalContext();
-  const { isInCurrentSection } = useMasonry();
   const [isDragOver, setIsDragOver] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -188,7 +193,10 @@ const ComposeNote = ({
     }
   };
 
-  const handleCreateNote = async (newUUID) => {
+  const handleCreateNote = async () => {
+    const newUUID = uuid();
+    lastAddedUUIDRef.current = newUUID;
+
     const newNote = {
       uuid: newUUID,
       creator: {
@@ -214,7 +222,7 @@ const ComposeNote = ({
     };
     dispatchNotes({
       type: "ADD_NOTE",
-      newNote: newNote,
+      newNote: { ...newNote, isVisible: false },
     });
 
     localDbReducer({
@@ -274,6 +282,7 @@ const ComposeNote = ({
     });
     setRedoStack([]);
     setUndoStack([]);
+    lastAddedUUIDRef.current = null;
   };
 
   useEffect(() => {
@@ -357,39 +366,70 @@ const ComposeNote = ({
           reset();
         }, 220);
       } else {
-        const newUUID = uuid();
-        handleCreateNote(newUUID);
+        handleCreateNote();
         modalRef.current.style.transformOrigin = "top left";
-        const observer = new MutationObserver(() => {
-          const lastNote = lastAddedNoteRef.current;
-          if (!lastNote) return;
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              const rect = lastNote.getBoundingClientRect();
-              lastNote.style.opacity = "0";
-              positionModal(rect);
-            });
-          });
-          observer.disconnect();
-        });
+        // const observer = new MutationObserver(() => {
+        //   const lastNote = lastAddedNoteRef.current;
+        //   if (!lastNote) return;
+        //   requestAnimationFrame(() => {
+        //     requestAnimationFrame(() => {
+        //       const rect = lastNote.getBoundingClientRect();
+        //       positionModal(rect);
+        //       lastNote.style.opacity = "0";
+        //     });
+        //   });
+        //   observer.disconnect();
+        // });
 
-        observer.observe(containerRef.current, {
-          childList: true,
-          subtree: false,
-        });
+        // observer.observe(containerRef.current, {
+        //   childList: true,
+        //   subtree: false,
+        // });
 
-        setTimeout(() => {
-          requestAnimationFrame(() => {
-            const lastNote = lastAddedNoteRef.current;
-            modalRef.current.removeAttribute("style");
-            overlay.removeAttribute("style");
-            lastNote?.style.removeProperty("opacity");
-            reset();
-          });
-        }, 220);
+        // setTimeout(() => {
+        //   requestAnimationFrame(() => {
+        //     const lastNote = lastAddedNoteRef.current;
+        //     modalRef.current.removeAttribute("style");
+        //     overlay.removeAttribute("style");
+        //     lastNote?.style.removeProperty("opacity");
+        //     reset();
+        //   });
+        // }, 220);
       }
     }
   }, [isOpen]);
+
+  const lastAddedUUIDRef = useRef(null);
+
+  useLayoutEffect(() => {
+    if (!lastAddedUUIDRef.current) return;
+
+    setTimeout(() => {
+      const note = notes.get(lastAddedUUIDRef.current);
+      const el = note?.ref.current?.parentElement;
+
+      if (!el) return;
+      const overlay = document.getElementById("n-overlay");
+      const rect = el.getBoundingClientRect();
+
+      positionModal(rect);
+
+      setTimeout(() => {
+        requestAnimationFrame(() => {
+          dispatchNotes({
+            type: "SHOW_NOTE",
+            uuid: lastAddedUUIDRef.current,
+          });
+          requestAnimationFrame(() => {
+            modalRef.current.removeAttribute("style");
+            overlay.removeAttribute("style");
+          });
+
+          reset();
+        });
+      }, 220);
+    }, 10);
+  }, [order]);
 
   const handlePinClick = () => {
     setNote((prev) => ({ ...prev, isPinned: !prev.isPinned }));

@@ -1,22 +1,7 @@
-import { useAppContext } from "@/context/AppContext";
-import React, {
-  memo,
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import Note from "../others/note/Note";
+import React, { memo, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { getNoteFormattedDate } from "@/utils/noteDateFormatter";
-import ComposeNote from "../others/ComposeNote";
-import FolderIcon from "../icons/FolderIcon";
 import SectionHeader from "../others/SectionHeader";
 import SetLabelModal from "../others/SetLabelModal";
-import { useGlobalContext } from "@/context/GlobalContext";
-import { useLayout } from "@/context/LayoutContext";
 import { useMasonry } from "@/context/MasonryContext";
 import NoteWrapper from "../others/note/NoteWrapper";
 
@@ -50,23 +35,6 @@ const DynamicLabel = ({
     calculateLayout,
   } = useMasonry();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const lastAddedNoteRef = useRef(null);
-
-  const getLastRef = () => {
-    let lastRef = null;
-    for (let uuid of order) {
-      const note = notes.get(uuid);
-      if (note?.labels?.includes(labelObj?.uuid) && !note?.isTrash) {
-        lastRef = note?.ref.current?.parentElement;
-        lastAddedNoteRef.current = lastRef;
-        return lastRef;
-      }
-    }
-  };
-
-  useEffect(() => {
-    getLastRef();
-  }, [notes, order]);
 
   useEffect(() => {
     setIsModalOpen(false);
@@ -173,13 +141,6 @@ const DynamicLabel = ({
           )}
         </div>
       </div>
-      <ComposeNote
-        dispatchNotes={dispatchNotes}
-        setVisibleItems={setVisibleItems}
-        containerRef={containerRef}
-        lastAddedNoteRef={lastAddedNoteRef}
-        labelObj={labelObj}
-      />
       <AnimatePresence>
         {isModalOpen && (
           <SetLabelModal

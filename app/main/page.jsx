@@ -43,6 +43,7 @@ import SplashScreen from "@/components/others/SplashScreen";
 import { useLabelsContext } from "@/context/LabelsContext";
 import { MasonryProvider } from "@/context/MasonryContext";
 import { useLayout } from "@/context/LayoutContext";
+import ComposeNote from "@/components/others/ComposeNote";
 
 const page = () => {
   const { searchTerm, filters } = useSearch();
@@ -639,6 +640,13 @@ const page = () => {
               rootContainerRef={rootContainerRef}
               labelObj={labelObj}
               handleDeleteLabel={handleDeleteLabel}
+            />
+            <ComposeNote
+              dispatchNotes={dispatchNotes}
+              setVisibleItems={setVisibleItems}
+              notes={notesState.notes}
+              order={notesState.order}
+              labelObj={labelObj}
             />
           </MasonryProvider>
         </div>

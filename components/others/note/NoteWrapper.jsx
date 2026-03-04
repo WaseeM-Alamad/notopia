@@ -192,8 +192,8 @@ const NoteWrapper = ({
           }
         }}
         className={`grid-item`}
-        // ${fadingNotes.has(note?.uuid) ? "fade-out" : ""}
         style={{
+          opacity: note.isVisible === undefined ? 1 : note.isVisible ? 1 : 0,
           maxWidth: `${isGrid ? gridNoteWidth : 600}px`,
           width: "100%",
           marginBottom: `${GUTTER}px`,

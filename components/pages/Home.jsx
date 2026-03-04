@@ -36,24 +36,11 @@ const Home = memo(
       hasUnpinned,
       calculateLayout,
     } = useMasonry();
-    const lastAddedNoteRef = useRef(null);
     const touchOverElementRef = useRef(null);
     const overIndexRef = useRef(null);
     const overIsPinnedRef = useRef(null);
     const isDraggingRef = useRef(false);
     const handleDragStartRef = useRef(null);
-
-    const getLastRef = () => {
-      let lastRef = null;
-      for (let uuid of order) {
-        const note = notes.get(uuid);
-        if (!note?.isArchived && !note?.isTrash) {
-          lastRef = note?.ref.current?.parentElement;
-          lastAddedNoteRef.current = lastRef;
-          return lastRef;
-        }
-      }
-    };
 
     useNoteDragging({
       touchOverElementRef,
@@ -64,10 +51,6 @@ const Home = memo(
       overIndexRef,
       dispatchNotes,
     });
-
-    useEffect(() => {
-      getLastRef();
-    }, [notes, order]);
 
     return (
       <>
@@ -109,34 +92,34 @@ const Home = memo(
               OTHERS
             </p>
 
-              {order.map((uuid, index) => {
-                const note = notes.get(uuid);
-                if (!visibleItems.has(note?.uuid)) return null;
-                if (note?.isArchived || note?.isTrash) return null;
+            {order.map((uuid, index) => {
+              const note = notes.get(uuid);
+              if (!visibleItems.has(note?.uuid)) return null;
+              if (note?.isArchived || note?.isTrash) return null;
 
-                return (
-                  <NoteWrapper
-                    selectedNotesRef={selectedNotesRef}
-                    key={note?.uuid}
-                    note={note}
-                    isGrid={isGrid}
-                    // fadingNotes={fadingNotes}
-                    overIndexRef={overIndexRef}
-                    overIsPinnedRef={overIsPinnedRef}
-                    noteActions={noteActions}
-                    dispatchNotes={dispatchNotes}
-                    handleDragStart={handleDragStartRef.current}
-                    setSelectedNotesIDs={setSelectedNotesIDs}
-                    handleNoteClick={handleNoteClick}
-                    handleSelectNote={handleSelectNote}
-                    gridNoteWidth={gridNoteWidth}
-                    GUTTER={GUTTER}
-                    isDraggingRef={isDraggingRef}
-                    touchOverElementRef={touchOverElementRef}
-                    calculateLayout={calculateLayout}
-                  />
-                );
-              })}
+              return (
+                <NoteWrapper
+                  selectedNotesRef={selectedNotesRef}
+                  key={note?.uuid}
+                  note={note}
+                  isGrid={isGrid}
+                  // fadingNotes={fadingNotes}
+                  overIndexRef={overIndexRef}
+                  overIsPinnedRef={overIsPinnedRef}
+                  noteActions={noteActions}
+                  dispatchNotes={dispatchNotes}
+                  handleDragStart={handleDragStartRef.current}
+                  setSelectedNotesIDs={setSelectedNotesIDs}
+                  handleNoteClick={handleNoteClick}
+                  handleSelectNote={handleSelectNote}
+                  gridNoteWidth={gridNoteWidth}
+                  GUTTER={GUTTER}
+                  isDraggingRef={isDraggingRef}
+                  touchOverElementRef={touchOverElementRef}
+                  calculateLayout={calculateLayout}
+                />
+              );
+            })}
           </div>
           <div style={{ display: notesExist && "none" }} className="empty-page">
             {notesReady && !notesExist && (
@@ -173,12 +156,6 @@ const Home = memo(
             )}
           </div>
         </div>
-        <ComposeNote
-          dispatchNotes={dispatchNotes}
-          setVisibleItems={setVisibleItems}
-          containerRef={containerRef}
-          lastAddedNoteRef={lastAddedNoteRef}
-        />
       </>
     );
   },
