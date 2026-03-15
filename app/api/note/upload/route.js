@@ -19,16 +19,18 @@ export async function POST(req) {
   if (!creatorID || !noteUUID) {
     return NextResponse.json(
       { error: "Missing creatorID or noteUUID" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
   if (files.length !== imageUUIDs.length) {
     return NextResponse.json(
       { error: "Mismatch between files and UUIDs" },
-      { status: 400 }
+      { status: 400 },
     );
   }
+
+  await connectDB();
 
   const uploadPromises = files.map(async (file, i) => {
     const imageUUID = imageUUIDs[i];
@@ -60,8 +62,6 @@ export async function POST(req) {
     const publicId = `${creatorID}/${noteUUID}/${imageUUID}`;
 
     try {
-      await connectDB();
-
       const result = await new Promise((resolve, reject) => {
         cloudinary.uploader
           .upload_stream(
@@ -69,26 +69,17 @@ export async function POST(req) {
             (err, result) => {
               if (err) reject(err);
               else resolve(result);
-            }
+            },
           )
           .end(buffer);
       });
 
-      const newUrl = cloudinary.url(publicId);
-
-      await NoteUpdateAction({
-        type: "images",
-        value: {
-          url: newUrl,
-          uuid: imageUUID,
-        },
-        noteUUIDs: [noteUUID],
-        clientID: clientID,
-      });
+      const newUrl = result.secure_url;
 
       return {
-        url: result.secure_url,
+        url: newUrl,
         uuid: imageUUID,
+        index: i,
       };
     } catch (error) {
       console.error("Error uploading image:", error);
@@ -101,8 +92,22 @@ export async function POST(req) {
 
   const uploads = await Promise.all(uploadPromises);
 
+  const successfulUploads = uploads
+    .filter((u) => !u.error)
+    .sort((a, b) => a.index - b.index)
+    .map(({ url, uuid }) => ({ url, uuid }));
+
+  const failedUploads = uploads.filter((u) => u.error).map(({url, uuid})=> ({url, uuid}));
+
+  await NoteUpdateAction({
+    type: "images",
+    value: successfulUploads,
+    noteUUIDs: [noteUUID],
+    clientID: clientID,
+  });
+
   return NextResponse.json({
-    uploads: uploads.filter((u) => !u.error),
-    errors: uploads.filter((u) => u.error),
+    uploads: successfulUploads,
+    errors: failedUploads,
   });
 }

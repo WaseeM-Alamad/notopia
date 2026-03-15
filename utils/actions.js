@@ -778,10 +778,6 @@ export const NoteUpdateAction = async (data) => {
         },
         { returnDocument: "after" },
       );
-      const updatedImage = updatedNote.images.find(
-        (img) => img.uuid === data.value.uuid,
-      );
-      return JSON.parse(JSON.stringify(updatedImage));
     } else if (data.type === "isArchived") {
       await UserSettings.updateOne(
         { note: data.noteUUIDs[0], user: userID },

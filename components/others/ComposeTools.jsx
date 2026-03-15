@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useRef, useState } from "react";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import Button from "../Tools/Button";
 import ColorSelectMenu from "./ColorSelectMenu";
 import BackIcon from "../icons/BackIcon";
@@ -24,8 +24,7 @@ const AddModalTools = ({
   setLabelsOpen,
   inputRef,
 }) => {
-  const { showTooltip, hideTooltip, openSnackRef } =
-    useAppContext();
+  const { showTooltip, hideTooltip, openSnackRef } = useAppContext();
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
   const [colorAnchorEl, setColorAnchorEl] = useState();
   const [colorDrawerOpen, setColorDrawerOpen] = useState(false);
@@ -54,8 +53,12 @@ const AddModalTools = ({
       if (note?.background === newBG) return;
       setNote((prev) => ({ ...prev, background: newBG }));
     },
-    [note?.background]
+    [note?.background],
   );
+
+  useEffect(()=> {
+    console.log(note)
+  }, [note])
 
   const handleOnChange = async (event) => {
     const files = Array.from(event.target?.files || []);
@@ -89,8 +92,8 @@ const AddModalTools = ({
     setNote((prevNote) => {
       return {
         ...prevNote,
-        images: imageObjs,
-        imageFiles: imageFiles,
+        images: [...prevNote.images, ...imageObjs],
+        imageFiles: [...prevNote.imageFiles, ...imageFiles],
       };
     });
     inputRef.current.value = "";
