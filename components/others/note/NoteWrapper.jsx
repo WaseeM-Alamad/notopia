@@ -70,7 +70,7 @@ const NoteWrapper = ({
       if (deltaX > 5 || deltaY > 5) {
         if (
           targetElement === noteRef.current &&
-          !target.classList.contains("not-draggable")
+          !target.closest(".not-draggable")
         ) {
           handleDragStart(
             e,

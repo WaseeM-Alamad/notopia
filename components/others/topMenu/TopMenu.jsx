@@ -922,11 +922,13 @@ const TopMenuHome = ({
                         : "top-pin-icon top-btn"
                     }
                   />
-                  <Button
-                    onMouseEnter={(e) => showTooltip(e, "Remind me")}
-                    onMouseLeave={hideTooltip}
-                    className="top-reminder-icon top-btn"
-                  />
+                  {selectedNotesIDs.length <= 1 && (
+                    <Button
+                      onMouseEnter={(e) => showTooltip(e, "Remind me")}
+                      onMouseLeave={hideTooltip}
+                      className="top-reminder-icon top-btn"
+                    />
+                  )}
                   <Button
                     onMouseEnter={(e) =>
                       showTooltip(e, archiveNotes ? "Unarchive" : "Archive")

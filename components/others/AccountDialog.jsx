@@ -187,7 +187,7 @@ const AccountDialog = ({ isOpen, setIsOpen }) => {
                   setAnchorEl(e.currentTarget);
                   setSelectMenuOpen((prev) => !prev);
                 }}
-                className={`select-menu option-styling ${sectionsBtns[selectedSection].icon}`}
+                className={`select-menu-input option-styling ${sectionsBtns[selectedSection].icon}`}
               >
                 <span>{sectionsBtns[selectedSection].title}</span>
                 <motion.div

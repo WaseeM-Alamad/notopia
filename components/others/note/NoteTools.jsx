@@ -11,6 +11,7 @@ import ColorSelectMenu from "../ColorSelectMenu";
 import Button from "@/components/Tools/Button";
 import Menu from "../Menu";
 import ManageLabelsMenu from "../ManageLabelsMenu";
+import ReminderMenu from "../reminderMenus/ReminderMenu";
 
 const NoteTools = ({
   note = {},
@@ -24,6 +25,8 @@ const NoteTools = ({
   setColorMenuOpen,
   moreMenuOpen,
   setMoreMenuOpen,
+  reminderOpen,
+  setReminderOpen,
   userID,
   noteActions,
   inputRef,
@@ -41,6 +44,8 @@ const NoteTools = ({
   const { filters } = useSearch();
   const [colorAnchorEl, setColorAnchorEl] = useState(null);
   const [labelsOpen, setLabelsOpen] = useState(false);
+
+  const [reminderAnchor, setReminderAnchor] = useState(null);
 
   const ImagesWithNoBottomContent =
     note?.images?.length > 0 &&
@@ -652,6 +657,31 @@ const NoteTools = ({
             {!note?.isTrash ? (
               <>
                 <Button
+                  onClick={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+
+                    // Convert to absolute page coordinates (scroll + viewport)
+                    const pageX = rect.left + window.pageXOffset;
+                    const pageY = rect.top + window.pageYOffset;
+
+                    const virtualAnchor = {
+                      getBoundingClientRect: () =>
+                        // Calculate rect relative to viewport on each call by subtracting current scroll
+                        new DOMRect(
+                          pageX - window.pageXOffset,
+                          pageY - window.pageYOffset,
+                          rect.width,
+                          rect.height,
+                        ),
+                      contextElement: document.body,
+                    };
+
+                    setReminderAnchor({
+                      ...virtualAnchor,
+                      btnRef: e.currentTarget,
+                    });
+                    setReminderOpen((prev) => !prev);
+                  }}
                   tabIndex="0"
                   className="reminder-icon btn-hover"
                   onMouseEnter={(e) => showTooltip(e, "Remind me")}
@@ -805,6 +835,16 @@ const NoteTools = ({
             setIsOpen={setLabelsOpen}
             anchorEl={anchorEl}
             removedFilteredLabelRef={removedFilteredLabelRef}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {reminderOpen && (
+          <ReminderMenu
+            note={note}
+            isOpen={reminderOpen}
+            setIsOpen={setReminderOpen}
+            anchorEl={reminderAnchor}
           />
         )}
       </AnimatePresence>

@@ -53,6 +53,7 @@ const Note = memo(
     const [isDragOver, setIsDragOver] = useState(false);
     const [colorMenuOpen, setColorMenuOpen] = useState(false);
     const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+    const [reminderOpen, setReminderOpen] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
     const [selected, setSelected] = useState(
       selectedNotesRef.current.has(note?.uuid),
@@ -396,7 +397,7 @@ const Note = memo(
             setAnchorEl(virtualAnchor);
             setMoreMenuOpen((prev) => !prev);
           }}
-          className={`note-wrapper ${selected || colorMenuOpen || moreMenuOpen ? "element-active" : ""}`}
+          className={`note-wrapper ${selected || colorMenuOpen || reminderOpen || moreMenuOpen ? "element-active" : ""}`}
           ref={note?.ref}
         >
           {/* <button onClick={()=> console.log(note?.images)}>click</button> */}
@@ -533,6 +534,8 @@ const Note = memo(
             handleNoteClick={handleNoteClick}
             setColorMenuOpen={handleMenuIsOpenChange}
             moreMenuOpen={moreMenuOpen}
+            reminderOpen={reminderOpen}
+            setReminderOpen={setReminderOpen}
             anchorEl={anchorEl}
             setAnchorEl={setAnchorEl}
             selectedColor={selectedColor}
