@@ -21,6 +21,9 @@ const ReminderMenu = ({
   const currentHour = new Date().getHours();
 
   const menuRef = useRef(null);
+  const firstSectionRef = useRef(null);
+  const secondSectionRef = useRef(null);
+  const isFirstRunRef = useRef(true);
 
   const menuItems = [
     {
@@ -101,6 +104,50 @@ const ReminderMenu = ({
     e.stopPropagation();
   }, []);
 
+  const timeoutRef = useRef(null);
+
+  useEffect(() => {
+    const menu = menuRef.current;
+    const firstSection = firstSectionRef.current;
+    const secondSection = secondSectionRef.current;
+
+    if (!menu || !firstSection || !secondSection) return;
+
+    if (isFirstRunRef.current) {
+      menu.style.height = firstSection.offsetHeight + "px";
+      isFirstRunRef.current = false;
+    }
+
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    secondSection.style.pointerEvents = isPickSection ? "all" : "none";
+    firstSection.style.pointerEvents = !isPickSection ? "all" : "none";
+
+    if (isPickSection) {
+      menu.style.height = secondSection.offsetHeight + "px";
+      firstSection.style.opacity = 0;
+
+      timeoutRef.current = setTimeout(() => {
+        secondSection.style.opacity = 1;
+      }, 300);
+    } else {
+      menu.style.height = firstSection.offsetHeight + "px";
+      secondSection.style.opacity = 0;
+
+      timeoutRef.current = setTimeout(() => {
+        firstSection.style.opacity = 1;
+      }, 300);
+    }
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [isPickSection]);
+
   if (!isClient) return;
   return (
     <>
@@ -153,16 +200,25 @@ const ReminderMenu = ({
               maxWidth: "unset",
               maxHeight: "26.96125rem",
               position: "relative",
-              overflow: "visible"
+              overflow: "visible",
+              boxSizing: "content-box",
+              transition: "width 0.3s ease-in, height 0.3s ease-in",
             }}
             ref={menuRef}
             className="menu menu-border not-draggable"
           >
-            {!isPickSection ? (
+            <div
+              ref={firstSectionRef}
+              style={{ transition: "opacity 0.25s ease" }}
+            >
               <RemindMeLater setIsOpen={setIsOpen} menuItems={menuItems} />
-            ) : (
-              <PickTime setIsPickSection={setIsPickSection} setIsOpen={setIsOpen} />
-            )}
+            </div>
+            <div ref={secondSectionRef} className="reminder-pick-wrapper">
+              <PickTime
+                setIsPickSection={setIsPickSection}
+                setIsOpen={setIsOpen}
+              />
+            </div>
           </motion.div>
         )}
       </Popper>

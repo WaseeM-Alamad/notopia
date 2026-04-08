@@ -1,16 +1,29 @@
 import { AnimatePresence, motion } from "framer-motion";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 
-const Select = () => {
-  const options = [
-    { value: "chocolate", label: "Chocolate" },
-    { value: "strawberry", label: "Strawberry" },
-    { value: "vanilla", label: "Vanilla" },
-  ];
-
-  const [selectedIndex, setSelectedIndex] = useState(0);
+const Select = ({ options, value, onChange, useSideTextforInput = false }) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
+
+  const selectedOption = options.find((option) => {
+    const optionValue = typeof option === "object" ? option.value : option;
+    return optionValue === value;
+  });
+
+  const selectedLabel =
+    typeof selectedOption === "object"
+      ? useSideTextforInput && selectedOption?.sideText
+        ? selectedOption?.sideText
+        : selectedOption?.label
+      : selectedOption;
+
+  useLayoutEffect(() => {
+    if (value === null || value === undefined) {
+      const optionValue =
+        typeof options[0] === "object" ? options[0].value : options[0];
+      onChange(optionValue);
+    }
+  }, [value]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -45,17 +58,16 @@ const Select = () => {
   return (
     <div className={isOpen ? "select-open" : ""} style={{ padding: "0 1rem" }}>
       <div
+        ref={menuRef}
         style={{
           position: "relative",
-          // width: "90%"
         }}
       >
         <div
-          ref={menuRef}
           className="select-input"
           onClick={() => setIsOpen((prev) => !prev)}
         >
-          <span>{options[selectedIndex].label}</span>
+          <span>{selectedLabel}</span>
           <motion.div
             initial={{
               transform: `translateY(-50%) rotateX(${isOpen ? "180deg" : "0"})`,
@@ -67,7 +79,7 @@ const Select = () => {
               type: "tween",
               duration: 0.2,
             }}
-            style={{ right: "2px" }}
+            style={{ right: "4px" }}
             className="down-arrow-icon"
           />
         </div>
@@ -101,15 +113,32 @@ const Select = () => {
               }}
               className="select-menu menu-border"
             >
-              {options.map(({ value, label }) => (
-                <div
-                  style={{ padding: ".5rem .6rem" }}
-                  className="menu-btn"
-                  key={label}
-                >
-                  {label}{" "}
-                </div>
-              ))}
+              {options.map((option) => {
+                const optionValue =
+                  typeof option === "object" ? option.value : option;
+
+                const optionLabel =
+                  typeof option === "object" ? option.label : option;
+
+                const sideText =
+                  typeof option === "object" ? option.sideText : null;
+                return (
+                  <div
+                    style={{ padding: ".5rem .6rem", fontSize: "0.83rem" }}
+                    className="menu-btn"
+                    key={optionValue}
+                    onClick={() => {
+                      onChange(optionValue);
+                      setIsOpen(false);
+                    }}
+                  >
+                    <span style={{ width: "fit-content" }}>{optionLabel}</span>
+                    {sideText && (
+                      <span style={{ width: "fit-content" }}>{sideText}</span>
+                    )}
+                  </div>
+                );
+              })}
             </motion.div>
           )}
         </AnimatePresence>
