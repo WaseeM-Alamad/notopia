@@ -4,6 +4,7 @@ import Button from "@/components/Tools/Button";
 import React, { useState } from "react";
 import Select from "../Select";
 import { useAppContext } from "@/context/AppContext";
+import DateSelect from "./DateSelect";
 
 const reps = ["Does not repeat", "Daily", "Weekly", "Monthly", "Yearly"];
 const time = [
@@ -19,6 +20,7 @@ const PickTime = ({ setIsPickSection, setIsOpen }) => {
   const { showTooltip, hideTooltip } = useAppContext();
   const [selectedRep, setSelectedRep] = useState(reps[0]);
   const [selectedTime, setSelectedTime] = useState(time[0].value);
+  const [selectedDate, setSelectedDate] = useState(null);
 
   return (
     <div className="pick-time-container">
@@ -36,7 +38,7 @@ const PickTime = ({ setIsPickSection, setIsOpen }) => {
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: ".5rem" }}>
-        {/* <Select /> */}
+        <DateSelect value={selectedDate} onChange={setSelectedDate} />
         <Select
           options={time}
           value={selectedTime}

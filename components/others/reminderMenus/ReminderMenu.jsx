@@ -131,14 +131,14 @@ const ReminderMenu = ({
 
       timeoutRef.current = setTimeout(() => {
         secondSection.style.opacity = 1;
-      }, 300);
+      }, 250);
     } else {
       menu.style.height = firstSection.offsetHeight + "px";
       secondSection.style.opacity = 0;
 
       timeoutRef.current = setTimeout(() => {
         firstSection.style.opacity = 1;
-      }, 300);
+      }, 250);
     }
 
     return () => {
@@ -202,14 +202,14 @@ const ReminderMenu = ({
               position: "relative",
               overflow: "visible",
               boxSizing: "content-box",
-              transition: "width 0.3s ease-in, height 0.3s ease-in",
+              transition: "width 0.25s ease-in, height 0.25s ease-in",
             }}
             ref={menuRef}
             className="menu menu-border not-draggable"
           >
             <div
               ref={firstSectionRef}
-              style={{ transition: "opacity 0.25s ease" }}
+              style={{ transition: "opacity 0.17s ease-out" }}
             >
               <RemindMeLater setIsOpen={setIsOpen} menuItems={menuItems} />
             </div>

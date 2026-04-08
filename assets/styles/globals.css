@@ -6519,7 +6519,7 @@ aside svg {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-  width: 15.625rem;
+  width: 16.625rem;
 }
 
 .clock-menu-icon {
@@ -6588,5 +6588,5 @@ aside svg {
   opacity: 0;
   width: 100%;
   pointer-events: none;
-  transition: opacity 0.25s ease;
+  transition: opacity 0.17s ease-out;
 }
