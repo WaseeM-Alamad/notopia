@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 
 const RemindMeLater = ({ setIsOpen, menuItems }) => {
   return (
@@ -35,7 +35,7 @@ const RemindMeLater = ({ setIsOpen, menuItems }) => {
                   width: "100%",
                   padding: "0.2rem .6rem",
                   paddingLeft: item.icon ? "2.2rem" : ".6rem",
-                  fontSize: ".83rem"
+                  fontSize: ".83rem",
                 }}
               >
                 <span>{item.title}</span>
@@ -49,4 +49,4 @@ const RemindMeLater = ({ setIsOpen, menuItems }) => {
   );
 };
 
-export default RemindMeLater;
+export default memo(RemindMeLater);

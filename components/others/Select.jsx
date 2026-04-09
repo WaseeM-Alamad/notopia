@@ -1,5 +1,11 @@
 import { AnimatePresence, motion } from "framer-motion";
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, {
+  memo,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 
 const Select = ({ options, value, onChange, useSideTextforInput = false }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -66,6 +72,9 @@ const Select = ({ options, value, onChange, useSideTextforInput = false }) => {
         <div
           className="select-input"
           onClick={() => setIsOpen((prev) => !prev)}
+          style={{
+            borderColor: selectedOption?.disabled ? "var(--error)" : "",
+          }}
         >
           <span>{selectedLabel}</span>
           <motion.div
@@ -112,6 +121,11 @@ const Select = ({ options, value, onChange, useSideTextforInput = false }) => {
                 opacity: { duration: 0.15 },
               }}
               className="select-menu menu-border"
+              style={{
+                borderTop: selectedOption?.disabled
+                  ? "solid 1px var(--error)"
+                  : "",
+              }}
             >
               {options.map((option) => {
                 const optionValue =
@@ -122,8 +136,12 @@ const Select = ({ options, value, onChange, useSideTextforInput = false }) => {
 
                 const sideText =
                   typeof option === "object" ? option.sideText : null;
+
+                const disabled =
+                  typeof option === "object" ? option?.disabled : false;
                 return (
-                  <div
+                  <button
+                    disabled={disabled}
                     style={{ padding: ".5rem .6rem", fontSize: "0.83rem" }}
                     className="menu-btn"
                     key={optionValue}
@@ -136,7 +154,7 @@ const Select = ({ options, value, onChange, useSideTextforInput = false }) => {
                     {sideText && (
                       <span style={{ width: "fit-content" }}>{sideText}</span>
                     )}
-                  </div>
+                  </button>
                 );
               })}
             </motion.div>
@@ -147,4 +165,4 @@ const Select = ({ options, value, onChange, useSideTextforInput = false }) => {
   );
 };
 
-export default Select;
+export default memo(Select);

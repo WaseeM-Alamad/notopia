@@ -148,6 +148,7 @@ input {
 }
 
 button {
+  background-color: unset;
   user-select: none !important;
   border: none;
 }
@@ -6589,4 +6590,112 @@ aside svg {
   width: 100%;
   pointer-events: none;
   transition: opacity 0.17s ease-out;
+}
+
+.date-picker {
+  z-index: 10;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-top: 1px solid var(--focus-border);
+  border-bottom-left-radius: 0.7rem;
+  border-bottom-right-radius: 0.7rem;
+  box-shadow: 0px 0px 16px -10px var(--shadow);
+  -webkit-box-shadow: 0px 0px 16px -10px var(--shadow);
+  -moz-box-shadow: 0px 0px 16px -10px var(--shadow);
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.8rem;
+}
+
+.month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.date-nav-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  color: var(--text3);
+  display: flex;
+  align-items: center;
+}
+
+.month-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.dow-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 4px;
+}
+
+.dow {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text);
+  font-weight: 550;
+  padding: 4px 0;
+}
+
+.days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.day-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text);
+  height: 25px;
+  width: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  font-family: inherit;
+  transition: background 0.1s;
+}
+
+.day-btn:hover {
+  background-color: var(--light-blue-hover);
+}
+
+.other-month {
+  color: var(--text3);
+}
+
+.past-day {
+  opacity: 0.35;
+  cursor: default;
+  pointer-events: none;
+}
+
+.today-btn {
+  border: 1px solid var(--filter-type-hover);
+  color: var(--filter-type);
+  font-weight: 500;
+}
+
+.selected-day {
+  background: var(--filter-type-hover);
+  color: #fff;
+  font-weight: 500;
+  border: none;
+  opacity: 1 !important;
+}
+
+.selected-day:hover {
+  background-color: var(--filter-type-hover);
 }

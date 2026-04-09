@@ -1,5 +1,11 @@
 import { AnimatePresence, motion } from "framer-motion";
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, {
+  memo,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import DatePicker from "./DatePicker";
 import { getNoteFormattedDate } from "@/utils/noteDateFormatter";
 import { format } from "date-fns";
@@ -111,6 +117,7 @@ const DateSelect = ({ value, onChange }) => {
                   onChange(selectedDate);
                   setIsOpen(false);
                 }}
+                selected={value}
               />
             </motion.div>
           )}
@@ -120,4 +127,4 @@ const DateSelect = ({ value, onChange }) => {
   );
 };
 
-export default DateSelect;
+export default memo(DateSelect);
