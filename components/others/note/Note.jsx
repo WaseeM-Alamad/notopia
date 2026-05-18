@@ -24,6 +24,7 @@ import NoteLabels from "../NoteLabels";
 import NoteCollabs from "../NoteCollabs";
 import NoteOverlay from "../NoteOverlay";
 import NoteListItemsLayout from "./NoteListItemsLayout";
+import NoteReminder from "./NoteReminder";
 
 const Note = memo(
   ({
@@ -512,7 +513,8 @@ const Note = memo(
                   />
                 )}
                 {(note?.labels?.length > 0 ||
-                  note?.collaborators?.length > 0) && (
+                  note?.collaborators?.length > 0 ||
+                  note?.reminder) && (
                   <div className="note-misc-container n-misc">
                     {note?.labels.length !== 0 && (
                       <NoteLabels note={note} noteActions={noteActions} />
@@ -523,6 +525,7 @@ const Note = memo(
                         handleNoteClick={handleNoteClick}
                       />
                     )}
+                    {note?.reminder && <NoteReminder note={note} />}
                   </div>
                 )}
               </div>

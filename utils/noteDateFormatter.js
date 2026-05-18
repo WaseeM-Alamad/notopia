@@ -5,18 +5,18 @@ export const getNoteFormattedDate = (recievedDate) => {
   const currentDate = new Date();
   const noteYear = new Date(recievedDate).getFullYear();
   const noteDay = new Date(recievedDate).getDate();
-  let FormattedDate;
+  let formattedDate;
   if (noteYear === currentDate.getFullYear()) {
     if (noteDay === currentDate.getDate()) {
-      FormattedDate = format(new Date(recievedDate), "h:mm a");
+      formattedDate = format(new Date(recievedDate), "h:mm a");
     } else if (noteDay === currentDate.getDate() - 1) {
-      FormattedDate = format(new Date(recievedDate), " 'yesterday, ' h:mm a");
+      formattedDate = format(new Date(recievedDate), " 'Yesterday, 'h:mm a");
     } else {
-      FormattedDate = format(new Date(recievedDate), `MMM dd`);
+      formattedDate = format(new Date(recievedDate), `MMM dd`);
     }
   } else {
-    FormattedDate = format(new Date(recievedDate), `MMM yyyy`);
+    formattedDate = format(new Date(recievedDate), `MMM yyyy`);
   }
 
-  return FormattedDate;
+  return formattedDate;
 };

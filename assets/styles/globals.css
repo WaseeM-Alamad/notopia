@@ -6548,12 +6548,16 @@ aside svg {
 
 .select-input {
   display: flex;
+  border: none;
+  outline: none;
   border-bottom: solid 1px var(--border);
   padding: 0.4rem 0.1rem;
   padding-right: 1.9rem;
   box-sizing: border-box;
   cursor: pointer;
   font-size: 0.83rem;
+  background-color: transparent;
+  color: var(--text);
   transition: border 0.2s ease;
 }
 
@@ -6698,4 +6702,19 @@ aside svg {
 
 .selected-day:hover {
   background-color: var(--filter-type-hover);
+}
+
+.select-input input {
+  border: none;
+  outline: none;
+  width: 100%;
+}
+
+.time-input::selection {
+  background-color: transparent;
+  color: var(--text);
+}
+
+.note-reminder-container {
+  
 }

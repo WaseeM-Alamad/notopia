@@ -524,6 +524,19 @@ export function notesReducer(state, action) {
         notes: updatedNotes,
       };
     }
+    case "SET_REMINDER": {
+      const newNote = {
+        ...state.notes.get(action.note.uuid),
+        reminder: action.reminder,
+      };
+
+      const updatedNotes = new Map(state.notes).set(action.note.uuid, newNote);
+
+      return {
+        ...state,
+        notes: updatedNotes,
+      };
+    }
     case "UPDATE_TEXT": {
       const newNote = {
         ...state.notes.get(action.note?.uuid),

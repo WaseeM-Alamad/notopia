@@ -845,6 +845,7 @@ const NoteTools = ({
             isOpen={reminderOpen}
             setIsOpen={setReminderOpen}
             anchorEl={reminderAnchor}
+            noteActions={noteActions}
           />
         )}
       </AnimatePresence>

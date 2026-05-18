@@ -7,7 +7,6 @@ import React, {
   useState,
 } from "react";
 import DatePicker from "./DatePicker";
-import { getNoteFormattedDate } from "@/utils/noteDateFormatter";
 import { format } from "date-fns";
 
 const DateSelect = ({ value, onChange }) => {
@@ -20,7 +19,11 @@ const DateSelect = ({ value, onChange }) => {
 
   useLayoutEffect(() => {
     if (!value) {
-      onChange(new Date());
+      const date = new Date();
+      if (date.getHours() >= 20) {
+        date.setDate(date.getDate() + 1);
+      }
+      onChange(date);
     }
   }, [value]);
 

@@ -98,7 +98,10 @@ const DatePicker = ({ onSelect, selected = null }) => {
           const isPast = d < today;
           const isToday = d.getTime() === today.getTime();
           const isSelected =
-            selectedDate && d.getTime() === selectedDate.getTime();
+            selectedDate &&
+            d.getDate() === selectedDate.getDate() &&
+            d.getFullYear() === selectedDate.getFullYear() &&
+            d.getMonth() === selectedDate.getMonth();
 
           return (
             <button

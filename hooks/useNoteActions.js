@@ -554,6 +554,19 @@ export function useNoteActions({
           note: data.note,
           labelUUID: data.labelUUID,
         });
+      } else if (data.type === "SET_REMINDER") {
+        if (data.reminder.date < new Date() || !data.reminder.date) {
+          openSnackRef.current({
+            snackMessage: "Something went wrong, please try again",
+            showUndo: false,
+          });
+          return;
+        }
+        dispatchNotes({
+          type: "SET_REMINDER",
+          note: data.note,
+          reminder: data.reminder,
+        });
       }
     },
     [currentSection, labelObj, filters],

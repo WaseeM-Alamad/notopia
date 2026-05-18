@@ -2,11 +2,11 @@ import { copyNoteAction, undoAction } from "@/utils/actions";
 import { Popper } from "@mui/material";
 import { motion } from "framer-motion";
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
-import { v4 as generateUUID } from "uuid";
 import ManageLabelsMenu from "../ManageLabelsMenu";
 import { useAppContext } from "@/context/AppContext";
 import RemindMeLater from "./RemindMeLater";
 import PickTime from "./PickTime";
+import { format } from "date-fns";
 
 const ReminderMenu = ({
   note,
@@ -14,6 +14,7 @@ const ReminderMenu = ({
   setIsOpen,
   anchorEl,
   transformOrigin = "top left",
+  noteActions,
 }) => {
   const { isContextMenuOpenRef } = useAppContext();
   const [isClient, setIsClient] = useState();
@@ -29,17 +30,58 @@ const ReminderMenu = ({
     {
       title: currentHour < 18 ? "Later today" : "",
       time: "6:00 PM",
-      function: () => {},
+      function: () => {
+        const date = new Date();
+        date.setHours(18, 0, 0, 0);
+
+        const reminder = {
+          date,
+          rep: "DNR",
+        };
+        noteActions({
+          type: "SET_REMINDER",
+          note: note,
+          reminder,
+        });
+      },
     },
     {
       title: "Tomorrow",
       time: "8:00 AM",
-      function: () => {},
+      function: () => {
+        const date = new Date();
+        date.setDate(date.getDate() + 1);
+        date.setHours(8, 0, 0, 0);
+
+        const reminder = {
+          date,
+          rep: "DNR",
+        };
+        noteActions({
+          type: "SET_REMINDER",
+          note: note,
+          reminder,
+        });
+      },
     },
     {
       title: "Next week",
-      time: "Mon, 8:00 AM",
-      function: () => {},
+      time: `${format(new Date(), "EEE")}, 8:00 AM`,
+      function: () => {
+        const date = new Date();
+        date.setDate(date.getDate() + 7);
+        date.setHours(8, 0, 0, 0);
+
+        const reminder = {
+          date,
+          rep: "DNR",
+        };
+        noteActions({
+          type: "SET_REMINDER",
+          note: note,
+          reminder,
+        });
+      },
     },
     {
       title: "Pick date & time",
@@ -217,6 +259,8 @@ const ReminderMenu = ({
               <PickTime
                 setIsPickSection={setIsPickSection}
                 setIsOpen={setIsOpen}
+                noteActions={noteActions}
+                note={note}
               />
             </div>
           </motion.div>
