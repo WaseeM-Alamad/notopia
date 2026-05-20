@@ -44,6 +44,7 @@ const NoteTools = ({
   const { filters } = useSearch();
   const [colorAnchorEl, setColorAnchorEl] = useState(null);
   const [labelsOpen, setLabelsOpen] = useState(false);
+  const reminderBtnRef = useRef(null);
 
   const [reminderAnchor, setReminderAnchor] = useState(null);
 
@@ -56,6 +57,20 @@ const NoteTools = ({
     (note?.checkboxes?.length === 0 || !note?.showCheckboxes);
 
   const isColorFiltered = filters.color;
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (!reminderBtnRef.current || reminderOpen) return;
+      const id = e.detail.noteUUID;
+
+      if (id !== note.uuid) return;
+      reminderBtnRef.current.click();
+    };
+
+    window.addEventListener("openReminderMenu", handler);
+
+    return () => window.removeEventListener("openReminderMenu", handler);
+  }, [reminderOpen]);
 
   const handleColorClick = async (newColor) => {
     if (newColor === note?.color && !isColorFiltered) return;
@@ -688,6 +703,7 @@ const NoteTools = ({
                   onMouseLeave={hideTooltip}
                   onFocus={(e) => showTooltip(e, "Remind me")}
                   onBlur={hideTooltip}
+                  ref={reminderBtnRef}
                 />
                 <Button
                   tabIndex="0"

@@ -23,6 +23,7 @@ import ImageDropZone from "../Tools/ImageDropZone";
 import TextLabelMenu from "./TextLabelMenu";
 import NoteLabels from "./NoteLabels";
 import NoteCollabs from "./NoteCollabs";
+import NoteReminder from "./note/NoteReminder";
 
 const NoteEditor = ({
   note,
@@ -753,8 +754,11 @@ const NoteEditor = ({
         )}
 
         {(localNote?.labels?.length > 0 ||
-          localNote?.collaborators?.length > 0) && (
+          localNote?.collaborators?.length > 0 || note?.reminder) && (
           <div className="note-misc-container">
+            {note?.reminder && (
+              <NoteReminder note={localNote} noteActions={noteActions} />
+            )}
             {localNote?.labels.length !== 0 && (
               <NoteLabels
                 note={localNote}

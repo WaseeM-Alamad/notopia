@@ -14,7 +14,8 @@ const TimeSelect = ({
   onChange,
   useSideTextforInput = false,
   inputRef,
-  setIsInputValid
+  setIsInputValid,
+  selectedDate,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
@@ -95,6 +96,7 @@ const TimeSelect = ({
             selectedOption={selectedOption}
             inputRef={inputRef}
             setIsInputValid={setIsInputValid}
+            selectedDate={selectedDate}
           />
           <motion.div
             initial={{

@@ -67,7 +67,7 @@ export default function TimeInput({
   };
 
   useEffect(() => {
-    commit("08:00AM");
+    commit(value);
   }, []);
 
   const handleKeyDown = (e) => {

@@ -6,16 +6,35 @@ import Select from "../Select";
 import { useAppContext } from "@/context/AppContext";
 import DateSelect from "./DateSelect";
 import TimeSelect from "./TimeSelect";
+import { format } from "date-fns";
 
 const reps = ["Does not repeat", "Daily", "Weekly", "Monthly", "Yearly"];
 
+function capitalizeFirstLetter(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
 const PickTime = ({ setIsPickSection, setIsOpen, noteActions, note }) => {
+  const noteReminder = note?.reminder?.date
+    ? new Date(note.reminder.date)
+    : null;
+
+  const noteRep =
+    note?.reminder?.rep?.toLowerCase() !== "dnr" && noteReminder
+      ? capitalizeFirstLetter(note?.reminder?.rep)
+      : reps[0];
   const { showTooltip, hideTooltip } = useAppContext();
-  const [selectedRep, setSelectedRep] = useState(reps[0]);
-  const [selectedTime, setSelectedTime] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedRep, setSelectedRep] = useState(noteRep);
+  const [selectedTime, setSelectedTime] = useState(
+    noteReminder ? format(noteReminder, "hh:mm") : null,
+  );
+  const [selectedDate, setSelectedDate] = useState(noteReminder);
   const [isInputValid, setIsInputValid] = useState(false);
   const inputRef = useRef(null);
+
+  useEffect(() => {
+    console.log(selectedDate);
+  }, [selectedDate]);
 
   const isDiabled = (time) => {
     if (!selectedDate) return true;
@@ -103,6 +122,7 @@ const PickTime = ({ setIsPickSection, setIsOpen, noteActions, note }) => {
           useSideTextforInput={true}
           inputRef={inputRef}
           setIsInputValid={setIsInputValid}
+          selectedDate={selectedDate}
         />
         <Select options={reps} value={selectedRep} onChange={setSelectedRep} />
       </div>
@@ -131,6 +151,7 @@ const PickTime = ({ setIsPickSection, setIsOpen, noteActions, note }) => {
           const reminder = {
             date: selectedDate,
             rep: rep,
+            enabled: true,
           };
           noteActions({
             type: "SET_REMINDER",

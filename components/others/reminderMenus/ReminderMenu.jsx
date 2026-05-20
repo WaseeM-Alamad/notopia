@@ -1,8 +1,13 @@
-import { copyNoteAction, undoAction } from "@/utils/actions";
 import { Popper } from "@mui/material";
 import { motion } from "framer-motion";
-import React, { memo, useCallback, useEffect, useRef, useState } from "react";
-import ManageLabelsMenu from "../ManageLabelsMenu";
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { useAppContext } from "@/context/AppContext";
 import RemindMeLater from "./RemindMeLater";
 import PickTime from "./PickTime";
@@ -16,6 +21,7 @@ const ReminderMenu = ({
   transformOrigin = "top left",
   noteActions,
 }) => {
+  const hasReminder = note?.reminder;
   const { isContextMenuOpenRef } = useAppContext();
   const [isClient, setIsClient] = useState();
   const [isPickSection, setIsPickSection] = useState(false);
@@ -38,6 +44,7 @@ const ReminderMenu = ({
         const reminder = {
           date,
           rep: "DNR",
+          enabled: true,
         };
         noteActions({
           type: "SET_REMINDER",
@@ -57,6 +64,7 @@ const ReminderMenu = ({
         const reminder = {
           date,
           rep: "DNR",
+          enabled: true,
         };
         noteActions({
           type: "SET_REMINDER",
@@ -76,6 +84,7 @@ const ReminderMenu = ({
         const reminder = {
           date,
           rep: "DNR",
+          enabled: true,
         };
         noteActions({
           type: "SET_REMINDER",
@@ -93,6 +102,13 @@ const ReminderMenu = ({
 
   useEffect(() => {
     setIsClient(true);
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!hasReminder) return;
+    setTimeout(() => {
+      setIsPickSection(true);
+    }, 10);
   }, []);
 
   useEffect(() => {
@@ -147,12 +163,27 @@ const ReminderMenu = ({
     e.stopPropagation();
   }, []);
 
+  const hasReminderFirstMountRef = useRef(hasReminder);
+
   useEffect(() => {
+    const skipTimeout = hasReminder && hasReminderFirstMountRef.current;
+
     const menu = menuRef.current;
     const firstSection = firstSectionRef.current;
     const secondSection = secondSectionRef.current;
 
     if (!menu || !firstSection || !secondSection) return;
+
+    firstSection.style.removeProperty("transition");
+    secondSection.style.removeProperty("transition");
+    menu.style.transitionDuration = ".25s";
+
+    if (skipTimeout) {
+      hasReminderFirstMountRef.current = false;
+      firstSection.style.transition = "none";
+      secondSection.style.transition = "none";
+      menu.style.transitionDuration = "0s";
+    }
 
     if (isFirstRunRef.current) {
       menu.style.height = firstSection.offsetHeight + "px";
@@ -170,16 +201,22 @@ const ReminderMenu = ({
       menu.style.height = secondSection.offsetHeight + "px";
       firstSection.style.opacity = 0;
 
-      timeoutRef.current = setTimeout(() => {
-        secondSection.style.opacity = 1;
-      }, 250);
+      timeoutRef.current = setTimeout(
+        () => {
+          secondSection.style.opacity = 1;
+        },
+        skipTimeout ? 0 : 250,
+      );
     } else {
       menu.style.height = firstSection.offsetHeight + "px";
       secondSection.style.opacity = 0;
 
-      timeoutRef.current = setTimeout(() => {
-        firstSection.style.opacity = 1;
-      }, 250);
+      timeoutRef.current = setTimeout(
+        () => {
+          firstSection.style.opacity = 1;
+        },
+        skipTimeout ? 0 : 250,
+      );
     }
 
     return () => {
@@ -248,10 +285,7 @@ const ReminderMenu = ({
             ref={menuRef}
             className="menu menu-border not-draggable"
           >
-            <div
-              ref={firstSectionRef}
-              style={{ transition: "opacity 0.17s ease-out" }}
-            >
+            <div ref={firstSectionRef} className="remind-later-wrapper">
               <RemindMeLater setIsOpen={setIsOpen} menuItems={menuItems} />
             </div>
             <div ref={secondSectionRef} className="reminder-pick-wrapper">

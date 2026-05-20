@@ -5,6 +5,8 @@ import React, { memo } from "react";
 const NoteReminder = ({ note, noteActions }) => {
   const { showTooltip, hideTooltip } = useAppContext();
   const reminder = note.reminder;
+  const enabled = note?.reminder?.enabled;
+  const repeat = note?.reminder?.rep?.toLowerCase();
 
   const formatDate = (date) => {
     if (!date) return;
@@ -34,14 +36,26 @@ const NoteReminder = ({ note, noteActions }) => {
   };
 
   return (
-    <div className="note-reminder-container">
+    <div
+      className={`note-reminder-container ${repeat !== "dnr" ? "repeat-reminder" : ""}`}
+    >
       <div
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+
+          const event = new CustomEvent("openReminderMenu", {
+            detail: {
+              noteUUID: note.uuid,
+            },
+          });
+
+          window.dispatchEvent(event);
+        }}
         className="label-wrapper label-wrapper-h"
+        style={!enabled ? { opacity: 0.7 } : undefined}
       >
         <div
-          // double-check-icon
-          className="reminder-active-icon"
+          className={enabled ? "reminder-active-icon" : "double-check-icon"}
           style={{
             width: "17px",
             height: "20px",
@@ -59,6 +73,16 @@ const NoteReminder = ({ note, noteActions }) => {
         />
 
         <label className="note-label">{formatDate(reminder.date)}</label>
+        {repeat !== "dnr" && (
+          <div
+            className="repeat-icon"
+            style={{
+              marginLeft: ".5rem",
+              width: "17px",
+              height: "20px",
+            }}
+          />
+        )}
       </div>
     </div>
   );

@@ -24,6 +24,7 @@ const UserSettingsSchema = new Schema({
   reminder: {
     date: Date,
     rep: String,
+    enabled: Boolean
   },
   labels: [
     {
