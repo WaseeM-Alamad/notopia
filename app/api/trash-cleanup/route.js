@@ -8,6 +8,8 @@ export async function GET(req) {
   try {
     const auth = req.headers.get("authorization");
 
+    console.log('SECRETTTTTTTTTTTTT', process.env.CRON_SECRET);
+
     if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
       return Response.json(
         { success: false, message: "Unauthorized" },
