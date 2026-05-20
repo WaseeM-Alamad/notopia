@@ -1,36 +1,39 @@
 // app/api/trash-cleanup/route.js
 
-import connectDB from "@/lib/connectDB";
+import connectDB from "@/config/database";
 import Note from "@/models/Note";
+import UserSettings from "@/models/UserSettings";
 
 export async function GET() {
   try {
     await connectDB();
 
-    // const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const sevenDaysAgo = new Date(Date.now() - 5 * 60 * 1000); //5mins ago, for testing...
+    const threshold = new Date(
+      Date.now() - 5 * 60 * 1000, // testing (5 min)
+    );
 
-    const result = await Note.deleteMany({
+    const trashedSettings = await UserSettings.find({
       isTrash: true,
-      trashedAt: {
-        $lte: sevenDaysAgo,
-      },
+      trashedAt: { $lte: threshold },
+    }).select("note");
+
+    const noteIds = trashedSettings.map((s) => s.note);
+
+    await Note.deleteMany({
+      uuid: { $in: noteIds },
+    });
+
+    await UserSettings.deleteMany({
+      note: { $in: noteIds },
     });
 
     return Response.json({
       success: true,
-      deletedCount: result.deletedCount,
+      deletedNotes: noteIds.length,
     });
   } catch (err) {
     console.error(err);
 
-    return Response.json(
-      {
-        success: false,
-      },
-      {
-        status: 500,
-      },
-    );
+    return Response.json({ success: false }, { status: 500 });
   }
 }
