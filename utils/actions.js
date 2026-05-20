@@ -869,6 +869,7 @@ export const NoteUpdateAction = async (data) => {
           $set: {
             isTrash: data.value,
             isPinned: false,
+            trashedAt: data.value ? new Date() : null,
             lastModifiedBy: data.clientID,
           },
         },
@@ -1186,6 +1187,7 @@ export const batchUpdateAction = async (data) => {
               update: {
                 $set: {
                   isTrash: !data.val,
+                  trashedAt: !data.val ? new Date() : null,
                   isPinned: false,
                   lastModifiedBy: data.clientID,
                 },

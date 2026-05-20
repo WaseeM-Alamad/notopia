@@ -52,6 +52,10 @@ const UserSettingsSchema = new Schema({
     type: Boolean,
     default: false,
   },
+  trashedAt: {
+    type: Date,
+    default: null,
+  },
   openNote: {
     type: Boolean,
     default: true,
