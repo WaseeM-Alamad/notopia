@@ -50,6 +50,7 @@ export default function TimeInput({
   selectedOption,
   inputRef,
   setIsInputValid,
+  selectedDate,
 }) {
   const [draft, setDraft] = useState(display24as12(value));
 
@@ -68,7 +69,7 @@ export default function TimeInput({
 
   useEffect(() => {
     commit(value);
-  }, []);
+  }, [selectedDate]);
 
   const handleKeyDown = (e) => {
     e.stopPropagation();
