@@ -4,8 +4,17 @@ import connectDB from "@/config/database";
 import Note from "@/models/Note";
 import UserSettings from "@/models/UserSettings";
 
-export async function GET() {
+export async function GET(req) {
   try {
+    const auth = req.headers.get("authorization");
+
+    if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+      return Response.json(
+        { success: false, message: "Unauthorized" },
+        { status: 401 },
+      );
+    }
+
     await connectDB();
 
     const threshold = new Date(
