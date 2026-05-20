@@ -14,7 +14,13 @@ function capitalizeFirstLetter(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-const PickTime = ({ setIsPickSection, setIsOpen, noteActions, note }) => {
+const PickTime = ({
+  setIsPickSection,
+  setIsOpen,
+  noteActions,
+  note,
+  setLocalNote,
+}) => {
   const noteReminder = note?.reminder?.date
     ? new Date(note.reminder.date)
     : null;
@@ -157,6 +163,7 @@ const PickTime = ({ setIsPickSection, setIsOpen, noteActions, note }) => {
             type: "SET_REMINDER",
             note: note,
             reminder,
+            setLocalNote,
           });
         }}
       >

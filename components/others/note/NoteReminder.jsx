@@ -2,8 +2,14 @@ import { useAppContext } from "@/context/AppContext";
 import { format } from "date-fns";
 import React, { memo } from "react";
 
-const NoteReminder = ({ note, noteActions }) => {
-  const { showTooltip, hideTooltip } = useAppContext();
+const NoteReminder = ({
+  note,
+  noteActions,
+  setReminderOpen,
+  setReminderAnchor,
+  setLocalNote = null,
+}) => {
+  const { showTooltip, hideTooltip, setDialogInfoRef } = useAppContext();
   const reminder = note.reminder;
   const enabled = note?.reminder?.enabled;
   const repeat = note?.reminder?.rep?.toLowerCase();
@@ -29,9 +35,16 @@ const NoteReminder = ({ note, noteActions }) => {
   };
 
   const deleteReminder = () => {
-    noteActions({
-      type: "DELETE_REMINDER",
-      note: note,
+    setDialogInfoRef.current({
+      func: () =>
+        noteActions({
+          type: "DELETE_REMINDER",
+          note: note,
+          setLocalNote,
+        }),
+      title: "Delete reminder?",
+      message: "You can add another reminder later.",
+      btnMsg: "Delete",
     });
   };
 
@@ -42,14 +55,27 @@ const NoteReminder = ({ note, noteActions }) => {
       <div
         onClick={(e) => {
           e.stopPropagation();
+          const rect = e.currentTarget.getBoundingClientRect();
 
-          const event = new CustomEvent("openReminderMenu", {
-            detail: {
-              noteUUID: note.uuid,
-            },
+          const pageX = rect.left + window.pageXOffset;
+          const pageY = rect.top + window.pageYOffset;
+
+          const virtualAnchor = {
+            getBoundingClientRect: () =>
+              new DOMRect(
+                pageX - window.pageXOffset,
+                pageY - window.pageYOffset,
+                rect.width,
+                rect.height,
+              ),
+            contextElement: document.body,
+          };
+
+          setReminderAnchor({
+            ...virtualAnchor,
+            btnRef: e.target,
           });
-
-          window.dispatchEvent(event);
+          setReminderOpen((prev) => !prev);
         }}
         className="label-wrapper label-wrapper-h"
         style={!enabled ? { opacity: 0.7 } : undefined}

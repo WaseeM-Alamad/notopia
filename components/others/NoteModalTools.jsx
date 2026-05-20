@@ -13,6 +13,7 @@ import handleServerCall from "@/utils/handleServerCall";
 import localDbReducer from "@/utils/localDbReducer";
 import ColorDrawer from "./ColorDrawer";
 import MoreMenuDrawer from "./MoreMenuDrawer";
+import ReminderMenu from "./reminderMenus/ReminderMenu";
 
 const ModalTools = ({
   localNote,
@@ -36,6 +37,10 @@ const ModalTools = ({
   setInitialStyle,
   openCollab,
   isScrolled,
+  reminderOpen,
+  setReminderOpen,
+  reminderAnchor,
+  setReminderAnchor,
 }) => {
   const {
     setLoadingImages,
@@ -556,7 +561,29 @@ const ModalTools = ({
     },
     {
       className: "pc-btn reminder-icon btn-hover",
-      onClick: () => {},
+      onClick: (e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+
+        const pageX = rect.left + window.pageXOffset;
+        const pageY = rect.top + window.pageYOffset;
+
+        const virtualAnchor = {
+          getBoundingClientRect: () =>
+            new DOMRect(
+              pageX - window.pageXOffset,
+              pageY - window.pageYOffset,
+              rect.width,
+              rect.height,
+            ),
+          contextElement: document.body,
+        };
+
+        setReminderAnchor({
+          ...virtualAnchor,
+          btnRef: e.currentTarget,
+        });
+        setReminderOpen((prev) => !prev);
+      },
       tooltip: "Reminders",
     },
     {
@@ -730,6 +757,18 @@ const ModalTools = ({
         open={colorDrawerOpen}
         setOpen={setColorDrawerOpen}
       />
+      <AnimatePresence>
+        {reminderOpen && (
+          <ReminderMenu
+            note={localNote}
+            isOpen={reminderOpen}
+            setIsOpen={setReminderOpen}
+            anchorEl={reminderAnchor}
+            noteActions={noteActions}
+            setLocalNote={setLocalNote}
+          />
+        )}
+      </AnimatePresence>
       <input
         ref={inputRef}
         style={{ display: "none" }}

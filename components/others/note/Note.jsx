@@ -55,6 +55,7 @@ const Note = memo(
     const [colorMenuOpen, setColorMenuOpen] = useState(false);
     const [moreMenuOpen, setMoreMenuOpen] = useState(false);
     const [reminderOpen, setReminderOpen] = useState(false);
+    const [reminderAnchor, setReminderAnchor] = useState(null);
     const [anchorEl, setAnchorEl] = useState(null);
     const [selected, setSelected] = useState(
       selectedNotesRef.current.has(note?.uuid),
@@ -517,7 +518,12 @@ const Note = memo(
                   note?.reminder) && (
                   <div className="note-misc-container n-misc">
                     {note?.reminder && (
-                      <NoteReminder note={note} noteActions={noteActions} />
+                      <NoteReminder
+                        note={note}
+                        noteActions={noteActions}
+                        setReminderOpen={setReminderOpen}
+                        setReminderAnchor={setReminderAnchor}
+                      />
                     )}
                     {note?.labels.length !== 0 && (
                       <NoteLabels note={note} noteActions={noteActions} />
@@ -541,6 +547,8 @@ const Note = memo(
             moreMenuOpen={moreMenuOpen}
             reminderOpen={reminderOpen}
             setReminderOpen={setReminderOpen}
+            reminderAnchor={reminderAnchor}
+            setReminderAnchor={setReminderAnchor}
             anchorEl={anchorEl}
             setAnchorEl={setAnchorEl}
             selectedColor={selectedColor}

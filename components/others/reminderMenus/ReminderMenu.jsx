@@ -20,6 +20,7 @@ const ReminderMenu = ({
   anchorEl,
   transformOrigin = "top left",
   noteActions,
+  setLocalNote = null,
 }) => {
   const hasReminder = note?.reminder;
   const { isContextMenuOpenRef } = useAppContext();
@@ -50,6 +51,7 @@ const ReminderMenu = ({
           type: "SET_REMINDER",
           note: note,
           reminder,
+          setLocalNote,
         });
       },
     },
@@ -70,6 +72,7 @@ const ReminderMenu = ({
           type: "SET_REMINDER",
           note: note,
           reminder,
+          setLocalNote,
         });
       },
     },
@@ -90,6 +93,7 @@ const ReminderMenu = ({
           type: "SET_REMINDER",
           note: note,
           reminder,
+          setLocalNote,
         });
       },
     },
@@ -294,6 +298,7 @@ const ReminderMenu = ({
                 setIsOpen={setIsOpen}
                 noteActions={noteActions}
                 note={note}
+                setLocalNote={setLocalNote}
               />
             </div>
           </motion.div>

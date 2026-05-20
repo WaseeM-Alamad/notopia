@@ -27,6 +27,8 @@ const NoteTools = ({
   setMoreMenuOpen,
   reminderOpen,
   setReminderOpen,
+  reminderAnchor,
+  setReminderAnchor,
   userID,
   noteActions,
   inputRef,
@@ -46,7 +48,7 @@ const NoteTools = ({
   const [labelsOpen, setLabelsOpen] = useState(false);
   const reminderBtnRef = useRef(null);
 
-  const [reminderAnchor, setReminderAnchor] = useState(null);
+  
 
   const ImagesWithNoBottomContent =
     note?.images?.length > 0 &&
@@ -57,20 +59,6 @@ const NoteTools = ({
     (note?.checkboxes?.length === 0 || !note?.showCheckboxes);
 
   const isColorFiltered = filters.color;
-
-  useEffect(() => {
-    const handler = (e) => {
-      if (!reminderBtnRef.current || reminderOpen) return;
-      const id = e.detail.noteUUID;
-
-      if (id !== note.uuid) return;
-      reminderBtnRef.current.click();
-    };
-
-    window.addEventListener("openReminderMenu", handler);
-
-    return () => window.removeEventListener("openReminderMenu", handler);
-  }, [reminderOpen]);
 
   const handleColorClick = async (newColor) => {
     if (newColor === note?.color && !isColorFiltered) return;

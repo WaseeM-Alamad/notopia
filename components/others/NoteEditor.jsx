@@ -58,6 +58,8 @@ const NoteEditor = ({
 
   const userID = user?.id;
 
+  const [reminderOpen, setReminderOpen] = useState(false);
+  const [reminderAnchor, setReminderAnchor] = useState(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [labelAnchor, setLabelAnchor] = useState(null);
   const [labelSearch, setLabelSearch] = useState("");
@@ -754,10 +756,17 @@ const NoteEditor = ({
         )}
 
         {(localNote?.labels?.length > 0 ||
-          localNote?.collaborators?.length > 0 || note?.reminder) && (
+          localNote?.collaborators?.length > 0 ||
+          localNote?.reminder) && (
           <div className="note-misc-container">
-            {note?.reminder && (
-              <NoteReminder note={localNote} noteActions={noteActions} />
+            {localNote?.reminder && (
+              <NoteReminder
+                note={localNote}
+                setLocalNote={setLocalNote}
+                noteActions={noteActions}
+                setReminderAnchor={setReminderAnchor}
+                setReminderOpen={setReminderOpen}
+              />
             )}
             {localNote?.labels.length !== 0 && (
               <NoteLabels
@@ -817,6 +826,10 @@ const NoteEditor = ({
         inputRef={inputRef}
         setInitialStyle={setInitialStyle}
         isScrolled={isScrolled}
+        reminderOpen={reminderOpen}
+        setReminderOpen={setReminderOpen}
+        reminderAnchor={reminderAnchor}
+        setReminderAnchor={setReminderAnchor}
       />
       <AnimatePresence>{isDragOver && <ImageDropZone />}</AnimatePresence>
       <AnimatePresence>
