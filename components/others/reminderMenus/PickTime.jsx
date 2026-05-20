@@ -122,9 +122,15 @@ const PickTime = ({ setIsPickSection, setIsOpen, noteActions, note }) => {
         }}
         onClick={() => {
           setIsOpen(false);
+
+          const acceptedReps = reps.slice(1);
+          const rep = acceptedReps.includes(selectedRep)
+            ? selectedRep.toLowerCase()
+            : "DNR";
+
           const reminder = {
             date: selectedDate,
-            rep: selectedRep,
+            rep: rep,
           };
           noteActions({
             type: "SET_REMINDER",

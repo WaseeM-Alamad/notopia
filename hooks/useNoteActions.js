@@ -562,11 +562,65 @@ export function useNoteActions({
           });
           return;
         }
+        localDbReducer({
+          notes: notesStateRef.current.notes,
+          order: notesStateRef.current.order,
+          userID: userID,
+          type: "SET_REMINDER",
+          note: data.note,
+          reminder: data.reminder,
+        });
         dispatchNotes({
           type: "SET_REMINDER",
           note: data.note,
           reminder: data.reminder,
         });
+
+        const result = await handleServerCall(
+          [
+            () =>
+              NoteUpdateAction({
+                type: "reminder",
+                reminder: data.reminder,
+                timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                noteUUIDs: [data.note?.uuid],
+                clientID: clientID,
+              }),
+          ],
+          openSnackRef.current,
+        );
+
+        if (!result?.success) {
+          noteActions({
+            type: "DELETE_REMINDER",
+            note: data.note,
+          });
+        }
+      } else if (data.type === "DELETE_REMINDER") {
+        localDbReducer({
+          notes: notesStateRef.current.notes,
+          order: notesStateRef.current.order,
+          userID: userID,
+          type: "DELETE_REMINDER",
+          note: data.note,
+        });
+        dispatchNotes({
+          type: "DELETE_REMINDER",
+          note: data.note,
+        });
+
+        handleServerCall(
+          [
+            () =>
+              NoteUpdateAction({
+                type: "reminder",
+                delete: true,
+                noteUUIDs: [data.note?.uuid],
+                clientID: clientID,
+              }),
+          ],
+          openSnackRef.current,
+        );
       }
     },
     [currentSection, labelObj, filters],

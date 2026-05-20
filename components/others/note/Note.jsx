@@ -516,6 +516,9 @@ const Note = memo(
                   note?.collaborators?.length > 0 ||
                   note?.reminder) && (
                   <div className="note-misc-container n-misc">
+                    {note?.reminder && (
+                      <NoteReminder note={note} noteActions={noteActions} />
+                    )}
                     {note?.labels.length !== 0 && (
                       <NoteLabels note={note} noteActions={noteActions} />
                     )}
@@ -525,7 +528,6 @@ const Note = memo(
                         handleNoteClick={handleNoteClick}
                       />
                     )}
-                    {note?.reminder && <NoteReminder note={note} />}
                   </div>
                 )}
               </div>

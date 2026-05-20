@@ -22,6 +22,7 @@ const ReminderMenu = ({
   const currentHour = new Date().getHours();
 
   const menuRef = useRef(null);
+  const timeoutRef = useRef(null);
   const firstSectionRef = useRef(null);
   const secondSectionRef = useRef(null);
   const isFirstRunRef = useRef(true);
@@ -145,8 +146,6 @@ const ReminderMenu = ({
   const containerClick = useCallback((e) => {
     e.stopPropagation();
   }, []);
-
-  const timeoutRef = useRef(null);
 
   useEffect(() => {
     const menu = menuRef.current;

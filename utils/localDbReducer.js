@@ -405,6 +405,25 @@ const localDbReducer = (payload) => {
         images: payload.images,
       };
       updateLocalNotesAndOrder([newNote], null, payload.userID);
+      break;
+    }
+
+    case "SET_REMINDER": {
+      const newNote = {
+        ...payload.notes.get(payload.note.uuid),
+        reminder: payload.reminder,
+      };
+      updateLocalNotesAndOrder([newNote], null, payload.userID);
+      break;
+    }
+
+    case "DELETE_REMINDER": {
+      const newNote = {
+        ...payload.notes.get(payload.note.uuid),
+        reminder: null,
+      };
+      updateLocalNotesAndOrder([newNote], null, payload.userID);
+      break;
     }
 
     case "UPDATE_TEXT": {
@@ -415,6 +434,7 @@ const localDbReducer = (payload) => {
         content: payload.newContent,
       };
       updateLocalNotesAndOrder([newNote], null, payload.userID);
+      break;
     }
     case "UPDATE_IMAGES": {
       const note = payload.notes.get(payload.note?.uuid);
@@ -494,6 +514,7 @@ const localDbReducer = (payload) => {
         labels: payload.newLabels,
       };
       updateLocalNotesAndOrder([newNote], null, payload.userID);
+      break;
     }
 
     case "BATCH_REMOVE_LABEL": {

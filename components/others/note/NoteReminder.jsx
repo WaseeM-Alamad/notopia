@@ -1,7 +1,11 @@
+import { useAppContext } from "@/context/AppContext";
 import { format } from "date-fns";
 import React, { memo } from "react";
 
-const NoteReminder = ({ note }) => {
+const NoteReminder = ({ note, noteActions }) => {
+  const { showTooltip, hideTooltip } = useAppContext();
+  const reminder = note.reminder;
+
   const formatDate = (date) => {
     if (!date) return;
     const currentDate = new Date();
@@ -22,11 +26,40 @@ const NoteReminder = ({ note }) => {
     return formattedDate;
   };
 
-  const reminder = note.reminder;
+  const deleteReminder = () => {
+    noteActions({
+      type: "DELETE_REMINDER",
+      note: note,
+    });
+  };
 
   return (
-    <div className="note-reminder-container label-wrapper">
-      {formatDate(reminder.date)}
+    <div className="note-reminder-container">
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="label-wrapper label-wrapper-h"
+      >
+        <div
+          // double-check-icon
+          className="reminder-active-icon"
+          style={{
+            width: "17px",
+            height: "20px",
+            marginRight: "4px",
+          }}
+        />
+        <div
+          onClick={(e) => {
+            e.stopPropagation();
+            deleteReminder();
+          }}
+          onMouseEnter={(e) => showTooltip(e, "Delete reminder")}
+          onMouseLeave={hideTooltip}
+          className="remove-label"
+        />
+
+        <label className="note-label">{formatDate(reminder.date)}</label>
+      </div>
     </div>
   );
 };

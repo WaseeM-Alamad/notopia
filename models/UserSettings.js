@@ -21,6 +21,10 @@ const UserSettingsSchema = new Schema({
     type: String,
     default: "DefaultBG",
   },
+  reminder: {
+    date: Date,
+    rep: String,
+  },
   labels: [
     {
       type: String,

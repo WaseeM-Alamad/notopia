@@ -56,10 +56,6 @@ const AddModalTools = ({
     [note?.background],
   );
 
-  useEffect(()=> {
-    console.log(note)
-  }, [note])
-
   const handleOnChange = async (event) => {
     const files = Array.from(event.target?.files || []);
 

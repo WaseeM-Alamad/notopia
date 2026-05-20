@@ -778,6 +778,40 @@ export const NoteUpdateAction = async (data) => {
         },
         { returnDocument: "after" },
       );
+    } else if (data.type === "reminder") {
+      if (data?.delete) {
+        await UserSettings.updateOne(
+          { note: data.noteUUIDs[0] },
+          {
+            $set: {
+              reminder: null,
+              lastModifiedBy: data.clientID,
+            },
+          },
+        );
+      } else {
+        const now = new Date();
+
+        const userDate = now.toLocaleString("en-US", {
+          timeZone: data.timeZone,
+        });
+
+        if (data.reminder.date < userDate) {
+          throw new Error("Invalid date");
+        }
+
+        await UserSettings.updateOne(
+          { note: data.noteUUIDs[0] },
+          {
+            $set: {
+              reminder: data.reminder,
+              lastModifiedBy: data.clientID,
+            },
+          },
+        );
+
+        return { success: true };
+      }
     } else if (data.type === "isArchived") {
       await UserSettings.updateOne(
         { note: data.noteUUIDs[0], user: userID },
