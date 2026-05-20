@@ -8,8 +8,6 @@ export async function GET(req) {
   try {
     const auth = req.headers.get("authorization");
 
-    console.log('SECRETTTTTTTTTTTTT', process.env.CRON_SECRET);
-
     if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
       return Response.json(
         { success: false, message: "Unauthorized" },
@@ -19,9 +17,7 @@ export async function GET(req) {
 
     await connectDB();
 
-    const threshold = new Date(
-      Date.now() - 5 * 60 * 1000, // testing (5 min)
-    );
+    const threshold = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000); //every 7 days
 
     const trashedSettings = await UserSettings.find({
       isTrash: true,
