@@ -792,11 +792,7 @@ export const NoteUpdateAction = async (data) => {
       } else {
         const now = new Date();
 
-        const userDate = now.toLocaleString("en-US", {
-          timeZone: data.timeZone,
-        });
-
-        if (data.reminder.date < userDate) {
+        if (data.reminder.date < now) {
           throw new Error("Invalid date");
         }
 

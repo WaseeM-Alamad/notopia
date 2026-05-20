@@ -98,7 +98,9 @@ const NoteReminder = ({
           className="remove-label"
         />
 
-        <label className="note-label">{formatDate(reminder.date)}</label>
+        <label style={enabled ? undefined : {textDecoration: "line-through"}} className="note-label">
+          {formatDate(reminder.date)}
+        </label>
         {repeat !== "dnr" && (
           <div
             className="repeat-icon"

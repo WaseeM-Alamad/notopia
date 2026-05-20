@@ -587,7 +587,6 @@ export function useNoteActions({
               NoteUpdateAction({
                 type: "reminder",
                 reminder: data.reminder,
-                timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                 noteUUIDs: [data.note?.uuid],
                 clientID: clientID,
               }),
