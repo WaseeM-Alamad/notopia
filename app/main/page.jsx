@@ -373,6 +373,10 @@ const page = () => {
     }
   }, [selectedNotesIDs.length]);
 
+  useEffect(()=> {
+    console.log(visibleItems)
+  }, [visibleItems])
+
   const matchesFilters = (note) => {
     if (note?.isTrash) return false;
 
@@ -395,6 +399,10 @@ const page = () => {
     }
 
     if (filters.lists && note?.checkboxes.length === 0) {
+      return false;
+    }
+
+    if (filters.reminder && !note?.reminder) {
       return false;
     }
 

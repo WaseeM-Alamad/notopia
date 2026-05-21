@@ -1,98 +1,93 @@
 "use client";
-import React, { memo, useCallback, useEffect, useRef, useState } from "react";
-import Note from "../others/note/Note";
-import { AnimatePresence, motion } from "framer-motion";
-import { useAppContext } from "@/context/AppContext";
-import SectionHeader from "../others/SectionHeader";
-import { useGlobalContext } from "@/context/GlobalContext";
-import { useLayout } from "@/context/LayoutContext";
+import React, { memo } from "react";
 import { useMasonry } from "@/context/MasonryContext";
 import NoteWrapper from "../others/note/NoteWrapper";
+import SectionHeader from "../others/SectionHeader";
 
-const Reminders = memo(
+const FilteredNotes = memo(
   ({
-    visibleItems,
-    selectedNotesRef,
     notes,
     order,
+    selectedNotesRef,
     dispatchNotes,
     setSelectedNotesIDs,
     handleNoteClick,
     handleSelectNote,
-    rootContainerRef,
     noteActions,
-    notesReady,
+    visibleItems,
     containerRef,
+    rootContainerRef,
   }) => {
-    const { gridNoteWidth, GUTTER, isGrid, notesExist, calculateLayout } =
-      useMasonry();
+    const {
+      gridNoteWidth,
+      GUTTER,
+      isGrid,
+      pinnedHeight,
+      sectionsHeight,
+      hasArchivedNotes,
+      hasPinned,
+      hasUnpinned,
+      calculateLayout,
+    } = useMasonry();
 
     return (
-      <>
-        <div ref={rootContainerRef} className={`starting-div `}>
-          <SectionHeader title="Reminders" iconClass="section-reminders-icon" />
-          <div ref={containerRef} className="section-container">
-              {order.map((uuid, index) => {
-                const note = notes.get(uuid);
-                if (!visibleItems.has(note?.uuid)) return null;
-                if (note?.reminder && !note?.isTrash)
-                  return (
-                    <NoteWrapper
-                      key={note?.uuid}
-                      note={note}
-                      isGrid={isGrid}
-                      selectedNotesRef={selectedNotesRef}
-                      dispatchNotes={dispatchNotes}
-                      index={index}
-                      handleNoteClick={handleNoteClick}
-                      handleSelectNote={handleSelectNote}
-                      noteActions={noteActions}
-                      setSelectedNotesIDs={setSelectedNotesIDs}
-                      gridNoteWidth={gridNoteWidth}
-                      GUTTER={GUTTER}
-                      calculateLayout={calculateLayout}
-                    />
-                  );
-              })}
-          </div>
-          <div style={{ display: notesExist && "none" }} className="empty-page">
-            {notesReady && !notesExist && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{
-                  type: "spring",
-                  stiffness: 800,
-                  damping: 50,
-                  mass: 1,
-                }}
-                className="empty-page-box"
-              >
-                <div className="empty-page-reminders" />
-                Notes with upcoming reminders appear here
-              </motion.div>
-            )}
-            {!notesReady && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{
-                  type: "spring",
-                  stiffness: 800,
-                  damping: 50,
-                  mass: 1,
-                }}
-                className="empty-page-box"
-              >
-                <div className="empty-page-loading" />
-                Loading notes...
-              </motion.div>
-            )}
-          </div>
+      <div ref={rootContainerRef} className="starting-div">
+        <SectionHeader title="Reminders" iconClass="section-reminders-icon" />
+        <div ref={containerRef} className="section-container">
+          <p
+            className="section-label"
+            style={{
+              opacity: hasPinned ? "1" : "0",
+              display: visibleItems.size === 0 && "none",
+            }}
+          >
+            PINNED
+          </p>
+          <p
+            className="section-label"
+            style={{
+              top: `${pinnedHeight}px`,
+              opacity: hasPinned && hasUnpinned ? "1" : "0",
+              display: visibleItems.size === 0 && "none",
+            }}
+          >
+            OTHERS
+          </p>
+          <p
+            className="section-label"
+            style={{
+              top: `${sectionsHeight}px`,
+              opacity: hasArchivedNotes ? "1" : "0",
+            }}
+          >
+            ARCHIVED
+          </p>
+          {order.map((uuid, index) => {
+            const note = notes.get(uuid);
+            if (!visibleItems.has(uuid)) return null;
+            if (note?.reminder && !note.isTrash)
+              return (
+                <NoteWrapper
+                  key={note?.uuid}
+                  note={note}
+                  noteActions={noteActions}
+                  selectedNotesRef={selectedNotesRef}
+                  dispatchNotes={dispatchNotes}
+                  isGrid={isGrid}
+                  index={index}
+                  setSelectedNotesIDs={setSelectedNotesIDs}
+                  handleNoteClick={handleNoteClick}
+                  handleSelectNote={handleSelectNote}
+                  GUTTER={GUTTER}
+                  gridNoteWidth={gridNoteWidth}
+                  calculateLayout={calculateLayout}
+                />
+              );
+          })}
         </div>
-      </>
+      </div>
     );
   },
 );
 
-export default memo(Reminders);
+export default FilteredNotes;

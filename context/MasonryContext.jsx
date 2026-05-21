@@ -169,6 +169,7 @@ export const MasonryProvider = ({
       const willCalcArchSection = [
         "search",
         "dynamiclabel",
+        "reminders",
         "archive",
       ].includes(section);
       const isArchSection = section === "archive";
