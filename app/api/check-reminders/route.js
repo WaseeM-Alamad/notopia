@@ -47,13 +47,13 @@ export async function GET(req) {
       const disableReminder = rep === "DNR";
 
       if (rep === "daily") {
-        date.setDate(date.getDate() + 1);
+        newDate.setDate(newDate.getDate() + 1);
       } else if (rep === "weekly") {
-        date.setDate(date.getDate() + 7);
+        newDate.setDate(newDate.getDate() + 7);
       } else if (rep === "monthly") {
-        date.setMonth(date.getMonth() + 1);
+        newDate.setMonth(newDate.getMonth() + 1);
       } else if (rep === "yearly") {
-        date.setFullYear(date.getFullYear() + 1);
+        newDate.setFullYear(newDate.getFullYear() + 1);
       }
 
       reminder = { ...reminder, date: newDate };

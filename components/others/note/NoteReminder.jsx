@@ -78,7 +78,7 @@ const NoteReminder = ({
           setReminderOpen((prev) => !prev);
         }}
         className="label-wrapper label-wrapper-h"
-        style={!enabled ? { opacity: 0.7 } : undefined}
+        style={!enabled ? { opacity: 0.6 } : undefined}
       >
         <div
           className={enabled ? "reminder-active-icon" : "double-check-icon"}
@@ -98,7 +98,10 @@ const NoteReminder = ({
           className="remove-label"
         />
 
-        <label style={enabled ? undefined : {textDecoration: "line-through"}} className="note-label">
+        <label
+          style={enabled ? undefined : { textDecoration: "line-through" }}
+          className="note-label"
+        >
           {formatDate(reminder.date)}
         </label>
         {repeat !== "dnr" && (
