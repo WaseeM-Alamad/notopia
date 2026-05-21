@@ -12,6 +12,7 @@ import isEmail from "validator/lib/isEmail";
 import cloudinary from "@/config/cloudinary";
 import UserSettings from "@/models/UserSettings";
 import { startSession } from "mongoose";
+import PushSubscription from "@/models/PushSubscription";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -2672,3 +2673,31 @@ export const openNoteAction = async (noteUUID, clientID) => {
     throw new Error("Error updating note");
   }
 };
+
+export async function saveSubscription(subscription) {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    throw new Error("Something went wrong");
+  }
+
+  await connectDB();
+
+  await PushSubscription.findOneAndUpdate(
+    { "subscription.endpoint": subscription.endpoint },
+    { userId: session.user.id, subscription },
+    { upsert: true },
+  );
+}
+
+export async function deleteSubscription(endpoint) {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    throw new Error("Something went wrong");
+  }
+
+  await connectDB();
+  await PushSubscription.deleteOne({
+    userId: session.user.id,
+    "subscription.endpoint": endpoint,
+  });
+}

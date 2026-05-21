@@ -3,6 +3,14 @@
 import connectDB from "@/config/database";
 import UserSettings from "@/models/UserSettings";
 import { v4 as uuid } from "uuid";
+import webpush from "web-push";
+import PushSubscription from "@/models/PushSubscription";
+
+webpush.setVapidDetails(
+  process.env.VAPID_MAILTO,
+  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+  process.env.VAPID_PRIVATE_KEY,
+);
 
 export async function GET(req) {
   try {
@@ -27,9 +35,15 @@ export async function GET(req) {
       {
         note: 1,
         reminder: 1,
+        user: 1,
         _id: 0,
       },
-    ).lean();
+    )
+      .populate({
+        path: "note",
+        select: "uuid title content -_id",
+      })
+      .lean();
 
     if (dueReminders.length === 0) {
       return Response.json({
@@ -40,7 +54,7 @@ export async function GET(req) {
 
     const bulkOps = [];
 
-    dueReminders.forEach((item) => {
+    for (const item of dueReminders) {
       let reminder = item.reminder;
       const newDate = reminder.date;
       const rep = reminder.rep;
@@ -56,11 +70,32 @@ export async function GET(req) {
         newDate.setFullYear(newDate.getFullYear() + 1);
       }
 
+      const pushSubs = await PushSubscription.find({ userId: item.user });
+
+      await Promise.all(
+        pushSubs.map(async (pushSub) => {
+          try {
+            await webpush.sendNotification(
+              pushSub.subscription,
+              JSON.stringify({
+                title: item.note.title.slice(0, 100) || "Reminder",
+                body: item.note.content?.slice(0, 100) || "You have a reminder",
+                url: `/#NOTE/${item.note.uuid}`,
+              }),
+            );
+          } catch (err) {
+            if (err.statusCode === 410) {
+              await PushSubscription.deleteOne({ _id: pushSub._id });
+            }
+          }
+        }),
+      );
+
       reminder = { ...reminder, date: newDate };
 
       bulkOps.push({
         updateOne: {
-          filter: { note: item.note },
+          filter: { note: item.note.uuid },
           update: {
             $set: {
               reminder: { ...reminder, enabled: !disableReminder },
@@ -69,7 +104,7 @@ export async function GET(req) {
           },
         },
       });
-    });
+    }
 
     await UserSettings.bulkWrite(bulkOps);
 
