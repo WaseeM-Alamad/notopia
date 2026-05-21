@@ -72,6 +72,11 @@ const FilteredNotes = memo(
           title: "Lists",
           class: "section-lists-icon",
         };
+      } else if (filters.reminder) {
+        return {
+          title: "Reminders",
+          class: "section-reminders-icon",
+        };
       }
       return { title: "", class: "" };
     }, [filters]);
@@ -111,28 +116,28 @@ const FilteredNotes = memo(
           >
             ARCHIVED
           </p>
-            {order.map((uuid, index) => {
-              const note = notes.get(uuid);
-              if (!isInCurrentSection(note)) return;
-              if (!visibleItems.has(uuid)) return null;
-              return (
-                <NoteWrapper
-                  key={note?.uuid}
-                  note={note}
-                  noteActions={noteActions}
-                  selectedNotesRef={selectedNotesRef}
-                  dispatchNotes={dispatchNotes}
-                  isGrid={isGrid}
-                  index={index}
-                  setSelectedNotesIDs={setSelectedNotesIDs}
-                  handleNoteClick={handleNoteClick}
-                  handleSelectNote={handleSelectNote}
-                  GUTTER={GUTTER}
-                  gridNoteWidth={gridNoteWidth}
-                  calculateLayout={calculateLayout}
-                />
-              );
-            })}
+          {order.map((uuid, index) => {
+            const note = notes.get(uuid);
+            if (!isInCurrentSection(note)) return;
+            if (!visibleItems.has(uuid)) return null;
+            return (
+              <NoteWrapper
+                key={note?.uuid}
+                note={note}
+                noteActions={noteActions}
+                selectedNotesRef={selectedNotesRef}
+                dispatchNotes={dispatchNotes}
+                isGrid={isGrid}
+                index={index}
+                setSelectedNotesIDs={setSelectedNotesIDs}
+                handleNoteClick={handleNoteClick}
+                handleSelectNote={handleSelectNote}
+                GUTTER={GUTTER}
+                gridNoteWidth={gridNoteWidth}
+                calculateLayout={calculateLayout}
+              />
+            );
+          })}
         </div>
       </>
     );

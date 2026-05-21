@@ -55,6 +55,10 @@ export const MasonryProvider = ({
       return false;
     }
 
+    if (filters.reminder && !note?.reminder) {
+      return false;
+    }
+
     if (filters.image && note?.images?.length === 0) {
       return false;
     }
@@ -87,6 +91,8 @@ export const MasonryProvider = ({
           return !note?.isArchived && !note?.isTrash;
         case "archive":
           return note?.isArchived && !note?.isTrash;
+        case "reminders":
+          return note?.reminder && !note?.isTrash;
         case "trash":
           return note?.isTrash;
         case "search":

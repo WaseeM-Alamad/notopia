@@ -1,8 +1,8 @@
 import React, { memo } from "react";
 
-const TypeFilterItem = ({ onClick, isImages, isLists }) => {
-  const iconClass = isImages ? "image" : isLists ? "lists" : "";
-  const title = isImages ? "Images" : isLists ? "Lists" : "";
+const TypeFilterItem = ({ onClick, type }) => {
+  const iconClass = type.toLowerCase();
+  const title = type;
 
   return (
     <div onClick={() => onClick(title)} className="filter-type-container">

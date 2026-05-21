@@ -76,6 +76,7 @@ export function useHashRouting({
     const color = params.get("color");
     const text = params.get("text") ?? "";
     const image = params.has("image");
+    const reminder = params.has("reminder");
     const lists = params.has("list");
     const collab = params.get("collab");
 
@@ -95,6 +96,7 @@ export function useHashRouting({
       label: labelUUID,
       collab: collab || null,
       image: image || null,
+      reminder: reminder || null,
       lists: lists || null,
     });
 
@@ -285,6 +287,7 @@ export function useHashRouting({
             colorSet.add(note?.color);
             note?.labels.forEach((label) => labelSet.add(label));
             note?.images.length > 0 && typeSet.add("images");
+            note?.reminder && typeSet.add("reminders");
             note?.checkboxes.length > 0 && typeSet.add("lists");
             note?.collaborators.forEach((collab) => {
               const username =

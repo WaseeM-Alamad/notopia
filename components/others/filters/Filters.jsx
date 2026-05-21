@@ -42,6 +42,7 @@ const Filters = ({
       note?.color && colors.add(note?.color);
       note?.labels.forEach((labelUUID) => labels.add(labelUUID));
       note?.images.length > 0 && types.add("Images");
+      note?.reminder && types.add("Reminders");
       note?.checkboxes.length > 0 && types.add("Lists");
       note?.collaborators.forEach((collab) => {
         const displayName =
@@ -240,8 +241,6 @@ const Filters = ({
               }}
             >
               {[...item.set].map((setItem, index) => {
-                const isImages = setItem === "Images";
-                const isLists = setItem === "Lists";
 
                 const func = (data) => {
                   resetText();
@@ -255,8 +254,7 @@ const Filters = ({
                     ) : isTypes ? (
                       <TypeFilterItem
                         onClick={func}
-                        isImages={isImages}
-                        isLists={isLists}
+                        type={setItem}
                       />
                     ) : isColors ? (
                       <ColorFilterItem onClick={func} color={setItem} />

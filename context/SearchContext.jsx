@@ -14,6 +14,7 @@ export const SearchProvider = ({ children }) => {
     label: null,
     collab: null,
     lists: null,
+    reminder: null,
   });
 
   return (
