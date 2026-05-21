@@ -3,11 +3,13 @@ import React, { memo } from "react";
 import { useMasonry } from "@/context/MasonryContext";
 import NoteWrapper from "../others/note/NoteWrapper";
 import SectionHeader from "../others/SectionHeader";
+import { motion } from "framer-motion";
 
 const FilteredNotes = memo(
   ({
     notes,
     order,
+    notesReady,
     selectedNotesRef,
     dispatchNotes,
     setSelectedNotesIDs,
@@ -26,6 +28,7 @@ const FilteredNotes = memo(
       sectionsHeight,
       hasArchivedNotes,
       hasPinned,
+      notesExist,
       hasUnpinned,
       calculateLayout,
     } = useMasonry();
@@ -84,6 +87,40 @@ const FilteredNotes = memo(
                 />
               );
           })}
+        </div>
+        <div style={{ display: notesExist && "none" }} className="empty-page">
+          {notesReady && !notesExist && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{
+                type: "spring",
+                stiffness: 800,
+                damping: 50,
+                mass: 1,
+              }}
+              className="empty-page-box"
+            >
+              <div className="empty-page-reminders" />
+              Notes with upcoming reminders appear here
+            </motion.div>
+          )}
+          {!notesReady && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{
+                type: "spring",
+                stiffness: 800,
+                damping: 50,
+                mass: 1,
+              }}
+              className="empty-page-box"
+            >
+              <div className="empty-page-loading" />
+              Loading notes...
+            </motion.div>
+          )}
         </div>
       </div>
     );
