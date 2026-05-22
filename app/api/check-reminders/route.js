@@ -108,7 +108,7 @@ export async function GET(req) {
           filter: { note: item.note.uuid },
           update: {
             $set: {
-              reminder: { ...reminder, enabled: true },
+              reminder: { ...reminder, enabled: !disableReminder },
               lastModifiedBy: uuid(),
             },
           },
