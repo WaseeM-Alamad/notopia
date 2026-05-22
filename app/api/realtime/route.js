@@ -22,7 +22,7 @@ export async function GET(request) {
 
   const stream = new ReadableStream({
     start(controller) {
-      registerClient(userID, controller);
+      const cleanupRealtime = registerClient(userID, controller);
 
       // Notes change stream
       const noteStream = Note.collection.watch(
@@ -197,6 +197,7 @@ export async function GET(request) {
         noteStream.close();
         userStream.close();
         settingsStream.close();
+        cleanupRealtime();
         controller.close();
       });
     },
