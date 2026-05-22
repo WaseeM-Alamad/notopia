@@ -58,9 +58,14 @@ export function AppProvider({ children, initialUser }) {
   }, []);
 
   useEffect(() => {
+    if (audioUnlockedRef.current) return;
+
     const handler = async () => {
+      if (audioUnlockedRef.current) return;
+
       const audio = new Audio("/notification.wav");
       audio.volume = 0;
+
       try {
         await audio.play();
         audio.pause();
@@ -68,7 +73,9 @@ export function AppProvider({ children, initialUser }) {
         audioUnlockedRef.current = true;
       } catch {}
     };
+
     document.addEventListener("click", handler, { once: true });
+
     return () => document.removeEventListener("click", handler);
   }, []);
 

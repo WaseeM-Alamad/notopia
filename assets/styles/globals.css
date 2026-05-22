@@ -3471,6 +3471,12 @@ img {
   border-color: rgba(255, 255, 255, 0.1);
 }
 
+@media (max-width: 380px) {
+  .notification {
+    min-width: unset;
+  }
+}
+
 .notification-close {
   position: absolute;
   top: 0.2rem;
