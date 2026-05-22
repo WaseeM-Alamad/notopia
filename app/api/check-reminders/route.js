@@ -6,6 +6,7 @@ import { v4 as uuid } from "uuid";
 import webpush from "web-push";
 import PushSubscription from "@/models/PushSubscription";
 import { emitToUser } from "@/utils/realtime";
+import Note from "@/models/Note";
 
 webpush.setVapidDetails(
   process.env.VAPID_MAILTO,

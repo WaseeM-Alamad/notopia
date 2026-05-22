@@ -19,11 +19,13 @@ const NoteReminder = ({
     const currentDate = new Date();
     const noteYear = new Date(date).getFullYear();
     const noteDay = new Date(date).getDate();
+    const noteMonth = new Date(date).getMonth();
+    const isSameMonth = noteMonth === currentDate.getMonth();
     let formattedDate;
     if (noteYear === currentDate.getFullYear()) {
-      if (noteDay === currentDate.getDate()) {
+      if (noteDay === currentDate.getDate() && isSameMonth) {
         formattedDate = format(new Date(date), "'Today, 'h:mm a");
-      } else if (noteDay === currentDate.getDate() + 1) {
+      } else if (noteDay === currentDate.getDate() + 1 && isSameMonth) {
         formattedDate = format(new Date(date), " 'Tomorrow, 'h:mm a");
       } else {
         formattedDate = format(new Date(date), `MMM dd, h:mm a`);

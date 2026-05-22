@@ -32,7 +32,7 @@ const PickTime = ({
   const { showTooltip, hideTooltip } = useAppContext();
   const [selectedRep, setSelectedRep] = useState(noteRep);
   const [selectedTime, setSelectedTime] = useState(
-    noteReminder ? format(noteReminder, "hh:mm") : null,
+    noteReminder ? format(noteReminder, "HH:mm") : null,
   );
   const [selectedDate, setSelectedDate] = useState(noteReminder);
   const [isInputValid, setIsInputValid] = useState(false);
