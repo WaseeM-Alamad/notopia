@@ -38,10 +38,6 @@ const PickTime = ({
   const [isInputValid, setIsInputValid] = useState(false);
   const inputRef = useRef(null);
 
-  useEffect(() => {
-    console.log(selectedDate);
-  }, [selectedDate]);
-
   const isDiabled = (time) => {
     if (!selectedDate) return true;
     const date = new Date(selectedDate);

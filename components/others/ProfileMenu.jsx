@@ -4,7 +4,6 @@ import React, { forwardRef, memo, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useAppContext } from "@/context/AppContext";
 import { useGlobalContext } from "@/context/GlobalContext";
-import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 const ProfileMenu = ({
   user,
@@ -15,7 +14,6 @@ const ProfileMenu = ({
   setSettingsOpen,
   setBindsOpen,
 }) => {
-  const { permission, subscribe } = usePushNotifications();
   const { setInitialLoading } = useAppContext();
   const { isDarkModeRef } = useGlobalContext();
   const [isClient, setIsClient] = useState(false);
@@ -55,7 +53,7 @@ const ProfileMenu = ({
   if (!isClient) {
     return null;
   }
-  
+
   const topMenuItems = [
     {
       title: "Account",
@@ -78,14 +76,6 @@ const ProfileMenu = ({
       func: () => {
         setBindsOpen(true);
         setIsOpen(false);
-      },
-    },
-    {
-      title: "Enable notifications",
-      classes: "keyboard-menu-icon s",
-      func: () => {
-        if (permission === "granted") return null; // already enabled
-        subscribe();
       },
     },
   ];

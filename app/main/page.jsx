@@ -38,12 +38,12 @@ import localDbReducer from "@/utils/localDbReducer";
 import { useRealtimeUpdates } from "@/hooks/useRealtimeUpdates";
 import { AnimatePresence, motion } from "framer-motion";
 import ActionModal from "@/components/others/ActionModal";
-import CustomThreeLineSpinner from "@/components/Tools/CustomSpinner";
 import SplashScreen from "@/components/others/SplashScreen";
 import { useLabelsContext } from "@/context/LabelsContext";
 import { MasonryProvider } from "@/context/MasonryContext";
 import { useLayout } from "@/context/LayoutContext";
 import ComposeNote from "@/components/others/ComposeNote";
+import { Toaster } from "sonner";
 
 const page = () => {
   const { searchTerm, filters } = useSearch();
@@ -373,10 +373,6 @@ const page = () => {
     }
   }, [selectedNotesIDs.length]);
 
-  useEffect(()=> {
-    console.log(visibleItems)
-  }, [visibleItems])
-
   const matchesFilters = (note) => {
     if (note?.isTrash) return false;
 
@@ -560,6 +556,7 @@ const page = () => {
 
   return (
     <>
+      <Toaster position="top-right" visibleToasts={5} closeButton />
       <SplashScreen />
       <div style={{ pointerEvents: initialLoading && "none" }}>
         <div

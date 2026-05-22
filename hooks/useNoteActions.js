@@ -21,7 +21,8 @@ export function useNoteActions({
   labelObj,
   currentSection,
 }) {
-  const { user, clientID, openSnackRef, notesStateRef } = useAppContext();
+  const { user, clientID, openSnackRef, notesStateRef, enableNotifs } =
+    useAppContext();
   const userID = user?.id;
   const { filters } = useSearch();
   const noteActions = useCallback(
@@ -562,6 +563,7 @@ export function useNoteActions({
           });
           return;
         }
+        enableNotifs();
         const setLocalNote = data?.setLocalNote;
         if (setLocalNote) {
           setLocalNote((prev) => ({ ...prev, reminder: data.reminder }));

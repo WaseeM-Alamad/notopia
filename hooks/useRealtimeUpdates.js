@@ -11,7 +11,8 @@ export function useRealtimeUpdates({
   updateModalRef,
   setVisibleItems,
 }) {
-  const { user, clientID, notesStateRef, isOnline } = useAppContext();
+  const { user, clientID, notesStateRef, isOnline, showReminderNotif } =
+    useAppContext();
 
   const { labelsRef } = useLabelsContext();
 
@@ -42,6 +43,10 @@ export function useRealtimeUpdates({
         const deletedNotesIDs = new Set();
         const newNotes = [];
         for (let item of data) {
+          if (item.type === "reminder") {
+            showReminderNotif(item?.data);
+          }
+
           if (item.type === "note") {
             const doc = item?.fullDocument;
             switch (item.operationType) {

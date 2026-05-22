@@ -1,10 +1,11 @@
-// app/api/trash-cleanup/route.js
+// app/api/check-reminders/route.js
 
 import connectDB from "@/config/database";
 import UserSettings from "@/models/UserSettings";
 import { v4 as uuid } from "uuid";
 import webpush from "web-push";
 import PushSubscription from "@/models/PushSubscription";
+import { emitToUser } from "@/utils/realtime";
 
 webpush.setVapidDetails(
   process.env.VAPID_MAILTO,
@@ -90,6 +91,15 @@ export async function GET(req) {
           }
         }),
       );
+
+      emitToUser(item.user, {
+        type: "reminder",
+        data: {
+          title: item.note.title,
+          body: item.note.content,
+          uuid: item.note.uuid,
+        },
+      });
 
       reminder = { ...reminder, date: newDate };
 
