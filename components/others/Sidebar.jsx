@@ -67,7 +67,7 @@ const Sidebar = memo(() => {
   useEffect(() => {
     const handler = () => {
       const width = window.innerWidth;
-      setIsSmallScreen(width < 605);
+      setIsSmallScreen(width <= 605);
     };
 
     handler();

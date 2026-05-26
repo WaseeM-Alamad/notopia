@@ -1,5 +1,6 @@
 import connectDB from "@/config/database";
 import Note from "@/models/Note";
+import Notification from "@/models/Notification";
 import User from "@/models/User";
 import UserSettings from "@/models/UserSettings";
 import { authOptions } from "@/utils/authOptions";
@@ -21,6 +22,18 @@ export async function GET(request) {
 
   const stream = new ReadableStream({
     start(controller) {
+      const notificationStream = Notification.collection.watch(
+        [
+          {
+            $match: {
+              operationType: { $in: ["insert", "update", "replace", "delete"] },
+              "fullDocument.user": userID,
+            },
+          },
+        ],
+        { fullDocument: "updateLookup" },
+      );
+
       // Notes change stream
       const noteStream = Note.collection.watch(
         [
@@ -63,6 +76,15 @@ export async function GET(request) {
         ],
         { fullDocument: "updateLookup" },
       );
+
+      notificationStream.on("change", (change) => {
+        noteBuffer.push({
+          type: "notification",
+          operationType: change.operationType,
+          documentId: change.documentKey._id,
+          fullDocument: change?.fullDocument,
+        });
+      });
 
       settingsStream.on("change", async (change) => {
         if (change.fullDocument.lastModifiedBy === clientID) return;
@@ -191,6 +213,7 @@ export async function GET(request) {
       request.signal.addEventListener("abort", () => {
         clearInterval(flushInterval);
         clearInterval(heartbeat);
+        notificationStream.close();
         noteStream.close();
         userStream.close();
         settingsStream.close();

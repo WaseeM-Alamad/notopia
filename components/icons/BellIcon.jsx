@@ -1,13 +1,14 @@
 import React, { memo } from "react";
 
-const BellIcon = ({ size = 25 }) => {
+const BellIcon = ({ size = 24, style }) => {
   return (
     <svg
-      width="24"
-      height="24"
+      width={size}
+      height={size}
       viewBox="0 0 24 24"
       fill="none"
       opacity=".75"
+      style={style}
       xmlns="http://www.w3.org/2000/svg"
     >
       <path

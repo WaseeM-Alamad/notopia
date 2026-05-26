@@ -10,6 +10,7 @@ import PolyfillClient from "@/utils/PolyfillClient";
 import { LabelsProvider } from "@/context/LabelsContext";
 import { GlobalProvider } from "@/context/GlobalContext";
 import { LayoutProvider } from "@/context/LayoutContext";
+import { NotificationProvider } from "@/context/NotificationContext";
 
 export const metadata = {
   title: "Notopia",
@@ -44,12 +45,14 @@ const MainLayout = async ({ children }) => {
                 <SearchProvider>
                   <AppProvider initialUser={initialUser}>
                     <LabelsProvider userID={initialUser?.id}>
-                      <div id="tooltipPortal" />
-                      <div id="snackbarPortal" />
-                      {children}
-                      <div id="menu" />
-                      <div id="modal-portal" />
-                      <div id="selectionBox" />
+                      <NotificationProvider>
+                        <div id="tooltipPortal" />
+                        <div id="snackbarPortal" />
+                        {children}
+                        <div id="menu" />
+                        <div id="modal-portal" />
+                        <div id="selectionBox" />
+                      </NotificationProvider>
                     </LabelsProvider>
                   </AppProvider>
                 </SearchProvider>

@@ -6,6 +6,7 @@ import { v4 as uuid } from "uuid";
 import webpush from "web-push";
 import PushSubscription from "@/models/PushSubscription";
 import Note from "@/models/Note";
+import Notification from "@/models/Notification";
 
 webpush.setVapidDetails(
   process.env.VAPID_MAILTO,
@@ -91,6 +92,16 @@ export async function GET(req) {
           }
         }),
       );
+
+      await Notification.create({
+        user: item.user,
+        type: "reminder",
+        data: {
+          title: item.note.title,
+          body: item.note.content,
+          uuid: item.note.uuid,
+        },
+      });
 
       reminder = { ...reminder, date: newDate };
 

@@ -16,6 +16,8 @@ import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { toast } from "sonner";
 import Button from "@/components/Tools/Button";
 import BellIcon from "@/components/icons/BellIcon";
+import handleServerCall from "@/utils/handleServerCall";
+import { deleteNotification } from "@/utils/actions";
 
 const AppContext = createContext();
 
@@ -234,7 +236,7 @@ export function AppProvider({ children, initialUser }) {
     audio.play();
   }
 
-  const showReminderNotif = useCallback(({ title, body, uuid }) => {
+  const showReminderNotif = useCallback(({ title, body, uuid, notifId }) => {
     if (!uuid) return;
     const note = notesStateRef.current.notes.get(uuid);
 
@@ -247,7 +249,26 @@ export function AppProvider({ children, initialUser }) {
       <div
         onClick={() => {
           toast.dismiss(t);
-          if (!note) return;
+          handleServerCall(
+            [() => deleteNotification(notifId)],
+            openSnackRef.current,
+          );
+          const event = new CustomEvent("deleteNotif", {
+            detail: { id: notifId },
+          });
+          window.dispatchEvent(event);
+          if (!note) {
+            setDialogInfoRef.current({
+              func: () => window.location.replace("#home"),
+              title: "Note not found",
+              message:
+                "This note may have been deleted or you may not have permission to view it.",
+              btnMsg: "Okay",
+              cancelFunc: () => window.location.replace("#home"),
+              closeFunc: () => window.location.replace("#home"),
+            });
+            return;
+          }
           const hash = window.location.hash.replace("#", "");
           if (!hash.toLowerCase().startsWith("note/")) {
             window.location.hash = `NOTE/${uuid}`;
@@ -265,7 +286,7 @@ export function AppProvider({ children, initialUser }) {
           height="24"
           viewBox="0 0 24 24"
           fill="none"
-          opacity=".75"
+          opacity=".9"
           xmlns="http://www.w3.org/2000/svg"
         >
           <path

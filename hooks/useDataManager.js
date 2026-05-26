@@ -17,6 +17,7 @@ import { useAppContext } from "@/context/AppContext";
 import { fetchNotes, syncOfflineUpdatesAction } from "@/utils/actions";
 import handleServerCall from "@/utils/handleServerCall";
 import { useLabelsContext } from "@/context/LabelsContext";
+import { useNotifs } from "@/context/NotificationContext";
 
 export function useDataManager({ notesState, dispatchNotes, setNotesReady }) {
   const {
@@ -31,6 +32,7 @@ export function useDataManager({ notesState, dispatchNotes, setNotesReady }) {
   } = useAppContext();
 
   const { labelsRef } = useLabelsContext();
+  const { fetchNotifs } = useNotifs();
 
   useEffect(() => {
     notesStateRef.current = notesState;
@@ -68,6 +70,7 @@ export function useDataManager({ notesState, dispatchNotes, setNotesReady }) {
       await saveNotesArray(fetchedNotes.data, user?.id);
       await saveOrderArray(fetchedNotes.order, user?.id);
       await saveLabelsArray(fetchedNotes.labels, user?.id);
+      fetchNotifs();
       setLabels(fetchedNotes.labels);
       setUser(fetchedNotes.user);
       const notesMap = new Map(

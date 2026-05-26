@@ -57,6 +57,10 @@
   --slider-rail: #e5e7eb;
   --note-scrollbar-color: rgba(0, 0, 0, 0.15);
   --note-scrollbar-hover-color: rgba(0, 0, 0, 0.25);
+  --skeleton-base: #ebebeb;
+  --skeleton-highlight: #f5f5f5;
+  --bg-icon-color: #d8d7d7;
+  --bg-text-color: #979797;
 }
 
 html.dark-mode {
@@ -101,6 +105,10 @@ html.dark-mode {
   --slider-rail: #374151;
   --note-scrollbar-color: rgba(200, 200, 200, 0.15);
   --note-scrollbar-hover-color: rgba(200, 200, 200, 0.25);
+  --skeleton-base: #313342;
+  --skeleton-highlight: #474b5f;
+  --bg-icon-color: #2f3f53;
+  --bg-text-color: #8a96aa;
 }
 
 html {
@@ -3457,12 +3465,13 @@ img {
   border-color: var(--border);
   color: var(--text);
   user-select: none;
-  border-radius: 0.7rem;
+  border-radius: 0.9rem;
   font-size: 0.9rem;
   min-width: 356px;
   padding: 1rem 0.5rem;
   padding-left: 0.9rem;
   /* padding-right: 0.5rem; */
+  cursor: pointer;
   box-sizing: border-box;
 }
 
@@ -6879,13 +6888,77 @@ aside svg {
 .hover-notif-box {
   position: fixed;
   z-index: 100;
-  /* left: 0; */
+  /* padding: 1.5rem; */
+  box-sizing: border-box;
   background-color: var(--bg2);
   width: 350px;
+  overflow: hidden;
   border-radius: 1rem;
   border: solid 1px var(--border);
-  height: 500px;
+  height: 450px;
   box-shadow:
     0 1px 3px rgba(0, 0, 0, 0.07),
     0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.notifs-container {
+  display: flex;
+  flex-direction: column;
+  padding: 0.6rem;
+}
+
+.notif-item-wrapper {
+  font-size: 0.9rem;
+  padding: 0.2rem 0;
+}
+
+.notif-item-wrapper:not(:last-child) {
+  border-bottom: solid 1px var(--border);
+}
+
+.notif-item-wrapper:first-child {
+  padding-top: 0;
+}
+
+.reminder-notif-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  border-radius: 0.9rem;
+  padding: 0.8rem 0.9rem;
+  padding-right: 1.5rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.reminder-notif-item:hover {
+  background-color: var(--light-blue-hover);
+}
+
+.notif-dot {
+  position: absolute;
+  right: 11px;
+  background-color: var(--linear-loader);
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.notif-badge {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  left: 0;
+  bottom: 0px;
+  background-color: var(--st-left-selected-btn);
+  color: white;
+  border-radius: 50%;
+  font-size: 0.65rem;
+  width: 22px;
+  height: 22px;
+  overflow: hidden;
+  white-space: nowrap;
 }

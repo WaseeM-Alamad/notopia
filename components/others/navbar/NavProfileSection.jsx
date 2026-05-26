@@ -5,10 +5,12 @@ import { AnimatePresence } from "framer-motion";
 import KeybindsTable from "../KeybindsTable";
 import AccountDialog from "../AccountDialog";
 import ProfileTooltip from "../profileTooltip";
-import HoverNotifBox from "../HoverNotifBox";
+import HoverNotifBox from "../notifs/HoverNotifBox";
+import { useNotifs } from "@/context/NotificationContext";
 
 const NavProfileSection = () => {
   const { user, setBindsOpenRef } = useAppContext();
+  const { notifsMap } = useNotifs();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [bindsOpen, setBindsOpen] = useState(false);
@@ -30,6 +32,8 @@ const NavProfileSection = () => {
   const hoverNotifBoxRef = useRef(null);
 
   const image = user?.image;
+
+  const notifsNumber = notifsMap.size;
 
   useEffect(() => {
     setBindsOpenRef.current = setBindsOpen;
@@ -72,7 +76,7 @@ const NavProfileSection = () => {
       const rect = menuRef.current.getBoundingClientRect();
       setHoverNotifPos({
         top: rect.top,
-        right: rect.width + 20,
+        right: rect.width + 15,
       });
     }, 400);
   };
@@ -89,7 +93,7 @@ const NavProfileSection = () => {
       <div className="nav-img-wrapper">
         <div
           tabIndex={0}
-          style={{ padding: "8px", opacity: "1" }}
+          style={{ padding: "8px", opacity: "1", position: "relative" }}
           className="btn"
           onClick={handleProfileOpen}
           ref={imageRef}
@@ -111,6 +115,11 @@ const NavProfileSection = () => {
             }, 150);
           }}
         >
+          {notifsNumber > 0 && (
+            <div className="notif-badge">
+              {notifsNumber > 10 ? "10+" : notifsNumber}
+            </div>
+          )}
           <img
             className="profile-image"
             draggable="false"
@@ -144,6 +153,9 @@ const NavProfileSection = () => {
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
             hoverNotifBoxRef={hoverNotifBoxRef}
+            closeMenu={() => {
+              setIsMenuOpen(false);
+            }}
           />
         )}
       </AnimatePresence>

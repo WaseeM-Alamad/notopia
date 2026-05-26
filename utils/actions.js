@@ -13,6 +13,7 @@ import cloudinary from "@/config/cloudinary";
 import UserSettings from "@/models/UserSettings";
 import { startSession } from "mongoose";
 import PushSubscription from "@/models/PushSubscription";
+import Notification from "@/models/Notification";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -2680,13 +2681,17 @@ export async function saveSubscription(subscription) {
     throw new Error("Something went wrong");
   }
 
-  await connectDB();
-
-  await PushSubscription.findOneAndUpdate(
-    { "subscription.endpoint": subscription.endpoint },
-    { userId: session.user.id, subscription },
-    { upsert: true },
-  );
+  try {
+    await connectDB();
+    await PushSubscription.findOneAndUpdate(
+      { "subscription.endpoint": subscription.endpoint },
+      { userId: session.user.id, subscription },
+      { upsert: true },
+    );
+  } catch (error) {
+    console.log("Error saving subscription", error);
+    throw new Error("Error saving subscription");
+  }
 }
 
 export async function deleteSubscription(endpoint) {
@@ -2695,9 +2700,56 @@ export async function deleteSubscription(endpoint) {
     throw new Error("Something went wrong");
   }
 
-  await connectDB();
-  await PushSubscription.deleteOne({
-    userId: session.user.id,
-    "subscription.endpoint": endpoint,
-  });
+  try {
+    await connectDB();
+    await PushSubscription.deleteOne({
+      userId: session.user.id,
+      "subscription.endpoint": endpoint,
+    });
+  } catch (error) {
+    console.log("Error deleting subscription", error);
+    throw new Error("Error deleting subscription");
+  }
+}
+
+export async function fetchNotifsAction() {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    throw new Error("Something went wrong");
+  }
+
+  try {
+    await connectDB();
+    const notifs = await Notification.find({
+      user: session.user.id,
+    });
+
+    return {
+      success: true,
+      notifs: JSON.parse(JSON.stringify(notifs ?? [])),
+    };
+  } catch (error) {
+    console.log("Error deleting notification", error);
+    return {
+      success: false,
+    };
+  }
+}
+
+export async function deleteNotification(notifId) {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    throw new Error("Something went wrong");
+  }
+
+  try {
+    await connectDB();
+    await Notification.deleteOne({
+      user: session.user.id,
+      _id: notifId,
+    });
+  } catch (error) {
+    console.log("Error deleting notification", error);
+    throw new Error("Error deleting notification");
+  }
 }
