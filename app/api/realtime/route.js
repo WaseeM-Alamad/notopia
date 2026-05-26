@@ -3,7 +3,6 @@ import Note from "@/models/Note";
 import User from "@/models/User";
 import UserSettings from "@/models/UserSettings";
 import { authOptions } from "@/utils/authOptions";
-import { registerClient } from "@/utils/realtime";
 import mongoose from "mongoose";
 import { getServerSession } from "next-auth";
 
@@ -22,8 +21,6 @@ export async function GET(request) {
 
   const stream = new ReadableStream({
     start(controller) {
-      const cleanupRealtime = registerClient(userID, controller);
-
       // Notes change stream
       const noteStream = Note.collection.watch(
         [
@@ -197,7 +194,6 @@ export async function GET(request) {
         noteStream.close();
         userStream.close();
         settingsStream.close();
-        cleanupRealtime();
         controller.close();
       });
     },

@@ -145,6 +145,9 @@ const PickTime = ({
         onClick={() => {
           setIsOpen(false);
 
+          if (+noteReminder === +selectedDate && selectedRep === noteRep)
+            return;
+
           const acceptedReps = reps.slice(1);
           const rep = acceptedReps.includes(selectedRep)
             ? selectedRep.toLowerCase()

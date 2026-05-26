@@ -1,9 +1,14 @@
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { signOut } from "next-auth/react";
 import React, { forwardRef, memo, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useAppContext } from "@/context/AppContext";
 import { useGlobalContext } from "@/context/GlobalContext";
+import {
+  ArrowBack,
+  ArrowBackIos,
+  ArrowBackIosRounded,
+} from "@mui/icons-material";
 
 const ProfileMenu = ({
   user,
@@ -13,12 +18,14 @@ const ProfileMenu = ({
   setIsOpen,
   setSettingsOpen,
   setBindsOpen,
+  onMouseEnter,
+  onMouseLeave,
+  menuRef,
+  hoverNotifBoxRef,
 }) => {
   const { setInitialLoading } = useAppContext();
   const { isDarkModeRef } = useGlobalContext();
   const [isClient, setIsClient] = useState(false);
-
-  const menuRef = useRef(null);
 
   useEffect(() => {
     setIsClient(true);
@@ -28,7 +35,8 @@ const ProfileMenu = ({
     const handler = (e) => {
       if (
         !menuRef.current.contains(e.target) &&
-        !imageRef.current.contains(e.target)
+        !imageRef.current.contains(e.target) &&
+        !hoverNotifBoxRef?.current?.contains(e.target)
       ) {
         setIsOpen(false);
       }
@@ -75,6 +83,13 @@ const ProfileMenu = ({
       classes: "keyboard-menu-icon",
       func: () => {
         setBindsOpen(true);
+        setIsOpen(false);
+      },
+    },
+    {
+      title: "Notifications",
+      classes: "notifs-menu-icon",
+      func: () => {
         setIsOpen(false);
       },
     },
@@ -161,15 +176,27 @@ const ProfileMenu = ({
           </div>
         </div>
         <div className="">
-          {topMenuItems.map(({ title, classes, func }) => (
-            <button
-              key={classes}
-              className={`profile-menu-btn ${classes}`}
-              onClick={func}
-            >
-              {title}
-            </button>
-          ))}
+          {topMenuItems.map(({ title, classes, func }) => {
+            const isNotif = classes.includes("notifs-menu-icon");
+            return (
+              <button
+                key={classes}
+                className={`profile-menu-btn ${classes}`}
+                style={isNotif ? { paddingRight: ".8rem" } : undefined}
+                onMouseEnter={isNotif ? onMouseEnter : undefined}
+                onMouseLeave={isNotif ? onMouseLeave : undefined}
+                onClick={func}
+              >
+                {title}
+                {isNotif && (
+                  <div
+                    className="arrow-menu-icon"
+                    style={{ width: "20px", height: "20px" }}
+                  />
+                )}
+              </button>
+            );
+          })}
         </div>
         <div className="menu-divider" />
         {bottomMenuItems.map(({ title, classes, func }) => (
