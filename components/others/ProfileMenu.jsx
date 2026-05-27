@@ -23,6 +23,7 @@ const ProfileMenu = ({
   onMouseLeave,
   menuRef,
   hoverNotifBoxRef,
+  setHoverNotifPos,
 }) => {
   const { notifsMap } = useNotifs();
   const { setInitialLoading } = useAppContext();
@@ -110,7 +111,10 @@ const ProfileMenu = ({
       ),
       classes: "notifs-menu-icon",
       func: () => {
-        setIsOpen(false);
+        if (window.innerWidth <= 605) {
+          setHoverNotifPos({ right: 0, top: 0 });
+          setIsOpen(false);
+        }
       },
     },
   ];
@@ -210,7 +214,7 @@ const ProfileMenu = ({
                 {title}
                 {isNotif && (
                   <div
-                    className="arrow-menu-icon"
+                    className="arrow-menu-icon non-mobile-element"
                     style={{ width: "20px", height: "20px" }}
                   />
                 )}

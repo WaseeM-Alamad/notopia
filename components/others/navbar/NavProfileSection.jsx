@@ -7,10 +7,12 @@ import AccountDialog from "../AccountDialog";
 import ProfileTooltip from "../profileTooltip";
 import HoverNotifBox from "../notifs/HoverNotifBox";
 import { useNotifs } from "@/context/NotificationContext";
+import { useGlobalContext } from "@/context/GlobalContext";
 
 const NavProfileSection = () => {
   const { user, setBindsOpenRef } = useAppContext();
   const { notifsMap } = useNotifs();
+  const { isExpanded } = useGlobalContext();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [bindsOpen, setBindsOpen] = useState(false);
@@ -34,6 +36,8 @@ const NavProfileSection = () => {
   const image = user?.image;
 
   const notifsNumber = notifsMap.size;
+
+  const isMobile = isExpanded.threshold === "before";
 
   useEffect(() => {
     setBindsOpenRef.current = setBindsOpen;
@@ -64,13 +68,19 @@ const NavProfileSection = () => {
   }, [isMenuOpen]);
 
   useEffect(() => {
-    if (!isMenuOpen) {
-      setHoverNotifPos(false);
+    if (!isMenuOpen && !isMobile) {
+      setHoverNotifPos(null);
     }
   }, [isMenuOpen]);
 
+  useEffect(() => {
+    setHoverNotifPos(null);
+    setIsMenuOpen(false);
+  }, [isMobile]);
+
   const onMouseEnter = () => {
     clearTimeout(timeoutRef.current);
+    if (isMobile) return;
     timeoutRef.current = setTimeout(() => {
       if (!menuRef.current) return;
       const rect = menuRef.current.getBoundingClientRect();
@@ -83,6 +93,7 @@ const NavProfileSection = () => {
 
   const onMouseLeave = () => {
     clearTimeout(timeoutRef.current);
+    if (isMobile) return;
     timeoutRef.current = setTimeout(() => {
       setHoverNotifPos(null);
     }, 500);
@@ -147,15 +158,17 @@ const NavProfileSection = () => {
         )}
       </AnimatePresence>
       <AnimatePresence>
-        {isMenuOpen && hoverNotifPos && (
+        {hoverNotifPos && (
           <HoverNotifBox
             {...hoverNotifPos}
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
             hoverNotifBoxRef={hoverNotifBoxRef}
             closeMenu={() => {
+              setHoverNotifPos(null);
               setIsMenuOpen(false);
             }}
+            isOpen={!!hoverNotifPos}
           />
         )}
       </AnimatePresence>

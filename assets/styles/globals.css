@@ -2840,6 +2840,11 @@ img {
 }
 
 @media (max-width: 605px) {
+
+  .non-mobile-element {
+    display: none !important;
+  }
+
   .completed-items-note {
     pointer-events: none;
     font-size: 13px;
@@ -5346,6 +5351,10 @@ aside svg {
 }
 
 @media (min-width: 605px) {
+  .mobile-element {
+    display: none !important;
+  }
+
   .sidebar-open .sidebar-ghost {
     width: 280px;
   }
@@ -6891,7 +6900,7 @@ aside svg {
   /* padding: 1.5rem; */
   box-sizing: border-box;
   background-color: var(--bg2);
-  width: 350px;
+  width: 345px;
   overflow: hidden;
   border-radius: 1rem;
   border: solid 1px var(--border);
@@ -6899,6 +6908,17 @@ aside svg {
   box-shadow:
     0 1px 3px rgba(0, 0, 0, 0.07),
     0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+@media (max-width: 605px) {
+  .hover-notif-box {
+    top: 0 !important;
+    left: 0 !important;
+    right: unset !important;
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 0 !important;
+  }
 }
 
 .notifs-container {

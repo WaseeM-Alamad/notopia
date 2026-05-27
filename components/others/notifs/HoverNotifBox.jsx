@@ -4,6 +4,8 @@ import React, { memo, useEffect, useMemo, useState } from "react";
 import { SkeletonTheme } from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import ReminderNotif from "./ReminderNotif";
+import Button from "@/components/Tools/Button";
+import { useGlobalContext } from "@/context/GlobalContext";
 
 const NoNotifs = () => {
   return (
@@ -64,12 +66,36 @@ const HoverNotifBox = ({
   onMouseLeave,
   hoverNotifBoxRef,
   closeMenu,
+  isOpen,
 }) => {
+  const { lockScroll } = useGlobalContext();
   const { notifsMap, fetchNotifs } = useNotifs();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchNotifs(setIsLoading);
+  }, []);
+
+  useEffect(() => {
+    if (window.innerWidth > 605) {
+      lockScroll(false);
+      return;
+    }
+    lockScroll(isOpen);
+
+    return () => lockScroll(false);
+  }, [isOpen]);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === "Escape") {
+        closeFunc();
+        setDialogInfo(null);
+      }
+    };
+
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
   }, []);
 
   const notifications = isLoading
@@ -174,13 +200,29 @@ const HoverNotifBox = ({
       >
         <div
           style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flex: "1",
             fontWeight: "bold",
             fontSize: "1.25rem",
             padding: "1.5rem",
             paddingBottom: "1rem",
           }}
         >
-          Notifications
+          <span>Notifications</span>
+          <Button
+            onClick={closeMenu}
+            className="clear-icon small-btn mobile-element"
+            style={{
+              position: "relative",
+              margin: "0",
+              left: "0",
+              top: "0",
+              width: "35px",
+              height: "35px",
+            }}
+          />
         </div>
 
         <div
