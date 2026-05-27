@@ -1,5 +1,6 @@
 import { useAppContext } from "@/context/AppContext";
 import { useLabelsContext } from "@/context/LabelsContext";
+import { useNotifs } from "@/context/NotificationContext";
 import { Popper } from "@mui/material";
 import { motion } from "framer-motion";
 import React from "react";
@@ -8,6 +9,9 @@ import { createPortal } from "react-dom";
 const ProfileTooltip = ({ tooltipTop }) => {
   const { user, notesStateRef } = useAppContext();
   const { labelsRef } = useLabelsContext();
+  const { notifsMap } = useNotifs();
+
+  const notifsNumber = notifsMap.size;
 
   return createPortal(
     <motion.div
@@ -57,6 +61,8 @@ const ProfileTooltip = ({ tooltipTop }) => {
           {notesStateRef.current.notes.size} Notes
           <br />
           {labelsRef.current.size} Labels
+          <br />
+          {notifsNumber} Notifications
         </div>
       </div>
     </motion.div>,
