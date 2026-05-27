@@ -2,6 +2,7 @@ import BellIcon from "@/components/icons/BellIcon";
 import { useAppContext } from "@/context/AppContext";
 import { deleteNotification } from "@/utils/actions";
 import handleServerCall from "@/utils/handleServerCall";
+import { formatNotificationDate } from "@/utils/notifDateFormatter";
 import React, { memo } from "react";
 import Skeleton from "react-loading-skeleton";
 
@@ -62,6 +63,7 @@ const ReminderNotif = ({ notif, closeMenu }) => {
           style={{
             display: "flex",
             flexDirection: "column",
+            gap: "0.1rem",
             minWidth: 0,
             width: "100%",
           }}
@@ -69,7 +71,6 @@ const ReminderNotif = ({ notif, closeMenu }) => {
           {isLoading ? (
             <>
               <Skeleton height={14} width="85%" />
-              <Skeleton height={14} width="60%" />
             </>
           ) : (
             <span
@@ -81,9 +82,17 @@ const ReminderNotif = ({ notif, closeMenu }) => {
                 WebkitBoxOrient: "vertical",
               }}
             >
-              <span style={{ fontWeight: "bold" }}>Reminder:</span>{" "}
+              <span style={{ fontWeight: "600" }}>Reminder:</span>{" "}
               {notif.data?.title}
             </span>
+          )}
+
+          {isLoading ? (
+            <Skeleton height={10} width="20%" />
+          ) : (
+            <div style={{ color: "var(--text3)", fontSize: ".75rem" }}>
+              {formatNotificationDate(notif.createdAt)}
+            </div>
           )}
         </div>
       </div>

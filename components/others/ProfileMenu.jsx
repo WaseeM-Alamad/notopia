@@ -9,6 +9,7 @@ import {
   ArrowBackIos,
   ArrowBackIosRounded,
 } from "@mui/icons-material";
+import { useNotifs } from "@/context/NotificationContext";
 
 const ProfileMenu = ({
   user,
@@ -23,8 +24,10 @@ const ProfileMenu = ({
   menuRef,
   hoverNotifBoxRef,
 }) => {
+  const { notifsMap } = useNotifs();
   const { setInitialLoading } = useAppContext();
   const { isDarkModeRef } = useGlobalContext();
+  const notifsNumber = notifsMap.size;
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -87,7 +90,24 @@ const ProfileMenu = ({
       },
     },
     {
-      title: "Notifications",
+      title: (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: ".7rem",
+            width: "fit-content",
+          }}
+        >
+          {notifsNumber > 0 && (
+            <div
+              className="notif-dot"
+              style={{ position: "relative", left: "0" }}
+            />
+          )}
+          {<span>Notifications</span>}
+        </div>
+      ),
       classes: "notifs-menu-icon",
       func: () => {
         setIsOpen(false);
