@@ -5592,6 +5592,7 @@ aside svg {
   }
 
   .note-modal-wrapper {
+    border: none;
     height: 100dvh;
     width: 100%;
     max-width: 100%;

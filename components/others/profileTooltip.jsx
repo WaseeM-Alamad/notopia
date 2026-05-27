@@ -62,7 +62,7 @@ const ProfileTooltip = ({ tooltipTop }) => {
           <br />
           {labelsRef.current.size} Labels
           <br />
-          {notifsNumber} Notifications
+          {notifsNumber > 0 && <span>{notifsNumber} Notifications</span>}
         </div>
       </div>
     </motion.div>,
