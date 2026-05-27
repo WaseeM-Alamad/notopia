@@ -2722,6 +2722,7 @@ export async function fetchNotifsAction() {
     await connectDB();
     const notifs = await Notification.find({
       user: session.user.id,
+      deleted: false,
     });
 
     return {
@@ -2744,9 +2745,9 @@ export async function deleteNotification(notifId) {
 
   try {
     await connectDB();
-    await Notification.deleteOne({
-      user: session.user.id,
-      _id: notifId,
+    await Notification.findByIdAndUpdate(notifId, {
+      deleted: true,
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1 hour from now
     });
   } catch (error) {
     console.log("Error deleting notification", error);

@@ -41,7 +41,6 @@ export function useRealtimeUpdates({
     eventSourceRef.current.onmessage = async (event) => {
       try {
         const data = JSON.parse(event.data);
-        console.log(data);
         updateModalRef.current = true;
         const updatedNotes = new Map();
         const deletedNotesIDs = new Set();
@@ -49,6 +48,15 @@ export function useRealtimeUpdates({
         for (let item of data) {
           if (item.type === "notification") {
             const doc = item?.fullDocument;
+            if (doc.deleted) {
+              setNotifsMap((prev) => {
+                const newMap = new Map(prev);
+                newMap.delete(doc._id);
+                return newMap;
+              });
+              continue;
+            }
+
             if (!doc) return;
             switch (doc.type) {
               case "reminder": {
@@ -57,7 +65,7 @@ export function useRealtimeUpdates({
                   newMap.set(doc._id, doc);
                   return newMap;
                 });
-                showReminderNotif({...doc?.data, notifId: doc._id});
+                showReminderNotif({ ...doc?.data, notifId: doc._id });
                 break;
               }
             }
