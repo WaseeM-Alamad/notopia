@@ -72,6 +72,8 @@ const HoverNotifBox = ({
   const { notifsMap, fetchNotifs } = useNotifs();
   const [isLoading, setIsLoading] = useState(true);
 
+  const isMobile = window.innerWidth <= 605;
+
   useEffect(() => {
     fetchNotifs(setIsLoading);
   }, []);
@@ -89,8 +91,7 @@ const HoverNotifBox = ({
   useEffect(() => {
     const handler = (e) => {
       if (e.key === "Escape") {
-        closeFunc();
-        setDialogInfo(null);
+        closeMenu();
       }
     };
 
@@ -177,9 +178,9 @@ const HoverNotifBox = ({
   return (
     <motion.div
       ref={hoverNotifBoxRef}
-      initial={{ x: -7, scale: 0.97, opacity: 0 }}
+      initial={{ x: isMobile ? 0 : -7, scale: 0.97, opacity: 0 }}
       animate={{ x: 0, scale: 1, opacity: 1 }}
-      exit={{ x: -7, scale: 0.97, opacity: 0 }}
+      exit={{ x: isMobile ? 0 : -7, scale: 0.97, opacity: 0 }}
       transition={{
         type: "spring",
         stiffness: 500,
@@ -208,6 +209,8 @@ const HoverNotifBox = ({
             fontSize: "1.25rem",
             padding: "1.5rem",
             paddingBottom: "1rem",
+            boxSizing: 'border-box',
+            height: '75px'
           }}
         >
           <span>Notifications</span>
@@ -229,7 +232,7 @@ const HoverNotifBox = ({
           style={{
             overflowY: isLoading ? "unset" : "auto",
             flex: "1",
-            height: "calc(100% - 66px)",
+            height: "calc(100% - 75px)",
           }}
         >
           {!isLoading && notifsMap.size === 0 ? (

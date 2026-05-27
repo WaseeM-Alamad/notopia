@@ -15,6 +15,12 @@
   color: #fff;
 }
 
+button,
+a,
+div {
+  -webkit-tap-highlight-color: transparent;
+}
+
 :root {
   --selection: #008cff;
   --primary: #6375f1;
@@ -2840,7 +2846,6 @@ img {
 }
 
 @media (max-width: 605px) {
-
   .non-mobile-element {
     display: none !important;
   }
@@ -6918,6 +6923,7 @@ aside svg {
     width: 100% !important;
     height: 100% !important;
     border-radius: 0 !important;
+    border: none !important;
   }
 }
 
@@ -6952,8 +6958,10 @@ aside svg {
   transition: background-color 0.2s ease;
 }
 
-.reminder-notif-item:hover {
-  background-color: var(--light-blue-hover);
+@media (hover: hover) {
+  .reminder-notif-item:hover {
+    background-color: var(--light-blue-hover);
+  }
 }
 
 .notif-dot {
