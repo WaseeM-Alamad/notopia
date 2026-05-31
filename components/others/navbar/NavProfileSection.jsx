@@ -128,7 +128,7 @@ const NavProfileSection = () => {
         >
           {notifsNumber > 0 && (
             <div className="notif-badge">
-              {notifsNumber > 10 ? "10+" : notifsNumber}
+              {notifsNumber > 100 ? "100+" : notifsNumber}
             </div>
           )}
           <img

@@ -67,6 +67,7 @@ div {
   --skeleton-highlight: #f5f5f5;
   --bg-icon-color: #d8d7d7;
   --bg-text-color: #979797;
+  --notif-color: #4590f1;
 }
 
 html.dark-mode {
@@ -115,6 +116,7 @@ html.dark-mode {
   --skeleton-highlight: #474b5f;
   --bg-icon-color: #2f3f53;
   --bg-text-color: #8a96aa;
+  --notif-color: #3a87eb;
 }
 
 html {
@@ -6968,7 +6970,7 @@ aside svg {
 .notif-dot {
   position: absolute;
   right: 11px;
-  background-color: var(--linear-loader);
+  background-color: var(--notif-color);
   width: 7px;
   height: 7px;
   border-radius: 50%;
@@ -6976,18 +6978,25 @@ aside svg {
 
 .notif-badge {
   position: absolute;
+  bottom: 0;
+  left: 0;
+
   display: flex;
   align-items: center;
   justify-content: center;
-  pointer-events: none;
-  left: 0;
-  bottom: 0px;
-  background-color: var(--st-left-selected-btn);
+
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+
+  border-radius: 999px;
+  background-color: var(--notif-color);
+
   color: white;
-  border-radius: 50%;
-  font-size: 0.65rem;
-  width: 22px;
-  height: 22px;
-  overflow: hidden;
-  white-space: nowrap;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1;
+
+  border: 2px solid var(--background);
+  pointer-events: none;
 }
