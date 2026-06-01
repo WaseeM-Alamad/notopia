@@ -664,10 +664,6 @@ svg {
     opacity 0.218s ease-in;
 }
 
-.modal-inputs-container::-webkit-scrollbar {
-  width: 10px;
-}
-
 .modal-inputs-container::-webkit-scrollbar-track {
   outline: none;
   background-color: transparent;
@@ -2848,6 +2844,10 @@ img {
 }
 
 @media (max-width: 605px) {
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
   .non-mobile-element {
     display: none !important;
   }
