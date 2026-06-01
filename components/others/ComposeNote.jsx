@@ -798,8 +798,7 @@ const ComposeNote = ({
                           e.stopPropagation();
                           removeLabel(labelUUID);
                         }}
-                        onMouseEnter={(e) => showTooltip(e, "Remove label")}
-                        onMouseLeave={hideTooltip}
+                        data-tooltip="Remove label"
                         className="remove-label"
                       />
                     </div>

@@ -478,10 +478,7 @@ const Label = ({
               <Button
                 tabIndex="0"
                 onClick={handleMoreClick}
-                onMouseEnter={(e) => showTooltip(e, "Options")}
-                onMouseLeave={hideTooltip}
-                onFocus={(e) => showTooltip(e, "Options")}
-                onBlur={hideTooltip}
+                data-tooltip="Options"
                 ref={moreRef}
                 className="btn-hover"
                 style={{

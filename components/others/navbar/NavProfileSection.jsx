@@ -108,18 +108,18 @@ const NavProfileSection = () => {
           className="btn"
           onClick={handleProfileOpen}
           ref={imageRef}
-          onMouseEnter={(e) => {
+          onPointerEnter={(e) => {
             clearTimeout(tooltipCloseTimeoutRef.current);
             const rect = e.currentTarget.getBoundingClientRect();
             tooltipTimeoutRef.current = setTimeout(() => {
               setTooltipTop(rect.bottom);
             }, 400);
           }}
-          onMouseDown={() => {
+          onPointerDown={() => {
             clearTimeout(tooltipTimeoutRef.current);
             setTooltipTop(null);
           }}
-          onMouseLeave={() => {
+          onPointerLeave={() => {
             clearTimeout(tooltipTimeoutRef.current);
             tooltipCloseTimeoutRef.current = setTimeout(() => {
               setTooltipTop(null);

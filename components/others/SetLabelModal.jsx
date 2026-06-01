@@ -123,8 +123,7 @@ const SetLabelModal = ({
         {showCloseBtn && (
           <div
             style={{ top: ".5rem", right: "0.7rem" }}
-            onMouseEnter={(e) => showTooltip(e, "Close")}
-            onMouseLeave={hideTooltip}
+            data-tooltip="Close"
             className="clear-icon btn small-btn"
           />
         )}

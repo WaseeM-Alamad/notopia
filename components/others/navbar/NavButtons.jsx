@@ -67,10 +67,7 @@ const NavButtons = () => {
   return (
     <div style={{ marginLeft: "auto" }} className="top-icons">
       <Button
-        onMouseEnter={(e) => showTooltip(e, isGrid ? "List view" : "Grid view")}
-        onMouseLeave={hideTooltip}
-        onFocus={(e) => showTooltip(e, isGrid ? "List view" : "Grid view")}
-        onBlur={hideTooltip}
+        data-tooltip={isGrid ? "List view" : "Grid view"}
         onClick={() => window.dispatchEvent(new Event("toggleLayout"))}
         className="nav-btn layout-btn"
       >
@@ -80,10 +77,7 @@ const NavButtons = () => {
         disabled={(isLoading && UpToDatetrigger) || !UpToDatetrigger}
         className="nav-btn refresh-btn"
         onClick={handleRefresh}
-        onMouseEnter={(e) => showTooltip(e, "Refresh")}
-        onMouseLeave={hideTooltip}
-        onFocus={(e) => showTooltip(e, "Refresh")}
-        onBlur={hideTooltip}
+        data-tooltip="Refresh"
       >
         <AnimatePresence>
           {!isLoading && UpToDatetrigger && (

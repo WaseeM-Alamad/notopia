@@ -79,9 +79,7 @@ const PickTime = ({
     <div className="pick-time-container">
       <div className="pick-time-top">
         <Button
-          onMouseEnter={(e) => showTooltip(e, "Go back")}
-          onMouseLeave={hideTooltip}
-          onFocus={(e) => showTooltip(e, "Remind me")}
+          data-tooltip="Go back"
           style={{ width: "28px", height: "28px" }}
           onClick={() => setIsPickSection(false)}
         >

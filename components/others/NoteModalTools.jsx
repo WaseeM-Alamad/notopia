@@ -658,8 +658,7 @@ const ModalTools = ({
                   return type === "mobile" ? (
                     <button
                       key={index}
-                      onMouseEnter={(e) => showTooltip(e, tooltip)}
-                      onMouseLeave={hideTooltip}
+                      data-tooltip={tooltip}
                       className={className}
                       style={style}
                       onClick={onClick}
@@ -668,8 +667,7 @@ const ModalTools = ({
                   ) : (
                     <Button
                       key={index}
-                      onMouseEnter={(e) => showTooltip(e, tooltip)}
-                      onMouseLeave={hideTooltip}
+                      data-tooltip={tooltip}
                       className={className}
                       style={style}
                       onClick={onClick}
@@ -685,14 +683,12 @@ const ModalTools = ({
             <>
               <Button
                 className="note-delete-icon"
-                onMouseEnter={(e) => showTooltip(e, "Delete forever")}
-                onMouseLeave={hideTooltip}
+                data-tooltip="Delete forever"
                 onClick={handleDeleteClick}
               />
               <Button
                 className="note-restore-icon"
-                onMouseEnter={(e) => showTooltip(e, "Restore")}
-                onMouseLeave={hideTooltip}
+                data-tooltip="Restore"
                 onClick={restoreNote}
               />
             </>

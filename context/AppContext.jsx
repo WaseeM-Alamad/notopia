@@ -140,16 +140,26 @@ export function AppProvider({ children, initialUser }) {
   }, []);
 
   useEffect(() => {
-    const handler = () => {
+    const handleDown = (e) => {
+      const type = e.pointerType;
+      if (type === "touch") return;
       requestAnimationFrame(() => {
         closeToolTip();
       });
     };
 
-    document.addEventListener("pointerdown", handler, true);
+    const handleUp = (e) => {
+      requestAnimationFrame(() => {
+        closeToolTip();
+      });
+    };
+
+    document.addEventListener("pointerdown", handleDown, true);
+    // document.addEventListener("pointerup", handleUp, true);
 
     return () => {
-      document.removeEventListener("pointerdown", handler, true);
+      document.removeEventListener("pointerdown", handleDown, true);
+      // document.removeEventListener("pointerup", handleUp, true);
     };
   }, []);
 
@@ -162,6 +172,33 @@ export function AppProvider({ children, initialUser }) {
 
     return () => window.removeEventListener("blur", handler);
   }, []);
+
+  useEffect(() => {
+    const handleEnter = (e) => {
+      if (!(e.target instanceof Element)) return;
+      const target = e.target.closest("[data-tooltip]");
+      if (!target) return;
+      showTooltip(
+        { currentTarget: target, nativeEvent: e },
+        target.dataset.tooltip,
+      );
+    };
+
+    const handleLeave = (e) => {
+      if (!(e.target instanceof Element)) return;
+      const target = e.target.closest("[data-tooltip]");
+      if (!target) return;
+      hideTooltip({ currentTarget: target });
+    };
+
+    document.addEventListener("pointerenter", handleEnter, true);
+    document.addEventListener("pointerleave", handleLeave, true);
+
+    return () => {
+      document.removeEventListener("pointerenter", handleEnter, true);
+      document.removeEventListener("pointerleave", handleLeave, true);
+    };
+  }, [showTooltip, hideTooltip]);
 
   useEffect(() => {
     if (status === "loading" && !user) {

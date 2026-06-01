@@ -7,7 +7,7 @@ const NoteCollabs = ({
   modalView = false,
   openCollab = () => {},
 }) => {
-  const { user, showTooltip, hideTooltip, notesIndexMapRef } =
+  const { user,  notesIndexMapRef } =
     useAppContext();
   const userID = user?.id;
   const [collaborators, setCollaborators] = useState([]);
@@ -57,8 +57,7 @@ const NoteCollabs = ({
                 true
               );
             }}
-            onMouseEnter={(e) => showTooltip(e, displayName)}
-            onMouseLeave={hideTooltip}
+            data-tooltip={displayName}
             style={image ? { backgroundImage: `url(${image})` } : undefined}
           />
         );

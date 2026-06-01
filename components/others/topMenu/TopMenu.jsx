@@ -899,8 +899,7 @@ const TopMenuHome = ({
           >
             <Button
               onClick={handleClose}
-              onMouseEnter={(e) => showTooltip(e, "Clear selection")}
-              onMouseLeave={hideTooltip}
+              data-tooltip="Clear selection"
               className="clear-icon top-clear-icon"
             />
             <span>
@@ -911,10 +910,7 @@ const TopMenuHome = ({
               {!inTrash ? (
                 <>
                   <Button
-                    onMouseEnter={(e) =>
-                      showTooltip(e, pinNotes ? "Unpin" : "Pin")
-                    }
-                    onMouseLeave={hideTooltip}
+                    data-tooltip={pinNotes ? "Unpin" : "Pin"}
                     onClick={handlePin}
                     className={
                       pinNotes
@@ -924,28 +920,22 @@ const TopMenuHome = ({
                   />
                   {selectedNotesIDs.length <= 1 && (
                     <Button
-                      onMouseEnter={(e) => showTooltip(e, "Remind me")}
-                      onMouseLeave={hideTooltip}
+                      data-tooltip="Remind me"
                       className="top-reminder-icon top-btn"
                     />
                   )}
                   <Button
-                    onMouseEnter={(e) =>
-                      showTooltip(e, archiveNotes ? "Unarchive" : "Archive")
-                    }
-                    onMouseLeave={hideTooltip}
+                    data-tooltip={archiveNotes ? "Unarchive" : "Archive"}
                     onClick={handleArchive}
                     className="top-archive-icon top-btn"
                   />
                   <Button
-                    onMouseEnter={(e) => showTooltip(e, "Background options")}
-                    onMouseLeave={hideTooltip}
+                    data-tooltip="Background options"
                     onClick={handleOpenColor}
                     className="top-color-icon top-btn"
                   />
                   <Button
-                    onMouseEnter={(e) => showTooltip(e, "More")}
-                    onMouseLeave={hideTooltip}
+                    data-tooltip="More"
                     onClick={handleOpenMenu}
                     className="top-more-icon top-btn"
                   />

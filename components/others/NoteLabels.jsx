@@ -55,8 +55,7 @@ const NoteLabels = ({
                     ? modalRemoveLabel(labelUUID)
                     : removeLabel(labelUUID);
                 }}
-                onMouseEnter={(e) => showTooltip(e, "Remove label")}
-                onMouseLeave={hideTooltip}
+                data-tooltip="Remove label"
                 className="remove-label"
               />
             </div>

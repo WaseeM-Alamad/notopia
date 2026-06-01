@@ -200,8 +200,7 @@ const NoteImagesLayout = ({
                 )}
                 {modalOpen && !isTrash && (
                   <div
-                    onMouseEnter={(e) => showTooltip(e, "Remove image")}
-                    onMouseLeave={hideTooltip}
+                    data-tooltip="Remove image"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleImageDeletion(item.id, item.src);

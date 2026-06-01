@@ -20,10 +20,7 @@ const LogoSection = () => {
     <div className="logo">
       <Button
         onClick={handleMenuClick}
-        onMouseEnter={(e) =>
-          showTooltip(e, <span style={{ fontWeight: 550 }}>Main menu</span>)
-        }
-        onMouseLeave={hideTooltip}
+        data-tooltip="Main menu"
         className="side-expand-btn"
       />
       <span

@@ -98,8 +98,7 @@ const UserModal = ({ setUser, user }) => {
           onClick={() => {
             setUser(null);
           }}
-          onMouseEnter={(e) => showTooltip(e, "Close")}
-          onMouseLeave={hideTooltip}
+          data-tooltip="Close"
           className="clear-icon btn small-btn"
         />
         <div

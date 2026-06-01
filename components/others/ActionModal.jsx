@@ -105,8 +105,7 @@ const ActionModal = ({
               closeFunc();
               setDialogInfo(null);
             }}
-            onMouseEnter={(e) => showTooltip(e, "Close")}
-            onMouseLeave={hideTooltip}
+            data-tooltip="Close"
             className="clear-icon btn small-btn"
           />
         )}

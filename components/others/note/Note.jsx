@@ -419,10 +419,7 @@ const Note = memo(
                 isArchived: note.isArchived,
               })
             }
-            onMouseEnter={(e) =>
-              showTooltip(e, `${selected ? "Deselect note" : "Select note"}`)
-            }
-            onMouseLeave={hideTooltip}
+            data-tooltip={`${selected ? "Deselect note" : "Select note"}`}
           >
             <CheckMark
               color={selected ? "note-checkmark-selected" : note?.color}
@@ -460,14 +457,7 @@ const Note = memo(
                 <div className="pin pc-btn" tabIndex="0">
                   {!note?.isTrash && (
                     <Button
-                      onMouseEnter={(e) =>
-                        showTooltip(e, `${note?.isPinned ? "Unpin" : "Pin"}`)
-                      }
-                      onMouseLeave={hideTooltip}
-                      onFocus={(e) =>
-                        showTooltip(e, `${note?.isPinned ? "Unpin" : "Pin"}`)
-                      }
-                      onBlur={hideTooltip}
+                      data-tooltip={`${note?.isPinned ? "Unpin" : "Pin"}`}
                       onClick={handlePinClick}
                       tabIndex="0"
                     >

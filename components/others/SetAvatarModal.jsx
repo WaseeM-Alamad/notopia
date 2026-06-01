@@ -122,8 +122,7 @@ const SetAvatarModal = ({ setIsOpen, initialFileRef, isGif }) => {
           onClick={() => {
             !isLoading && setIsOpen(false);
           }}
-          onMouseEnter={(e) => showTooltip(e, "Close")}
-          onMouseLeave={hideTooltip}
+          data-tooltip="Close"
           className="clear-icon btn small-btn"
         />
 

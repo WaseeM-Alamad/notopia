@@ -24,7 +24,7 @@ const AddModalTools = ({
   setLabelsOpen,
   inputRef,
 }) => {
-  const { showTooltip, hideTooltip, openSnackRef } = useAppContext();
+  const {  openSnackRef } = useAppContext();
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
   const [colorAnchorEl, setColorAnchorEl] = useState();
   const [colorDrawerOpen, setColorDrawerOpen] = useState(false);
@@ -102,15 +102,10 @@ const AddModalTools = ({
     >
       {/* <p className="date">{FormattedDate}</p> */}
       <div className="modal-bottom-icons">
-        <Button
-          className="reminder-icon btn-hover"
-          onMouseEnter={(e) => showTooltip(e, "Remind me")}
-          onMouseLeave={hideTooltip}
-        />
+        <Button className="reminder-icon btn-hover" data-tooltip="Remind me" />
         <Button
           className="person-add-icon btn-hover"
-          onMouseEnter={(e) => showTooltip(e, "Collaborator")}
-          onMouseLeave={hideTooltip}
+          data-tooltip="Collaborator"
         />
         <Button
           className="archive-icon btn-hover"
@@ -128,13 +123,11 @@ const AddModalTools = ({
             });
             setNote((prev) => ({ ...prev, isArchived: !prev.isArchived }));
           }}
-          onMouseEnter={(e) => showTooltip(e, "Archive")}
-          onMouseLeave={hideTooltip}
+          data-tooltip="Archive"
         />
         <Button
           className="image-icon btn-hover"
-          onMouseEnter={(e) => showTooltip(e, "Add image")}
-          onMouseLeave={hideTooltip}
+          data-tooltip="Add image"
           onClick={() => inputRef.current.click()}
         >
           <input
@@ -148,8 +141,7 @@ const AddModalTools = ({
         </Button>
         <Button
           className="color-icon btn-hover"
-          onMouseEnter={(e) => showTooltip(e, "Background options")}
-          onMouseLeave={hideTooltip}
+          data-tooltip="Background options"
           ref={colorButtonRef}
           onClick={toggleMenu}
         />
@@ -180,8 +172,7 @@ const AddModalTools = ({
             setMoreMenuOpen((prev) => !prev);
             setLabelsOpen(false);
           }}
-          onMouseEnter={(e) => showTooltip(e, "More")}
-          onMouseLeave={hideTooltip}
+          data-tooltip="More"
           className="more-icon btn-hover"
         />
         <Button onClick={handleUndo} disabled={undoStack.length === 0}>

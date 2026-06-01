@@ -249,9 +249,9 @@ const SideBtn = ({
           id={hash}
           tabIndex="-1"
           onClick={(e) => handleIconClick(e, hash)}
-          onMouseEnter={showSideTooltip}
-          onMouseLeave={hideSideTooltip}
-          onMouseDown={handleMouseDown}
+          onPointerEnter={showSideTooltip}
+          onPointerLeave={hideSideTooltip}
+          onPointerDown={hideSideTooltip}
         >
           <Icon />
           <span className="side-btn-title">{name}</span>

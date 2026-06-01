@@ -793,12 +793,7 @@ const NoteEditor = ({
               : localNote?.isArchived
                 ? "Note in Archive  •  "
                 : ""}
-            <span
-              onMouseEnter={(e) =>
-                showTooltip(e, "Created " + formattedCreatedAtDate)
-              }
-              onMouseLeave={hideTooltip}
-            >
+            <span data-tooltip={"Created " + formattedCreatedAtDate}>
               Edited
               {" " + formattedEditedDate}
             </span>

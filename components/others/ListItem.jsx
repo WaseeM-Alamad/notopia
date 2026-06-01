@@ -19,7 +19,7 @@ const ListItem = ({
   modalOpen,
   index,
 }) => {
-  const { clientID, showTooltip, hideTooltip, openSnackRef } = useAppContext();
+  const { clientID,  openSnackRef } = useAppContext();
   const listItemRef = useRef(null);
   const containerRef = useRef(null);
   const inputTimeoutRef = useRef(null);
@@ -158,8 +158,7 @@ const ListItem = ({
       >
         {!no && <div onMouseDown={handleMouseDown} className="drag-db-area" />}
         <Button
-          onMouseEnter={(e) => showTooltip(e, "Delete")}
-          onMouseLeave={hideTooltip}
+          data-tooltip="Delete"
           onClick={handleDelete}
           className="delete-list-item"
         />

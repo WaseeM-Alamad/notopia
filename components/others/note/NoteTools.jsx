@@ -48,8 +48,6 @@ const NoteTools = ({
   const [labelsOpen, setLabelsOpen] = useState(false);
   const reminderBtnRef = useRef(null);
 
-  
-
   const ImagesWithNoBottomContent =
     note?.images?.length > 0 &&
     note?.labels?.length === 0 &&
@@ -687,19 +685,13 @@ const NoteTools = ({
                   }}
                   tabIndex="0"
                   className="reminder-icon btn-hover"
-                  onMouseEnter={(e) => showTooltip(e, "Remind me")}
-                  onMouseLeave={hideTooltip}
-                  onFocus={(e) => showTooltip(e, "Remind me")}
-                  onBlur={hideTooltip}
+                  data-tooltip="Remind me"
                   ref={reminderBtnRef}
                 />
                 <Button
                   tabIndex="0"
                   className="person-add-icon btn-hover"
-                  onMouseEnter={(e) => showTooltip(e, "Collaborator")}
-                  onMouseLeave={hideTooltip}
-                  onFocus={(e) => showTooltip(e, "Collaborator")}
-                  onBlur={hideTooltip}
+                  data-tooltip="Collaborator"
                   onClick={handleCollab}
                 />
                 <Button
@@ -715,20 +707,7 @@ const NoteTools = ({
                       noteRef: note?.ref,
                     });
                   }}
-                  onMouseEnter={(e) =>
-                    showTooltip(
-                      e,
-                      `${note?.isArchived ? "Unarchive" : "Archive"}`,
-                    )
-                  }
-                  onMouseLeave={hideTooltip}
-                  onFocus={(e) =>
-                    showTooltip(
-                      e,
-                      `${note?.isArchived ? "Unarchive" : "Archive"}`,
-                    )
-                  }
-                  onBlur={hideTooltip}
+                  data-tooltip={`${note?.isArchived ? "Unarchive" : "Archive"}`}
                 />
                 <Button
                   tabIndex="0"
@@ -736,10 +715,7 @@ const NoteTools = ({
                   onClick={() => {
                     inputRef.current.click();
                   }}
-                  onMouseEnter={(e) => showTooltip(e, "Add image")}
-                  onMouseLeave={hideTooltip}
-                  onFocus={(e) => showTooltip(e, "Add image")}
-                  onBlur={hideTooltip}
+                  data-tooltip="Add image"
                 >
                   <input
                     ref={inputRef}
@@ -754,10 +730,7 @@ const NoteTools = ({
                   tabIndex="0"
                   className="color-icon btn-hover"
                   onClick={toggleMenu}
-                  onMouseEnter={(e) => showTooltip(e, "Background options")}
-                  onMouseLeave={hideTooltip}
-                  onFocus={(e) => showTooltip(e, "Background options")}
-                  onBlur={hideTooltip}
+                  data-tooltip="Background options"
                 />
                 <AnimatePresence>
                   {colorMenuOpen && (
@@ -776,10 +749,7 @@ const NoteTools = ({
                   tabIndex="0"
                   className="more-icon btn-hover"
                   onClick={handleMoreClick}
-                  onMouseEnter={(e) => showTooltip(e, "More")}
-                  onMouseLeave={hideTooltip}
-                  onFocus={(e) => showTooltip(e, "More")}
-                  onBlur={hideTooltip}
+                  data-tooltip="More"
                 />
               </>
             ) : (
@@ -801,19 +771,13 @@ const NoteTools = ({
                       btnMsg: "Delete",
                     })
                   }
-                  onMouseEnter={(e) => showTooltip(e, "Delete forever")}
-                  onMouseLeave={hideTooltip}
-                  onFocus={(e) => showTooltip(e, "Delete forever")}
-                  onBlur={hideTooltip}
+                  data-tooltip="Delete forever"
                 />
                 <Button
                   tabIndex="0"
                   className="note-restore-icon"
                   onClick={handleRestoreNote}
-                  onMouseEnter={(e) => showTooltip(e, "Restore")}
-                  onMouseLeave={hideTooltip}
-                  onFocus={(e) => showTooltip(e, "Restore")}
-                  onBlur={hideTooltip}
+                  data-tooltip="Restore"
                 />
               </>
             )}

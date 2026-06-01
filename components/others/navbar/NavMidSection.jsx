@@ -10,8 +10,7 @@ import InputLeftArrow from "@/components/icons/InputLeftArrow";
 import { useLabelsContext } from "@/context/LabelsContext";
 
 const NavMidSection = () => {
-  const { showTooltip, hideTooltip, currentSection, labelsReady } =
-    useAppContext();
+  const { currentSection, labelsReady } = useAppContext();
   const {
     searchRef,
     labelSearchTerm,
@@ -177,10 +176,7 @@ const NavMidSection = () => {
                   inputClick();
                 }
               }}
-              onMouseEnter={(e) =>
-                showTooltip(e, isSearchPage ? "Back" : "Search")
-              }
-              onMouseLeave={hideTooltip}
+              data-tooltip={isSearchPage ? "Back" : "Search"}
               tabIndex="-1"
               className="nav-btn nav-search-icon"
             >

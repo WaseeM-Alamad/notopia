@@ -190,8 +190,7 @@ const KeybindsTable = ({ keybindsRef, isOpen, setIsOpen }) => {
           onClick={() => {
             setIsOpen(false);
           }}
-          onMouseEnter={(e) => showTooltip(e, "Close")}
-          onMouseLeave={hideTooltip}
+          data-tooltip="Close"
           className="clear-icon btn small-btn"
         />
         <div

@@ -42,7 +42,7 @@ const ColorSelectMenu = ({
   setIsOpen,
   anchorEl,
 }) => {
-  const { showTooltip, hideTooltip, isContextMenuOpenRef } = useAppContext();
+  const {  isContextMenuOpenRef } = useAppContext();
   const [hoveredItem, setHoveredItem] = useState(false);
   const menuRef = useRef(null);
 
@@ -143,14 +143,12 @@ const ColorSelectMenu = ({
                   handleColorClick(color);
                 }}
                 onMouseEnter={(e) => {
-                  showTooltip(e, color);
-
                   setHoveredItem(color);
                 }}
                 onMouseLeave={(e) => {
                   setHoveredItem(null);
-                  hideTooltip(e);
                 }}
+                data-tooltip={color}
                 disabled={!isOpen}
                 key={index}
                 className={`${colorClass} not-draggable menu-color-btn ${
@@ -210,14 +208,12 @@ const ColorSelectMenu = ({
                     handleBackground(name);
                   }}
                   onMouseEnter={(e) => {
-                    showTooltip(e, name === "DefaultBG" ? "Default" : name);
-
                     setHoveredItem(name);
                   }}
                   onMouseLeave={(e) => {
                     setHoveredItem(null);
-                    hideTooltip(e);
                   }}
+                  data-tooltip={name === "DefaultBG" ? "Default" : name}
                   className={`menu-bg-btn menu-bg-${name} ${itemClass}`}
                   key={name}
                   disabled={!isOpen}

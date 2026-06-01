@@ -9,7 +9,7 @@ const NoteReminder = ({
   setReminderAnchor,
   setLocalNote = null,
 }) => {
-  const { showTooltip, hideTooltip, setDialogInfoRef } = useAppContext();
+  const { setDialogInfoRef } = useAppContext();
   const reminder = note.reminder;
   const enabled = note?.reminder?.enabled;
   const repeat = note?.reminder?.rep?.toLowerCase();
@@ -95,8 +95,7 @@ const NoteReminder = ({
             e.stopPropagation();
             deleteReminder();
           }}
-          onMouseEnter={(e) => showTooltip(e, "Delete reminder")}
-          onMouseLeave={hideTooltip}
+          data-tooltip="Delete reminder"
           className="remove-label"
         />
 

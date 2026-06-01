@@ -105,8 +105,7 @@ const Snackbar = ({
             </button>
           )}
           <Button
-            onMouseEnter={(e) => showTooltip(e, "Dismiss")}
-            onMouseLeave={hideTooltip}
+            data-tooltip="Dismiss"
             onClick={() => {
               setSnackbarState((prev) => ({
                 ...prev,
