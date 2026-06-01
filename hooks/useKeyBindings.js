@@ -138,7 +138,7 @@ export function useKeyBindings({
               break;
             }
             case "Reminders": {
-              return false;
+              if (!note?.reminder || note?.isTrash) return false;
               break;
             }
             case "Archive": {
