@@ -207,12 +207,19 @@ const SideBtn = ({
     }, 100);
   };
 
-  const hideSideTooltip = () => {
+  const hideSideTooltip = (e) => {
     clearTimeout(tooltipTimeoutRef.current);
     setTooltipAnc(null);
     setTooltipOpen(false);
   };
 
+  const handlePointerDown = (e) => {
+    const type = e.pointerType;
+    if (type === "touch") return;
+    clearTimeout(tooltipTimeoutRef.current);
+    setTooltipAnc(null);
+    setTooltipOpen(false);
+  };
   return (
     <>
       <motion.div
@@ -251,7 +258,7 @@ const SideBtn = ({
           onClick={(e) => handleIconClick(e, hash)}
           onPointerEnter={showSideTooltip}
           onPointerLeave={hideSideTooltip}
-          onPointerDown={hideSideTooltip}
+          onPointerDown={handlePointerDown}
         >
           <Icon />
           <span className="side-btn-title">{name}</span>

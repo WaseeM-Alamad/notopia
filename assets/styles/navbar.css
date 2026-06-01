@@ -87,6 +87,7 @@ nav {
 
 .profile-image {
   display: block;
+  pointer-events: none;
   object-fit: cover;
   user-select: none;
   flex-shrink: 0;

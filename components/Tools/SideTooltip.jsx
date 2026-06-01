@@ -2,7 +2,9 @@ import { Popper } from "@mui/material";
 import { motion } from "framer-motion";
 import React from "react";
 
-const SideTooltip = ({ text, anchor, Xi = "16px", Xf = "19px" }) => {
+const SideTooltip = ({ text, anchor, Xi = 10 }) => {
+  const XiPx = Xi + "px";
+  const XfPx = Math.abs(Xi + 3) + "px";
   return (
     <Popper
       open={true}
@@ -20,15 +22,15 @@ const SideTooltip = ({ text, anchor, Xi = "16px", Xf = "19px" }) => {
     >
       <motion.div
         initial={{
-          transform: `translateY(-50%) translateX(${Xi}) scale(0.97)`,
+          transform: `translateY(-50%) translateX(${XiPx}) scale(0.97)`,
           opacity: 0,
         }}
         animate={{
-          transform: `translateY(-50%) translateX(${Xf}) scale(1)`,
+          transform: `translateY(-50%) translateX(${XfPx}) scale(1)`,
           opacity: 1,
         }}
         exit={{
-          transform: `translateY(-50%) translateX(${Xi}) scale(0.97)`,
+          transform: `translateY(-50%) translateX(${XiPx}) scale(0.97)`,
           opacity: 0,
         }}
         transition={{

@@ -115,7 +115,9 @@ const NavProfileSection = () => {
               setTooltipTop(rect.bottom);
             }, 400);
           }}
-          onPointerDown={() => {
+          onPointerDown={(e) => {
+            const type = e.pointerType;
+            if (type === "touch") return;
             clearTimeout(tooltipTimeoutRef.current);
             setTooltipTop(null);
           }}

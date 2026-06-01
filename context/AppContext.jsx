@@ -148,18 +148,10 @@ export function AppProvider({ children, initialUser }) {
       });
     };
 
-    const handleUp = (e) => {
-      requestAnimationFrame(() => {
-        closeToolTip();
-      });
-    };
-
     document.addEventListener("pointerdown", handleDown, true);
-    // document.addEventListener("pointerup", handleUp, true);
 
     return () => {
       document.removeEventListener("pointerdown", handleDown, true);
-      // document.removeEventListener("pointerup", handleUp, true);
     };
   }, []);
 

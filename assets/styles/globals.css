@@ -4723,11 +4723,11 @@ aside {
 
 
 .selected.side-icon {
-  background-color: #c2e8ff;
+  background-color: #c2e8ff !important;
 }
 
 .dark-mode .selected.side-icon {
-  background-color: #014c69;
+  background-color: #014c69 !important;
 }
 
 .side-icon-fill {
