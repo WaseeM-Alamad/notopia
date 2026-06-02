@@ -298,10 +298,11 @@ export function useNoteDragging({
   let currentScrollSpeed = 0;
   const SCROLL_EDGE = 120;
   const MAX_SCROLL_SPEED = 55;
-  const SCROLL_ACCELERATION = 1;
+  const SCROLL_ACCELERATION = 0.25;
+  const SCROLL_DECELERATION = 0.18;
 
   function smoothScroll() {
-    if (Math.abs(currentScrollSpeed) > 0.1) {
+    if (Math.abs(currentScrollSpeed) > 0.5) {
       window.scrollBy(0, currentScrollSpeed);
       scrollAnimationFrame = requestAnimationFrame(smoothScroll);
     } else {
@@ -327,22 +328,21 @@ export function useNoteDragging({
       targetSpeed = ((y - (vh - SCROLL_EDGE)) / SCROLL_EDGE) * MAX_SCROLL_SPEED;
     }
 
-    currentScrollSpeed +=
-      (targetSpeed - currentScrollSpeed) * SCROLL_ACCELERATION;
+    // use slower deceleration factor when easing back to 0
+    const factor =
+      targetSpeed === 0 ? SCROLL_DECELERATION : SCROLL_ACCELERATION;
+    currentScrollSpeed += (targetSpeed - currentScrollSpeed) * factor;
 
-    if (!scrollAnimationFrame) {
+    if (!scrollAnimationFrame && Math.abs(currentScrollSpeed) > 0.5) {
       scrollAnimationFrame = requestAnimationFrame(smoothScroll);
     }
 
     if (
-      Math.abs(t.clientY - lastPointerY) > 5 ||
-      Math.abs(t.clientX - lastPointerX) > 5
+      Math.abs(t.clientX - lastPointerX) > 5 ||
+      Math.abs(t.clientY - lastPointerY) > 5
     ) {
       const limit = 100;
-      const topLimit = limit;
-      const bottomLimit = window.innerHeight - limit;
-
-      if (t.clientY > topLimit && t.clientY < bottomLimit) {
+      if (t.clientY > limit && t.clientY < vh - limit) {
         lastPointerX = t.clientX;
         lastPointerY = t.clientY;
         pointerMovedRef.current = true;
