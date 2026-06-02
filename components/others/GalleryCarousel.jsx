@@ -95,6 +95,7 @@ const GalleryCarousel = ({
         <Button
           onClick={() => setIsOpen(false)}
           className="clear-icon-white btn-hover"
+          data-tooltip="Close"
         />
         <div
           style={{
@@ -113,6 +114,7 @@ const GalleryCarousel = ({
               handleImageDeletion(image.uuid, image.url);
             }}
             className="gallery-del-icon"
+            data-tooltip="Remove image"
           />
         )}
       </div>

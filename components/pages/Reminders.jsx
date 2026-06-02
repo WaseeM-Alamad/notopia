@@ -101,8 +101,10 @@ const FilteredNotes = memo(
               }}
               className="empty-page-box"
             >
-              <div className="empty-page-reminders" />
-              Notes with upcoming reminders appear here
+              <div className="empty-page-reminders empty-page-icon" />
+              <span className="empty-page-text">
+                Notes with upcoming reminders appear here
+              </span>
             </motion.div>
           )}
           {!notesReady && (

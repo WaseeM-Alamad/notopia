@@ -636,7 +636,11 @@ const NoteEditor = ({
           onClick={() => setIsOpen(false)}
         />
 
-        <button className="modal-mobile-btn" onClick={handlePinClick}>
+        <button
+          className="modal-mobile-btn"
+          data-tooltip={localIsPinned ? "Unpin" : "Pin"}
+          onClick={handlePinClick}
+        >
           <PinIcon
             rotation={localIsPinned ? "-45deg" : "-5deg"}
             isPinned={localIsPinned}
@@ -648,8 +652,9 @@ const NoteEditor = ({
             setIsOpen(false);
           }}
           className="modal-mobile-btn archive-icon"
+          data-tooltip={localNote?.isArchived? "Unarchive": "Archive"}
         />
-        <button className="modal-mobile-btn reminder-icon" />
+        <button className="modal-mobile-btn reminder-icon" data-tooltip="Reminder" />
       </div>
       <div
         onClick={inputsContainerClick}
@@ -668,6 +673,7 @@ const NoteEditor = ({
               onClick={handlePinClick}
               disabled={!isOpen}
               className="btn-hover"
+              data-tooltip={localIsPinned ? "Unpin" : "Pin"}
             >
               <PinIcon
                 isPinned={localIsPinned}

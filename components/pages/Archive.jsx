@@ -68,8 +68,8 @@ const Archive = memo(
                 }}
                 className="empty-page-box"
               >
-                <div className="empty-page-archive" />
-                Your archived notes appear here
+                <div className="empty-page-archive empty-page-icon" />
+                <span className="empty-page-text">Your archived notes appear here</span>
               </motion.div>
             )}
             {!notesReady && (

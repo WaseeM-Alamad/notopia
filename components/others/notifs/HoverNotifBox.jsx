@@ -225,6 +225,7 @@ const HoverNotifBox = ({
               width: "35px",
               height: "35px",
             }}
+            data-tooltip="Close"
           />
         </div>
 

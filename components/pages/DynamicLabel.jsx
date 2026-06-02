@@ -119,8 +119,8 @@ const DynamicLabel = ({
               }}
               className="empty-page-box"
             >
-              <div className="empty-page-dynamic-label" />
-              No notes with this label yet
+              <div className="empty-page-dynamic-label empty-page-icon" />
+              <span className="empty-page-text">No notes with this label yet</span>
             </motion.div>
           )}
           {!notesReady && (

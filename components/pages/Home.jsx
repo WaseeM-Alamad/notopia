@@ -134,8 +134,8 @@ const Home = memo(
                 }}
                 className="empty-page-box"
               >
-                <div className="empty-page-home" />
-                Notes you add appear here
+                <div className="empty-page-home empty-page-icon" />
+                <span className="empty-page-text">Notes you add appear here</span>
               </motion.div>
             )}
             {!notesReady && (
