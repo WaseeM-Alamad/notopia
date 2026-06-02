@@ -91,28 +91,28 @@ const Trash = memo(
             Notes in Trash are deleted after 7 days.
           </div>
           <div ref={containerRef} className="section-container">
-            {order.map((uuid, index) => {
-              const note = notes.get(uuid);
-              if (!visibleItems.has(note?.uuid)) return null;
-              if (note?.isTrash)
-                return (
-                  <NoteWrapper
-                    isGrid={isGrid}
-                    key={note?.uuid}
-                    note={note}
-                    selectedNotesRef={selectedNotesRef}
-                    noteActions={noteActions}
-                    dispatchNotes={dispatchNotes}
-                    index={index}
-                    setSelectedNotesIDs={setSelectedNotesIDs}
-                    handleSelectNote={handleSelectNote}
-                    handleNoteClick={handleNoteClick}
-                    gridNoteWidth={gridNoteWidth}
-                    GUTTER={GUTTER}
-                    calculateLayout={calculateLayout}
-                  />
-                );
-            })}
+              {order.map((uuid, index) => {
+                const note = notes.get(uuid);
+                if (!visibleItems.has(note?.uuid)) return null;
+                if (note?.isTrash)
+                  return (
+                    <NoteWrapper
+                      isGrid={isGrid}
+                      key={note?.uuid}
+                      note={note}
+                      selectedNotesRef={selectedNotesRef}
+                      noteActions={noteActions}
+                      dispatchNotes={dispatchNotes}
+                      index={index}
+                      setSelectedNotesIDs={setSelectedNotesIDs}
+                      handleSelectNote={handleSelectNote}
+                      handleNoteClick={handleNoteClick}
+                      gridNoteWidth={gridNoteWidth}
+                      GUTTER={GUTTER}
+                      calculateLayout={calculateLayout}
+                    />
+                  );
+              })}
           </div>
           <div style={{ display: notesExist && "none" }} className="empty-page">
             {notesReady && !notesExist && (
@@ -143,7 +143,7 @@ const Trash = memo(
                 }}
                 className="empty-page-box"
               >
-                <div className="empty-page-loading" />
+                <div className="empty-page-loading empty-page-icon" />
                 Loading notes...
               </motion.div>
             )}

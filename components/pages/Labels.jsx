@@ -250,7 +250,7 @@ const Labels = memo(
                 className="empty-page-box"
               >
                 <div className="empty-page-labels empty-page-icon" />
-                <span className="empty-page-text">Labels you add appear here</span>
+                <span >Labels you add appear here</span>
               </motion.div>
             )}
             {!labelsReady && (
@@ -265,7 +265,7 @@ const Labels = memo(
                 }}
                 className="empty-page-box"
               >
-                <div className="empty-page-loading" />
+                <div className="empty-page-loading empty-page-icon" />
                 Loading labels...
               </motion.div>
             )}

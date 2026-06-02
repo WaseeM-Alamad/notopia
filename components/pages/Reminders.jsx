@@ -119,8 +119,8 @@ const FilteredNotes = memo(
               }}
               className="empty-page-box"
             >
-              <div className="empty-page-loading" />
-              Loading notes...
+              <div className="empty-page-loading empty-page-icon empty-page-icon" />
+              <span className="empty-page-text">Loading notes...</span>
             </motion.div>
           )}
         </div>

@@ -3336,10 +3336,9 @@ img {
   position: relative;
   flex-direction: column;
   align-items: center;
-  margin: auto;
-  margin-top: 23vh;
-  padding-bottom: 3rem;
-  width: fit-content;
+  justify-content: center;
+  width: 99%;
+  height: calc(80dvh - 9rem);
   font-size: 1.8rem;
   white-space: nowrap;
   cursor: default;
@@ -3352,12 +3351,13 @@ img {
 }
 
 .empty-page-box {
-  position: absolute;
+  position: relative;
   pointer-events: none;
   display: flex;
   flex-direction: column;
   font-size: 1.4rem;
   align-items: center;
+  justify-content: center;
   text-align: center;
 }
 
@@ -3382,11 +3382,11 @@ img {
 }
 
 .empty-page-icon {
-  background-size: clamp(100px, 18vw, 120px) !important;
+  background-size: clamp(95px, 18vw, 120px) !important;
 }
 
 .empty-page-text {
-  font-size: clamp(1.2rem, 4vw, 1.4rem) !important;
+  font-size: clamp(1.1rem, 4vw, 1.4rem) !important;
 }
 
 .empty-page-dynamic-label {

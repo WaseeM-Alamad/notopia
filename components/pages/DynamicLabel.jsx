@@ -135,7 +135,7 @@ const DynamicLabel = ({
               }}
               className="empty-page-box"
             >
-              <div className="empty-page-loading" />
+              <div className="empty-page-loading empty-page-icon" />
               Loading notes...
             </motion.div>
           )}

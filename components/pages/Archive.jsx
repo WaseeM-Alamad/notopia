@@ -32,28 +32,28 @@ const Archive = memo(
         <div ref={rootContainerRef} className={`starting-div `}>
           <SectionHeader title="Archive" iconClass="section-archive-icon" />
           <div ref={containerRef} className="section-container">
-              {order.map((uuid, index) => {
-                const note = notes.get(uuid);
-                if (!visibleItems.has(note?.uuid)) return null;
-                if (note?.isArchived && !note?.isTrash)
-                  return (
-                    <NoteWrapper
-                      key={note?.uuid}
-                      note={note}
-                      isGrid={isGrid}
-                      selectedNotesRef={selectedNotesRef}
-                      dispatchNotes={dispatchNotes}
-                      index={index}
-                      handleNoteClick={handleNoteClick}
-                      handleSelectNote={handleSelectNote}
-                      noteActions={noteActions}
-                      setSelectedNotesIDs={setSelectedNotesIDs}
-                      gridNoteWidth={gridNoteWidth}
-                      GUTTER={GUTTER}
-                      calculateLayout={calculateLayout}
-                    />
-                  );
-              })}
+            {order.map((uuid, index) => {
+              const note = notes.get(uuid);
+              if (!visibleItems.has(note?.uuid)) return null;
+              if (note?.isArchived && !note?.isTrash)
+                return (
+                  <NoteWrapper
+                    key={note?.uuid}
+                    note={note}
+                    isGrid={isGrid}
+                    selectedNotesRef={selectedNotesRef}
+                    dispatchNotes={dispatchNotes}
+                    index={index}
+                    handleNoteClick={handleNoteClick}
+                    handleSelectNote={handleSelectNote}
+                    noteActions={noteActions}
+                    setSelectedNotesIDs={setSelectedNotesIDs}
+                    gridNoteWidth={gridNoteWidth}
+                    GUTTER={GUTTER}
+                    calculateLayout={calculateLayout}
+                  />
+                );
+            })}
           </div>
           <div style={{ display: notesExist && "none" }} className="empty-page">
             {notesReady && !notesExist && (
@@ -69,7 +69,9 @@ const Archive = memo(
                 className="empty-page-box"
               >
                 <div className="empty-page-archive empty-page-icon" />
-                <span className="empty-page-text">Your archived notes appear here</span>
+                <span className="empty-page-text">
+                  Your archived notes appear here
+                </span>
               </motion.div>
             )}
             {!notesReady && (
@@ -84,7 +86,7 @@ const Archive = memo(
                 }}
                 className="empty-page-box"
               >
-                <div className="empty-page-loading" />
+                <div className="empty-page-loading empty-page-icon" />
                 Loading notes...
               </motion.div>
             )}
