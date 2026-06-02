@@ -10,13 +10,8 @@ import Menu from "./Menu";
 import { useGlobalContext } from "@/context/GlobalContext";
 
 const AccountDialog = ({ isOpen, setIsOpen }) => {
-  const {
-    showTooltip,
-    hideTooltip,
-    ignoreKeysRef,
-    user,
-    setUser,
-  } = useAppContext();
+  const { showTooltip, hideTooltip, ignoreKeysRef, user, setUser } =
+    useAppContext();
   const [isMounted, setIsMounted] = useState(false);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   const { isExpanded, lockScroll } = useGlobalContext();
@@ -170,14 +165,20 @@ const AccountDialog = ({ isOpen, setIsOpen }) => {
         }}
         className="acc-settings-container"
       >
-        <div
-          onClick={() => {
-            setIsOpen(false);
-          }}
-          data-tooltip="Close"
-          className="clear-icon btn small-btn"
-        />
         <div className="settings-left-panel">
+          <div
+            onClick={() => {
+              setIsOpen(false);
+            }}
+            data-tooltip="Close"
+            className="clear-icon small-btn mobile-element btn"
+            style={{
+              width: "35px",
+              height: "35px",
+              top: "50%",
+              transform: "translateY(-50%)",
+            }}
+          />
           <div className="account-left-section-header">Settings</div>
           <div className="settings-section-container">
             {isExpanded.threshold === "before" && (
@@ -277,7 +278,7 @@ const AccountDialog = ({ isOpen, setIsOpen }) => {
         )}
       </AnimatePresence>
     </>,
-    document.getElementById("modal-portal")
+    document.getElementById("modal-portal"),
   );
 };
 

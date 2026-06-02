@@ -526,6 +526,13 @@ const ModalTools = ({
       icon: "add-checkbox-menu-icon",
     },
     {
+      title: "Collaborator",
+      function: () => {
+        openCollab();
+      },
+      icon: "collab-menu-icon",
+    },
+    {
       title: "Make a copy",
       function: handleMakeCopy,
       icon: "copy-menu-icon",
