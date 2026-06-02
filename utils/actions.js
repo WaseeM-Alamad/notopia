@@ -862,8 +862,16 @@ export const NoteUpdateAction = async (data) => {
       await user.save();
     } else if (data.type === "isTrash") {
       const noteUUID = data.noteUUIDs[0];
-      const collabIDs =
-        data.note?.collaborators?.map((collab) => collab.id) || [];
+      const dbCollabs = await Note.findOne(
+        {
+          uuid: noteUUID,
+        },
+        {
+          "collaborators.id": 1,
+          _id: 0,
+        },
+      ).lean();
+      const collabIDs = dbCollabs?.collaborators.map((c) => c.id) || [];
       const user = await User.findById(userID);
       const { notesOrder } = user;
       const order = notesOrder.filter((uuid) => uuid !== data.noteUUIDs[0]);
