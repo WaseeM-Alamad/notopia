@@ -3340,7 +3340,6 @@ img {
   width: 99%;
   height: calc(80dvh - 9rem);
   font-size: 1.8rem;
-  white-space: nowrap;
   cursor: default;
   user-select: none;
   color: rgb(151, 151, 151);
@@ -3386,7 +3385,7 @@ img {
 }
 
 .empty-page-text {
-  font-size: clamp(1.1rem, 4vw, 1.4rem) !important;
+  font-size: clamp(1.1rem, 3.5vw, 1.4rem) !important;
 }
 
 .empty-page-dynamic-label {
