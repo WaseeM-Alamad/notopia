@@ -21,8 +21,14 @@ export function useNoteActions({
   labelObj,
   currentSection,
 }) {
-  const { user, clientID, openSnackRef, notesStateRef, enableNotifs } =
-    useAppContext();
+  const {
+    user,
+    clientID,
+    openSnackRef,
+    notesStateRef,
+    enableNotifs,
+    setDialogInfoRef,
+  } = useAppContext();
   const userID = user?.id;
   const { filters } = useSearch();
   const noteActions = useCallback(
@@ -183,36 +189,8 @@ export function useNoteActions({
         });
       } else if (data.type === "TRASH_NOTE") {
         const initialIndex = data.index;
-
-        const redo = async () => {
-          dispatchNotes({
-            type: "TRASH_NOTE",
-            note: data.note,
-          });
-        };
-
-        redo();
-
-        const undoTrash = async () => {
-          localDbReducer({
-            notes: notesStateRef.current.notes,
-            order: notesStateRef.current.order,
-            userID: userID,
-            type: "UNDO_TRASH",
-            note: data.note,
-            initialIndex: initialIndex,
-          });
-          dispatchNotes({
-            type: "UNDO_TRASH",
-            note: data.note,
-            initialIndex: initialIndex,
-          });
-          setVisibleItems((prev) => {
-            const updated = new Set(prev);
-            updated.add(data.note?.uuid);
-            return updated;
-          });
-        };
+        const hasCollabs = !!data.note?.collaborators.length;
+        const noteReminder = data.note?.reminder;
 
         const onClose = async () => {
           localDbReducer({
@@ -236,7 +214,7 @@ export function useNoteActions({
           );
         };
 
-        if (!data.note?.isTrash) {
+        const showSnack = () => {
           openSnackRef.current({
             snackMessage: `${
               data.note?.isPinned ? "Note unpinned and trashed" : "Note trashed"
@@ -246,6 +224,67 @@ export function useNoteActions({
             snackRedo: redo,
             unloadWarn: true,
           });
+        };
+
+        const redo = async () => {
+          dispatchNotes({
+            type: "TRASH_NOTE",
+            note: data.note,
+          });
+          if (hasCollabs) {
+            onClose();
+          }
+        };
+
+        if (hasCollabs) {
+          setDialogInfoRef.current({
+            func: redo,
+            title: "Move to trash?",
+            message:
+              "Trashed note won't be visible to anyone that you shared the note with.",
+            btnMsg: "Move to trash",
+          });
+
+          return;
+        }
+
+        if (noteReminder) {
+          setDialogInfoRef.current({
+            func: () => {
+              redo();
+              showSnack();
+            },
+            title: "Move to trash?",
+            message: "The reminder on this note will be deleted.",
+            btnMsg: "Move to trash",
+          });
+        } else {
+          redo();
+        }
+
+        const undoTrash = async () => {
+          localDbReducer({
+            notes: notesStateRef.current.notes,
+            order: notesStateRef.current.order,
+            userID: userID,
+            type: "UNDO_TRASH",
+            note: data.note,
+            initialIndex: initialIndex,
+          });
+          dispatchNotes({
+            type: "UNDO_TRASH",
+            note: data.note,
+            initialIndex: initialIndex,
+          });
+          setVisibleItems((prev) => {
+            const updated = new Set(prev);
+            updated.add(data.note?.uuid);
+            return updated;
+          });
+        };
+
+        if (!data.note?.isTrash && !hasCollabs && !noteReminder) {
+          showSnack();
         }
         data.setIsOpen(false);
       } else if (data.type === "DELETE_NOTE") {

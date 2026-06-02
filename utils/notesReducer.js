@@ -215,7 +215,7 @@ export function notesReducer(state, action) {
         const newNote = {
           ...updatedNotes.get(noteData.uuid),
           [action.property]: !action.val,
-          ...(action.property === "isTrash" ? { collaborators: [] } : {}),
+          ...(action.property === "isTrash" ? { collaborators: [], reminder: null } : {}),
           isPinned: false,
         };
         if (action.property === "isTrash") {
@@ -361,10 +361,14 @@ export function notesReducer(state, action) {
     }
 
     case "TRASH_NOTE": {
+      const note = state.notes.get(action.note?.uuid);
+      const val = !action.note?.isTrash;
       const newNote = {
-        ...state.notes.get(action.note?.uuid),
-        isTrash: !action.note?.isTrash,
+        ...note,
+        collaborators: [],
+        isTrash: val,
         isPinned: false,
+        reminder: null,
       };
       const updatedNotes = new Map(state.notes).set(action.note?.uuid, newNote);
       const updatedOrder = [...state.order].filter(
@@ -379,6 +383,8 @@ export function notesReducer(state, action) {
     case "UNDO_TRASH": {
       const newNote = {
         ...state.notes.get(action.note?.uuid),
+        collaborators: action.note?.collaborators,
+        reminder: action.note?.reminder,
         isTrash: action.note?.isTrash,
         isPinned: action.note?.isPinned,
       };

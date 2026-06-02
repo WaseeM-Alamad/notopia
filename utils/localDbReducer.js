@@ -162,7 +162,9 @@ const localDbReducer = (payload) => {
         if (noteData) {
           const newNote = {
             ...payload.notes.get(noteData.uuid),
+            reminder: null,
             [payload.property]: !payload.val,
+            ...(payload.property === "isTrash" ? { collaborators: [], reminder: null } : {}),
             isPinned: false,
           };
           newNotes.push(newNote);
@@ -285,10 +287,14 @@ const localDbReducer = (payload) => {
     }
 
     case "TRASH_NOTE": {
+      const note = payload.notes.get(payload.note?.uuid);
+      const val = !payload.note?.isTrash;
       const newNote = {
-        ...payload.notes.get(payload.note?.uuid),
-        isTrash: !payload.note?.isTrash,
+        ...note,
+        collaborators: [],
+        isTrash: val,
         isPinned: false,
+        reminder: null,
       };
       const updatedOrder = [...payload.order].filter(
         (uuid) => uuid !== payload.note?.uuid,
@@ -303,6 +309,8 @@ const localDbReducer = (payload) => {
     case "UNDO_TRASH": {
       const newNote = {
         ...payload.notes.get(payload.note?.uuid),
+        collaborators: payload.note?.collaborators,
+        reminder: payload.note?.reminder,
         isTrash: payload.note?.isTrash,
         isPinned: payload.note?.isPinned,
       };

@@ -861,24 +861,86 @@ export const NoteUpdateAction = async (data) => {
       user.notesOrder = updatedOrder;
       await user.save();
     } else if (data.type === "isTrash") {
-      await UserSettings.updateOne(
-        { note: data.noteUUIDs[0], user: userID },
-        {
-          $set: {
-            isTrash: data.value,
-            isPinned: false,
-            trashedAt: data.value ? new Date() : null,
-            lastModifiedBy: data.clientID,
-          },
-        },
-      );
+      const noteUUID = data.noteUUIDs[0];
+      const collabIDs =
+        data.note?.collaborators?.map((collab) => collab.id) || [];
       const user = await User.findById(userID);
       const { notesOrder } = user;
       const order = notesOrder.filter((uuid) => uuid !== data.noteUUIDs[0]);
       const updatedOrder = [data.noteUUIDs[0], ...order];
-      user.orderLastModifiedBy = data.clientID;
-      user.notesOrder = updatedOrder;
-      await user.save();
+
+      const userBulkOps = [
+        {
+          updateOne: {
+            filter: { _id: userID },
+            update: {
+              $set: {
+                notesOrder: updatedOrder,
+                orderLastModifiedBy: data.clientID,
+              },
+            },
+          },
+        },
+      ];
+
+      const settingsBulkOps = [
+        {
+          updateOne: {
+            filter: { note: noteUUID, user: userID },
+            update: {
+              $set: {
+                isTrash: data.value,
+                isPinned: false,
+                trashedAt: data.value ? new Date() : null,
+                reminder: null,
+                lastModifiedBy: data.clientID,
+              },
+            },
+          },
+        },
+      ];
+
+      const noteBulkOps = [
+        {
+          updateOne: {
+            filter: { uuid: noteUUID },
+            update: {
+              $set: {
+                lastModifiedBy: data.clientID,
+                collaborators: [],
+              },
+            },
+          },
+        },
+      ];
+
+      if (!!collabIDs.length) {
+        settingsBulkOps.push({
+          deleteMany: {
+            filter: {
+              note: noteUUID,
+              user: { $ne: userID },
+            },
+          },
+        });
+
+        userBulkOps.push({
+          updateMany: {
+            filter: { _id: { $in: collabIDs } },
+            update: {
+              $pull: { notesOrder: noteUUID },
+              $set: { orderLastModifiedBy: data.clientID },
+            },
+          },
+        });
+      }
+
+      const session = await startSession();
+      await session.withTransaction(async () => {
+        await Note.bulkWrite(noteBulkOps, { session });
+        await UserSettings.bulkWrite(settingsBulkOps, { session });
+        await User.bulkWrite(userBulkOps, { session });
+      });
     } else if (data.type === "checkboxes") {
       switch (data.operation) {
         case "ADD": {
@@ -1187,6 +1249,7 @@ export const batchUpdateAction = async (data) => {
                   isTrash: !data.val,
                   trashedAt: !data.val ? new Date() : null,
                   isPinned: false,
+                  reminder: null,
                   lastModifiedBy: data.clientID,
                 },
               },

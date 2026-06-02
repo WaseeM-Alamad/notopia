@@ -511,6 +511,7 @@ const TopMenuHome = ({
     const notesWithCollabs = [];
     const selectedUUIDs = [];
     const sharedNotesSet = new Set();
+    let hasReminders = false;
 
     selectedNotesIDs.forEach(({ uuid }) => {
       const note = notesStateRef.current.notes.get(uuid);
@@ -527,6 +528,9 @@ const TopMenuHome = ({
           notesWithCollabs.push({ uuid, isCreator: false });
           sharedNotesSet.add(uuid);
         }
+      }
+      if (note.reminder && !hasReminders) {
+        hasReminders = true;
       }
       selectedUUIDs.push(uuid);
     });
@@ -625,14 +629,17 @@ const TopMenuHome = ({
           ? `Note ${val ? "restored" : "trashed"}`
           : `${length} notes ${val ? "restored" : "trashed"}`;
 
-      openSnackRef.current({
-        snackMessage: snackMessage,
-        snackOnUndo: undo,
-        snackRedo: redo,
-      });
+      {
+        !notesWithCollabs.length &&
+          openSnackRef.current({
+            snackMessage: snackMessage,
+            snackOnUndo: undo,
+            snackRedo: redo,
+          });
+      }
 
       handleClose();
-    };
+    };[]
 
     if (notesWithCollabs.length > 0) {
       setMoreMenuOpen(false);
@@ -640,7 +647,21 @@ const TopMenuHome = ({
         func: execute,
         title: "Move to trash?",
         message:
-          "Once trashed, shared notes won't be visible to anyone that the note was shared with.",
+          length > 1
+            ? "Once trashed, shared notes won't be visible to anyone that the note was shared with."
+            : "Trashed note won't be visible to anyone that you shared the note with.",
+        btnMsg: "Move to trash",
+      });
+      return;
+    }
+
+    if (hasReminders) {
+      console.log(length > 0);
+      setMoreMenuOpen(false);
+      setDialogInfoRef.current({
+        func: execute,
+        title: "Move to trash?",
+        message: `The ${length > 1 ? "reminders" : "reminder"} on ${length > 1 ? "these notes" : "this note"} will be deleted.`,
         btnMsg: "Move to trash",
       });
       return;
