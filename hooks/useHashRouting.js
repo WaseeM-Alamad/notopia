@@ -22,7 +22,7 @@ export function useHashRouting({
   selectedNote,
   skipSetLabelObjRef,
 }) {
-  const { labelsReady, labelObjRef, openSnackRef, closeToolTip } =
+  const { labelsReady, labelObjRef, openSnackRef, closeToolTip, setDialogInfoRef } =
     useAppContext();
   const {
     setFilters,
@@ -125,13 +125,76 @@ export function useHashRouting({
 
     const index = notesStateRef.current.order.indexOf(noteUUID);
 
-    setSelectedNote(note);
-    setIsModalOpen(true);
-    setModalStyle({
-      index,
-      element: null,
-      initialNote: note,
-    });
+    const handleOpenNote = () => {
+      setSelectedNote(note);
+      setIsModalOpen(true);
+      setModalStyle({
+        index,
+        element: null,
+        initialNote: note,
+      });
+    };
+
+    const openNote = note?.openNote ?? true;
+
+    if (!openNote) {
+      setDialogInfoRef.current({
+        func: () => {
+          dispatchNotes({
+            type: "OPEN_NOTE",
+            noteUUID: note?.uuid,
+          });
+          localDbReducer({
+            notes: notesStateRef.current.notes,
+            order: notesStateRef.current.order,
+            userID: userID,
+            type: "OPEN_NOTE",
+            noteUUID: note?.uuid,
+          });
+          handleServerCall(
+            [() => openNoteAction(note?.uuid, clientID)],
+            openSnackRef.current,
+          );
+          handleOpenNote();
+        },
+        title: "This note has been shared with you",
+        message: (
+          <span>
+            The owner of this note is
+            <span style={{ fontWeight: "bold" }}>
+              {" " + note?.creator?.username || "Owner"}
+            </span>
+            . You should only open notes from someone you trust. How would you
+            like to proceed?
+          </span>
+        ),
+        btnMsg: "Open note",
+        cancelFunc: () => {
+          window.location.hash = ""
+          localDbReducer({
+            notes: notesStateRef.current.notes,
+            order: notesStateRef.current.order,
+            userID: userID,
+            type: "DELETE_NOTE",
+            note: note,
+          });
+          dispatchNotes({
+            type: "DELETE_NOTE",
+            note: note,
+          });
+          handleServerCall(
+            [() => removeSelfAction(note?.uuid, clientID)],
+            openSnackRef.current,
+          );
+        },
+        cancelBtnMsg: "Delete note",
+        showCloseBtn: true,
+        closeFunc: ()=> window.location.hash = ""
+      });
+      return;
+    }
+
+    handleOpenNote();
   };
 
   const handleSectionFromHash = (hash) => {

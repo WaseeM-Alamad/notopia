@@ -14,6 +14,7 @@ import localDbReducer from "@/utils/localDbReducer";
 import ColorDrawer from "./ColorDrawer";
 import MoreMenuDrawer from "./MoreMenuDrawer";
 import ReminderMenu from "./reminderMenus/ReminderMenu";
+import { useGlobalContext } from "@/context/GlobalContext";
 
 const ModalTools = ({
   localNote,
@@ -52,6 +53,7 @@ const ModalTools = ({
     openSnackRef,
     notesStateRef,
   } = useAppContext();
+  const { isExpanded } = useGlobalContext();
   const [colorMenuOpen, setColorMenuOpen] = useState(false);
   const [colorAnchorEl, setColorAnchorEl] = useState(null);
   const [anchorEl, setAnchorEl] = useState(false);
@@ -61,6 +63,8 @@ const ModalTools = ({
   const [colorDrawerOpen, setColorDrawerOpen] = useState(false);
   const userID = user?.id;
   const closeRef = useRef(null);
+
+  const isMobile = isExpanded.threshold === "before";
 
   const handleColorClick = useCallback(async (color) => {
     if (color === localNote?.color) return;
@@ -526,7 +530,7 @@ const ModalTools = ({
       icon: "add-checkbox-menu-icon",
     },
     {
-      title: "Collaborator",
+      title: isMobile ? "Collaborator" : "",
       function: () => {
         openCollab();
       },

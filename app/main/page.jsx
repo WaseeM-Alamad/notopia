@@ -234,37 +234,6 @@ const page = () => {
   }, [isModalOpen]);
 
   useEffect(() => {
-    if (!notesReady) return;
-    const hash = window.location.hash.replace("#", "");
-    if (hash.toLowerCase().startsWith("note")) {
-      const noteUUID = hash.slice(5);
-      const note = notesState.notes.get(noteUUID);
-      const index = notesStateRef.current.order.findIndex(
-        (uuid) => uuid === noteUUID,
-      );
-      if (note !== undefined) {
-        setSelectedNote(note);
-        setIsModalOpen(true);
-        setModalStyle({
-          index: index,
-          element: null,
-          initialNote: note,
-        });
-      } else {
-        setDialogInfo({
-          func: () => window.location.replace("#home"),
-          title: "Note not found",
-          message:
-            "This note may have been deleted or you may not have permission to view it.",
-          btnMsg: "Okay",
-          cancelFunc: () => window.location.replace("#home"),
-          closeFunc: () => window.location.replace("#home"),
-        });
-      }
-    }
-  }, [notesReady]);
-
-  useEffect(() => {
     if (searchTerm.trim() !== "" && currentSection !== "Search") {
       setCurrentSection("Search");
     }
