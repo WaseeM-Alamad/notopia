@@ -19,6 +19,12 @@ const CollabLayout = ({
   const [collaborators, setCollaborators] = useState(note?.collaborators || []);
   const [collabOpsMap, setCollabOpsMap] = useState(new Map());
   const [dialogUser, setDialogUser] = useState(null);
+  const isOwner = note?.creator?._id === user.id;
+  const ownerDisplayName = isOwner
+    ? user.displayName
+    : note?.creator?.displayName;
+  const ownerUsername = isOwner ? user.username : note?.creator?.username;
+  const ownerImage = isOwner ? user.image : note?.creator?.image;
 
   const isCreator = note?.creator?._id === user?.id;
 
@@ -50,9 +56,9 @@ const CollabLayout = ({
           </div>
           <div className="collab-users-container">
             <CollabUser
-              displayName={note?.creator?.displayName}
-              username={note?.creator?.username}
-              image={note?.creator?.image}
+              displayName={ownerDisplayName}
+              username={ownerUsername}
+              image={ownerImage}
               createdAt={note?.creator?.createdAt}
               isOwner={true}
               setDialogUser={setDialogUser}
