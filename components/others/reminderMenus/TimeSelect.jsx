@@ -7,6 +7,8 @@ import React, {
   useState,
 } from "react";
 import TimeInput from "./TimeInput";
+import { useGlobalContext } from "@/context/GlobalContext";
+import { display24as12 } from "@/utils/parseTime";
 
 const TimeSelect = ({
   options,
@@ -14,9 +16,11 @@ const TimeSelect = ({
   onChange,
   useSideTextforInput = false,
   inputRef,
-  setIsInputValid,
+  setIsInputValid = ()=> {},
   selectedDate,
 }) => {
+  const { isExpanded } = useGlobalContext();
+  const isMobile = isExpanded.threshold === "before";
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
   const setTimeRef = useRef(null);
@@ -74,7 +78,7 @@ const TimeSelect = ({
   }, [isOpen]);
 
   return (
-    <div className={isOpen ? "select-open" : ""} style={{ padding: "0 1rem" }}>
+    <div className={`select-input-wrapper ${isOpen ? "select-open" : ""}`}>
       <div
         ref={menuRef}
         style={{
@@ -82,22 +86,25 @@ const TimeSelect = ({
         }}
       >
         <div
-          // className="select-input"
+          className={isMobile ? "select-input" : undefined}
           onClick={() => setIsOpen((prev) => !prev)}
           style={{
             borderColor: selectedOption?.disabled ? "var(--error)" : "",
           }}
         >
-          {/* <input defaultValue={selectedLabel ?? ""} type="time" /> */}
-          <TimeInput
-            value={value}
-            onChange={onChange}
-            setTimeRef={setTimeRef}
-            selectedOption={selectedOption}
-            inputRef={inputRef}
-            setIsInputValid={setIsInputValid}
-            selectedDate={selectedDate}
-          />
+          {isMobile ? (
+            <span>{display24as12(value)}</span>
+          ) : (
+            <TimeInput
+              value={value}
+              onChange={onChange}
+              setTimeRef={setTimeRef}
+              selectedOption={selectedOption}
+              inputRef={inputRef}
+              setIsInputValid={setIsInputValid}
+              selectedDate={selectedDate}
+            />
+          )}
           <motion.div
             initial={{
               transform: `translateY(-50%) rotateX(${isOpen ? "180deg" : "0"})`,
@@ -168,7 +175,7 @@ const TimeSelect = ({
                     key={optionValue}
                     onClick={() => {
                       onChange(optionValue);
-                      if (optionValue !== "custom") {
+                      if (optionValue !== "custom" && !isMobile) {
                         setTimeRef.current(optionValue);
                       }
                       setIsOpen(false);

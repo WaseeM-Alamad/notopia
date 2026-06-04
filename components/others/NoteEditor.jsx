@@ -24,6 +24,7 @@ import TextLabelMenu from "./TextLabelMenu";
 import NoteLabels from "./NoteLabels";
 import NoteCollabs from "./NoteCollabs";
 import NoteReminder from "./note/NoteReminder";
+import ReminderDrawer from "./reminderMenus/ReminderDrawer";
 
 const NoteEditor = ({
   note,
@@ -64,6 +65,7 @@ const NoteEditor = ({
   const [labelAnchor, setLabelAnchor] = useState(null);
   const [labelSearch, setLabelSearch] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
+  const [reminderDrawerOpenn, setReminderDrawerOpen] = useState(false);
   const formattedEditedDate = isOpen
     ? getNoteFormattedDate(localNote?.updatedAt)
     : null;
@@ -652,9 +654,13 @@ const NoteEditor = ({
             setIsOpen(false);
           }}
           className="modal-mobile-btn archive-icon"
-          data-tooltip={localNote?.isArchived? "Unarchive": "Archive"}
+          data-tooltip={localNote?.isArchived ? "Unarchive" : "Archive"}
         />
-        <button className="modal-mobile-btn reminder-icon" data-tooltip="Reminder" />
+        <button
+          className="modal-mobile-btn reminder-icon"
+          data-tooltip="Reminder"
+          onClick={() => setReminderDrawerOpen(true)}
+        />
       </div>
       <div
         onClick={inputsContainerClick}
@@ -843,6 +849,16 @@ const NoteEditor = ({
           />
         )}
       </AnimatePresence>
+      <ReminderDrawer
+        open={reminderDrawerOpenn}
+        setOpen={setReminderDrawerOpen}
+        selectedColor={localNote?.color}
+        selectedBG={localNote?.background}
+        localNote={localNote}
+        setLocalNote={setLocalNote}
+        noteActions={noteActions}
+        
+      />
     </div>
   );
 };

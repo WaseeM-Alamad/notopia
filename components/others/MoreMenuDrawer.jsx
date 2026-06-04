@@ -95,7 +95,7 @@ const MoreMenuDrawer = ({
               className="drawer-body"
             >
               {updatedAt && (
-                <div className="menu-drawer-date">
+                <div className="menu-drawer-title">
                   {"Edited " + formattedEditedDate}{" "}
                 </div>
               )}

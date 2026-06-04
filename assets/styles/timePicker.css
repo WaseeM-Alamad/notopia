@@ -1,0 +1,145 @@
+.tp-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 2rem;
+}
+
+.tp-overlay > * {
+  box-sizing: border-box;
+}
+
+.tp-dialog {
+  position: fixed;
+  background: var(--bg2);
+  border-radius: 1.5rem;
+  width: 90%;
+  max-width: 328px;
+  z-index: 900;
+  padding: 24px;
+  box-sizing: border-box;
+  left: 50%;
+  top: 40%;
+  border: 0.5px solid var(--border);
+}
+
+.tp-dialog-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text2);
+  letter-spacing: 0.04em;
+  margin-bottom: 16px;
+}
+
+.tp-time-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-bottom: 20px;
+}
+
+.tp-time-segment {
+  display: flex;
+  justify-content: center;
+  font-size: 35px;
+  font-weight: 300;
+  padding: 9px 6px;
+  width: 70px;
+  box-sizing: border-box;
+  border-radius: 10px;
+  cursor: pointer;
+  line-height: 1;
+  transition: background 0.15s;
+}
+
+.tp-time-segment.active {
+  background: var(--primary);
+  color: white;
+}
+
+.tp-time-separator {
+  font-size: 52px;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.tp-period-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-left: 8px;
+}
+
+.tp-period-btn {
+  font-size: 15px;
+  font-weight: 500;
+  padding: 6px 10px;
+  border-radius: 8px;
+  color: var(--text);
+  background: transparent;
+  cursor: pointer;
+}
+
+.tp-period-btn.active {
+  background: var(--light-blue-active);
+  color: var(--primary);
+  border-color: transparent;
+  transition: all 0.2s ease;
+}
+
+.tp-mode-icon {
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+}
+
+.tp-clock-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.tp-clock {
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+.tp-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 3px;
+}
+
+.tp-btn-cancel,
+.tp-btn-ok {
+  border: none;
+  cursor: pointer;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.tp-btn-cancel {
+  background: transparent;
+  color: var(--primary);
+  padding: 10px 16px;
+}
+
+.tp-btn-ok {
+  background: var(--primary);
+  color: white;
+  padding: 10px 20px;
+}
+
+.tp-selected-time-out {
+  text-align: center;
+  font-size: 14px;
+  margin-top: 12px;
+  min-height: 20px;
+}

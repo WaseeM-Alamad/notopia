@@ -23,8 +23,8 @@ div {
 
 :root {
   --selection: #008cff;
-  --primary: #6375f1;
-  --primary-hover: #5b6fe6;
+  --primary: #4083ff;
+  --primary-hover: #3f7ef5;
   --linear-loader: #008cff;
   --linear-loader-bg: rgba(176, 214, 255, 0.75);
   --light-blue-hover: rgba(91, 156, 230, 0.074);
@@ -72,8 +72,8 @@ div {
 
 html.dark-mode {
   --selection: #1a75c0;
-  --primary: #4756ca;
-  --primary-hover: #5261d1;
+  --primary: #4076da;
+  --primary-hover: #376dd1;
   --linear-loader: #65adff; /* brighter blue */
   --linear-loader-bg: rgba(20, 36, 82, 0.45);
   --light-blue-hover: rgba(91, 156, 230, 0.074);
@@ -769,6 +769,49 @@ svg {
   z-index: 210;
 }
 
+.pick-time-modal {
+  width: 100%;
+  max-width: fit-content;
+  box-sizing: border-box;
+  /* line-height: 1.1rem; */
+  position: fixed;
+  padding: 1.2rem 1.4rem;
+  transform-origin: center center;
+  box-shadow: 1px 1px 20px 0 var(--shadow);
+  background-color: var(--bg2);
+  border-radius: 1rem;
+  border: solid 1px var(--border);
+  left: 50%;
+  top: 40%;
+  z-index: 210;
+}
+
+.pick-time-modal .action-title {
+  text-align: left;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.pick-time-modal .select-input {
+  padding: 0.6rem 0.1rem;
+  padding-right: 1.9rem;
+  font-size: 0.9rem;
+}
+
+.pick-time-modal .select-input-wrapper {
+  padding: 0 !important;
+}
+
+.pick-time-modal .action-btns-container {
+  display: flex;
+  gap: 0;
+}
+
+.pick-time-modal .menu-btn {
+  padding: 0.6rem 0.6rem !important;
+  font-size: 0.9rem !important;
+}
+
 .action-btns-container {
   text-align: center;
   gap: 0.8rem;
@@ -1429,6 +1472,11 @@ svg {
   border-top-left-radius: 1.5rem;
   border-top-right-radius: 1.5rem;
   animation: slideUp 0.25s ease-out;
+}
+
+.dark-mode .drawer-content {
+  border-color: var(--c);
+  border-bottom: none !important;
 }
 
 .Default {
@@ -4819,7 +4867,11 @@ aside svg {
   border-top-left-radius: 1.5rem;
   border-top-right-radius: 1.5rem;
   padding-bottom: 12px;
-  transition: background-color 0.25s ease-in-out;
+  transition:
+    background-color 0.25s ease-in-out,
+    border 0.25s ease-in-out;
+  border: 1px solid;
+  border-color: transparent !important;
 }
 
 .drawer-handle {
@@ -5515,7 +5567,7 @@ aside svg {
   background-color: var(--btn-hover);
 }
 
-.menu-drawer-date {
+.menu-drawer-title {
   font-size: 15px;
   padding: 0.6rem 0 1.1rem 1.4rem;
 }
@@ -6353,6 +6405,14 @@ aside svg {
   background-image: url("data:image/svg+xml,%3Csvg width='14' height='14' viewBox='0 0 14 14' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 2.84375C7.36244 2.84375 7.65625 3.13756 7.65625 3.5V7.3623L10.6589 8.1134C11.0105 8.20129 11.2244 8.55739 11.1366 8.90894C11.0487 9.26048 10.6926 9.47437 10.3411 9.3866L7.17261 8.59448C6.68571 8.47276 6.34375 8.03509 6.34375 7.5332V3.5C6.34375 3.13756 6.63756 2.84375 7 2.84375Z' fill='%23E9E9E9'/%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M7 0C10.866 0 14 3.13401 14 7C14 10.866 10.866 14 7 14C3.13401 14 0 10.866 0 7C0 3.13401 3.13401 0 7 0ZM7 1.3125C3.85888 1.3125 1.3125 3.85888 1.3125 7C1.3125 10.1411 3.85888 12.6875 7 12.6875C10.1411 12.6875 12.6875 10.1411 12.6875 7C12.6875 3.85888 10.1411 1.3125 7 1.3125Z' fill='%23E9E9E9'/%3E%3C/svg%3E%0A");
 }
 
+.clock-menu-icon-2 {
+  background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M8 3.25C8.41421 3.25 8.75 3.58579 8.75 4V8.41406L12.1816 9.27246C12.5834 9.3729 12.8278 9.77987 12.7275 10.1816C12.6271 10.5834 12.2201 10.8278 11.8184 10.7275L8.19727 9.82227C7.64081 9.68315 7.25 9.18296 7.25 8.60938V4C7.25 3.58579 7.58579 3.25 8 3.25Z' fill='%23374151'/%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M8 0C12.4183 0 16 3.58172 16 8C16 12.4183 12.4183 16 8 16C3.58172 16 0 12.4183 0 8C0 3.58172 3.58172 0 8 0ZM8 1.5C4.41015 1.5 1.5 4.41015 1.5 8C1.5 11.5899 4.41015 14.5 8 14.5C11.5899 14.5 14.5 11.5899 14.5 8C14.5 4.41015 11.5899 1.5 8 1.5Z' fill='%23374151'/%3E%3C/svg%3E%0A");
+}
+
+.dark-mode .clock-menu-icon-2 {
+  background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M8 3.25C8.41421 3.25 8.75 3.58579 8.75 4V8.41406L12.1816 9.27246C12.5834 9.3729 12.8278 9.77987 12.7275 10.1816C12.6271 10.5834 12.2201 10.8278 11.8184 10.7275L8.19727 9.82227C7.64081 9.68315 7.25 9.18296 7.25 8.60938V4C7.25 3.58579 7.58579 3.25 8 3.25Z' fill='%23E9E9E9'/%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M8 0C12.4183 0 16 3.58172 16 8C16 12.4183 12.4183 16 8 16C3.58172 16 0 12.4183 0 8C0 3.58172 3.58172 0 8 0ZM8 1.5C4.41015 1.5 1.5 4.41015 1.5 8C1.5 11.5899 4.41015 14.5 8 14.5C11.5899 14.5 14.5 11.5899 14.5 8C14.5 4.41015 11.5899 1.5 8 1.5Z' fill='%23E9E9E9'/%3E%3C/svg%3E%0A");
+}
+
 .pick-time-container {
   display: flex;
   flex-direction: column;
@@ -6383,6 +6443,10 @@ aside svg {
 
 .select-open .select-input {
   border-color: var(--focus-border);
+}
+
+.select-input-wrapper {
+  padding: 0 1rem;
 }
 
 .select-menu {

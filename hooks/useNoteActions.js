@@ -639,6 +639,7 @@ export function useNoteActions({
           noteActions({
             type: "DELETE_REMINDER",
             note: data.note,
+            setLocalNote: setLocalNote
           });
         }
       } else if (data.type === "DELETE_REMINDER") {

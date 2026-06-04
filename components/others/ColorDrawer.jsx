@@ -108,7 +108,7 @@ const ColorDrawer = ({
           className={`drawer-content-wrapper ${selectedColor ? selectedColor : ""} ${selectedBG ? "drawer-bg-" + selectedBG : ""}`}
         >
           <div
-            className={`drawer-content ${selectedBG ? "drawer-bg-" + selectedBG : ""}`}
+            className={`drawer-content ${selectedColor ? selectedColor : ""} ${selectedBG ? "drawer-bg-" + selectedBG : ""}`}
           >
             <Drawer.Description />
             <Drawer.Title></Drawer.Title>

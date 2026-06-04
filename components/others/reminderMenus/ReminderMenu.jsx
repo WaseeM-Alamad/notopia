@@ -136,8 +136,15 @@ const ReminderMenu = ({
       }
     };
 
+    let previousWidth = window.innerWidth;
+
     const handleResize = () => {
-      setIsOpen(false);
+      const currentWidth = window.innerWidth;
+
+      if (currentWidth !== previousWidth) {
+        previousWidth = currentWidth;
+        setIsOpen(false);
+      }
     };
 
     const handleKeyDown = (e) => {

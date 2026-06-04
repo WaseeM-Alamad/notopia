@@ -62,7 +62,7 @@ const Select = ({ options, value, onChange, useSideTextforInput = false }) => {
   }, [isOpen]);
 
   return (
-    <div className={isOpen ? "select-open" : ""} style={{ padding: "0 1rem" }}>
+    <div className={`select-input-wrapper ${isOpen ? "select-open" : ""}`}>
       <div
         ref={menuRef}
         style={{
