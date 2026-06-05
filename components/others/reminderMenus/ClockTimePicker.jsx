@@ -39,6 +39,7 @@ export default function ClockTimePicker({
   isOpen,
   setIsOpen,
   setSelectedTime,
+  initialTime = {h: 12, m: 0}
 }) {
   const { isDarkModeRef } = useGlobalContext();
 
@@ -47,8 +48,8 @@ export default function ClockTimePicker({
   const draggingRef = useRef(false);
 
   const [mode, setMode] = useState("hour");
-  const [hour, setHour] = useState(12);
-  const [minute, setMinute] = useState(0);
+  const [hour, setHour] = useState(initialTime.h);
+  const [minute, setMinute] = useState(initialTime.m);
   const [period, setPeriod] = useState("AM");
 
   const angleRef = useRef(-Math.PI / 2);
@@ -262,7 +263,7 @@ export default function ClockTimePicker({
           damping: 50,
           mass: 1,
         }}
-        style={{ zIndex: "210" }}
+        style={{ zIndex: "410" }}
         onClick={() => {
           setIsOpen(false);
         }}

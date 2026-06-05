@@ -25,6 +25,7 @@ import NoteLabels from "./NoteLabels";
 import NoteCollabs from "./NoteCollabs";
 import NoteReminder from "./note/NoteReminder";
 import ReminderDrawer from "./reminderMenus/ReminderDrawer";
+import PickTimeModal from "./reminderMenus/PickTimeModal";
 
 const NoteEditor = ({
   note,
@@ -60,6 +61,7 @@ const NoteEditor = ({
   const userID = user?.id;
 
   const [reminderOpen, setReminderOpen] = useState(false);
+  const [pickTimeOpen, setPickTimeOpen] = useState(false);
   const [reminderAnchor, setReminderAnchor] = useState(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [labelAnchor, setLabelAnchor] = useState(null);
@@ -778,6 +780,7 @@ const NoteEditor = ({
                 noteActions={noteActions}
                 setReminderAnchor={setReminderAnchor}
                 setReminderOpen={setReminderOpen}
+                setPickTimeOpen={setPickTimeOpen}
               />
             )}
             {localNote?.labels.length !== 0 && (
@@ -849,6 +852,17 @@ const NoteEditor = ({
           />
         )}
       </AnimatePresence>
+      <AnimatePresence>
+        {pickTimeOpen && (
+          <PickTimeModal
+            isOpen={pickTimeOpen}
+            setIsOpen={setPickTimeOpen}
+            note={localNote}
+            setLocalNote={setLocalNote}
+            noteActions={noteActions}
+          />
+        )}
+      </AnimatePresence>
       <ReminderDrawer
         open={reminderDrawerOpenn}
         setOpen={setReminderDrawerOpen}
@@ -857,7 +871,6 @@ const NoteEditor = ({
         localNote={localNote}
         setLocalNote={setLocalNote}
         noteActions={noteActions}
-        
       />
     </div>
   );

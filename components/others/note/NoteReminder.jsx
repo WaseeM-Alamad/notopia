@@ -1,4 +1,5 @@
 import { useAppContext } from "@/context/AppContext";
+import { useGlobalContext } from "@/context/GlobalContext";
 import { format } from "date-fns";
 import React, { memo } from "react";
 
@@ -8,7 +9,10 @@ const NoteReminder = ({
   setReminderOpen,
   setReminderAnchor,
   setLocalNote = null,
+  setPickTimeOpen = () => {},
 }) => {
+  const { isExpanded } = useGlobalContext();
+  const isMobile = isExpanded.threshold === "before";
   const { setDialogInfoRef } = useAppContext();
   const reminder = note.reminder;
   const enabled = note?.reminder?.enabled;
@@ -57,6 +61,12 @@ const NoteReminder = ({
       <div
         onClick={(e) => {
           e.stopPropagation();
+
+          if (isMobile) {
+            setPickTimeOpen(true);
+            return;
+          }
+
           const rect = e.currentTarget.getBoundingClientRect();
 
           const pageX = rect.left + window.pageXOffset;

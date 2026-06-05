@@ -28,12 +28,6 @@ const ReminderDrawer = ({
     e.stopPropagation();
   }, []);
 
-  const handleResize = () => {
-    const width = window.innerWidth;
-    if (width < 605) return;
-    setOpen(false);
-  };
-
   useEffect(() => {
     const handler = () => {
       setIsOpen(false);
@@ -44,14 +38,15 @@ const ReminderDrawer = ({
   }, []);
 
   useEffect(() => {
+    if (!isMobile) {
+      setOpen(false);
+    }
+  }, [isMobile]);
+
+  useEffect(() => {
     if (open) {
       document.activeElement?.blur();
-      window.addEventListener("resize", handleResize);
-    } else {
-      window.removeEventListener("resize", handleResize);
     }
-
-    return () => window.removeEventListener("resize", handleResize);
   }, [open]);
 
   useEffect(() => {
@@ -199,7 +194,13 @@ const ReminderDrawer = ({
       </Drawer.Root>
       <AnimatePresence>
         {isPickTime && (
-          <PickTimeModal isOpen={isPickTime} setIsOpen={setIsPickTime} note={localNote} />
+          <PickTimeModal
+            isOpen={isPickTime}
+            setIsOpen={setIsPickTime}
+            note={localNote}
+            setLocalNote={setLocalNote}
+            noteActions={noteActions}
+          />
         )}
       </AnimatePresence>
     </>

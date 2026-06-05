@@ -1,3 +1,4 @@
+import { format } from "date-fns";
 import { AnimatePresence, motion } from "framer-motion";
 import React, {
   memo,
@@ -7,12 +8,31 @@ import React, {
   useState,
 } from "react";
 
-const Select = ({ options, value, onChange, useSideTextforInput = false }) => {
+const getFormattedDate = (date) => {
+  if (!date) return;
+
+  const d = new Date();
+  if (d.getFullYear() === new Date(date).getFullYear()) {
+    return format(new Date(date), `MMM d`);
+  }
+  return format(new Date(date), `MMM d, yyyy`);
+};
+
+const Select = ({
+  options,
+  value,
+  onChange,
+  useSideTextforInput = false,
+  isDate = false,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
 
   const selectedOption = options.find((option) => {
     const optionValue = typeof option === "object" ? option.value : option;
+    if (isDate && typeof optionValue !== "string") {
+      return new Date(optionValue).getTime() === new Date(value).getTime();
+    }
     return optionValue === value;
   });
 
@@ -76,7 +96,7 @@ const Select = ({ options, value, onChange, useSideTextforInput = false }) => {
             borderColor: selectedOption?.disabled ? "var(--error)" : "",
           }}
         >
-          <span>{selectedLabel}</span>
+          <span>{!isDate ? selectedLabel : getFormattedDate(value)}</span>
           <motion.div
             initial={{
               transform: `translateY(-50%) rotateX(${isOpen ? "180deg" : "0"})`,

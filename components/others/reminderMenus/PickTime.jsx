@@ -1,9 +1,8 @@
 import BackIcon from "@/components/icons/BackIcon";
 import InputLeftArrow from "@/components/icons/InputLeftArrow";
 import Button from "@/components/Tools/Button";
-import React, { memo, useEffect, useRef, useState } from "react";
+import React, { memo, useRef, useState } from "react";
 import Select from "../Select";
-import { useAppContext } from "@/context/AppContext";
 import DateSelect from "./DateSelect";
 import TimeSelect from "./TimeSelect";
 import { format } from "date-fns";
@@ -29,7 +28,6 @@ const PickTime = ({
     note?.reminder?.rep?.toLowerCase() !== "dnr" && noteReminder
       ? capitalizeFirstLetter(note?.reminder?.rep)
       : reps[0];
-  const { showTooltip, hideTooltip } = useAppContext();
   const [selectedRep, setSelectedRep] = useState(noteRep);
   const [selectedTime, setSelectedTime] = useState(
     noteReminder ? format(noteReminder, "HH:mm") : null,

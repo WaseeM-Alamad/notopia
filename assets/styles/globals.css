@@ -783,7 +783,7 @@ svg {
   border: solid 1px var(--border);
   left: 50%;
   top: 40%;
-  z-index: 210;
+  z-index: 313;
 }
 
 .pick-time-modal .action-title {
@@ -837,6 +837,10 @@ svg {
 }
 
 .action-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
   user-select: none;
   text-align: center;
   font-weight: 600;
@@ -5155,6 +5159,11 @@ aside svg {
 }
 
 @media (max-width: 605px) {
+  .note-modal-wrapper .label-wrapper {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.6rem;
+  }
+
   .note-list-items-wrapper {
     pointer-events: none;
   }
@@ -6718,7 +6727,28 @@ aside svg {
   pointer-events: none;
 }
 
+.del-reminder-btn {
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  width: fit-content;
+  padding: 0.5rem 0.8rem;
+  border-radius: 0.5rem;
+  user-select: none;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border 0.13s ease;
+}
+
 @media (hover: hover) {
+  .del-reminder-btn:hover {
+    background-color: rgba(247, 50, 50, 0.06);
+  }
+
+  .dark-mode .del-reminder-btn:hover {
+    background-color: rgba(230, 83, 83, 0.06);
+  }
+
   ::-webkit-scrollbar-thumb:hover {
     background: #bdc1c7;
   }

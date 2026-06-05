@@ -19,9 +19,9 @@
   background: var(--bg2);
   border-radius: 1.5rem;
   width: 90%;
-  max-width: 328px;
+  max-width: 308px;
   z-index: 900;
-  padding: 24px;
+  padding: 24px 20px;
   box-sizing: border-box;
   left: 50%;
   top: 40%;

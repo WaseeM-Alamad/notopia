@@ -7,13 +7,27 @@ import Select from "../Select";
 import TimeSelect from "./TimeSelect";
 import ClockTimePicker from "./ClockTimePicker";
 import { format } from "date-fns";
+import MobileDatePicker from "./MobileDatePicker";
 
 const reps = ["Does not repeat", "Daily", "Weekly", "Monthly", "Yearly"];
 
-const PickTimeModal = ({ isOpen, setIsOpen, note }) => {
-  const { isActionModalOpenRef } = useAppContext();
+function capitalizeFirstLetter(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+const PickTimeModal = ({
+  isOpen,
+  setIsOpen,
+  note,
+  setLocalNote,
+  noteActions,
+}) => {
+  const { isExpanded } = useGlobalContext();
+  const isMobile = isExpanded.threshold === "before";
+  const { isActionModalOpenRef, setDialogInfoRef } = useAppContext();
   const [isMounted, setIsMounted] = useState(false);
   const [timePickerOpen, setTimePickerOpen] = useState(false);
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
 
   const inputRef = useRef(null);
 
@@ -32,6 +46,14 @@ const PickTimeModal = ({ isOpen, setIsOpen, note }) => {
   );
   const [selectedDate, setSelectedDate] = useState(noteReminder ?? new Date());
 
+  const isInvalidDate = selectedDate < new Date();
+
+  useEffect(() => {
+    if (!isMobile) {
+      setIsOpen(false);
+    }
+  }, [isMobile]);
+
   useEffect(() => {
     if (!selectedTime) return;
 
@@ -42,10 +64,6 @@ const PickTimeModal = ({ isOpen, setIsOpen, note }) => {
       return newDate;
     });
   }, [selectedTime]);
-
-  useEffect(() => {
-    // console.log("selectedDate", selectedDate);
-  }, [selectedDate]);
 
   useEffect(() => {
     setIsMounted(true);
@@ -102,6 +120,42 @@ const PickTimeModal = ({ isOpen, setIsOpen, note }) => {
     { value: "custom", label: "Custom" },
   ];
 
+  const startOfDay = (date) => {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  };
+
+  const dateOptions = [
+    {
+      value: startOfDay(new Date()),
+      label: "Today",
+    },
+    {
+      value: startOfDay(new Date(Date.now() + 24 * 60 * 60 * 1000)),
+      label: "Tomorrow",
+    },
+    {
+      value: startOfDay(new Date(new Date().setDate(new Date().getDate() + 7))),
+      label: `Next ${new Date().toLocaleDateString("en-US", { weekday: "long" })}`,
+    },
+    { value: "custom", label: "Custom" },
+  ];
+
+  const deleteReminder = () => {
+    setDialogInfoRef.current({
+      func: () =>
+        noteActions({
+          type: "DELETE_REMINDER",
+          note: note,
+          setLocalNote,
+        }),
+      title: "Delete reminder?",
+      message: "You can add another reminder later.",
+      btnMsg: "Delete",
+    });
+  };
+
   if (!isMounted) return;
 
   return createPortal(
@@ -125,7 +179,7 @@ const PickTimeModal = ({ isOpen, setIsOpen, note }) => {
           damping: 50,
           mass: 1,
         }}
-        style={{ zIndex: "209" }}
+        style={{ zIndex: "312" }}
         onClick={() => {
           setIsOpen(false);
         }}
@@ -153,7 +207,21 @@ const PickTimeModal = ({ isOpen, setIsOpen, note }) => {
       >
         <div className="action-title">Pick date & time</div>
         <div style={{ display: "flex", flexDirection: "column", gap: ".5rem" }}>
-          <Select options={["hi", "hi2"]} value={"hi"} onChange={() => {}} />
+          <Select
+            options={dateOptions}
+            value={startOfDay(selectedDate)}
+            onChange={(date) => {
+              if (date === "custom") {
+                setDatePickerOpen(true);
+                return;
+              }
+              const newDate = new Date(date);
+              const [h, m] = selectedTime.split(":").map(Number);
+              newDate.setHours(h, m, 0, 0);
+              setSelectedDate(newDate);
+            }}
+            isDate={true}
+          />
           <TimeSelect
             options={time}
             value={selectedTime}
@@ -180,6 +248,7 @@ const PickTimeModal = ({ isOpen, setIsOpen, note }) => {
             value={selectedRep}
             onChange={setSelectedRep}
           />
+          <div className="del-reminder-btn" onClick={deleteReminder}>Delete reminder</div>
         </div>
         <div className="action-btns-container">
           <button
@@ -191,9 +260,30 @@ const PickTimeModal = ({ isOpen, setIsOpen, note }) => {
             Cancel
           </button>
           <button
+            disabled={isInvalidDate}
             className="action-modal-bottom-btn"
             onClick={() => {
               setIsOpen(false);
+
+              if (+noteReminder === +selectedDate && selectedRep === noteRep)
+                return;
+
+              const acceptedReps = reps.slice(1);
+              const rep = acceptedReps.includes(selectedRep)
+                ? selectedRep.toLowerCase()
+                : "DNR";
+
+              const reminder = {
+                date: selectedDate,
+                rep: rep,
+                enabled: true,
+              };
+              noteActions({
+                type: "SET_REMINDER",
+                note: note,
+                reminder,
+                setLocalNote,
+              });
             }}
           >
             Save
@@ -206,6 +296,28 @@ const PickTimeModal = ({ isOpen, setIsOpen, note }) => {
             isOpen={timePickerOpen}
             setIsOpen={setTimePickerOpen}
             setSelectedTime={setSelectedTime}
+            initialTime={((arr) => ({ h: arr[0], m: arr[1] }))(
+              selectedTime.split(":").map(Number),
+            )}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {datePickerOpen && (
+          <MobileDatePicker
+            onChange={(date) => {
+              if (!date) return;
+              if (selectedTime) {
+                const [h, m] = selectedTime.split(":").map(Number);
+                date.setHours(h, m, 0, 0);
+              } else {
+                date.setHours(0, 0, 0, 0);
+              }
+              setSelectedDate(date);
+            }}
+            initialDate={selectedDate}
+            isOpen={datePickerOpen}
+            setIsOpen={setDatePickerOpen}
           />
         )}
       </AnimatePresence>
