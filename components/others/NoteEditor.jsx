@@ -67,7 +67,7 @@ const NoteEditor = ({
   const [labelAnchor, setLabelAnchor] = useState(null);
   const [labelSearch, setLabelSearch] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
-  const [reminderDrawerOpenn, setReminderDrawerOpen] = useState(false);
+  const [reminderDrawerOpen, setReminderDrawerOpen] = useState(false);
   const formattedEditedDate = isOpen
     ? getNoteFormattedDate(localNote?.updatedAt)
     : null;
@@ -865,7 +865,7 @@ const NoteEditor = ({
         )}
       </AnimatePresence>
       <ReminderDrawer
-        open={reminderDrawerOpenn}
+        open={reminderDrawerOpen}
         setOpen={setReminderDrawerOpen}
         selectedColor={localNote?.color}
         selectedBG={localNote?.background}

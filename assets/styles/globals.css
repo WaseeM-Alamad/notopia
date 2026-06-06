@@ -154,6 +154,19 @@ body[data-scroll-locked] .floating-btn {
   margin-right: var(--removed-body-scroll-bar-size, 0px);
 }
 
+body[data-prevent-scroll] {
+  overflow: hidden;
+  margin-right: var(--removed-body-scroll-bar-size, 0px);
+}
+
+body[data-prevent-scroll] .top-menu {
+  padding-right: var(--removed-body-scroll-bar-size, 0px);
+}
+
+body[data-prevent-scroll] .floating-btn {
+  margin-right: var(--removed-body-scroll-bar-size, 0px);
+}
+
 button:disabled {
   pointer-events: none;
   opacity: 0.35 !important;

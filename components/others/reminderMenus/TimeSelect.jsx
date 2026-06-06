@@ -31,6 +31,7 @@ const TimeSelect = ({
   });
 
   const isInvalidTime = (time) => {
+    if (!time) return;
     const [h, m] = time.split(":").map(Number);
     const timeDate = new Date();
 

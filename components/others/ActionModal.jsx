@@ -16,7 +16,7 @@ const ActionModal = ({
   btnMsg,
   cancelBtnMsg = "Cancel",
 }) => {
-  const { hideTooltip, showTooltip, isActionModalOpenRef } = useAppContext();
+  const { isActionModalOpenRef } = useAppContext();
   const { lockScroll } = useGlobalContext();
   const [isMounted, setIsMounted] = useState(false);
 

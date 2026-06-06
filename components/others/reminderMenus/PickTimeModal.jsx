@@ -50,6 +50,14 @@ const PickTimeModal = ({
   const isInvalidDate = selectedDate < new Date();
 
   useEffect(() => {
+    if (isOpen) {
+      document.body.setAttribute("data-prevent-scroll", 1);
+    }
+
+    return () => document.body.removeAttribute("data-prevent-scroll");
+  }, [isOpen]);
+
+  useEffect(() => {
     if (!isMobile) {
       setIsOpen(false);
     }

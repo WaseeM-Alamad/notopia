@@ -19,6 +19,10 @@ import ColorDrawer from "../ColorDrawer";
 import Menu from "../Menu";
 import MoreMenuDrawer from "../MoreMenuDrawer";
 import { useLayout } from "@/context/LayoutContext";
+import ReminderMenu from "../reminderMenus/ReminderMenu";
+import ReminderDrawer from "../reminderMenus/ReminderDrawer";
+import { useGlobalContext } from "@/context/GlobalContext";
+import PickTimeModal from "../reminderMenus/PickTimeModal";
 
 const TopMenuHome = ({
   notes,
@@ -31,17 +35,18 @@ const TopMenuHome = ({
   rootContainerRef,
   functionRefs,
   currentSection,
+  noteActions,
 }) => {
   const {
     user,
     clientID,
-    showTooltip,
-    hideTooltip,
     openSnackRef,
     setDialogInfoRef,
     notesStateRef,
     setLoadingImages,
   } = useAppContext();
+  const { isExpanded, getScrollbarWidth } = useGlobalContext();
+  const isMobile = isExpanded.threshold === "before";
   const { filters } = useSearch();
   const { calculateLayoutRef } = useLayout();
   const userID = user?.id;
@@ -58,9 +63,15 @@ const TopMenuHome = ({
   const [pinNotes, setPinNotes] = useState(false);
   const [archiveNotes, setArchiveNotes] = useState(false);
   const [selectedColor, setSelectedColor] = useState();
+  const [reminderOpen, setReminderOpen] = useState(false);
+  const [reminderAnchor, setReminderAnchor] = useState(null);
+  const [reminderDrawerOpen, setReminderDrawerOpen] = useState(false);
+  const [pickTimeOpen, setPickTimeOpen] = useState(false);
   const topMenuRef = useRef(null);
   const selectedNotesRef = useRef(null);
   const initialColorRef = useRef(null);
+
+  const firstNote = notes.get(selectedNotesIDs[0]?.uuid);
 
   const hasLabels = () => {
     const labelsExist = selectedNotesIDs.some((noteData) => {
@@ -639,7 +650,8 @@ const TopMenuHome = ({
       }
 
       handleClose();
-    };[]
+    };
+    [];
 
     if (notesWithCollabs.length > 0) {
       setMoreMenuOpen(false);
@@ -656,7 +668,6 @@ const TopMenuHome = ({
     }
 
     if (hasReminders) {
-      console.log(length > 0);
       setMoreMenuOpen(false);
       setDialogInfoRef.current({
         func: execute,
@@ -868,6 +879,42 @@ const TopMenuHome = ({
     });
   };
 
+  const handleReminderClick = (e) => {
+    if (isMobile) {
+      getScrollbarWidth();
+      requestAnimationFrame(() => {
+        if (firstNote?.reminder) {
+          setPickTimeOpen(true);
+        } else {
+          setReminderDrawerOpen(true);
+        }
+      });
+      return;
+    }
+
+    const rect = e.currentTarget.getBoundingClientRect();
+
+    const pageX = rect.left + window.pageXOffset;
+    const pageY = rect.top + window.pageYOffset;
+
+    const virtualAnchor = {
+      getBoundingClientRect: () =>
+        new DOMRect(
+          pageX - window.pageXOffset,
+          pageY - window.pageYOffset,
+          rect.width,
+          rect.height,
+        ),
+      contextElement: document.body,
+    };
+
+    setReminderAnchor({
+      ...virtualAnchor,
+      btnRef: e.currentTarget,
+    });
+    setReminderOpen((prev) => !prev);
+  };
+
   const handleLabels = () => {
     setMoreMenuOpen(false);
     setLabelsOpen(true);
@@ -943,6 +990,7 @@ const TopMenuHome = ({
                     <Button
                       data-tooltip="Remind me"
                       className="top-reminder-icon top-btn"
+                      onClick={handleReminderClick}
                     />
                   )}
                   <Button
@@ -1050,6 +1098,35 @@ const TopMenuHome = ({
         menuItems={menuItems}
         hasTopPadding={true}
       />
+      <ReminderDrawer
+        open={reminderDrawerOpen}
+        setOpen={setReminderDrawerOpen}
+        selectedColor={firstNote?.color}
+        selectedBG={firstNote?.background}
+        localNote={firstNote}
+        noteActions={noteActions}
+      />
+      <AnimatePresence>
+        {reminderOpen && selectedNumber === 1 && (
+          <ReminderMenu
+            note={firstNote}
+            isOpen={reminderOpen && selectedNumber === 1}
+            setIsOpen={setReminderOpen}
+            anchorEl={reminderAnchor}
+            noteActions={noteActions}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {pickTimeOpen && (
+          <PickTimeModal
+            isOpen={pickTimeOpen}
+            setIsOpen={setPickTimeOpen}
+            note={firstNote}
+            noteActions={noteActions}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 };

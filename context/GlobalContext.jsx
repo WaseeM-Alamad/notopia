@@ -124,10 +124,21 @@ export const GlobalProvider = ({ children }) => {
     requestAnimationFrame(() => {
       if (isOpen) {
         // ignoreKeysRef.current = true;
-        document.body.setAttribute("data-scroll-locked", "1");
+        document.body.setAttribute(
+          "data-scroll-locked",
+          String(
+            (Number(document.body.getAttribute("data-scroll-locked")) || 0) + 1,
+          ),
+        );
       } else {
         // ignoreKeysRef.current = false;
-        document.body.removeAttribute("data-scroll-locked");
+        const count = (+document.body.dataset.scrollLocked || 0) - 1;
+
+        if (count <= 0) {
+          document.body.removeAttribute("data-scroll-locked");
+        } else {
+          document.body.dataset.scrollLocked = count;
+        }
       }
     });
   }, []);
@@ -139,6 +150,7 @@ export const GlobalProvider = ({ children }) => {
         setIsExpanded,
         isDarkModeRef,
         lockScroll,
+        getScrollbarWidth,
       }}
     >
       {children}

@@ -580,6 +580,7 @@ const page = () => {
           isDraggingRef={isDraggingRef}
           rootContainerRef={rootContainerRef}
           currentSection={currentSection}
+          noteActions={noteActions}
         />
         <div style={{ display: "flex" }}>
           <div className="sidebar-ghost" />
