@@ -16,7 +16,7 @@ const TimeSelect = ({
   onChange,
   useSideTextforInput = false,
   inputRef,
-  setIsInputValid = ()=> {},
+  setIsInputValid = () => {},
   selectedDate,
 }) => {
   const { isExpanded } = useGlobalContext();
@@ -29,6 +29,25 @@ const TimeSelect = ({
     const optionValue = typeof option === "object" ? option.value : option;
     return optionValue === value;
   });
+
+  const isInvalidTime = (time) => {
+    const [h, m] = time.split(":").map(Number);
+    const timeDate = new Date();
+
+    const date = new Date();
+    const date2 = new Date(selectedDate);
+    date.setHours(0, 0, 0, 0);
+    date2.setHours(0, 0, 0, 0);
+
+    const isDateInvalid = date2 <= date;
+
+    return (
+      h * 60 + m <= timeDate.getHours() * 60 + timeDate.getMinutes() &&
+      isDateInvalid
+    );
+  };
+
+  const invalidTime = selectedOption?.disabled || isInvalidTime(value);
 
   const selectedLabel =
     typeof selectedOption === "object"
@@ -89,7 +108,7 @@ const TimeSelect = ({
           className={isMobile ? "select-input" : undefined}
           onClick={() => setIsOpen((prev) => !prev)}
           style={{
-            borderColor: selectedOption?.disabled ? "var(--error)" : "",
+            borderColor: invalidTime ? "var(--error)" : "",
           }}
         >
           {isMobile ? (
@@ -103,6 +122,7 @@ const TimeSelect = ({
               inputRef={inputRef}
               setIsInputValid={setIsInputValid}
               selectedDate={selectedDate}
+              invalidTime={invalidTime}
             />
           )}
           <motion.div
@@ -150,9 +170,7 @@ const TimeSelect = ({
               }}
               className="select-menu menu-border"
               style={{
-                borderTop: selectedOption?.disabled
-                  ? "solid 1px var(--error)"
-                  : "",
+                borderTop: invalidTime ? "solid 1px var(--error)" : "",
               }}
             >
               {options.map((option) => {

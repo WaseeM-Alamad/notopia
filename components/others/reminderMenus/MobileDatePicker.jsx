@@ -233,7 +233,7 @@ export default function MobileDatePicker({
           </button>
           {!showYearGrid && (
             <div className="dp-arrows">
-              <button className="dp-arrow-btn" onClick={prevMonth}>
+              <button data-tooltip="Previous month" className="dp-arrow-btn" onClick={prevMonth}>
                 <svg
                   width="18"
                   height="18"
@@ -247,7 +247,7 @@ export default function MobileDatePicker({
                   <polyline points="15 18 9 12 15 6" />
                 </svg>
               </button>
-              <button className="dp-arrow-btn" onClick={nextMonth}>
+              <button data-tooltip="Next month" className="dp-arrow-btn" onClick={nextMonth}>
                 <svg
                   width="18"
                   height="18"

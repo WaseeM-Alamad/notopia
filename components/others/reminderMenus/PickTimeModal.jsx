@@ -8,6 +8,7 @@ import TimeSelect from "./TimeSelect";
 import ClockTimePicker from "./ClockTimePicker";
 import { format } from "date-fns";
 import MobileDatePicker from "./MobileDatePicker";
+import Button from "@/components/Tools/Button";
 
 const reps = ["Does not repeat", "Daily", "Weekly", "Monthly", "Yearly"];
 
@@ -144,12 +145,14 @@ const PickTimeModal = ({
 
   const deleteReminder = () => {
     setDialogInfoRef.current({
-      func: () =>
+      func: () => {
         noteActions({
           type: "DELETE_REMINDER",
           note: note,
           setLocalNote,
-        }),
+        });
+        setIsOpen(false);
+      },
       title: "Delete reminder?",
       message: "You can add another reminder later.",
       btnMsg: "Delete",
@@ -179,7 +182,7 @@ const PickTimeModal = ({
           damping: 50,
           mass: 1,
         }}
-        style={{ zIndex: "312" }}
+        style={{ zIndex: "209" }}
         onClick={() => {
           setIsOpen(false);
         }}
@@ -205,7 +208,51 @@ const PickTimeModal = ({
           mass: 1.05,
         }}
       >
-        <div className="action-title">Pick date & time</div>
+        <div
+          className="action-title"
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <span>Pick date & time</span>
+          {noteReminder && (
+            <Button
+              data-tooltip="Delete reminder"
+              style={{
+                width: "35px",
+                height: "35px",
+                position: "absolute",
+                right: "0",
+              }}
+              onClick={deleteReminder}
+            >
+              <svg
+                width="14"
+                height="16"
+                viewBox="0 0 14 16"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M5.36667 4.49524C5.83924 4.49524 6.22222 4.87047 6.22222 5.33333V12.5714C6.22222 13.0343 5.83924 13.4095 5.36667 13.4095C4.89417 13.4095 4.51115 13.0343 4.51115 12.5714V5.33333C4.51115 4.87047 4.89417 4.49524 5.36667 4.49524Z"
+                  fill="var(--error)"
+                />
+                <path
+                  d="M9.33333 5.33333C9.33333 4.87047 8.95036 4.49524 8.47778 4.49524C8.00528 4.49524 7.62222 4.87047 7.62222 5.33333V12.5714C7.62222 13.0343 8.00528 13.4095 8.47778 13.4095C8.95036 13.4095 9.33333 13.0343 9.33333 12.5714V5.33333Z"
+                  fill="var(--error)"
+                />
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M2.77338 1.98347C2.80996 0.882118 3.75739 0 4.92077 0H9.07923C10.2426 0 11.19 0.882118 11.2266 1.98347H13.2376C13.6586 1.98347 14 2.30908 14 2.71074C14 3.10692 13.668 3.4291 13.2548 3.43784C13.293 3.53093 13.3116 3.63306 13.3059 3.73938L12.7567 14.0544C12.6986 15.1445 11.7552 16 10.6109 16H3.39085C2.24546 16 1.30146 15.1429 1.24496 14.0515L0.695396 3.43525C0.305713 3.40289 0 3.09087 0 2.71074C0 2.30908 0.341328 1.98347 0.762378 1.98347H2.77338ZM4.30084 1.98347C4.33531 1.68595 4.59972 1.45454 4.92077 1.45454H9.07923C9.4003 1.45454 9.66467 1.68595 9.6992 1.98347H4.30084ZM2.22215 3.43802H11.8341C11.8051 3.50892 11.7874 3.5854 11.7831 3.66558L11.2339 13.9806C11.217 14.2971 10.9432 14.5454 10.6109 14.5454H3.39085C3.05832 14.5454 2.78426 14.2966 2.76785 13.9797L2.22215 3.43802Z"
+                  fill="var(--error)"
+                />
+              </svg>
+            </Button>
+          )}
+        </div>
         <div style={{ display: "flex", flexDirection: "column", gap: ".5rem" }}>
           <Select
             options={dateOptions}
@@ -248,7 +295,6 @@ const PickTimeModal = ({
             value={selectedRep}
             onChange={setSelectedRep}
           />
-          <div className="del-reminder-btn" onClick={deleteReminder}>Delete reminder</div>
         </div>
         <div className="action-btns-container">
           <button

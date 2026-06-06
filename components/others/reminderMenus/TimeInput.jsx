@@ -51,6 +51,7 @@ export default function TimeInput({
   inputRef,
   setIsInputValid,
   selectedDate,
+  invalidTime
 }) {
   const [draft, setDraft] = useState(display24as12(value));
 
@@ -113,7 +114,7 @@ export default function TimeInput({
         style={{
           cursor: "pointer",
           backgroundColor: "transparent",
-          borderColor: selectedOption?.disabled ? "var(--error)" : "",
+          borderColor: invalidTime ? "var(--error)" : "",
         }}
         onBlur={() => commit()}
         onKeyDown={handleKeyDown}

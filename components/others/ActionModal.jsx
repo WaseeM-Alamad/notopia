@@ -71,7 +71,7 @@ const ActionModal = ({
           damping: 50,
           mass: 1,
         }}
-        style={{ zIndex: "209" }}
+        style={{ zIndex: "210" }}
         onClick={() => {
           closeFunc();
           setDialogInfo(null);

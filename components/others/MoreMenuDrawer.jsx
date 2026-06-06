@@ -81,10 +81,10 @@ const MoreMenuDrawer = ({
         <Drawer.Content
           onClick={handleContentClick}
           onMouseMove={handleContentClick}
-          className={`drawer-content-wrapper ${selectedColor ? selectedColor : ""} ${selectedBG ? "drawer-bg-" + selectedBG : ""}`}
+          className={`drawer-content-wrapper ${selectedColor ? selectedColor : "drawer-default-color"} ${selectedBG ? "drawer-bg-" + selectedBG : ""}`}
         >
           <div
-            className={`drawer-content ${selectedColor ? selectedColor : ""} ${selectedBG ? "drawer-bg-" + selectedBG : ""}`}
+            className={`drawer-content ${selectedColor ? selectedColor : "drawer-default-color"} ${selectedBG ? "drawer-bg-" + selectedBG : ""}`}
           >
             <Drawer.Description />
             <Drawer.Title></Drawer.Title>

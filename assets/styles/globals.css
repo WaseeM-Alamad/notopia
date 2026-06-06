@@ -752,7 +752,7 @@ svg {
 }
 
 .action-modal {
-  width: 100%;
+  width: 90%;
   max-width: 360px;
   box-sizing: border-box;
   /* line-height: 1.1rem; */
@@ -783,7 +783,7 @@ svg {
   border: solid 1px var(--border);
   left: 50%;
   top: 40%;
-  z-index: 313;
+  z-index: 210;
 }
 
 .pick-time-modal .action-title {
@@ -837,9 +837,7 @@ svg {
 }
 
 .action-title {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  position: relative;
   gap: 0.5rem;
   user-select: none;
   text-align: center;
@@ -1464,7 +1462,7 @@ svg {
 
 .drawer-content-wrapper {
   position: fixed;
-  z-index: 301;
+  z-index: 208;
   left: 0;
   bottom: 0;
   width: 100%;
@@ -4861,7 +4859,7 @@ aside svg {
 
 .drawer-overlay {
   position: fixed;
-  z-index: 300;
+  z-index: 207;
   inset: 0;
   background: rgba(0, 0, 0, 0.4);
 }
@@ -4876,6 +4874,10 @@ aside svg {
     border 0.25s ease-in-out;
   border: 1px solid;
   border-color: transparent !important;
+}
+
+.drawer-default-color {
+  background-color: var(--bg2) !important;
 }
 
 .drawer-handle {
@@ -4910,7 +4912,6 @@ aside svg {
   position: fixed;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.4);
-  z-index: 300;
 }
 
 .drawer-handle {
@@ -5067,6 +5068,8 @@ aside svg {
   background-repeat: no-repeat;
   margin-right: auto;
   opacity: 0.6;
+  width: 35px;
+  height: 35px;
 }
 
 .dark-mode .modal-back-icon {
@@ -5564,6 +5567,10 @@ aside svg {
 
 .dark-mode .drawer-bg-Celebration {
   background-color: #382d50;
+}
+
+.drawer-bg-Default {
+  background-color: var(--bg2);
 }
 
 .drawer-menu-btn {
@@ -6458,6 +6465,10 @@ aside svg {
   padding: 0 1rem;
 }
 
+.select-input-wrapper > * {
+  user-select: none;
+}
+
 .select-menu {
   display: flex;
   flex-direction: column;
@@ -6727,24 +6738,7 @@ aside svg {
   pointer-events: none;
 }
 
-.del-reminder-btn {
-  font-size: 0.85rem;
-  margin-top: 0.5rem;
-  width: fit-content;
-  padding: 0.5rem 0.8rem;
-  border-radius: 0.5rem;
-  user-select: none;
-  cursor: pointer;
-  transition:
-    background-color 0.2s ease,
-    border 0.13s ease;
-}
-
 @media (hover: hover) {
-  .del-reminder-btn:hover {
-    background-color: rgba(247, 50, 50, 0.06);
-  }
-
   .dark-mode .del-reminder-btn:hover {
     background-color: rgba(230, 83, 83, 0.06);
   }

@@ -636,6 +636,7 @@ const NoteEditor = ({
         className={`modal-top-section ${isScrolled.fromTop && localNote?.background === "DefaultBG" && localNote?.color === "Default" ? "distinct-section-mobile" : ""}`}
       >
         <Button
+          data-tooltip="Back"
           className="modal-back-icon btn-hover"
           onClick={() => setIsOpen(false)}
         />
