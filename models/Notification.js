@@ -12,7 +12,7 @@ const NotificationSchema = new mongoose.Schema(
     type: {
       type: String,
       required: true,
-      enum: ["reminder"],
+      enum: ["reminder", "share"],
     },
 
     data: {
@@ -28,6 +28,11 @@ const NotificationSchema = new mongoose.Schema(
     deleted: {
       type: Boolean,
       default: false,
+    },
+
+    lastModifiedBy: {
+      type: String,
+      default: null,
     },
 
     expiresAt: {

@@ -25,10 +25,9 @@ const ProfileMenu = ({
   hoverNotifBoxRef,
   setHoverNotifPos,
 }) => {
-  const { notifsMap } = useNotifs();
+  const { unreadNotifsNumber } = useNotifs();
   const { setInitialLoading } = useAppContext();
   const { isDarkModeRef } = useGlobalContext();
-  const notifsNumber = notifsMap.size;
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -37,10 +36,12 @@ const ProfileMenu = ({
 
   useEffect(() => {
     const handler = (e) => {
+      const isCloseBtn = e.target.classList.contains("notif-del");
       if (
         !menuRef.current.contains(e.target) &&
         !imageRef.current.contains(e.target) &&
-        !hoverNotifBoxRef?.current?.contains(e.target)
+        !hoverNotifBoxRef?.current?.contains(e.target) &&
+        !isCloseBtn
       ) {
         setIsOpen(false);
       }
@@ -100,7 +101,7 @@ const ProfileMenu = ({
             width: "fit-content",
           }}
         >
-          {notifsNumber > 0 && (
+          {unreadNotifsNumber > 0 && (
             <div
               className="notif-dot"
               style={{ position: "relative", left: "0" }}
@@ -144,7 +145,7 @@ const ProfileMenu = ({
           closed: {
             opacity: 0,
             scale: 0.97,
-            y: -17,
+            y: -10,
             transition: {
               duration: 0.15,
               ease: "easeInOut",

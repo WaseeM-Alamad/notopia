@@ -9,9 +9,7 @@ import { createPortal } from "react-dom";
 const ProfileTooltip = ({ tooltipTop }) => {
   const { user, notesStateRef } = useAppContext();
   const { labelsRef } = useLabelsContext();
-  const { notifsMap } = useNotifs();
-
-  const notifsNumber = notifsMap.size;
+  const { unreadNotifsNumber } = useNotifs();
 
   return createPortal(
     <motion.div
@@ -62,7 +60,7 @@ const ProfileTooltip = ({ tooltipTop }) => {
           <br />
           {labelsRef.current.size} Labels
           <br />
-          {notifsNumber > 0 && <span>{notifsNumber} Notifications</span>}
+          {unreadNotifsNumber > 0 && <span>{unreadNotifsNumber} Notifications</span>}
         </div>
       </div>
     </motion.div>,

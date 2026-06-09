@@ -8,6 +8,7 @@ const NotificationContext = createContext();
 
 export const NotificationProvider = ({ children }) => {
   const [notifsMap, setNotifsMap] = useState(new Map());
+  const unreadNotifsNumber = [...notifsMap.values()].filter((notif) => !notif.read).length;
 
   const fetchNotifs = async (setIsLoading = () => {}) => {
     const data = await fetchNotifsAction();
@@ -38,6 +39,7 @@ export const NotificationProvider = ({ children }) => {
         notifsMap,
         setNotifsMap,
         fetchNotifs,
+        unreadNotifsNumber
       }}
     >
       {children}

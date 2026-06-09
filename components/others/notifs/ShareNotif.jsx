@@ -7,7 +7,7 @@ import { formatNotificationDate } from "@/utils/notifDateFormatter";
 import React, { memo } from "react";
 import Skeleton from "react-loading-skeleton";
 
-const ReminderNotif = ({ notif, closeMenu }) => {
+const shareNotif = ({ notif, closeMenu }) => {
   const { notesStateRef, setDialogInfoRef, openSnackRef, clientID } =
     useAppContext();
   const { setNotifsMap } = useNotifs();
@@ -32,7 +32,6 @@ const ReminderNotif = ({ notif, closeMenu }) => {
         closeFunc: () => window.location.replace("#home"),
       });
     }
-
     if (!notif.read) {
       handleServerCall(
         [() => markNotifAsRead(notifId, clientID)],
@@ -59,8 +58,6 @@ const ReminderNotif = ({ notif, closeMenu }) => {
     });
   };
 
-  const title = notif.data?.title.trim() ? notif.data?.title : notif.data?.body;
-
   return (
     <div
       onClick={onClick}
@@ -71,7 +68,6 @@ const ReminderNotif = ({ notif, closeMenu }) => {
         className="reminder-notif-item"
       >
         {!isLoading && !notif.read && <div className="notif-dot" />}
-
         <div
           onClick={deleteNotif}
           className="clear-icon small-btn btn notif-del"
@@ -84,12 +80,14 @@ const ReminderNotif = ({ notif, closeMenu }) => {
         {isLoading ? (
           <Skeleton circle width={30} height={30} />
         ) : (
-          <BellIcon
-            size={23}
+          <img
             style={{
-              flexShrink: 0,
-              opacity: 0.9,
+              width: "34px",
+              height: "34px",
+              borderRadius: "50%",
+              border: "solid 1px var(--border)",
             }}
+            src={notif?.data?.image}
           />
         )}
 
@@ -116,7 +114,8 @@ const ReminderNotif = ({ notif, closeMenu }) => {
                 WebkitBoxOrient: "vertical",
               }}
             >
-              <span style={{ fontWeight: "600" }}>Reminder:</span> {title}
+              <span style={{ fontWeight: "600" }}>{notif?.data?.username}</span>{" "}
+              has shared a note with you!
             </span>
           )}
 
@@ -133,4 +132,4 @@ const ReminderNotif = ({ notif, closeMenu }) => {
   );
 };
 
-export default memo(ReminderNotif);
+export default memo(shareNotif);

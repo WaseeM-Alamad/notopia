@@ -12,8 +12,14 @@ export function useRealtimeUpdates({
   updateModalRef,
   setVisibleItems,
 }) {
-  const { user, clientID, notesStateRef, isOnline, showReminderNotif } =
-    useAppContext();
+  const {
+    user,
+    clientID,
+    notesStateRef,
+    isOnline,
+    showReminderNotif,
+    showShareNotif,
+  } = useAppContext();
 
   const { setNotifsMap } = useNotifs();
 
@@ -66,6 +72,29 @@ export function useRealtimeUpdates({
                   return newMap;
                 });
                 showReminderNotif({ ...doc?.data, notifId: doc._id });
+                break;
+              }
+              case "share": {
+                const noteUUID = doc?.data?.uuid;
+
+                setNotifsMap((prev) => {
+                  const newMap = new Map(prev);
+                  newMap.set(doc._id, doc);
+                  return newMap;
+                });
+
+                if (item.operationType === "insert") {
+                  const note = data.find(
+                    (i) => i.type === "note" && i.documentId === noteUUID,
+                  )?.fullDocument;
+                  requestAnimationFrame(() => {
+                    showShareNotif({
+                      ...doc?.data,
+                      notifId: doc._id,
+                      note,
+                    });
+                  });
+                }
                 break;
               }
             }

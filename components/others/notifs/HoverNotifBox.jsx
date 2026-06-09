@@ -6,6 +6,10 @@ import "react-loading-skeleton/dist/skeleton.css";
 import ReminderNotif from "./ReminderNotif";
 import Button from "@/components/Tools/Button";
 import { useGlobalContext } from "@/context/GlobalContext";
+import ShareNotif from "./ShareNotif";
+import handleServerCall from "@/utils/handleServerCall";
+import { markNotifAsRead } from "@/utils/actions";
+import { useAppContext } from "@/context/AppContext";
 
 const NoNotifs = () => {
   return (
@@ -68,8 +72,10 @@ const HoverNotifBox = ({
   closeMenu,
   isOpen,
 }) => {
+  const { openSnackRef, clientID } = useAppContext();
   const { lockScroll } = useGlobalContext();
-  const { notifsMap, fetchNotifs } = useNotifs();
+  const { notifsMap, setNotifsMap, fetchNotifs, unreadNotifsNumber } =
+    useNotifs();
   const [isLoading, setIsLoading] = useState(true);
 
   const isMobile = window.innerWidth <= 605;
@@ -121,24 +127,26 @@ const HoverNotifBox = ({
 
     const now = new Date();
 
-    notifications.forEach(([id, notif]) => {
-      const date = new Date(notif.createdAt);
+    [...notifications]
+      .sort(([, a], [, b]) => new Date(b.createdAt) - new Date(a.createdAt))
+      .forEach(([id, notif]) => {
+        const date = new Date(notif.createdAt);
 
-      const diffMin = (now - date) / 1000 / 60;
-      const diffDays = (now - date) / 1000 / 60 / 60 / 24;
+        const diffMin = (now - date) / 1000 / 60;
+        const diffDays = (now - date) / 1000 / 60 / 60 / 24;
 
-      if (notif.skeleton || diffMin <= 5) {
-        groups.now.push([id, notif]);
-      } else if (isToday(date)) {
-        groups.today.push([id, notif]);
-      } else if (isYesterday(date)) {
-        groups.yesterday.push([id, notif]);
-      } else if (diffDays <= 7) {
-        groups.last7.push([id, notif]);
-      } else {
-        groups.last30.push([id, notif]);
-      }
-    });
+        if (notif.skeleton || diffMin <= 5) {
+          groups.now.push([id, notif]);
+        } else if (isToday(date)) {
+          groups.today.push([id, notif]);
+        } else if (isYesterday(date)) {
+          groups.yesterday.push([id, notif]);
+        } else if (diffDays <= 7) {
+          groups.last7.push([id, notif]);
+        } else {
+          groups.last30.push([id, notif]);
+        }
+      });
 
     return groups;
   }, [notifications]);
@@ -167,6 +175,10 @@ const HoverNotifBox = ({
               return (
                 <ReminderNotif key={id} notif={notif} closeMenu={closeMenu} />
               );
+            case "share":
+              return (
+                <ShareNotif key={id} notif={notif} closeMenu={closeMenu} />
+              );
             default:
               return null;
           }
@@ -175,12 +187,41 @@ const HoverNotifBox = ({
     );
   };
 
+  const markAllAsRead = () => {
+    handleServerCall(
+      [() => markNotifAsRead("all", clientID)],
+      openSnackRef.current,
+    );
+    setNotifsMap((prev) => {
+      const newMap = new Map(prev);
+
+      for (const [key, notif] of newMap) {
+        newMap.set(key, {
+          ...notif,
+          read: true,
+        });
+      }
+
+      return newMap;
+    });
+  };
+
   return (
     <motion.div
       ref={hoverNotifBoxRef}
-      initial={{ x: isMobile ? 0 : -7, scale: 0.97, opacity: 0 }}
-      animate={{ x: 0, scale: 1, opacity: 1 }}
-      exit={{ x: isMobile ? 0 : -7, scale: 0.97, opacity: 0 }}
+      initial={{
+        x: isMobile ? 0 : -7,
+        scale: 0.97,
+        opacity: 0,
+        pointerEvents: "none",
+      }}
+      animate={{ x: 0, scale: 1, opacity: 1, pointerEvents: "all" }}
+      exit={{
+        x: isMobile ? 0 : -7,
+        scale: 0.97,
+        opacity: 0,
+        pointerEvents: "none",
+      }}
       transition={{
         type: "spring",
         stiffness: 500,
@@ -199,41 +240,42 @@ const HoverNotifBox = ({
         baseColor="var(--skeleton-base)"
         highlightColor="var(--skeleton-highlight)"
       >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            flex: "1",
-            fontWeight: "bold",
-            fontSize: "1.25rem",
-            padding: "1.5rem",
-            paddingBottom: "1rem",
-            boxSizing: 'border-box',
-            height: '75px'
-          }}
-        >
+        <div className="hover-notif-box-top">
           <span>Notifications</span>
-          <Button
-            onClick={closeMenu}
-            className="clear-icon small-btn mobile-element"
+          <div
             style={{
-              position: "relative",
-              margin: "0",
-              left: "0",
-              top: "0",
-              width: "35px",
-              height: "35px",
+              display: "flex",
+              gap: ".5rem",
+              alignItems: "center",
             }}
-            data-tooltip="Close"
-          />
+          >
+            <button
+              disabled={unreadNotifsNumber === 0}
+              className="mark-all-read"
+              onClick={markAllAsRead}
+            >
+              Mark all as read
+            </button>
+            <Button
+              onClick={closeMenu}
+              className="clear-icon small-btn mobile-element"
+              style={{
+                position: "relative",
+                margin: "0",
+                left: "0",
+                top: "0",
+                width: "35px",
+                height: "35px",
+              }}
+              data-tooltip="Close"
+            />
+          </div>
         </div>
 
         <div
+          className="hover-notif-box-items-wrapper"
           style={{
             overflowY: isLoading ? "unset" : "auto",
-            flex: "1",
-            height: "calc(100% - 75px)",
           }}
         >
           {!isLoading && notifsMap.size === 0 ? (

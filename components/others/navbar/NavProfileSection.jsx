@@ -11,7 +11,7 @@ import { useGlobalContext } from "@/context/GlobalContext";
 
 const NavProfileSection = () => {
   const { user, setBindsOpenRef } = useAppContext();
-  const { notifsMap } = useNotifs();
+  const { unreadNotifsNumber } = useNotifs();
   const { isExpanded } = useGlobalContext();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -34,8 +34,6 @@ const NavProfileSection = () => {
   const hoverNotifBoxRef = useRef(null);
 
   const image = user?.image;
-
-  const notifsNumber = notifsMap.size;
 
   const isMobile = isExpanded.threshold === "before";
 
@@ -80,7 +78,7 @@ const NavProfileSection = () => {
 
   const onMouseEnter = () => {
     clearTimeout(timeoutRef.current);
-    if (isMobile) return;
+    if (isMobile || hoverNotifPos) return;
     timeoutRef.current = setTimeout(() => {
       if (!menuRef.current) return;
       const rect = menuRef.current.getBoundingClientRect();
@@ -128,9 +126,12 @@ const NavProfileSection = () => {
             }, 150);
           }}
         >
-          {notifsNumber > 0 && (
-            <div className="notif-badge">
-              {notifsNumber > 100 ? "100+" : notifsNumber}
+          {unreadNotifsNumber > 0 && (
+            <div
+              className="notif-badge"
+              style={{ minWidth: unreadNotifsNumber > 9 && "18px" }}
+            >
+              {unreadNotifsNumber > 100 ? "100+" : unreadNotifsNumber}
             </div>
           )}
           <img

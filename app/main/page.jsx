@@ -151,21 +151,11 @@ const page = () => {
     if (!openNote) {
       setDialogInfo({
         func: () => {
-          dispatchNotes({
-            type: "OPEN_NOTE",
-            noteUUID: note?.uuid,
+          const event = new CustomEvent("openNote", {
+            detail: { uuid: note?.uuid },
           });
-          localDbReducer({
-            notes: notesStateRef.current.notes,
-            order: notesStateRef.current.order,
-            userID: userID,
-            type: "OPEN_NOTE",
-            noteUUID: note?.uuid,
-          });
-          handleServerCall(
-            [() => openNoteAction(note?.uuid, clientID)],
-            openSnackRef.current,
-          );
+          window.dispatchEvent(event);
+
           handleOpenNote();
         },
         title: "This note has been shared with you",
@@ -181,21 +171,10 @@ const page = () => {
         ),
         btnMsg: "Open note",
         cancelFunc: () => {
-          localDbReducer({
-            notes: notesStateRef.current.notes,
-            order: notesStateRef.current.order,
-            userID: userID,
-            type: "DELETE_NOTE",
-            note: note,
+          const event = new CustomEvent("deleteNote", {
+            detail: { uuid: note?.uuid },
           });
-          dispatchNotes({
-            type: "DELETE_NOTE",
-            note: note,
-          });
-          handleServerCall(
-            [() => removeSelfAction(note?.uuid, clientID)],
-            openSnackRef.current,
-          );
+          window.dispatchEvent(event);
         },
         cancelBtnMsg: "Delete note",
         showCloseBtn: true,
@@ -204,6 +183,57 @@ const page = () => {
     }
 
     handleOpenNote();
+  }, []);
+
+  useEffect(() => {
+    const handleOpen = (e) => {
+      const uuid = e.detail.uuid;
+      const note = notesStateRef.current.notes.get(uuid);
+      if (!note) return;
+      dispatchNotes({
+        type: "OPEN_NOTE",
+        noteUUID: note?.uuid,
+      });
+      localDbReducer({
+        notes: notesStateRef.current.notes,
+        order: notesStateRef.current.order,
+        userID: userID,
+        type: "OPEN_NOTE",
+        noteUUID: note?.uuid,
+      });
+      handleServerCall(
+        [() => openNoteAction(note?.uuid, clientID)],
+        openSnackRef.current,
+      );
+    };
+
+    const handleDelete = (e) => {
+      const uuid = e.detail.uuid;
+      const note = notesStateRef.current.notes.get(uuid);
+      if (!note) return;
+      localDbReducer({
+        notes: notesStateRef.current.notes,
+        order: notesStateRef.current.order,
+        userID: userID,
+        type: "DELETE_NOTE",
+        note: note,
+      });
+      dispatchNotes({
+        type: "DELETE_NOTE",
+        note: note,
+      });
+      handleServerCall(
+        [() => removeSelfAction(note?.uuid, clientID)],
+        openSnackRef.current,
+      );
+    };
+
+    window.addEventListener("openNote", handleOpen);
+    window.addEventListener("deleteNote", handleDelete);
+    return () => {
+      window.removeEventListener("openNote", handleOpen);
+      window.removeEventListener("deleteNote", handleDelete);
+    };
   }, []);
 
   useEffect(() => {
@@ -397,7 +427,12 @@ const page = () => {
   };
 
   const updateModalRef = useRef(false);
-  useRealtimeUpdates({ dispatchNotes, updateModalRef, setVisibleItems });
+  useRealtimeUpdates({
+    dispatchNotes,
+    updateModalRef,
+    setVisibleItems,
+    notesState,
+  });
 
   useDataManager({ notesState, dispatchNotes, notesReady, setNotesReady });
 
@@ -417,6 +452,7 @@ const page = () => {
     currentSection,
     selectedNote,
     skipSetLabelObjRef,
+    dispatchNotes,
   });
 
   const { noteActions } = useNoteActions({
@@ -556,7 +592,7 @@ const page = () => {
         />
         <AnimatePresence>
           {[...tooltipAnchor].map(([anchor, text], index) => (
-            <Tooltip key={text} anchorEl={anchor} text={text} />
+            <Tooltip key={text + anchor} anchorEl={anchor} text={text} />
           ))}
         </AnimatePresence>
         <Snackbar

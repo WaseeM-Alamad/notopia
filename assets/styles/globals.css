@@ -3406,6 +3406,8 @@ img {
   cursor: default;
   user-select: none;
   color: rgb(151, 151, 151);
+  padding: 0 1rem;
+  box-sizing: border-box;
 }
 
 .dark-mode .empty-page {
@@ -6660,6 +6662,7 @@ aside svg {
 
 .hover-notif-box {
   position: fixed;
+  will-change: transform;
   z-index: 100;
   /* padding: 1.5rem; */
   box-sizing: border-box;
@@ -6672,6 +6675,39 @@ aside svg {
   box-shadow:
     0 1px 3px rgba(0, 0, 0, 0.07),
     0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.hover-notif-box-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
+  font-weight: bold;
+  font-size: 1.25rem;
+  padding: 1.5rem;
+  padding-bottom: 1rem;
+  box-sizing: border-box;
+  height: 75px;
+}
+
+.hover-notif-box-items-wrapper {
+  flex: 1;
+  height: calc(100% - 75px);
+}
+
+.mark-all-read {
+  font-size: 0.9rem;
+  word-spacing: -2px;
+  font-weight: normal;
+  color: var(--notif-color);
+  border-radius: 0.7rem;
+  padding: 0.5rem 0.8rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.mark-all-read:disabled {
+  opacity: 0.5 !important;
 }
 
 @media (max-width: 605px) {
@@ -6717,6 +6753,11 @@ aside svg {
   transition: background-color 0.2s ease;
 }
 
+.reminder-notif-item .clear-icon {
+  display: none;
+  right: 13px;
+}
+
 .notif-dot {
   position: absolute;
   right: 11px;
@@ -6735,7 +6776,7 @@ aside svg {
   align-items: center;
   justify-content: center;
 
-  min-width: 18px;
+  min-width: 12px;
   height: 18px;
   padding: 0 5px;
 
@@ -7110,6 +7151,22 @@ aside svg {
   }
 
   .reminder-notif-item:hover {
+    background-color: var(--light-blue-hover);
+    padding-right: 3rem;
+  }
+
+  .unread-notif .reminder-notif-item:hover {
+    padding-right: 4.5rem;
+  }
+
+  .reminder-notif-item:hover .notif-dot {
+    right: 3.3rem;
+  }
+
+  .reminder-notif-item:hover .clear-icon {
+    display: unset;
+  }
+  .mark-all-read:hover {
     background-color: var(--light-blue-hover);
   }
 }

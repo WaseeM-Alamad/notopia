@@ -3,6 +3,9 @@
 import { useAppContext } from "@/context/AppContext";
 import { useLabelsContext } from "@/context/LabelsContext";
 import { useSearch } from "@/context/SearchContext";
+import { openNoteAction, removeSelfAction } from "@/utils/actions";
+import handleServerCall from "@/utils/handleServerCall";
+import localDbReducer from "@/utils/localDbReducer";
 import { useCallback, useEffect, useRef } from "react";
 
 export function useHashRouting({
@@ -21,8 +24,9 @@ export function useHashRouting({
   currentSection,
   selectedNote,
   skipSetLabelObjRef,
+  dispatchNotes
 }) {
-  const { labelsReady, labelObjRef, openSnackRef, closeToolTip, setDialogInfoRef } =
+  const { labelsReady, labelObjRef, openSnackRef, closeToolTip, setDialogInfoRef, user, clientID } =
     useAppContext();
   const {
     setFilters,
@@ -31,6 +35,8 @@ export function useHashRouting({
     skipHashChangeRef,
     searchRef,
   } = useSearch();
+
+  const userID = user?.id;
 
   const { labelsRef } = useLabelsContext();
 

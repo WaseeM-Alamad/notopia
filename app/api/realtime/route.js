@@ -78,6 +78,7 @@ export async function GET(request) {
       );
 
       notificationStream.on("change", (change) => {
+        if (change.fullDocument.lastModifiedBy === clientID) return;
         noteBuffer.push({
           type: "notification",
           operationType: change.operationType,

@@ -18,6 +18,7 @@ import Button from "@/components/Tools/Button";
 import BellIcon from "@/components/icons/BellIcon";
 import handleServerCall from "@/utils/handleServerCall";
 import { deleteNotification } from "@/utils/actions";
+import localDbReducer from "@/utils/localDbReducer";
 
 const AppContext = createContext();
 
@@ -279,7 +280,7 @@ export function AppProvider({ children, initialUser }) {
         onClick={() => {
           toast.dismiss(t);
           handleServerCall(
-            [() => deleteNotification(notifId)],
+            [() => deleteNotification(notifId, clientID)],
             openSnackRef.current,
           );
           const event = new CustomEvent("deleteNotif", {
@@ -343,6 +344,75 @@ export function AppProvider({ children, initialUser }) {
     ));
   }, []);
 
+  const showShareNotif = useCallback(
+    ({ username, image, uuid, notifId, note }) => {
+      if (!uuid) return;
+      playNotification();
+
+      const handleOpenNote = (uuid) => {
+        const hash = window.location.hash.replace("#", "");
+        if (!hash.toLowerCase().startsWith("note/")) {
+          window.location.hash = `NOTE/${uuid}`;
+        } else {
+          window.open(
+            `${process.env.NEXT_PUBLIC_DOMAIN}/#NOTE/${uuid}`,
+            "_blank",
+          );
+        }
+      };
+
+      toast.custom((t) => (
+        <div
+          onClick={() => {
+            toast.dismiss(t);
+            if (!note) {
+              setDialogInfoRef.current({
+                func: () => window.location.replace("#home"),
+                title: "Note not found",
+                message:
+                  "This note may have been deleted or you may not have permission to view it.",
+                btnMsg: "Okay",
+                cancelFunc: () => window.location.replace("#home"),
+                closeFunc: () => window.location.replace("#home"),
+              });
+              return;
+            }
+
+            handleOpenNote(uuid);
+          }}
+          className="notification"
+        >
+          <img
+            style={{
+              width: "34px",
+              height: "34px",
+              borderRadius: "50%",
+              border: "solid 1px var(--border)",
+            }}
+            src={image}
+          />
+          <div className="notification-inner">
+            <p>
+              <span style={{ fontWeight: "500" }}>{username}</span> has shared a
+              note with you!
+            </p>
+          </div>
+
+          <Button
+            style={{ color: "var(--text)" }}
+            onClick={(e) => {
+              e.stopPropagation();
+              toast.dismiss(t);
+            }}
+          >
+            ✕
+          </Button>
+        </div>
+      ));
+    },
+    [],
+  );
+
   return (
     <AppContext.Provider
       value={{
@@ -385,6 +455,7 @@ export function AppProvider({ children, initialUser }) {
         saveNewAvatar,
         enableNotifs,
         showReminderNotif,
+        showShareNotif,
         clientID: clientID.current,
       }}
     >

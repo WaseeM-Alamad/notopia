@@ -2581,6 +2581,7 @@ export const removeSelfAction = async (noteUUID, clientID) => {
 
 export const updateCollabsAction = async (data) => {
   const session = await getServerSession(authOptions);
+  const currentUser = session?.user;
   const userID = session?.user?.id;
 
   if (!session) {
@@ -2603,6 +2604,7 @@ export const updateCollabsAction = async (data) => {
     const noteBulkOps = [];
     const settingsBulkOps = [];
     const userBulkOps = [];
+    const notifsBulkOps = [];
 
     const addIDsSet = new Set();
     const removeIDsSet = new Set();
@@ -2636,6 +2638,20 @@ export const updateCollabsAction = async (data) => {
       );
 
       const collabsToAdd = newUsers.map((u) => {
+        notifsBulkOps.push({
+          insertOne: {
+            document: {
+              user: u._id,
+              type: "share",
+              data: {
+                displayName: currentUser.displayName,
+                username: currentUser.username,
+                image: currentUser.image,
+                uuid: data.noteUUID,
+              },
+            },
+          },
+        });
         return {
           data: u._id,
           id: u._id,
@@ -2709,6 +2725,7 @@ export const updateCollabsAction = async (data) => {
       await Note.bulkWrite(noteBulkOps, { session });
       await UserSettings.bulkWrite(settingsBulkOps, { session });
       await User.bulkWrite(userBulkOps, { session });
+      await Notification.bulkWrite(notifsBulkOps, { session });
     });
     session.endSession();
     return { success: true, message: "Collaborators updated successfully" };
@@ -2808,7 +2825,7 @@ export async function fetchNotifsAction() {
   }
 }
 
-export async function deleteNotification(notifId) {
+export async function deleteNotification(notifId, clientID) {
   const session = await getServerSession(authOptions);
   if (!session) {
     throw new Error("Something went wrong");
@@ -2818,10 +2835,45 @@ export async function deleteNotification(notifId) {
     await connectDB();
     await Notification.findByIdAndUpdate(notifId, {
       deleted: true,
+      lastModifiedBy: clientID,
       expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1 hour from now
     });
   } catch (error) {
     console.log("Error deleting notification", error);
     throw new Error("Error deleting notification");
+  }
+}
+
+export async function markNotifAsRead(notifId, clientID) {
+  const session = await getServerSession(authOptions);
+  const userID = session.user.id;
+  if (!session) {
+    throw new Error("Something went wrong");
+  }
+
+  const markAll = notifId === "all";
+
+  try {
+    await connectDB();
+
+    if (markAll) {
+      await Notification.updateMany(
+        {
+          user: userID,
+        },
+        {
+          read: true,
+          lastModifiedBy: clientID,
+        },
+      );
+    } else {
+      await Notification.findByIdAndUpdate(notifId, {
+        read: true,
+        lastModifiedBy: clientID,
+      });
+    }
+  } catch (error) {
+    console.log("Error marking notification as read", error);
+    throw new Error("Error marking notification as read");
   }
 }
