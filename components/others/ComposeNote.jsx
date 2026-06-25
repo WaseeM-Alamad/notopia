@@ -360,7 +360,7 @@ const ComposeNote = ({
     } else {
       overlay.style.opacity = "0";
       modalRef.current.style.transition =
-        "all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1)";
+        "all 0.2s cubic-bezier(0.45, 0.1, 0.05, 1)";
 
       const noteEmpty =
         !note?.title && !note?.content && note?.images.length === 0;

@@ -52,6 +52,7 @@ const NoteTools = ({
     note?.images?.length > 0 &&
     note?.labels?.length === 0 &&
     note?.collaborators?.length === 0 &&
+    !note?.reminder &&
     !note?.title.trim() &&
     !note?.content.trim() &&
     (note?.checkboxes?.length === 0 || !note?.showCheckboxes);

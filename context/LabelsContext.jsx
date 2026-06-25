@@ -16,7 +16,7 @@ import { useAppContext } from "./AppContext";
 const LabelsContext = createContext();
 
 export const LabelsProvider = ({ children, userID }) => {
-  const { clientID } = useAppContext();
+  const { clientID, setLoadingImages } = useAppContext();
   const labelsRef = useRef(new Map());
 
   const updateLocalLabels = useMemo(

@@ -78,6 +78,7 @@ const Note = memo(
       note?.collaborators?.length === 0 &&
       !note?.title.trim() &&
       !note?.content.trim() &&
+      !note?.reminder &&
       (note?.checkboxes.length === 0 || !note?.showCheckboxes);
 
     const isNoteEmpty =
