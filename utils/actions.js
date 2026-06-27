@@ -244,7 +244,7 @@ export const sendResetPassAction = async (receivedEmail) => {
     // const link = `http://localhost:3000/auth/reset-password?token=${token}`;
     const link = `https://notopia.app/auth/reset-password?token=${token}`;
 
-    await resend.emails.send({
+    const f = await resend.emails.send({
       from: "Notopia <noreply@notopia.app>",
       to: user.email,
       subject: "Reset your Notopia password",
@@ -265,6 +265,8 @@ export const sendResetPassAction = async (receivedEmail) => {
         </div>
       `,
     });
+
+    console.log(f);
 
     return { success: true, message: "Reset link sent successfully" };
   } catch (error) {

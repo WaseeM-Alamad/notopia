@@ -166,27 +166,13 @@ const RightPanel = ({
   };
 
   return (
-    <motion.div
-      initial={{
+    <div
+      style={{
         pointerEvents: isLogin ? "none" : "auto",
-        x: isLogin ? 40 : 0,
-        opacity: isLogin ? 0 : 1,
-        // scale: isLogin ? 0.99 : 1,
+        transform: isLogin ? 'translateX(30px)' : 'translateX(0px)',
+        opacity: isLogin ? '0' : '1',
       }}
-      animate={{
-        pointerEvents: isLogin ? "none" : "auto",
-        x: isLogin ? 40 : 0,
-        opacity: isLogin ? 0 : 1,
-        // scale: isLogin ? 0.99 : 1,
-      }}
-      transition={{
-        type: "spring",
-        stiffness: 270,
-        damping: 50,
-        mass: 3,
-        opacity: { duration: 0.35 },
-      }}
-      className="right-panel"
+      className="right-panel auth-panel"
     >
       <div>
         <div className="form-title">Create Account</div>
@@ -293,7 +279,7 @@ const RightPanel = ({
                   setShowPassword(false);
                   validatePassword(e, false);
                 }}
-                style={{ paddingRight: "3rem", marginBottom: "0" }}
+                style={{ paddingRight: "2.7rem", marginBottom: "0" }}
                 spellCheck="false"
                 autoComplete="off"
               />
@@ -301,7 +287,11 @@ const RightPanel = ({
           </div>
         </form>
         <div className="form-btns-container">
-          <button type="submit" form="signup-form" className="login-btn">
+          <button
+            type="submit"
+            form="signup-form"
+            className="auth-btn auth-primary-btn"
+          >
             {!isSubmitLoading ? "Sign Up" : <HorizontalLoader2 size={0.55} />}
           </button>
           <div
@@ -312,7 +302,7 @@ const RightPanel = ({
                 setGoogleIsLoading(false);
               }, 500);
             }}
-            className="login-btn border-btn"
+            className="auth-btn border-btn"
           >
             {!googleIsLoading ? (
               <>
@@ -340,7 +330,7 @@ const RightPanel = ({
           </span>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 

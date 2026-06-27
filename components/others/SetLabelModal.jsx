@@ -179,7 +179,7 @@ const SetLabelModal = ({
               style={{
                 minHeight: "2.5rem",
                 backgroundColor: "var(--input-bg)",
-                border: "1px solid var(--border)",
+                // border: "1px solid var(--border)",
                 marginBottom: "0",
                 color: "var(--text)",
                 paddingRight: "2.7rem",
@@ -189,9 +189,8 @@ const SetLabelModal = ({
             <div
               style={{
                 position: "absolute",
-                top: "50%",
-                right: ".9rem",
-                transform: "translateY(-50%)",
+                right: ".3rem",
+                bottom: ".7rem",
                 fontSize: ".8rem",
                 color: "var(--text2)",
                 marginRight: "0.4rem",

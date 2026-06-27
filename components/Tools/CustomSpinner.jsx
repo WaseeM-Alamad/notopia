@@ -4,6 +4,7 @@ export default function CustomThreeLineSpinner({
   size = 50,
   strokeWidth = 4,
   color = "#8991ffff",
+  className
 }) {
   const canvasRef = useRef(null);
 
@@ -75,5 +76,5 @@ export default function CustomThreeLineSpinner({
     return () => ctx.clearRect(0, 0, size, size);
   }, [size, strokeWidth, color]);
 
-  return <canvas ref={canvasRef} />;
+  return <canvas className={className} ref={canvasRef} />;
 }

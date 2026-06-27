@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import RightPanel from "./RightPanel";
 import LeftPanel from "./LeftPanel";
+import AuthSlider from "./AuthSlider";
+import ThemeToggle from "../Tools/ThemeToggle";
 
 const Auth = () => {
   const pathname = usePathname();
@@ -30,29 +32,19 @@ const Auth = () => {
 
   return (
     <>
+      <ThemeToggle />
       <motion.div
         initial={{ transform: "translate(-50%, -50%) scale(0.9)", opacity: 0 }}
         animate={{ transform: "translate(-50%, -50%) scale(1)", opacity: 1 }}
-        transition={{ type: "spring", stiffness: 600, damping: 50, mass: 1 }}
+        transition={{
+          duration: 0.3,
+          ease: [0.22, 1, 0.36, 1],
+          // staggerChildren: 0.05,
+          // delayChildren: 0.1,
+        }}
         className="login-container"
       >
-        <motion.div
-          initial={{
-            transform: isLogin ? "translateX(85.19%)" : "translateX(0%)",
-          }}
-          animate={{
-            transform: isLogin ? "translateX(85.19%)" : "translateX(0%)",
-          }}
-          transition={{
-            type: "spring",
-            stiffness: 200,
-            damping: 30,
-            mass: 1.25,
-          }}
-          className="login-slider"
-        >
-          
-          </motion.div>
+        <AuthSlider isLogin={isLogin} />
         <RightPanel
           isLogin={isLogin}
           toggleForm={toggleForm}

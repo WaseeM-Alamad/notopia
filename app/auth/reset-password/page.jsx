@@ -62,7 +62,7 @@ const Page = () => {
     const formData = new FormData(event.currentTarget);
     const { success, passExists } = await resetPasswordAction(
       formData,
-      validToken
+      validToken,
     );
 
     if (passExists) {
@@ -211,7 +211,7 @@ const Page = () => {
                           validatePassword(null, false);
                         }}
                         placeholder="Enter your password"
-                        style={{ paddingRight: "3rem", marginBottom: "0" }}
+                        style={{ paddingRight: "2.7rem", marginBottom: "0" }}
                         spellCheck="false"
                         autoComplete="off"
                       />
@@ -254,7 +254,7 @@ const Page = () => {
                           validateConfirmPassword(null);
                         }}
                         placeholder="Confirm your password"
-                        style={{ paddingRight: "3rem", marginBottom: "0" }}
+                        style={{ paddingRight: "2.7rem", marginBottom: "0" }}
                         spellCheck="false"
                         autoComplete="off"
                       />
@@ -263,13 +263,19 @@ const Page = () => {
                 </form>
               </div>
               <div style={{ marginTop: "0" }} className="form-btns-container">
-                <button type="submit" form="reset-form" className="login-btn">
-                  {!isResetLoading ? (
-                    "Reset Password"
-                  ) : (
+                <button
+                  type="submit"
+                  form="reset-form"
+                  className="auth-btn auth-blue-btn"
+                >
+                  <span style={{ opacity: !isResetLoading ? "1" : "0" }}>
+                    Reset Password
+                  </span>
+                  {isResetLoading && (
                     <CustomThreeLineSpinner
                       size={20}
                       strokeWidth={2.3}
+                      className="btn-loader"
                       color={
                         document.documentElement.classList.contains("dark-mode")
                           ? " #292929"
@@ -278,13 +284,15 @@ const Page = () => {
                     />
                   )}
                 </button>
-                <button onClick={cancelReset} className="login-btn border-btn">
-                  {!isCancelLoading ? (
-                    "Cancel"
-                  ) : (
+                <button onClick={cancelReset} className="auth-btn border-btn">
+                  <span style={{ opacity: !isCancelLoading ? "1" : "0" }}>
+                    Cancel
+                  </span>
+                  {isCancelLoading && (
                     <CustomThreeLineSpinner
                       size={20}
                       strokeWidth={2.3}
+                      className="btn-loader"
                       color={
                         document.documentElement.classList.contains("dark-mode")
                           ? " #292929"
@@ -352,7 +360,7 @@ const Page = () => {
                     : "Password has been updated!"}
                 </div>
                 {isValidLoading && !PasswordReset ? (
-                  <HorizontalLoader color="#2b2663" size={0.8} />
+                  <HorizontalLoader color="var(--text)" size={0.8} />
                 ) : (
                   !PasswordReset && (
                     <div style={{ fontSize: "1rem" }}>
@@ -361,27 +369,31 @@ const Page = () => {
                   )
                 )}
                 {PasswordReset && (
-                  <div
-                    onClick={cancelReset}
-                    className="login-btn"
-                    style={{ marginTop: "auto" }}
-                  >
-                    {!isCancelLoading ? (
-                      "Sign in"
-                    ) : (
-                      <CustomThreeLineSpinner
-                        size={20}
-                        strokeWidth={2.3}
-                        color={
-                          document.documentElement.classList.contains(
-                            "dark-mode"
-                          )
-                            ? " #292929"
-                            : "#dfdfdf"
-                        }
-                      />
-                    )}
-                  </div>
+                  <>
+                    <div
+                      onClick={cancelReset}
+                      className="auth-btn auth-blue-btn"
+                      style={{ marginTop: "auto" }}
+                    >
+                      <span style={{ opacity: !isCancelLoading ? "1" : "0" }}>
+                        Sign in
+                      </span>
+                      {isCancelLoading && (
+                        <CustomThreeLineSpinner
+                          size={20}
+                          strokeWidth={2.3}
+                          className="btn-loader"
+                          color={
+                            document.documentElement.classList.contains(
+                              "dark-mode",
+                            )
+                              ? " #292929"
+                              : "#dfdfdf"
+                          }
+                        />
+                      )}
+                    </div>
+                  </>
                 )}
               </div>
               {!isValidLoading && !PasswordReset && (
@@ -391,14 +403,16 @@ const Page = () => {
                     router.push("/auth/login");
                   }}
                   style={{ marginTop: "auto" }}
-                  className="login-btn"
+                  className="auth-btn auth-primary-btn"
                 >
-                  {!isCancelLoading ? (
-                    "Back"
-                  ) : (
+                  <span style={{ opacity: !isCancelLoading ? "1" : "0" }}>
+                    Back
+                  </span>
+                  {isCancelLoading && (
                     <CustomThreeLineSpinner
                       size={20}
                       strokeWidth={2.3}
+                      className="btn-loader"
                       color={
                         document.documentElement.classList.contains("dark-mode")
                           ? " #292929"

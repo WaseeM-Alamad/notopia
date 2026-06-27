@@ -120,30 +120,19 @@ const LeftPanel = ({
 
   return (
     <>
-      <motion.div
-        initial={{
+      <div
+        style={{
           pointerEvents: !isLogin ? "none" : "auto",
-          x: !isLogin ? -40 : 0,
-          opacity: !isLogin ? 0 : 1,
-          // scale: !isLogin ? 0.99 : 1,
+          transform: !isLogin ? "translateX(-30px)" : "translateX(-0px)",
+          opacity: !isLogin ? '0' : '1',
         }}
-        animate={{
-          pointerEvents: !isLogin ? "none" : "auto",
-          x: !isLogin ? -40 : 0,
-          opacity: !isLogin ? 0 : 1,
-          // scale: !isLogin ? 0.99 : 1,
-        }}
-        transition={{
-          type: "spring",
-          stiffness: 270,
-          damping: 50,
-          mass: 3,
-          opacity: { duration: 0.35 },
-        }}
-        className="left-panel"
+        className="left-panel auth-panel"
       >
-        <div>
-          <div className="form-title">Sign in</div>
+        <div className="form-top">
+          <div className="form-title">Welcome Back!</div>
+          <div style={{ color: "var(--text3)", fontSize: ".8rem" }}>
+            Enter your details below
+          </div>
         </div>
 
         <div className="form-container">
@@ -212,7 +201,7 @@ const LeftPanel = ({
                   onInput={() => setPassStatus(null)}
                   onBlur={() => setShowPassword(false)}
                   placeholder="Enter your password"
-                  style={{ paddingRight: "3rem", marginBottom: "0" }}
+                  style={{ paddingRight: "2.7rem", marginBottom: "0" }}
                   spellCheck="false"
                   autoComplete="off"
                 />
@@ -225,7 +214,11 @@ const LeftPanel = ({
             </div>
           </div>
           <div className="form-btns-container">
-            <button form="signin-form" type="submit" className="login-btn">
+            <button
+              form="signin-form"
+              type="submit"
+              className="auth-btn auth-primary-btn"
+            >
               {!isSubmitLoading ? "Sign In" : <HorizontalLoader2 size={0.55} />}
             </button>
             <div
@@ -236,7 +229,7 @@ const LeftPanel = ({
                   setGoogleIsLoading(false);
                 }, 500);
               }}
-              className="login-btn border-btn"
+              className="auth-btn border-btn"
             >
               {!googleIsLoading ? (
                 <>
@@ -264,7 +257,7 @@ const LeftPanel = ({
             </span>
           </div>
         </div>
-      </motion.div>
+      </div>
       <Modal
         initial={{
           scale: 0.95,
@@ -293,9 +286,15 @@ const LeftPanel = ({
           >
             Instructions sent!
           </div>
-          <div style={{ fontWeight: "500", lineHeight: "1.4rem" }}>
+          <div
+            style={{
+              fontWeight: "500",
+              fontSize: ".95rem",
+              lineHeight: "1.4rem",
+            }}
+          >
             We sent instructions to change your password to{" "}
-            <span style={{ fontWeight: "bold" }}>
+            <span style={{ fontWeight: "bold", textDecoration: "underline" }}>
               {emailRef?.current?.value}
             </span>
             , please check both your inbox and spam folder.
@@ -307,9 +306,12 @@ const LeftPanel = ({
               justifyContent: "flex-end",
             }}
           >
-            <div className="okay-btn" onClick={() => setModalOpen(false)}>
+            <button
+              className="action-modal-bottom-btn"
+              onClick={() => setModalOpen(false)}
+            >
               Okay
-            </div>
+            </button>
           </div>
         </div>
       </Modal>

@@ -73,7 +73,7 @@ const Page = () => {
           >
             <div
               style={{
-                fontSize: isLoading ? "1.7rem" : "1.5rem",
+                fontSize: isLoading ? "1.7rem" : "1.4rem",
                 marginBottom: "0.4rem",
                 userSelect: "none",
               }}
@@ -85,7 +85,7 @@ const Page = () => {
                 : "Please wait..."}
             </div>
             {isLoading ? (
-              <HorizontalLoader color="#2b2663" size={0.8} />
+              <HorizontalLoader color="var(--text)" size={0.8} />
             ) : isExpired ? (
               <div style={{ fontSize: "1rem" }}>
                 Please sign in to resend the link
@@ -99,14 +99,16 @@ const Page = () => {
                 router.push("/auth/login");
               }}
               style={{ marginTop: "auto" }}
-              className="login-btn"
+              className="auth-btn auth-primary-btn"
             >
-              {!loginIsLoading ? (
-                "Sign In"
-              ) : (
+              <span style={{ opacity: !loginIsLoading ? "1" : "0" }}>
+                Sign In
+              </span>
+              {loginIsLoading && (
                 <CustomThreeLineSpinner
                   size={20}
                   strokeWidth={2.3}
+                  className="btn-loader"
                   color={
                     document.documentElement.classList.contains("dark-mode")
                       ? " #292929"
