@@ -4,8 +4,7 @@ import SliderOverlay from "./SliderOverlay";
 
 const slides = [
   {
-    image:
-      "https://picsum.photos/800/600",
+    image: "https://picsum.photos/800/600",
     html: (
       <span style={{ fontSize: "1.7rem", fontWeight: "600" }}>
         Welcome to your
@@ -95,7 +94,7 @@ const AuthSlider = ({ isLogin }) => {
                 transform: isCurrentSlide
                   ? `scale(${1.1 + (slideNum + 1) / 10})`
                   : `scale(${1 + slideNum / 10.5})`,
-                transition: `opacity 0.6s ease-out, transform ${isCurrentSlide ? "10s linear" : ".9s ease-outt"}`,
+                transition: `opacity 0.6s ease-out, transform ${isCurrentSlide ? "10s linear" : "5s linear"}`,
                 opacity: isCurrentSlide ? "1" : "0",
                 zIndex: isCurrentSlide ? "5" : "",
               }}
