@@ -23,10 +23,12 @@ div {
 
 :root {
   --notopia-bg: #ededed;
+  --notopia-logo-text: #fff;
+  --notopia-logo-bg: #101010;
   --selection: #008cff;
   --primary: #5089f3;
   --primary-hover: #4981e9;
-  --login-slider: #e9f2ff;
+  --auth-slider-color: #e9f2ff;
   --auth-container: #fff;
   --dark-btn: #2c2e2a;
   --dark-btn-hover: #1b1d1a;
@@ -77,10 +79,12 @@ div {
 
 html.dark-mode {
   --notopia-bg: #9ba9b9;
+  --notopia-logo-text: #101010;
+  --notopia-logo-bg: #fff;
   --selection: #1a75c0;
   --primary: #3164c4;
   --primary-hover: #2d5bb1;
-  --login-slider: #142338;
+  --auth-slider-color: #142338;
   --auth-container: #0e131d;
   --dark-btn: #f3f3f3;
   --dark-btn-hover: #dddddd;
@@ -995,7 +999,7 @@ svg {
   background-color: #3a5bb5;
 }
 
-.login-container {
+.auth-container {
   /* height: 75%; */
   width: 95%;
   max-width: 60rem;
@@ -1008,6 +1012,17 @@ svg {
   border-radius: 2rem;
   border: 1px solid var(--border);
   overflow: hidden;
+  animation: auth-mount .8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes auth-mount {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
 }
 
 .login-slider-wrapper {
@@ -1072,8 +1087,7 @@ svg {
 
 .login-slider {
   position: relative;
-  /* display: none; */
-  background-color: var(--login-slider);
+  background-color: var(--auth-slider-color);
   width: 100%;
   height: 100%;
   border-radius: 1.5rem;
@@ -1204,7 +1218,7 @@ svg {
     transform 0.65s cubic-bezier(0.35, 0, 0.25, 1),
     opacity 0.7s ease;
   animation: fadeUp 2.2s cubic-bezier(0.4, 0, 0.2, 1);
-  /* animation-delay: 1.8s; */
+  animation-iteration-count: 1 !important;
 }
 
 @keyframes fadeUp {
@@ -1251,10 +1265,25 @@ svg {
   }
 }
 
+.no-mount-animation .auth-panel,
+.no-mount-animation .auth-container,
+.no-mount-animation .auth-panel-inner,
+.no-mount-animation .login-slider-wrapper,
+.no-mount-animation .slider-overlay {
+  animation: none;
+}
+
 @media (max-width: 900px) or (max-height: 670px) {
   .auth-panel {
     width: 100%;
   }
+
+  .auth-container {
+  }
+
+  .auth-panel-inner {
+  }
+
   .login-slider-wrapper {
     visibility: hidden;
   }
@@ -1263,7 +1292,7 @@ svg {
     display: flex !important;
   }
 
-  .login-container {
+  .auth-container {
     width: 100%;
     max-width: unset;
     height: 100dvh;

@@ -101,15 +101,7 @@ const NavButtons = () => {
               transition={{ duration: 0.15 }}
               style={{ position: "absolute", display: "flex" }}
             >
-              <CustomThreeLineSpinner
-                size={20}
-                strokeWidth={2.8}
-                color={
-                  document.documentElement.classList.contains("dark-mode")
-                    ? "#dfdfdf"
-                    : "#292929"
-                }
-              />
+              <CustomThreeLineSpinner size={20} strokeWidth={2.8} />
             </motion.div>
           )}
         </AnimatePresence>

@@ -14,10 +14,29 @@ const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [isClient, setIsClient] = useState(false);
   const [googleIsLoading, setGoogleIsLoading] = useState(false);
+  const [isSmallScreen, setIsSmallScreen] = useState();
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  useEffect(() => {
+    const handler = () => {
+      const height = window.innerHeight;
+      const width = window.innerWidth;
+      if (width > 900 || (height > 670 && width > 900)) return;
+      setIsSmallScreen(true);
+    };
+
+    handler();
+
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+
+  useEffect(() => {
+    console.log(isSmallScreen);
+  }, [isSmallScreen]);
 
   useEffect(() => {
     const routeName = pathname.replace(/^\/|\/$/g, "").toLowerCase();
@@ -32,19 +51,9 @@ const Auth = () => {
   if (!isClient) return null;
 
   return (
-    <>
+    <div id="idk" className={isSmallScreen ? "no-mount-animation" : ""}>
       <ThemeToggle />
-      <motion.div
-        initial={{ transform: "translate(-50%, -50%) scale(0.9)", opacity: 0 }}
-        animate={{ transform: "translate(-50%, -50%) scale(1)", opacity: 1 }}
-        transition={{
-          duration: 0.3,
-          ease: [0.22, 1, 0.36, 1],
-          // staggerChildren: 0.05,
-          // delayChildren: 0.1,
-        }}
-        className="login-container"
-      >
+      <div className={`auth-container`}>
         <AuthSlider isLogin={isLogin} />
         <RightPanel
           isLogin={isLogin}
@@ -59,8 +68,8 @@ const Auth = () => {
           googleIsLoading={googleIsLoading}
           setGoogleIsLoading={setGoogleIsLoading}
         />
-      </motion.div>
-    </>
+      </div>
+    </div>
   );
 };
 

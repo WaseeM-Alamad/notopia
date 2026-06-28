@@ -1,11 +1,14 @@
+import { useGlobalContext } from "@/context/GlobalContext";
 import { useEffect, useRef } from "react";
 
 export default function CustomThreeLineSpinner({
   size = 50,
   strokeWidth = 4,
-  color = "#8991ffff",
-  className
+  className,
+  wb = false,
 }) {
+  const { isDarkMode } = useGlobalContext();
+  const color = !wb && isDarkMode? "#dfdfdf" :"#292929";
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -21,7 +24,6 @@ export default function CustomThreeLineSpinner({
 
     const center = size / 2;
     const radius = (size - strokeWidth) / 2;
-
 
     const duration = 1150;
     const startTime = performance.now();
@@ -63,7 +65,7 @@ export default function CustomThreeLineSpinner({
           radius,
           startAngle,
           startAngle + currentLength,
-          false
+          false,
         );
         ctx.stroke();
       }

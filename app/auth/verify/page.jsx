@@ -109,11 +109,7 @@ const Page = () => {
                   size={20}
                   strokeWidth={2.3}
                   className="btn-loader"
-                  color={
-                    document.documentElement.classList.contains("dark-mode")
-                      ? " #292929"
-                      : "#dfdfdf"
-                  }
+                  wb={true}
                 />
               )}
             </div>

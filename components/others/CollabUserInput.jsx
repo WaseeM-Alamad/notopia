@@ -106,7 +106,7 @@ const CollabUserInput = ({
     setIsLoading(true);
     const { success, message, newUser } = await submitCollabUserAction(
       input,
-      note?.uuid
+      note?.uuid,
     );
     setIsLoading(false);
     if (!success) {
@@ -185,15 +185,7 @@ const CollabUserInput = ({
               padding: "5px",
             }}
           >
-            <CustomThreeLineSpinner
-              size={16}
-              strokeWidth={2.3}
-              color={
-                document.documentElement.classList.contains("dark-mode")
-                  ? "#dfdfdf"
-                  : "#292929"
-              }
-            />
+            <CustomThreeLineSpinner size={16} strokeWidth={2.3} />
           </span>
         ) : (
           input.trim() && (

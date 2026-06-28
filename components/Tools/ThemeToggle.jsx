@@ -1,6 +1,8 @@
+import { useGlobalContext } from "@/context/GlobalContext";
 import { useState } from "react";
 
 export default function ThemeToggle() {
+  const { setIsDarkMode } = useGlobalContext();
   const [isDark, setIsDark] = useState(false);
 
   return (
@@ -29,13 +31,11 @@ export default function ThemeToggle() {
             setIsDark(e.target.checked);
             requestIdleCallback(() => {
               document.documentElement.classList.toggle("dark-mode");
-              const newMode = document.documentElement.classList.contains(
-                "dark-mode",
-              )
-                ? "dark"
-                : "light";
+              const isDark =
+                document.documentElement.classList.contains("dark-mode");
+              const newMode = isDark ? "dark" : "light";
               localStorage.setItem("theme", newMode);
-              // isDarkModeRef.current = newMode === "dark";
+              setIsDarkMode(isDark);
             });
           }}
           style={{ opacity: 0, width: 0, height: 0, position: "absolute" }}

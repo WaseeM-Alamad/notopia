@@ -176,9 +176,8 @@ const RightPanel = ({
       className="right-panel auth-panel"
     >
       <div className="auth-panel-inner">
-        <div className="notopia-auth-logo" style={{paddingBottom: "1.5rem" }}>
+        <div className="notopia-auth-logo" style={{ paddingBottom: "1.5rem" }}>
           <NotopiaLogo
-            isDarkMode={false}
             style={{
               // // position: "absolute",
               // // top: "1.8rem",
@@ -329,15 +328,7 @@ const RightPanel = ({
                   Continue with Google
                 </>
               ) : (
-                <CustomThreeLineSpinner
-                  size={20}
-                  strokeWidth={3}
-                  color={
-                    document.documentElement.classList.contains("dark-mode")
-                      ? "#dfdfdf"
-                      : "#292929"
-                  }
-                />
+                <CustomThreeLineSpinner size={20} strokeWidth={3} />
               )}
             </div>
           </div>

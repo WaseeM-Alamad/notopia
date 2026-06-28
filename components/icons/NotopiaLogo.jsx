@@ -1,8 +1,8 @@
 import React from "react";
 
-const NotopiaLogo = ({ style, isDarkMode = false }) => {
-  const textColor = isDarkMode ? "#101010" : "#fff";
-  const bgColor = isDarkMode ? "#fff" : "#101010";
+const NotopiaLogo = ({ style, fixedColors = false }) => {
+  const textColor = fixedColors ? "#fff" : "var(--notopia-logo-text)";
+  const bgColor = fixedColors ? "#101010" : "var(--notopia-logo-bg)";
   return (
     <svg
       style={style}

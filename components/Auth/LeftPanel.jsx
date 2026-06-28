@@ -9,6 +9,7 @@ import { sendResetPassAction } from "@/utils/actions";
 import HorizontalLoader2 from "../Tools/HorizontalLoader2";
 import CustomThreeLineSpinner from "../Tools/CustomSpinner";
 import NotopiaLogo from "../icons/NotopiaLogo";
+import { useGlobalContext } from "@/context/GlobalContext";
 
 const LeftPanel = ({
   isLogin,
@@ -16,6 +17,7 @@ const LeftPanel = ({
   googleIsLoading,
   setGoogleIsLoading,
 }) => {
+  const { isComingBackRef } = useGlobalContext();
   const router = useRouter();
 
   const [showPassword, setShowPassword] = useState(false);
@@ -132,7 +134,6 @@ const LeftPanel = ({
         <div className="auth-panel-inner">
           <div className="notopia-auth-logo" style={{ padding: ".5rem 0" }}>
             <NotopiaLogo
-              isDarkMode={false}
               style={{
                 // // position: "absolute",
                 // // top: "1.8rem",
@@ -146,7 +147,7 @@ const LeftPanel = ({
             />
           </div>
           <div className="form-top">
-            <div className="form-title">Welcome Back!</div>
+            <div className="form-title">{ isComingBackRef.current ? "Welcome Back!": "Welcome!"}</div>
             <div style={{ color: "var(--text3)", fontSize: ".8rem" }}>
               Enter your details below
             </div>
@@ -226,7 +227,11 @@ const LeftPanel = ({
               </div>
             </form>
             <div className="form-tools">
-              <div onClick={handleForgotPass} className="forgot-pass">
+              <div
+                onClick={handleForgotPass}
+                className="forgot-pass"
+                style={{ pointerEvents: isForgotloading ? "none" : "auto" }}
+              >
                 {!isForgotloading ? "Forgot password?" : "Please wait..."}
               </div>
             </div>
@@ -258,15 +263,7 @@ const LeftPanel = ({
                     Continue with Google
                   </>
                 ) : (
-                  <CustomThreeLineSpinner
-                    size={20}
-                    strokeWidth={3}
-                    color={
-                      document.documentElement.classList.contains("dark-mode")
-                        ? "#dfdfdf"
-                        : "#292929"
-                    }
-                  />
+                  <CustomThreeLineSpinner size={20} strokeWidth={3} />
                 )}
               </div>
             </div>

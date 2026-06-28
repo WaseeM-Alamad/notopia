@@ -103,7 +103,7 @@ const SetAvatarModal = ({ setIsOpen, initialFileRef, isGif }) => {
           padding: "1.1rem 0",
           paddingBottom: "0.5rem",
           width: "90%",
-          height: '90%',
+          height: "90%",
           maxWidth: isLoading ? "270px" : isPreview ? "410px" : "478px",
           maxHeight: isLoading ? "200px" : isPreview ? "340px" : "38.5rem",
           borderRadius: isLoading && "2rem",
@@ -155,15 +155,7 @@ const SetAvatarModal = ({ setIsOpen, initialFileRef, isGif }) => {
               </div>
 
               <div style={{ marginTop: "2rem", marginBottom: ".5rem" }}>
-                <CustomThreeLineSpinner
-                  color={
-                    document.documentElement.classList.contains("dark-mode")
-                      ? "rgb(232, 234, 237)"
-                      : "#212121"
-                  }
-                  strokeWidth={4}
-                  size={33}
-                />
+                <CustomThreeLineSpinner strokeWidth={4} size={33} />
                 {/* <HorizontalLoader color="var(--text)" size={0.6} /> */}
               </div>
             </div>

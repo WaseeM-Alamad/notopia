@@ -41,9 +41,8 @@ export default function ClockTimePicker({
   setSelectedTime,
   initialTime = {h: 12, m: 0}
 }) {
-  const { isDarkModeRef } = useGlobalContext();
+  const { isDarkMode } = useGlobalContext();
 
-  const isDarkMode = isDarkModeRef.current;
   const canvasRef = useRef(null);
   const draggingRef = useRef(false);
 

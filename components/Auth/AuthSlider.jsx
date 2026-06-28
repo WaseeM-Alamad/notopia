@@ -125,7 +125,7 @@ const AuthSlider = ({ isLogin }) => {
                 duration: 2.45,
               }}
             >
-              <NotopiaLogo />
+              <NotopiaLogo fixedColors={true} />
             </motion.div>
           </div>
         </div>

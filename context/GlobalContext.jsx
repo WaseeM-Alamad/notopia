@@ -14,8 +14,9 @@ const GlobalContext = createContext();
 export const GlobalProvider = ({ children }) => {
   const { calculateLayoutRef } = useLayout();
   const [isExpanded, setIsExpanded] = useState({ open: null, threshold: null });
-  const isDarkModeRef = useRef(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const isFirstRenderRef = useRef(true);
+  const isComingBackRef = useRef(false);
 
   useEffect(() => {
     if (!calculateLayoutRef.current) return;
@@ -50,6 +51,14 @@ export const GlobalProvider = ({ children }) => {
     }
   }, [isExpanded.open]);
 
+  
+
+  useEffect(() => {
+    const isComingBack = localStorage.getItem("isComingBack") ?? false;
+    isComingBackRef.current = isComingBack;
+    localStorage.setItem("isComingBack", true);
+  }, []);
+
   useEffect(() => {
     const width = window.innerWidth;
     const sidebarExpanded = localStorage.getItem("sidebar-expanded");
@@ -60,7 +69,7 @@ export const GlobalProvider = ({ children }) => {
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme === "dark") {
       document.documentElement.classList.add("dark-mode");
-      isDarkModeRef.current = true;
+      setIsDarkMode(true);
     }
   }, []);
 
@@ -148,9 +157,11 @@ export const GlobalProvider = ({ children }) => {
       value={{
         isExpanded,
         setIsExpanded,
-        isDarkModeRef,
         lockScroll,
         getScrollbarWidth,
+        isDarkMode,
+        setIsDarkMode,
+        isComingBackRef,
       }}
     >
       {children}

@@ -27,7 +27,7 @@ const ProfileMenu = ({
 }) => {
   const { unreadNotifsNumber } = useNotifs();
   const { setInitialLoading } = useAppContext();
-  const { isDarkModeRef } = useGlobalContext();
+  const { isDarkMode, setIsDarkMode } = useGlobalContext();
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -58,7 +58,7 @@ const ProfileMenu = ({
         ? "dark"
         : "light";
       localStorage.setItem("theme", newMode);
-      isDarkModeRef.current = newMode === "dark";
+      setIsDarkMode(newMode === "dark");
     });
     setIsOpen(false);
   };
@@ -77,7 +77,7 @@ const ProfileMenu = ({
       },
     },
     {
-      title: `${!isDarkModeRef.current ? "Dark theme" : "Light theme"}`,
+      title: `${!isDarkMode ? "Dark theme" : "Light theme"}`,
       classes: "theme-menu-icon",
       func: () => {
         toggleDarkMode();
