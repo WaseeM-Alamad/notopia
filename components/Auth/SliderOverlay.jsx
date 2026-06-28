@@ -1,56 +1,73 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useCallback } from "react";
+
+const DURATION = 4000;
 
 const SliderOverlay = ({ currentIndex, setCurrentIndex, slides }) => {
   const intervalRef = useRef(null);
+  const rafRef = useRef(null);
+  const startTimeRef = useRef(null);
+  const fillRefs = useRef([]);
 
-  useEffect(() => {
-    intervalRef.current = setInterval(() => {
-      setCurrentIndex((prev) => {
-        if (prev + 1 > slides.length - 1) {
-          return 0;
-        }
-        return prev + 1;
-      });
-    }, 4000);
+  const startFillAnimation = useCallback((idx) => {
+    cancelAnimationFrame(rafRef.current);
 
-    return () => clearInterval(intervalRef.current);
+    fillRefs.current.forEach((el, i) => {
+      if (!el) return;
+      if (i < idx) {
+        el.style.transition = "width 0.3s ease";
+        el.style.width = "100%";
+      } else {
+        el.style.transition = "none";
+        el.style.width = "0%";
+      }
+    });
+
+    startTimeRef.current = performance.now();
+
+    const tick = () => {
+      const pct =
+        Math.min((performance.now() - startTimeRef.current) / DURATION, 1) *
+        100;
+      if (fillRefs.current[idx]) fillRefs.current[idx].style.width = `${pct}%`;
+      if (pct < 100) rafRef.current = requestAnimationFrame(tick);
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
   }, []);
 
-  const resetInterval = () => {
+  const resetInterval = useCallback(() => {
     clearInterval(intervalRef.current);
     intervalRef.current = setInterval(() => {
-      setCurrentIndex((prev) => {
-        if (prev + 1 > slides.length - 1) {
-          return 0;
-        }
-        return prev + 1;
-      });
-    }, 4000);
-  };
+      setCurrentIndex((prev) => (prev + 1 > slides.length - 1 ? 0 : prev + 1));
+    }, DURATION);
+  }, [slides.length, setCurrentIndex]);
+
+  useEffect(() => {
+    resetInterval();
+    return () => {
+      clearInterval(intervalRef.current);
+      cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    startFillAnimation(currentIndex);
+  }, [currentIndex, startFillAnimation]);
 
   const sliderClick = (index) => {
+    if (currentIndex === index) return;
     resetInterval();
     setCurrentIndex(index);
   };
 
   const nextSlide = () => {
     resetInterval();
-    setCurrentIndex((prev) => {
-      if (prev + 1 > slides.length - 1) {
-        return 0;
-      }
-      return prev + 1;
-    });
+    setCurrentIndex((prev) => (prev + 1 > slides.length - 1 ? 0 : prev + 1));
   };
 
   const prevSlide = () => {
     resetInterval();
-    setCurrentIndex((prev) => {
-      if (prev - 1 < 0) {
-        return slides.length - 1;
-      }
-      return prev - 1;
-    });
+    setCurrentIndex((prev) => (prev - 1 < 0 ? slides.length - 1 : prev - 1));
   };
 
   return (
@@ -91,84 +108,64 @@ const SliderOverlay = ({ currentIndex, setCurrentIndex, slides }) => {
           );
         })}
       </div>
+
       <div
         style={{
           display: "flex",
           justifyContent: "center",
           gap: "0.7rem",
           position: "absolute",
-          bottom: "0",
+          bottom: 0,
           width: "100%",
           padding: "1.4rem 3rem",
           boxSizing: "border-box",
         }}
       >
-        {slides.map((_, index) => {
-          currentIndex - index === 1 && console.log(index);
-          return (
+        {slides.map((_, index) => (
+          <div
+            className="slide-indicator"
+            onClick={() => sliderClick(index)}
+            key={index}
+          >
             <div
-              className="slide-indicator"
-              onClick={() => sliderClick(index)}
-              key={index}
+              style={{
+                position: "relative",
+                borderRadius: "10rem",
+                width: "100%",
+                height: "100%",
+              }}
             >
               <div
                 style={{
-                  position: "relative",
+                  position: "absolute",
                   borderRadius: "10rem",
+                  backgroundColor: "#ededed",
                   width: "100%",
-                  height: "100%",
+                  left: 0,
+                  top: 0,
+                  height: "3px",
+                  opacity: index < currentIndex ? 1 : 0.4,
+                  transition: "opacity 0.3s ease",
                 }}
-              >
-                <div
-                  style={{
-                    position: "absolute",
-                    borderRadius: "10rem",
-                    backgroundColor: "#ededed",
-                    width: "100%",
-                    left: "0",
-                    top: "0",
-                    height: "3px",
-                    opacity: index < currentIndex ? "1" : ".4",
-                    transition: `opacity ${index < currentIndex ? "0.5s ease" : "0.5s ease"}`,
-                  }}
-                />
-                <div
-                  style={{
-                    position: "absolute",
-                    borderRadius: "10rem",
-                    backgroundColor: "#ededed",
-                    width: currentIndex === index ? "100%" : "0%",
-                    left: "0",
-                    top: "0",
-                    height: "3px",
-                    opacity: currentIndex - index !== 1 ? "1" : "0",
-                    zIndex: "2",
-                    visibility: currentIndex === index ? "visible" : "hidden",
-                    transition: `width ${currentIndex === index ? "3.8" : ".3"}s linear`,
-                  }}
-                />
-                <div
-                  style={{
-                    position: "absolute",
-                    borderRadius: "10rem",
-                    backgroundColor: "#ededed",
-                    width:
-                      currentIndex > index || currentIndex === index
-                        ? "100%"
-                        : "0%",
-                    // width: "100%",
-                    left: "0",
-                    top: "0",
-                    height: "3px",
-                    opacity: currentIndex - index === 1 ? "1" : "0",
-                    zIndex: "2",
-                    transition: `width ${currentIndex === index ? "3.8" : "0"}s linear`,
-                  }}
-                />
-              </div>
+              />
+              <div
+                ref={(el) => {
+                  fillRefs.current[index] = el;
+                }}
+                style={{
+                  position: "absolute",
+                  borderRadius: "10rem",
+                  backgroundColor: "#ededed",
+                  width: "0%",
+                  left: 0,
+                  top: 0,
+                  height: "3px",
+                  zIndex: 2,
+                }}
+              />
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
     </div>
   );

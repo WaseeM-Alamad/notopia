@@ -7,6 +7,7 @@ import RightPanel from "./RightPanel";
 import LeftPanel from "./LeftPanel";
 import AuthSlider from "./AuthSlider";
 import ThemeToggle from "../Tools/ThemeToggle";
+import NotopiaLogo from "../icons/NotopiaLogo";
 
 const Auth = () => {
   const pathname = usePathname();

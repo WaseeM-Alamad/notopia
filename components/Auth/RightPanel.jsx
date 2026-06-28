@@ -6,6 +6,7 @@ import React, { useEffect, useRef, useState } from "react";
 import isEmail from "validator/lib/isEmail";
 import HorizontalLoader2 from "../Tools/HorizontalLoader2";
 import CustomThreeLineSpinner from "../Tools/CustomSpinner";
+import NotopiaLogo from "../icons/NotopiaLogo";
 
 const RightPanel = ({
   isLogin,
@@ -169,165 +170,186 @@ const RightPanel = ({
     <div
       style={{
         pointerEvents: isLogin ? "none" : "auto",
-        transform: isLogin ? 'translateX(30px)' : 'translateX(0px)',
-        opacity: isLogin ? '0' : '1',
+        transform: isLogin ? "translateX(30px)" : "translateX(0px)",
+        opacity: isLogin ? "0" : "1",
       }}
       className="right-panel auth-panel"
     >
-      <div>
-        <div className="form-title">Create Account</div>
-      </div>
-
-      <div className="form-container">
-        <form
-          id="signup-form"
-          className="login-form"
-          onSubmit={(e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            handleSignUp(formData);
-          }}
-          ref={formRef}
-        >
-          <div>
-            <label
-              className={`form-label ${emailStatus ? "form-error-color" : ""} `}
-            >
-              Email
-              {emailStatus ? (
-                <span style={{ fontStyle: "italic", fontSize: ".76rem" }}>
-                  {" "}
-                  - {emailStatus}
-                </span>
-              ) : (
-                ""
-              )}
-            </label>
-            <input
-              className="form-input"
-              ref={emailRef}
-              name="email"
-              onInput={() => setEmailStatus(null)}
-              onBlur={(e) => validateEmail(e, false)}
-              type="text"
-              placeholder="Enter your email"
-              spellCheck="false"
-              autoCapitalize="none"
-              autoCorrect="off"
-            />
-          </div>
-          <div>
-            <label
-              className={`form-label ${userStatus ? "form-error-color" : ""} `}
-            >
-              Username
-              {userStatus ? (
-                <span style={{ fontStyle: "italic", fontSize: ".76rem" }}>
-                  {" "}
-                  - {userStatus}
-                </span>
-              ) : (
-                ""
-              )}
-            </label>
-            <input
-              className="form-input"
-              ref={userRef}
-              onInput={(e) => {
-                e.target.value = e.target.value.toLowerCase();
-                setUserStatus(null);
-              }}
-              name="username"
-              onBlur={(e) => validateUsername(e, false)}
-              type="text"
-              placeholder="Enter your username"
-              autoCorrect="off"
-            />
-          </div>
-          <div>
-            <label
-              className={`form-label ${PassStatus ? "form-error-color" : ""} `}
-            >
-              Password
-              {PassStatus ? (
-                <span style={{ fontStyle: "italic", fontSize: ".76rem" }}>
-                  {" "}
-                  - {PassStatus}
-                </span>
-              ) : (
-                ""
-              )}
-            </label>
-            <div
-              style={{
-                position: "relative",
-                marginBottom: "0.5rem",
-              }}
-            >
-              <div
-                onClick={() => setShowPassword((prev) => !prev)}
-                className={`show-pass-icon ${!showPassword ? "hide-pass-icon" : ""}`}
-              />
-              <input
-                className="form-input"
-                ref={passRef}
-                name="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="Enter your password"
-                onInput={() => setPassStatus(null)}
-                onBlur={(e) => {
-                  setShowPassword(false);
-                  validatePassword(e, false);
-                }}
-                style={{ paddingRight: "2.7rem", marginBottom: "0" }}
-                spellCheck="false"
-                autoComplete="off"
-              />
-            </div>
-          </div>
-        </form>
-        <div className="form-btns-container">
-          <button
-            type="submit"
-            form="signup-form"
-            className="auth-btn auth-primary-btn"
-          >
-            {!isSubmitLoading ? "Sign Up" : <HorizontalLoader2 size={0.55} />}
-          </button>
-          <div
-            onClick={async () => {
-              setGoogleIsLoading(true);
-              await signIn("google");
-              setTimeout(() => {
-                setGoogleIsLoading(false);
-              }, 500);
+      <div className="auth-panel-inner">
+        <div className="notopia-auth-logo" style={{paddingBottom: "1.5rem" }}>
+          <NotopiaLogo
+            isDarkMode={false}
+            style={{
+              // // position: "absolute",
+              // // top: "1.8rem",
+              // // left: "50%",
+              // transform: "translateX(-50%)",
+              // margin: "0 auto",
+              width: "70px",
+              height: "35px",
+              flexShrink: "0",
             }}
-            className="auth-btn border-btn"
-          >
-            {!googleIsLoading ? (
-              <>
-                <div className="google-icon" />
-                Continue with Google
-              </>
-            ) : (
-              <CustomThreeLineSpinner
-                size={20}
-                strokeWidth={3}
-                color={
-                  document.documentElement.classList.contains("dark-mode")
-                    ? "#dfdfdf"
-                    : "#292929"
-                }
-              />
-            )}
+          />
+        </div>
+        <div>
+          <div className="form-title" style={{ marginBottom: "2rem" }}>
+            Create Account
           </div>
         </div>
-        <div className="form-bottom">
-          <span className="form-bottom-question">Already have an account?</span>
-          <span className="slider-trigger" onClick={toggleForm}>
-            {" "}
-            Sign In
-          </span>
+
+        <div className="form-container">
+          <form
+            id="signup-form"
+            className="login-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.target);
+              handleSignUp(formData);
+            }}
+            ref={formRef}
+          >
+            <div>
+              <label
+                className={`form-label ${emailStatus ? "form-error-color" : ""} `}
+              >
+                Email
+                {emailStatus ? (
+                  <span style={{ fontStyle: "italic", fontSize: ".76rem" }}>
+                    {" "}
+                    - {emailStatus}
+                  </span>
+                ) : (
+                  ""
+                )}
+              </label>
+              <input
+                className="form-input"
+                ref={emailRef}
+                name="email"
+                onInput={() => setEmailStatus(null)}
+                onBlur={(e) => validateEmail(e, false)}
+                type="text"
+                placeholder="Enter your email"
+                spellCheck="false"
+                autoCapitalize="none"
+                autoCorrect="off"
+              />
+            </div>
+            <div>
+              <label
+                className={`form-label ${userStatus ? "form-error-color" : ""} `}
+              >
+                Username
+                {userStatus ? (
+                  <span style={{ fontStyle: "italic", fontSize: ".76rem" }}>
+                    {" "}
+                    - {userStatus}
+                  </span>
+                ) : (
+                  ""
+                )}
+              </label>
+              <input
+                className="form-input"
+                ref={userRef}
+                onInput={(e) => {
+                  e.target.value = e.target.value.toLowerCase();
+                  setUserStatus(null);
+                }}
+                name="username"
+                onBlur={(e) => validateUsername(e, false)}
+                type="text"
+                placeholder="Enter your username"
+                autoCorrect="off"
+              />
+            </div>
+            <div>
+              <label
+                className={`form-label ${PassStatus ? "form-error-color" : ""} `}
+              >
+                Password
+                {PassStatus ? (
+                  <span style={{ fontStyle: "italic", fontSize: ".76rem" }}>
+                    {" "}
+                    - {PassStatus}
+                  </span>
+                ) : (
+                  ""
+                )}
+              </label>
+              <div
+                style={{
+                  position: "relative",
+                  marginBottom: "0.5rem",
+                }}
+              >
+                <div
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className={`show-pass-icon ${!showPassword ? "hide-pass-icon" : ""}`}
+                />
+                <input
+                  className="form-input"
+                  ref={passRef}
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  onInput={() => setPassStatus(null)}
+                  onBlur={(e) => {
+                    setShowPassword(false);
+                    validatePassword(e, false);
+                  }}
+                  style={{ paddingRight: "2.7rem", marginBottom: "0" }}
+                  spellCheck="false"
+                  autoComplete="off"
+                />
+              </div>
+            </div>
+          </form>
+          <div className="form-btns-container">
+            <button
+              type="submit"
+              form="signup-form"
+              className="auth-btn auth-primary-btn"
+            >
+              {!isSubmitLoading ? "Sign Up" : <HorizontalLoader2 size={0.55} />}
+            </button>
+            <div
+              onClick={async () => {
+                setGoogleIsLoading(true);
+                await signIn("google");
+                setTimeout(() => {
+                  setGoogleIsLoading(false);
+                }, 500);
+              }}
+              className="auth-btn border-btn"
+            >
+              {!googleIsLoading ? (
+                <>
+                  <div className="google-icon" />
+                  Continue with Google
+                </>
+              ) : (
+                <CustomThreeLineSpinner
+                  size={20}
+                  strokeWidth={3}
+                  color={
+                    document.documentElement.classList.contains("dark-mode")
+                      ? "#dfdfdf"
+                      : "#292929"
+                  }
+                />
+              )}
+            </div>
+          </div>
+          <div className="form-bottom">
+            <span className="form-bottom-question">
+              Already have an account?
+            </span>
+            <span className="slider-trigger" onClick={toggleForm}>
+              {" "}
+              Sign In
+            </span>
+          </div>
         </div>
       </div>
     </div>

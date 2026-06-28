@@ -22,6 +22,7 @@ div {
 }
 
 :root {
+  --notopia-bg: #ededed;
   --selection: #008cff;
   --primary: #5089f3;
   --primary-hover: #4981e9;
@@ -75,6 +76,7 @@ div {
 }
 
 html.dark-mode {
+  --notopia-bg: #9ba9b9;
   --selection: #1a75c0;
   --primary: #3164c4;
   --primary-hover: #2d5bb1;
@@ -994,10 +996,10 @@ svg {
 }
 
 .login-container {
-  height: 75%;
+  /* height: 75%; */
   width: 95%;
   max-width: 60rem;
-  max-height: 40rem;
+  height: 40rem;
   position: fixed;
   left: 50%;
   top: 50%;
@@ -1014,12 +1016,41 @@ svg {
   height: 100%;
   width: 54%;
   position: absolute;
-  /* left: 0; */
+  left: 0;
   z-index: 5;
-  right: 0;
+  /* right: 0; */
   will-change: transform;
   transition: transform 0.65s cubic-bezier(0.4, 0, 0.2, 1);
   animation: slider-shrink 2.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-out {
+  0% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    display: none;
+    opacity: 0;
+  }
 }
 
 @keyframes slider-shrink {
@@ -1140,24 +1171,35 @@ svg {
   height: 3px;
   width: calc(50% / var(--slides-num));
   transition: opacity 0.5s ease;
-  padding: .6rem 0;
+  padding: 0.6rem 0;
   cursor: pointer;
+}
+
+.auth-panel-inner {
+  padding: 4rem 3.6rem;
+  padding-bottom: 2.3rem;
+  animation: fade-in 2.6s ease;
+  position: relative;
+  overflow-y: auto;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 .auth-panel {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   /* will-change: transform; */
-  padding: 6.6% 6%;
+
   box-sizing: border-box;
   height: 100%;
   background-color: var(--auth-container);
   width: 46%;
   position: absolute;
-  overflow-y: auto;
-  /* transition: all 0.37s ease, padding 0s; */
+  /* overflow-y: auto; */
   z-index: 1;
-  /* opacity: 0; */
+  opacity: 0;
   transition:
     transform 0.65s cubic-bezier(0.35, 0, 0.25, 1),
     opacity 0.7s ease;
@@ -1195,23 +1237,60 @@ svg {
   left: 0;
 }
 
-@media (max-width: 855px) {
-  .login-slider {
-    display: none;
+.notopia-auth-logo {
+  display: none !important;
+  width: 100%;
+}
+
+@media (max-height: 670px) and (min-width: 900px) {
+  .auth-panel {
+    width: 100%;
+  }
+  .auth-panel-inner {
+    padding: 7dvh clamp(4rem, 32vw, 60rem) !important;
+  }
+}
+
+@media (max-width: 900px) or (max-height: 670px) {
+  .auth-panel {
+    width: 100%;
+  }
+  .login-slider-wrapper {
+    visibility: hidden;
+  }
+
+  .notopia-auth-logo {
+    display: flex !important;
   }
 
   .login-container {
-    max-width: 30rem;
+    width: 100%;
+    max-width: unset;
+    height: 100dvh;
+    max-height: unset;
+    border-radius: 0;
+    box-sizing: border-box;
   }
 
-  .right-panel {
+  .auth-panel-inner {
     width: 100%;
-    padding: 3rem;
+    padding: 7dvh clamp(1rem, 15vw, 10rem);
+    justify-content: center;
   }
 
-  .left-panel {
+  .form-title {
+    padding: 0 !important;
+  }
+
+  .form-bottom {
+    margin-top: 2rem !important;
+  }
+}
+
+@media (max-width: 580px) {
+  .auth-panel-inner {
     width: 100%;
-    padding: 3rem;
+    padding: 7dvh clamp(1rem, 9vw, 10rem) !important;
   }
 }
 
@@ -1227,6 +1306,7 @@ svg {
   color: var(--text);
   user-select: none;
   margin-bottom: 0.2rem;
+  /* padding-top: 3.8rem; */
 }
 
 .login-form {
@@ -1312,10 +1392,10 @@ svg {
 }
 
 .form-bottom {
-  padding-top: 0.7rem;
+  padding-top: 1.7rem;
   font-size: 0.83rem;
-  margin-top: auto;
   text-align: center;
+  box-sizing: border-box;
 }
 
 .form-bottom-question {
@@ -1337,7 +1417,7 @@ svg {
 .form-container {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  /* height: 100%; */
 }
 
 .form-label {

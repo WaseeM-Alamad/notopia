@@ -8,6 +8,7 @@ import Modal from "../Tools/Modal";
 import { sendResetPassAction } from "@/utils/actions";
 import HorizontalLoader2 from "../Tools/HorizontalLoader2";
 import CustomThreeLineSpinner from "../Tools/CustomSpinner";
+import NotopiaLogo from "../icons/NotopiaLogo";
 
 const LeftPanel = ({
   isLogin,
@@ -124,137 +125,160 @@ const LeftPanel = ({
         style={{
           pointerEvents: !isLogin ? "none" : "auto",
           transform: !isLogin ? "translateX(-30px)" : "translateX(-0px)",
-          opacity: !isLogin ? '0' : '1',
+          opacity: !isLogin ? "0" : "1",
         }}
         className="left-panel auth-panel"
       >
-        <div className="form-top">
-          <div className="form-title">Welcome Back!</div>
-          <div style={{ color: "var(--text3)", fontSize: ".8rem" }}>
-            Enter your details below
+        <div className="auth-panel-inner">
+          <div className="notopia-auth-logo" style={{ padding: ".5rem 0" }}>
+            <NotopiaLogo
+              isDarkMode={false}
+              style={{
+                // // position: "absolute",
+                // // top: "1.8rem",
+                // // left: "50%",
+                // transform: "translateX(-50%)",
+                margin: "0 auto",
+                width: "70px",
+                height: "35px",
+                flexShrink: "0",
+              }}
+            />
           </div>
-        </div>
-
-        <div className="form-container">
-          <form
-            id="signin-form"
-            ref={formRef}
-            onSubmit={handleLogin}
-            className="login-form"
-          >
-            <div>
-              <label
-                className={`form-label ${emailStatus ? "form-error-color" : ""} `}
-              >
-                Email
-                {emailStatus ? (
-                  <span style={{ fontStyle: "italic", fontSize: ".76rem" }}>
-                    {" "}
-                    - {emailStatus}
-                  </span>
-                ) : (
-                  ""
-                )}
-              </label>
-              <input
-                className="form-input"
-                ref={emailRef}
-                name="email"
-                type="text"
-                onInput={() => setEmailStatus(null)}
-                onBlur={() => validateEmail(null, false)}
-                placeholder="Enter your email"
-                spellCheck="false"
-                autoCapitalize="none"
-                autoCorrect="off"
-              />
+          <div className="form-top">
+            <div className="form-title">Welcome Back!</div>
+            <div style={{ color: "var(--text3)", fontSize: ".8rem" }}>
+              Enter your details below
             </div>
-            <div>
-              <label
-                className={`form-label ${PassStatus ? "form-error-color" : ""} `}
-              >
-                Password
-                {PassStatus ? (
-                  <span style={{ fontStyle: "italic", fontSize: ".76rem" }}>
-                    {" "}
-                    - {PassStatus}
-                  </span>
-                ) : (
-                  ""
-                )}
-              </label>
-              <div
-                style={{
-                  position: "relative",
-                  marginBottom: "0.5rem",
-                }}
-              >
-                <div
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  className={`show-pass-icon ${!showPassword ? "hide-pass-icon" : ""}`}
-                />
+          </div>
+
+          <div className="form-container">
+            <form
+              id="signin-form"
+              ref={formRef}
+              onSubmit={handleLogin}
+              className="login-form"
+            >
+              <div>
+                <label
+                  className={`form-label ${emailStatus ? "form-error-color" : ""} `}
+                >
+                  Email
+                  {emailStatus ? (
+                    <span style={{ fontStyle: "italic", fontSize: ".76rem" }}>
+                      {" "}
+                      - {emailStatus}
+                    </span>
+                  ) : (
+                    ""
+                  )}
+                </label>
                 <input
                   className="form-input"
-                  ref={passRef}
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  onInput={() => setPassStatus(null)}
-                  onBlur={() => setShowPassword(false)}
-                  placeholder="Enter your password"
-                  style={{ paddingRight: "2.7rem", marginBottom: "0" }}
+                  ref={emailRef}
+                  name="email"
+                  type="text"
+                  onInput={() => setEmailStatus(null)}
+                  onBlur={() => validateEmail(null, false)}
+                  placeholder="Enter your email"
                   spellCheck="false"
-                  autoComplete="off"
+                  autoCapitalize="none"
+                  autoCorrect="off"
                 />
               </div>
+              <div>
+                <label
+                  className={`form-label ${PassStatus ? "form-error-color" : ""} `}
+                >
+                  Password
+                  {PassStatus ? (
+                    <span style={{ fontStyle: "italic", fontSize: ".76rem" }}>
+                      {" "}
+                      - {PassStatus}
+                    </span>
+                  ) : (
+                    ""
+                  )}
+                </label>
+                <div
+                  style={{
+                    position: "relative",
+                    marginBottom: "0.5rem",
+                  }}
+                >
+                  <div
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className={`show-pass-icon ${!showPassword ? "hide-pass-icon" : ""}`}
+                  />
+                  <input
+                    className="form-input"
+                    ref={passRef}
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    onInput={() => setPassStatus(null)}
+                    onBlur={() => setShowPassword(false)}
+                    placeholder="Enter your password"
+                    style={{ paddingRight: "2.7rem", marginBottom: "0" }}
+                    spellCheck="false"
+                    autoComplete="off"
+                  />
+                </div>
+              </div>
+            </form>
+            <div className="form-tools">
+              <div onClick={handleForgotPass} className="forgot-pass">
+                {!isForgotloading ? "Forgot password?" : "Please wait..."}
+              </div>
             </div>
-          </form>
-          <div className="form-tools">
-            <div onClick={handleForgotPass} className="forgot-pass">
-              {!isForgotloading ? "Forgot password?" : "Please wait..."}
+            <div className="form-btns-container">
+              <button
+                form="signin-form"
+                type="submit"
+                className="auth-btn auth-primary-btn"
+              >
+                {!isSubmitLoading ? (
+                  "Sign In"
+                ) : (
+                  <HorizontalLoader2 size={0.55} />
+                )}
+              </button>
+              <div
+                onClick={async () => {
+                  setGoogleIsLoading(true);
+                  await signIn("google");
+                  setTimeout(() => {
+                    setGoogleIsLoading(false);
+                  }, 500);
+                }}
+                className="auth-btn border-btn"
+              >
+                {!googleIsLoading ? (
+                  <>
+                    <div className="google-icon" />
+                    Continue with Google
+                  </>
+                ) : (
+                  <CustomThreeLineSpinner
+                    size={20}
+                    strokeWidth={3}
+                    color={
+                      document.documentElement.classList.contains("dark-mode")
+                        ? "#dfdfdf"
+                        : "#292929"
+                    }
+                  />
+                )}
+              </div>
             </div>
-          </div>
-          <div className="form-btns-container">
-            <button
-              form="signin-form"
-              type="submit"
-              className="auth-btn auth-primary-btn"
-            >
-              {!isSubmitLoading ? "Sign In" : <HorizontalLoader2 size={0.55} />}
-            </button>
-            <div
-              onClick={async () => {
-                setGoogleIsLoading(true);
-                await signIn("google");
-                setTimeout(() => {
-                  setGoogleIsLoading(false);
-                }, 500);
-              }}
-              className="auth-btn border-btn"
-            >
-              {!googleIsLoading ? (
-                <>
-                  <div className="google-icon" />
-                  Continue with Google
-                </>
-              ) : (
-                <CustomThreeLineSpinner
-                  size={20}
-                  strokeWidth={3}
-                  color={
-                    document.documentElement.classList.contains("dark-mode")
-                      ? "#dfdfdf"
-                      : "#292929"
-                  }
-                />
-              )}
+            <div className="form-bottom">
+              <span className="form-bottom-question">
+                Don't have an account?
+              </span>
+              <span className="slider-trigger" onClick={toggleForm}>
+                {" "}
+                Sign Up
+              </span>
             </div>
-          </div>
-          <div className="form-bottom">
-            <span className="form-bottom-question">Don't have an account?</span>
-            <span className="slider-trigger" onClick={toggleForm}>
-              {" "}
-              Sign Up
-            </span>
           </div>
         </div>
       </div>
