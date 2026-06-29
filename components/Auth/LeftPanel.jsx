@@ -147,7 +147,9 @@ const LeftPanel = ({
             />
           </div>
           <div className="form-top">
-            <div className="form-title">{ isComingBackRef.current ? "Welcome Back!": "Welcome!"}</div>
+            <div className="form-title">
+              {isComingBackRef.current ? "Welcome Back!" : "Welcome!"}
+            </div>
             <div style={{ color: "var(--text3)", fontSize: ".8rem" }}>
               Enter your details below
             </div>
@@ -255,6 +257,7 @@ const LeftPanel = ({
                     setGoogleIsLoading(false);
                   }, 500);
                 }}
+                style={googleIsLoading ? { pointerEvents: "none" } : undefined}
                 className="auth-btn border-btn"
               >
                 {!googleIsLoading ? (

@@ -2,12 +2,10 @@
 import { usePathname } from "next/navigation";
 import "@/assets/styles/login.css";
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
 import RightPanel from "./RightPanel";
 import LeftPanel from "./LeftPanel";
 import AuthSlider from "./AuthSlider";
-import ThemeToggle from "../Tools/ThemeToggle";
-import NotopiaLogo from "../icons/NotopiaLogo";
+import AuthThemeToggle from "../Tools/AuthThemeToggle";
 
 const Auth = () => {
   const pathname = usePathname();
@@ -24,7 +22,7 @@ const Auth = () => {
     const handler = () => {
       const height = window.innerHeight;
       const width = window.innerWidth;
-      if (width > 900 || (height > 670 && width > 900)) return;
+      if (width > 900 && height > 670) return;
       setIsSmallScreen(true);
     };
 
@@ -32,7 +30,7 @@ const Auth = () => {
 
     window.addEventListener("resize", handler);
     return () => window.removeEventListener("resize", handler);
-  }, []);
+  }, [isSmallScreen]);
 
   useEffect(() => {
     console.log(isSmallScreen);
@@ -52,8 +50,8 @@ const Auth = () => {
 
   return (
     <div id="idk" className={isSmallScreen ? "no-mount-animation" : ""}>
-      <ThemeToggle />
       <div className={`auth-container`}>
+        <AuthThemeToggle isSmallScreen={true} />
         <AuthSlider isLogin={isLogin} />
         <RightPanel
           isLogin={isLogin}

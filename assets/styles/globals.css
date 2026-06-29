@@ -28,6 +28,13 @@ div {
   --selection: #008cff;
   --primary: #5089f3;
   --primary-hover: #4981e9;
+  --auth-overlay-bg: linear-gradient(
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0) 10%,
+    rgba(31, 44, 82, 0.55) 50%,
+    rgba(31, 44, 82, 0.88) 70%,
+    rgb(24, 32, 56) 100%
+  );
   --auth-slider-color: #e9f2ff;
   --auth-container: #fff;
   --dark-btn: #2c2e2a;
@@ -84,6 +91,13 @@ html.dark-mode {
   --selection: #1a75c0;
   --primary: #3164c4;
   --primary-hover: #2d5bb1;
+  --auth-overlay-bg: linear-gradient(
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0) 10%,
+    rgba(30, 42, 74, 0.45) 50%,
+    rgba(30, 42, 74, 0.75) 70%,
+    rgb(24, 32, 56) 100%
+  );
   --auth-slider-color: #142338;
   --auth-container: #0e131d;
   --dark-btn: #f3f3f3;
@@ -1012,7 +1026,7 @@ svg {
   border-radius: 2rem;
   border: 1px solid var(--border);
   overflow: hidden;
-  animation: auth-mount .8s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: auth-mount 0.8s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes auth-mount {
@@ -1121,13 +1135,7 @@ svg {
   height: 100%;
   color: white;
   box-sizing: border-box;
-  background: linear-gradient(
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0) 10%,
-    rgba(40, 50, 80, 0.55) 50%,
-    rgba(40, 50, 80, 0.88) 70%,
-    rgb(59, 53, 94) 100%
-  );
+  background: var(--auth-overlay-bg);
   z-index: 10;
   animation: slider-overlay-show 2.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -1177,8 +1185,24 @@ svg {
   transition: background-color 0.3s ease;
 }
 
-.auth-slide-arrow:hover {
-  background: rgba(255, 255, 255, 0.2);
+.auth-theme-toggle {
+  position: absolute;
+  top: 1rem;
+  left: 0;
+  background: rgba(85, 85, 85, 0.2);
+  border: none;
+  border-radius: 50%;
+  /* width: 2.2rem; */
+  /* height: 2.2rem; */
+  padding: 0.45rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+  font-size: 1rem;
+  backdrop-filter: blur(4px);
+  z-index: 5;
 }
 
 .slide-indicator {
@@ -1273,15 +1297,19 @@ svg {
   animation: none;
 }
 
+.auth-theme-toggle-sm {
+  right: clamp(1.4rem, 4vw, 3rem) !important;
+  left: unset !important;
+  display: none;
+}
+
 @media (max-width: 900px) or (max-height: 670px) {
   .auth-panel {
     width: 100%;
   }
 
-  .auth-container {
-  }
-
-  .auth-panel-inner {
+  .auth-theme-toggle-sm {
+    display: flex;
   }
 
   .login-slider-wrapper {
@@ -1555,27 +1583,15 @@ svg {
   transition: background-color 0.3s ease;
 }
 
-.auth-btn:hover {
-  background-color: var(--light-blue-hover);
-}
-
 .auth-blue-btn {
   color: #fff;
   background-color: var(--primary);
-}
-
-.auth-blue-btn:hover {
-  background-color: var(--primary-hover);
 }
 
 .auth-primary-btn {
   border-color: transparent;
   color: var(--bw);
   background-color: var(--dark-btn);
-}
-
-.auth-primary-btn:hover {
-  background-color: var(--dark-btn-hover);
 }
 
 .google-icon {
@@ -7483,5 +7499,17 @@ aside svg {
   }
   .mark-all-read:hover {
     background-color: var(--light-blue-hover);
+  }
+  .auth-slide-arrow:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  .auth-btn:hover {
+    background-color: var(--light-blue-hover);
+  }
+  .auth-blue-btn:hover {
+    background-color: var(--primary-hover);
+  }
+  .auth-primary-btn:hover {
+    background-color: var(--dark-btn-hover);
   }
 }

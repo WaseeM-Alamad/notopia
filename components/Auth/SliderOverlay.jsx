@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useCallback } from "react";
+import AuthThemeToggle from "../Tools/AuthThemeToggle";
 
 const DURATION = 4000;
 
@@ -72,6 +73,7 @@ const SliderOverlay = ({ currentIndex, setCurrentIndex, slides }) => {
 
   return (
     <div className="slider-overlay" style={{ "--slides-num": slides.length }}>
+      <AuthThemeToggle />
       <button
         className="auth-slide-arrow"
         onClick={nextSlide}

@@ -16,7 +16,8 @@ const slides = [
     ),
   },
   {
-    image: "https://picsum.photos/800/601",
+    image:
+      "https://media.discordapp.net/attachments/1099998106227060789/1520936643136065817/image.png?ex=6a430221&is=6a41b0a1&hm=3a099f0e3d08e12d15a19bb2d1e52f18d6b215961b21e5c3a09663a1d0fd12a1&=&format=webp&quality=lossless",
     html: (
       <span style={{ fontSize: "1.7rem", fontWeight: "600" }}>
         Simple, fast, and
@@ -155,9 +156,10 @@ const AuthSlider = ({ isLogin }) => {
                   transform: isCurrentSlide
                     ? `scale(${1.1 + (slideNum + 1) / 10})`
                     : `scale(${1 + slideNum / 10.5})`,
-                  transition: `opacity 0.6s ease-out, transform ${isCurrentSlide ? "10s linear" : "5s linear"}`,
+                  transition: `opacity 0.6s ease-out, transform ${isCurrentSlide ? "10s linear" : "5s ease-in"}`,
                   opacity: isCurrentSlide ? "1" : "0",
                   zIndex: isCurrentSlide ? "5" : "",
+                  willChange: "transform"
                 }}
               />
             );
