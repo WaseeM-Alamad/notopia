@@ -320,6 +320,7 @@ const RightPanel = ({
                   setGoogleIsLoading(false);
                 }, 500);
               }}
+              style={googleIsLoading ? { pointerEvents: "none" } : undefined}
               className="auth-btn border-btn"
             >
               {!googleIsLoading ? (

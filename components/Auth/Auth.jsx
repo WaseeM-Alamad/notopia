@@ -33,10 +33,6 @@ const Auth = () => {
   }, [isSmallScreen]);
 
   useEffect(() => {
-    console.log(isSmallScreen);
-  }, [isSmallScreen]);
-
-  useEffect(() => {
     const routeName = pathname.replace(/^\/|\/$/g, "").toLowerCase();
     setIsLogin(routeName === "auth/login");
   }, [pathname]);

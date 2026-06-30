@@ -280,7 +280,7 @@ export function AppProvider({ children, initialUser }) {
         onClick={() => {
           toast.dismiss(t);
           handleServerCall(
-            [() => deleteNotification(notifId, clientID)],
+            [() => deleteNotification(notifId, clientID.current)],
             openSnackRef.current,
           );
           const event = new CustomEvent("deleteNotif", {

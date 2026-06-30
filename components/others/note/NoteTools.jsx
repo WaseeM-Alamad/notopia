@@ -32,6 +32,8 @@ const NoteTools = ({
   userID,
   noteActions,
   inputRef,
+  labelsOpen,
+  setLabelsOpen
 }) => {
   const {
     clientID,
@@ -45,7 +47,7 @@ const NoteTools = ({
   } = useAppContext();
   const { filters } = useSearch();
   const [colorAnchorEl, setColorAnchorEl] = useState(null);
-  const [labelsOpen, setLabelsOpen] = useState(false);
+  
   const reminderBtnRef = useRef(null);
 
   const ImagesWithNoBottomContent =

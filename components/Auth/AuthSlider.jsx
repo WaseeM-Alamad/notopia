@@ -6,7 +6,7 @@ import NotopiaLogo from "../icons/NotopiaLogo";
 const slides = [
   {
     image:
-      "https://media.discordapp.net/attachments/1099998106227060789/1520481484795019366/image.png?ex=6a4202fb&is=6a40b17b&hm=90545e3808646e38301490983630915bd91eeb8143e9a4263e0295d4ca9c4910&=&format=webp&quality=lossless&width=767&height=960",
+      "https://res.cloudinary.com/dhp3zvrdz/image/upload/v1782806987/image_vyhtta.webp",
     html: (
       <span style={{ fontSize: "1.7rem", fontWeight: "600" }}>
         Welcome to your
@@ -17,7 +17,7 @@ const slides = [
   },
   {
     image:
-      "https://media.discordapp.net/attachments/1099998106227060789/1520936643136065817/image.png?ex=6a430221&is=6a41b0a1&hm=3a099f0e3d08e12d15a19bb2d1e52f18d6b215961b21e5c3a09663a1d0fd12a1&=&format=webp&quality=lossless",
+      "https://res.cloudinary.com/dhp3zvrdz/image/upload/v1782806966/notopia_vbtzmp.png",
     html: (
       <span style={{ fontSize: "1.7rem", fontWeight: "600" }}>
         Simple, fast, and
@@ -27,7 +27,8 @@ const slides = [
     ),
   },
   {
-    image: "https://picsum.photos/800/602",
+    image:
+      "https://res.cloudinary.com/dhp3zvrdz/image/upload/v1782807546/Screenshot_2026-06-30_111844_p55iaa.png",
     html: (
       <span style={{ fontSize: "1.7rem", fontWeight: "600" }}>
         Organize your notes
@@ -37,7 +38,8 @@ const slides = [
     ),
   },
   {
-    image: "https://picsum.photos/800/603",
+    image:
+      "https://res.cloudinary.com/dhp3zvrdz/image/upload/v1782806837/images_preview_jnbuze.png",
     html: (
       <span style={{ fontSize: "1.7rem", fontWeight: "600" }}>
         Add images and
@@ -47,17 +49,19 @@ const slides = [
     ),
   },
   {
-    image: "https://picsum.photos/800/604",
+    image:
+      "https://res.cloudinary.com/dhp3zvrdz/image/upload/v1782810817/collab_kdj0cw.png",
     html: (
       <span style={{ fontSize: "1.7rem", fontWeight: "600" }}>
-        Archive notes to keep
-        <br /> your workspace clean
-        <br /> and focused
+        Collaborate with
+        <br /> friends and teammates
+        <br /> in real time
       </span>
     ),
   },
   {
-    image: "https://picsum.photos/800/605",
+    image:
+      "https://res.cloudinary.com/dhp3zvrdz/image/upload/v1782813322/477f1a72-473b-4324-a8e9-fc00d96de480.png",
     html: (
       <span style={{ fontSize: "1.7rem", fontWeight: "600" }}>
         Turn scattered ideas
@@ -154,12 +158,12 @@ const AuthSlider = ({ isLogin }) => {
                   objectFit: "cover",
                   userSelect: "none",
                   transform: isCurrentSlide
-                    ? `scale(${1.1 + (slideNum + 1) / 10})`
+                    ? `scale(${1.2 + (slideNum + 1) / 10})`
                     : `scale(${1 + slideNum / 10.5})`,
-                  transition: `opacity 0.6s ease-out, transform ${isCurrentSlide ? "10s linear" : "5s ease-in"}`,
+                  transition: `opacity 0.6s ease-out, transform ${isCurrentSlide ? "10s linear" : "5s cubic-bezier(0.85, -0.2, 1, 0.11)"}`,
                   opacity: isCurrentSlide ? "1" : "0",
                   zIndex: isCurrentSlide ? "5" : "",
-                  willChange: "transform"
+                  willChange: "transform",
                 }}
               />
             );

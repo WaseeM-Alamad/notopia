@@ -54,6 +54,7 @@ const Note = memo(
     const [isDragOver, setIsDragOver] = useState(false);
     const [colorMenuOpen, setColorMenuOpen] = useState(false);
     const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+    const [labelsOpen, setLabelsOpen] = useState(false);
     const [reminderOpen, setReminderOpen] = useState(false);
     const [reminderAnchor, setReminderAnchor] = useState(null);
     const [anchorEl, setAnchorEl] = useState(null);
@@ -400,7 +401,7 @@ const Note = memo(
             setAnchorEl(virtualAnchor);
             setMoreMenuOpen((prev) => !prev);
           }}
-          className={`note-wrapper ${selected || colorMenuOpen || reminderOpen || moreMenuOpen ? "element-active" : ""}`}
+          className={`note-wrapper ${selected || colorMenuOpen || reminderOpen || moreMenuOpen || labelsOpen ? "element-active" : ""}`}
           ref={note?.ref}
         >
           {/* <button onClick={()=> console.log(note?.images)}>click</button> */}
@@ -550,6 +551,8 @@ const Note = memo(
             userID={userID}
             noteActions={noteActions}
             inputRef={inputRef}
+            labelsOpen={labelsOpen}
+            setLabelsOpen={setLabelsOpen}
           />
           <div
             className="note-border element-selected"
